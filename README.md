@@ -6,6 +6,6 @@ This Repository is used for storing, organizing and sharing the Software Project
 Integrantes:
 Charly: Conectado :)
 Sebas:
-Andy: 
+Andy: Conectado :)
 Juárez: 
 
