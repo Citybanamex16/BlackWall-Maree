@@ -11,10 +11,11 @@ appServer.set('views', 'views')
 
 // Sección de Routers
 const clienteRutes = require('./routes/cliente.routes.js')
-appServer.use('/cliente', clienteRutes)
+const adminRutes = require('./routes/admin.routes.js')  
 
-// Middlwares Globales o Enrutamiento (Tentativo ¿Mala practica?)
+appServer.use('/cliente', clienteRutes)
+appServer.use('/admin', adminRutes)
 
 appServer.listen(3000, () => {
-  console.log('Servidor activo en http local host: 3000')
+  console.log('Servidor activo en http://localhost:3000')
 })
