@@ -11,7 +11,7 @@ appServer.set('views', 'views')
 
 // Sección de Routers
 const clienteRutes = require('./routes/cliente.routes.js')
-const adminRutes = require('./routes/admin.routes.js')  
+const adminRutes = require('./routes/admin.routes.js')
 
 appServer.use('/cliente', clienteRutes)
 appServer.use('/admin', adminRutes)
