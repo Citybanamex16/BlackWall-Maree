@@ -41,6 +41,12 @@ body {
     color: #b5956a !important;
 }
 
+.navbar-item:hover,
+.navbar-link:hover {
+    background-color: transparent !important;
+    color: #b5956a !important;
+}
+
 /* LAYOUT */
 .menu-layout {
     display: flex;

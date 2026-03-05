@@ -74,3 +74,9 @@ body {
     background-color: #ffffff;
     border: 1px solid #e5e5e5;
 }
+
+.navbar-item:hover,
+.navbar-link:hover {
+    background-color: transparent !important;
+    color: #b5956a !important;
+}
