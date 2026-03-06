@@ -13,6 +13,8 @@ appServer.set('views', 'views')
 const clienteRutes = require('./routes/cliente.routes.js')
 const adminRutes = require('./routes/admin.routes.js')
 
+appServer.get('/', (req, res) => res.render('menu'))
+
 appServer.use('/cliente', clienteRutes)
 appServer.use('/admin', adminRutes)
 
