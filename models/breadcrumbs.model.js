@@ -7,29 +7,35 @@ exports.getBreadcrumbs = (page) => {
       { name: 'Estado Royalty', url: '/cliente/royalty' },
       { name: 'Carrito', url: '/cliente/orden' },
       { name: 'Log In', url: '/cliente/login' },
+      { name: 'AdminHub', url: '/admin/' },
       // Esta es la activa
       { name: 'Menu', url: '' }
     ],
     Royalty: [
-      { name: 'Menu', url: '/cliente/' },
+      { name: 'Menu', url: '/cliente/menu' },
       { name: 'Carrito', url: '/cliente/orden' },
       // Activa
       { name: 'Estado Royalty', url: '' }
 
     ],
     Orden: [
-      { name: 'Menu', url: '/cliente/' },
+      { name: 'Menu', url: '/cliente/menu' },
       { name: 'Estado Royalty', url: '/cliente/royalty' },
       { name: 'Log In', url: '/cliente/login' },
       // Activa
       { name: 'Carrito', url: '' }
     ],
     LogIn: [
-      { name: 'Menu', url: '/cliente/' },
+      { name: 'Menu', url: '/cliente/menu' },
       { name: 'Carrito', url: '/cliente/orden' },
       // Activa
       { name: 'Log In', url: '' }
 
+    ],
+    Admin: [
+      { name: 'Menu Cliente', url: '/cliente/menu' },
+      // Activa
+      { name: 'Admin Hub', url: '' }
     ]
 
   }
