@@ -1,0 +1,82 @@
+.logo {
+    font-size: 21px;
+    font-weight: bold;
+    letter-spacing: 3px;
+}
+
+.active-link {
+    color: #8a9e8a !important;
+}
+
+.dashboard-grid {
+    grid-template-columns: repeat(4, 1fr);
+}
+
+.dashboard-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 14px;
+    padding: 36px 20px;
+    text-align: center;
+    color: #222;
+    text-decoration: none;
+    transition: box-shadow 0.2s;
+}
+
+.dashboard-card:hover {
+    box-shadow: 0 4px 20px rgba(0,0,0,0.12);
+}
+
+.icon-circle {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 26px;
+}
+
+.blue     { background-color: #4A90D9; }
+.green    { background-color: #27AE60; }
+.yellow   { background-color: #F5A623; }
+.purple   { background-color: #9B59B6; }
+.red      { background-color: #E74C3C; }
+.pink     { background-color: #E91E8C; }
+.teal     { background-color: #1ABC9C; }
+.whatsapp { background-color: #25D366; }
+
+/* Todo esto es para contrarrestar el automatico color negro que tiene bulma */
+body {
+    background-color: #ffffff;
+    color: #222;
+}
+
+.navbar {
+    background-color: #ffffff;
+    border-bottom: 1px solid #eee;
+}
+
+.navbar-item {
+    color: #444 !important;
+}
+
+.title {
+    color: #222 !important;
+}
+
+.subtitle {
+    color: #777 !important;
+}
+
+.box {
+    background-color: #ffffff;
+    border: 1px solid #e5e5e5;
+}
+
+.navbar-item:hover,
+.navbar-link:hover {
+    background-color: transparent !important;
+    color: #b5956a !important;
+}
