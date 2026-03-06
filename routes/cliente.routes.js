@@ -4,6 +4,7 @@
 
 const express = require('express')
 const router = express.Router()
+// const clienteControlador = require('../controllers/cliente.controller.js')
 
 // Llamadas de controlador
 const clienteControlador = require('../controllers/cliente.controller.js')
