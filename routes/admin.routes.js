@@ -1,15 +1,27 @@
 const express = require('express')
 const router = express.Router()
 
-router.get('/', (req, res) => res.render('admin/admindashboard'))
-router.get('/ingredients', (req, res) => res.render('admin/ingredients'))
-router.get('/products', (req, res) => res.render('admin/products'))
-router.get('/royalty', (req, res) => res.render('admin/royalty'))
-router.get('/collaborators', (req, res) => res.render('admin/collaborators'))
-router.get('/orders', (req, res) => res.render('admin/orders'))
-router.get('/promotions', (req, res) => res.render('admin/promotions'))
-router.get('/events', (req, res) => res.render('admin/events'))
-router.get('/whatsapp', (req, res) => res.render('admin/whatsapp'))
-router.get('/cliente', (req, res) => res.render('menu'))
+// Llamada a controlador de Admin
+const adminControlador = require('../controllers/admin.controlador.js')
+
+// Dashboard principal
+router.get('/', adminControlador.getHub)
+// Cada sección del dashboard uu que rico
+router.get('/ingredientes', adminControlador.getIngredients)
+
+router.get('/productos', adminControlador.getProducts)
+
+router.get('/royalty', adminControlador.getRoyalty)
+router.get('/royaltyMetrics', adminControlador.getRoyaltyMetrics)
+
+router.get('/colaboradores', adminControlador.getCollaborators)
+
+router.get('/ordenes', adminControlador.getOrders)
+
+router.get('/promociones', adminControlador.getPromotions)
+
+router.get('/eventos', adminControlador.getEvents)
+
+router.get('/mensajes', adminControlador.getMensajes)
 
 module.exports = router

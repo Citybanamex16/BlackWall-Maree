@@ -1,11 +1,20 @@
+// Configuración Express y enrutamiento
+
+// TODOS ESTOS SON TIPO /cliente
+
 const express = require('express')
 const router = express.Router()
 // const clienteControlador = require('../controllers/cliente.controller.js')
 
-router.get('/hours', (req, res) => res.render('cliente/hours'))
-router.get('/promotions', (req, res) => res.render('cliente/promotions'))
-router.get('/record', (req, res) => res.render('cliente/record'))
-router.get('/royalty', (req, res) => res.render('cliente/royalty'))
-router.get('/order', (req, res) => res.render('cliente/order'))
+// Llamadas de controlador
+const clienteControlador = require('../controllers/cliente.controller.js')
+
+// Middlewares de enrutamiento -> router.metodo('/url', controlador.metodo)
+
+router.get('/', clienteControlador.getMenu)
+router.get('/royalty', clienteControlador.getRoyalty)
+router.get('/orden', clienteControlador.getOrden)
+router.get('/login', clienteControlador.getLogin)
+router.post('/login', clienteControlador.postLogin)
 
 module.exports = router
