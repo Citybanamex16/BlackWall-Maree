@@ -13,12 +13,15 @@ appServer.set('views', 'views')
 const clienteRutes = require('./routes/cliente.routes.js')
 const adminRutes = require('./routes/admin.routes.js')
 
-appServer.get('/', (req, res) => res.render('menu'))
-
 appServer.use('/cliente', clienteRutes)
 appServer.use('/admin', adminRutes)
 
-// Middlewares Globales de enrutamiento
+// Middlewares Globales de enrutamiento & redirects
+
+// ¡No debemos renderizar en Server!
+appServer.get('/', (req, response) => {
+  response.redirect('/cliente/menu')
+})
 
 // 404 (Ruta no encontrada)
 appServer.use((req, res, next) => {

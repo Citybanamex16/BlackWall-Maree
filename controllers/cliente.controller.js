@@ -10,17 +10,17 @@ const nav = require('../models/breadcrumbs.model.js')
 
 exports.getMenu = (request, response, next) => {
   const breadcrumbs = nav.getBreadcrumbs('Menu')
-  response.render('cliente/login', { breadcrumbs })
+  response.render('cliente/menu', { breadcrumbs })
 }
 
 exports.getRoyalty = (request, response, next) => {
   const breadcrumbs = nav.getBreadcrumbs('Royalty')
-  response.render('cliente/login', { breadcrumbs })
+  response.render('cliente/royalty', { breadcrumbs })
 }
 
 exports.getOrden = (request, response, next) => {
   const breadcrumbs = nav.getBreadcrumbs('Orden')
-  response.render('cliente/login', { breadcrumbs })
+  response.render('cliente/order', { breadcrumbs })
 }
 
 exports.getLogin = (request, response, next) => {

@@ -17,15 +17,10 @@
             <span class="logo-sub">LOVE AT FIRST CRÊPE</span>
         </a>
     </div>
-    <div class="navbar-menu">
-        <div class="navbar-end">
-            <a href="/" class="navbar-item active-link">Menu</a>
-            <a href="/cliente/hours" class="navbar-item">Hours</a>
-            <a href="/cliente/promotions" class="navbar-item">Promotions</a>
-            <a href="/cliente/record" class="navbar-item">Record Visit</a>
-            <a href="/admin" class="navbar-item">Admin</a>
-        </div>
-    </div>
+
+    <%- include('../partials/breadcrumbs') %>
+  
+
 </nav>
 
 <section class="section">
@@ -734,7 +729,7 @@
 
 <!-- COLUMNA DERECHA: ORDER -->
         <div class="order-column">
-            <a href="/cliente/order" class="order-btn-card">
+            <a href="/cliente/orden" class="order-btn-card">
                 <div class="order-btn-icon">🛒</div>
                 <div class="order-btn-text">
                     <span class="order-btn-title">Ver Resumen de Pedido</span>

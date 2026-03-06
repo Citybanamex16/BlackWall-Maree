@@ -15,16 +15,10 @@
     <div class="navbar-brand">
         <span class="navbar-item logo">MARÉE</span>
     </div>
-    <div class="navbar-menu">
-        <div class="navbar-end">
-            <a href="/" class="navbar-item">Menu</a>
-            <a href="/cliente/hours" class="navbar-item">Hours</a>
-            <a href="/cliente/promotions" class="navbar-item">Promotions</a>
-            <a href="/cliente/record" class="navbar-item">Record Visit</a>
-            <a href="/admin" class="navbar-item active-link">Admin</a>
-        </div>
-    </div>
+
 </nav>
+
+    <%- include('../partials/breadcrumbs') %>
 
 <section class="section">
     <div class="container">
@@ -35,14 +29,14 @@
         <div class="grid dashboard-grid">
 
             <div class="cell">
-                <a href="/admin/ingredients" class="box dashboard-card">
+                <a href="/admin/ingredientes" class="box dashboard-card">
                     <div class="icon-circle blue">📦</div>
                     <p>Ingredients</p>
                 </a>
             </div>
 
             <div class="cell">
-                <a href="/admin/products" class="box dashboard-card">
+                <a href="/admin/productos" class="box dashboard-card">
                     <div class="icon-circle green">🛍️</div>
                     <p>Products</p>
                 </a>
@@ -56,35 +50,35 @@
             </div>
 
             <div class="cell">
-                <a href="/admin/collaborators" class="box dashboard-card">
+                <a href="/admin/colaboradores" class="box dashboard-card">
                     <div class="icon-circle purple">👥</div>
                     <p>Colaborators/Employees</p>
                 </a>
             </div>
 
             <div class="cell">
-                <a href="/admin/orders" class="box dashboard-card">
+                <a href="/admin/ordenes" class="box dashboard-card">
                     <div class="icon-circle red">📋</div>
                     <p>Active Orders</p>
                 </a>
             </div>
 
             <div class="cell">
-                <a href="/admin/promotions" class="box dashboard-card">
+                <a href="/admin/promociones" class="box dashboard-card">
                     <div class="icon-circle pink">🏷️</div>
                     <p>Promotions</p>
                 </a>
             </div>
 
             <div class="cell">
-                <a href="/admin/events" class="box dashboard-card">
+                <a href="/admin/eventos" class="box dashboard-card">
                     <div class="icon-circle teal">📅</div>
                     <p>Events</p>
                 </a>
             </div>
 
             <div class="cell">
-                <a href="/admin/whatsapp" class="box dashboard-card">
+                <a href="/admin/mensajes" class="box dashboard-card">
                     <div class="icon-circle whatsapp">💬</div>
                     <p>WhatsApp</p>
                 </a>
