@@ -10,8 +10,26 @@ const nav = require('../models/breadcrumbs.model.js')
 
 exports.getMenu = (request, response, next) => {
   const breadcrumbs = nav.getBreadcrumbs('Menu')
-  response.render('cliente/menu', { breadcrumbs })
+  response.render('cliente/menu', { breadcrumbs})
 }
+
+
+
+exports.logout = (request, response, next) => {
+    // 1. Destruye la sesión en el servidor
+    console.log("Llamando a logout")
+    request.session.destroy((err) => {
+        if (err) {
+            console.error("Error al cerrar sesión:", err);
+            return next(err);
+        }
+        // 2. Limpia la cookie del navegador (el nombre por defecto es 'connect.sid')
+        response.clearCookie('connect.sid');
+        
+        // 3. Redirige al login o al inicio
+        response.redirect('/cliente/menu'); 
+    });
+};
 
 exports.getRoyalty = (request, response, next) => {
   const breadcrumbs = nav.getBreadcrumbs('Royalty')
@@ -29,16 +47,18 @@ exports.getLogin = (request, response, next) => {
 }
 
 exports.postLogin = (request, response, next) => {
-  let body = ''
-  // 1. Almacenamos para procesar
-  request.on('data', chunk => {
-    body += chunk.toString()
-  })
-  // 2. traducirlos para manipular
-  request.on('end', () => {
-    const datos = querystring.parse(body)
-    console.log(`Cuenta registrada bajo nombre de ${datos.nombre} con numero telefonico: ${datos.telefono}`)
-    // 3. respondemos
-    response.redirect('/cliente/login')
-  })
+  console.log(request.body.nombre)
+  request.session.password = request.body.telefono
+  request.session.name = request.body.nombre
+
+  // 3. respondemos
+  response.redirect('/cliente/menu')
+
 }
+
+exports.logOut = (request, response, next) => {
+
+}
+
+
+
