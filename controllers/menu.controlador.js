@@ -18,3 +18,33 @@ exports.getPlatillo = (request, response, next) => {
   // productos.fetchOne(request.body)
   response.status(200).json({ message: 'Respuesta asíncrona' })
 }
+
+exports.getProducts = (req, res, next) => {
+  res.render('admin/products')
+}
+
+//Dummys
+const dummyTypes = [
+    { id: 1, nombre: "Platillo"},
+    { id: 2, nombre: "Bebida"}
+];
+
+exports.getModalForms = (req,res,next) => {
+  //1. Debemos de consultar los tipos de 
+  //const productTypes = productos.getAllProductTypes().then().catch()
+  console.log("Controlador obteniendo tipos de Productos")
+  //Enviamos Datos JSON a Front
+  res.status(200).json({
+    succes:true,
+    message:'Tipos recuperados',
+    data:dummyTypes
+  })
+
+}
+
+
+
+
+
+
+

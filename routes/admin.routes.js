@@ -8,7 +8,6 @@ router.get('/', adminControlador.getHub)
 // Cada sección del dashboard uu que rico
 router.get('/ingredientes', adminControlador.getIngredients)
 
-router.get('/productos', adminControlador.getProducts)
 
 router.get('/royalty', adminControlador.getRoyalty)
 router.get('/royaltyMetrics', adminControlador.getRoyaltyMetrics)

@@ -80,3 +80,30 @@ body {
     background-color: transparent !important;
     color: #b5956a !important;
 }
+
+
+
+/* Clase global para boton flotante en esquina inferior derecha Floating Action Button */
+.fab{
+     /* 1. Lo saca del flujo normal del documento */
+    position: fixed; 
+    
+    /* 2. Ubicación (puedes ajustar los pixeles a tu gusto) */
+    bottom: 24px;
+    right: 24px;
+    
+    /* 3. Asegura que siempre esté al frente */
+    z-index: 999; 
+    
+    /* 4. Evita que el botón se deforme si el texto es largo */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    
+    /* 5. Mejora la experiencia en móviles (opcional pero recomendado) */
+    cursor: pointer;
+    touch-action: manipulation;
+}
+
+
+

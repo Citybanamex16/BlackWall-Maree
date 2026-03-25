@@ -35,9 +35,12 @@ const clienteRutes = require('./routes/cliente.routes.js')
 const adminRutes = require('./routes/admin.routes.js')
 const menuRutes = require('./routes/menu.routes.js')
 
+//Prefijos De Routes
 appServer.use('/cliente', clienteRutes)
 appServer.use('/admin', adminRutes)
-appServer.use('/menu', menuRutes)
+appServer.use('/menu', menuRutes) //Modulo de Menu Digital
+
+
 
 // ¡No debemos renderizar en Server!
 appServer.get('/', (req, response) => {
