@@ -33,11 +33,6 @@ exports.getRoyalty = (request, response, next) => {
   response.render('cliente/royalty', { breadcrumbs })
 }
 
-exports.getOrden = (request, response, next) => {
-  const breadcrumbs = nav.getBreadcrumbs('Orden')
-  response.render('cliente/order', { breadcrumbs })
-}
-
 exports.getLogin = (request, response, next) => {
   const breadcrumbs = nav.getBreadcrumbs('LogIn')
   response.render('cliente/login', { breadcrumbs })
