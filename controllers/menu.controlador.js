@@ -86,3 +86,15 @@ exports.getProductRegisterForms = (req, res, next) => {
   }
   */
 }
+
+exports.postNewProduct = (req,res,nex) => {
+  const NewProductData = req.body
+  console.log(NewProductData)
+  console.log(`Registrando nuevo producto: $`)
+
+  res.status(201).json({
+      ok: true,
+      message: 'Producto registrado exitosamente'
+    });
+
+}

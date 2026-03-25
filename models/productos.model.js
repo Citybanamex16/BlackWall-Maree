@@ -19,4 +19,9 @@ module.exports = class Producto {
   static async getAllIngredientes () {
     return db.execute('SELECT * FROM ?', ['insumos'])
   }
+
+
+  sttaic async insertNewProduct(){
+    return db.execute('INSERT INTO PRODUCTOS VALUES ()')
+  }
 }
