@@ -5,13 +5,14 @@ const router = express.Router()
 // Llamadas de controlador
 const menuControlador = require('../controllers/menu.controlador.js')
 
-//Rutas Menu cliente
+// Rutas Menu cliente
 router.get('/menu', menuControlador.getMenu)
 router.get('/orden', menuControlador.getOrden)
 router.get('/consultaplatillo', menuControlador.getPlatillo)
 
-//Rutas Admin
+// Rutas Admin
 router.get('/productos', menuControlador.getProducts)
-router.get('/formsTipoPlatillo',menuControlador.getModalForms)
+router.get('/formsTipoPlatillo', menuControlador.getModalForms)
+router.get('/formsRegistraPlatillo',menuControlador.getProductRegisterForms)
 
 module.exports = router
