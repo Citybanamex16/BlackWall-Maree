@@ -26,17 +26,22 @@ appServer.use((req, res, next) => {
   res.locals.nombreUsuario = req.session.name || null
   next()
 })
+const bodyParser = require('body-parser')
+appServer.use(bodyParser.urlencoded({ extended: false }))
+appServer.use(bodyParser.json())
 
 // Sección de Routers
 const clienteRutes = require('./routes/cliente.routes.js')
 const adminRutes = require('./routes/admin.routes.js')
+const menuRutes = require('./routes/menu.routes.js')
 
 appServer.use('/cliente', clienteRutes)
 appServer.use('/admin', adminRutes)
+appServer.use('/menu', menuRutes)
 
 // ¡No debemos renderizar en Server!
 appServer.get('/', (req, response) => {
-  response.redirect('/cliente/menu')
+  response.redirect('/menu/menu')
 })
 
 // 404 (Ruta no encontrada)
