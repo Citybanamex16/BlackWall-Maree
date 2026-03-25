@@ -23,19 +23,46 @@
         <span>Añadir Producto</span>
     </a>
 
-
-
-
-
 <!-- Sección de modals-->
 
 <dialog id="TypeFormsCU04">
   <h2 id="tituloModal">Título dinámico</h2>
   <p>Elige una opción:</p>
-  <button id="btnA">Opción A</button>
-  <button id="btnB">Opción B</button>
   <br>
   <button id="cerrarModal" style="margin-top: 10px;">Cerrar</button>
+</dialog>
+
+
+<dialog id="RegisterFormsCU04">
+  <h2 id="formsRegistrarTitulo">Título dinámico</h2>
+
+  <form id="formsRegistrarForm" novalidate>
+    <!-- Los campos se inyectan aquí dinámicamente -->
+
+        <!-- Contenedor del Dropdown -->
+    <div class="field">
+      <label class="label">Seleccionar opción</label>
+      <div class="control">
+        <div class="select is-fullwidth"> 
+          <!-- Aquí es donde inyectarás los <option> -->
+          <select id="DropdownIngredientes" name="miDropdownDinamico">
+            <option value="">Cargando opciones...</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+
+  </form>
+
+  <div class="field is-grouped is-grouped-right" style="margin-top: 16px;">
+    <div class="control">
+      <button id="cerrarFormsRegistrar" type="button" class="button is-light">Cancelar</button>
+    </div>
+    <div class="control">
+      <button id="submitFormsRegistrar" type="submit" form="formsRegistrarForm" class="button is-primary">Guardar</button>
+    </div>
+  </div>
 </dialog>
 
 
