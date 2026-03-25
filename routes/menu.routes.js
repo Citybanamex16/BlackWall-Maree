@@ -13,6 +13,6 @@ router.get('/consultaplatillo', menuControlador.getPlatillo)
 // Rutas Admin
 router.get('/productos', menuControlador.getProducts)
 router.get('/formsTipoPlatillo', menuControlador.getModalForms)
-router.get('/formsRegistraPlatillo',menuControlador.getProductRegisterForms)
+router.get('/formsRegistraPlatillo', menuControlador.getProductRegisterForms)
 
 module.exports = router
