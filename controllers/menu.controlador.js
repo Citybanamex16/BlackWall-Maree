@@ -37,18 +37,18 @@ exports.getModalForms = (req, res, next) => {
   res.status(200).json({
     succes: true,
     message: 'Tipos recuperados',
-    data: dummyTypes //matriz [{},{}]
+    data: dummyTypes // matriz [{},{}]
   })
 }
 
 const dummyFields = [
-  { "nombre": "ID_Producto", "type": "int" },
-  { "nombre": "Nombre", "type": "string" },
-  { "nombre": "Precio", "type": "float" },
-  { "nombre": "Disponible", "type": "boolean" },
-  { "nombre": "Tipo", "type": "string" },
-  { "nombre": "Tamaño", "type": "string" },
-  { "nombre": "Imagen", "type": "string" }
+  { nombre: 'ID_Producto', type: 'int' },
+  { nombre: 'Nombre', type: 'string' },
+  { nombre: 'Precio', type: 'float' },
+  { nombre: 'Disponible', type: 'boolean' },
+  { nombre: 'Tipo', type: 'string' },
+  { nombre: 'Tamaño', type: 'string' },
+  { nombre: 'Imagen', type: 'string' }
 ]
 
 const ingredientesDummy = [
@@ -58,30 +58,27 @@ const ingredientesDummy = [
   { id: 4, nombre: 'Jamón de Pavo', categoria: 'Salado', precio: 14.00 },
   { id: 5, nombre: 'Cajeta', categoria: 'Dulce', precio: 11.50 },
   { id: 6, nombre: 'Champiñones', categoria: 'Salado', precio: 13.00 }
-];
+]
 
-
-
-
-exports.getProductRegisterForms = (req,res,next) =>{
+exports.getProductRegisterForms = (req, res, next) => {
   /*
   try{
 
   }
   */
   const typeId = req.query.id
-  console.log("Tipo de producto seleccionado fue: ", typeId)
-//1. Consultar Campos de Tabla
-//const ProductFields = async productos.getProductFields()
+  console.log('Tipo de producto seleccionado fue: ', typeId)
+  // 1. Consultar Campos de Tabla
+  // const ProductFields = async productos.getProductFields()
   const ProductFields = dummyFields
 
-//2. Consultar Ingredientes existentes
-  //const AllIngredientes = async productos.getAllIngredientes()
+  // 2. Consultar Ingredientes existentes
+  // const AllIngredientes = async productos.getAllIngredientes()
   const AllIngredientes = ingredientesDummy
   res.status(200).json({
     succes: true,
     message: 'Campos e Ingredientes recuperados',
-    data: {'Fields':ProductFields,'Ingredientes':AllIngredientes}
+    data: { Fields: ProductFields, Ingredientes: AllIngredientes }
   })
   /*
   catch{
@@ -89,7 +86,3 @@ exports.getProductRegisterForms = (req,res,next) =>{
   }
   */
 }
-
-
-
-

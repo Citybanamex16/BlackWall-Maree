@@ -38,15 +38,14 @@
 
   <form id="formsRegistrarForm" novalidate>
     <!-- Los campos se inyectan aquí dinámicamente -->
-
         <!-- Contenedor del Dropdown -->
     <div class="field">
-      <label class="label">Seleccionar opción</label>
+      <label class="label">Seleccionar un Ingrediente</label>
       <div class="control">
         <div class="select is-fullwidth"> 
           <!-- Aquí es donde inyectarás los <option> -->
           <select id="DropdownIngredientes" name="miDropdownDinamico">
-            <option value="">Cargando opciones...</option>
+            <option value="">Selecciona un ingrediente</option>
           </select>
         </div>
       </div>
@@ -64,6 +63,25 @@
     </div>
   </div>
 </dialog>
+
+
+<dialog id="SummaryCU04">
+  <h2 id="SummaryTitleModal">Título dinámico</h2>
+  <p>Elige una opción:</p>
+  <br>
+  <button id="cerrarSummaryModal" style="margin-top: 10px;">Cerrar</button>
+</dialog>
+
+
+<!-- Dialogo de error con ID -->
+<dialog id="InvalidaDataRegister" class="error-modal">
+    <h2>Error: Datos invalidos</h2>
+    <p>Dato invalido en Formulario, favor de corregirlo</p>
+    <!-- Botón con ID para manipularlo desde JS -->
+    <button id="closeInvalidData">Cerrar</button>
+</dialog>
+
+
 
 
 <script src="/js/menudigital/adminProducts.js"></script>

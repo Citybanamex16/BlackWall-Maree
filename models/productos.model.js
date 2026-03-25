@@ -7,17 +7,16 @@ module.exports = class Producto {
 
   // funcion para los tipos de productos existentes
   static async getProductTypes () {
-    return db.execute('SELECT * FROM ?',[Tipos]) // Query que regresa TODOS los tipos de productos
+    return db.execute('SELECT * FROM ?', ['Tipos']) // Query que regresa TODOS los tipos de productos
   }
 
-  //Función para obtener los campos de la Tabla Productos
-  static async getProductFields(){
-    return db.execute('SHOW COLUMNS FROM ?',[producto])
+  // Función para obtener los campos de la Tabla Productos
+  static async getProductFields (producto) {
+    return db.execute('SHOW COLUMNS FROM ?', ['producto'])
   }
 
-  //Función para obtener los ingredientes pertenecientes a un tipo
-  static async getAllIngredientes(){
-    return db.execute('SELECT * FROM ?',[Insumos])
+  // Función para obtener los ingredientes pertenecientes a un tipo
+  static async getAllIngredientes () {
+    return db.execute('SELECT * FROM ?', ['insumos'])
   }
-
 }
