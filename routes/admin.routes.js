@@ -3,7 +3,6 @@ const router = express.Router()
 
 // Llamada a controlador de Admin
 const adminControlador = require('../controllers/admin.controlador.js')
-
 // Dashboard principal
 router.get('/', adminControlador.getHub)
 // Cada sección del dashboard uu que rico
