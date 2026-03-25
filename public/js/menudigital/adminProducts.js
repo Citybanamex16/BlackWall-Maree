@@ -264,6 +264,7 @@ function createProductRegisterForms (Fields, Ingredientes, type) {
 const SummaryModal = document.getElementById('SummaryCU04')
 const SummaryFormTitle = document.getElementById('SummaryTitleModal')
 const SummaryFormClose = document.getElementById('cerrarSummaryModal')
+const SummaryRegisterbtn = document.getElementById('RegisterProduct')
 
 function createSummaryElement (title, content) {
   const wrapper = document.createElement('div')
@@ -310,10 +311,61 @@ function ShowProductSummary (Registerdata, type) {
     // FA: Cancelar confirmacion
     RegisterFormModal.showModal() // Volvemos a abrir el Formulario de registro
     SummaryModal.close()
-  })
+  },{ once: true })
+
+  SummaryRegisterbtn.addEventListener('click', async (event) => {
+    //Send de los Datos del Summary
+    event.preventDefault()
+    registerNewProduct(Registerdata)
+  },{ once: true })
 
   SummaryModal.showModal()
 }
+
+
+async function registerNewProduct(NewProductData){
+  try{
+      console.log("POST NEW PRODUCT")
+      const postrequest = await fetch('/menu/registerNewProduct',{
+        method:'POST',
+        headers:{'Content-Type':'application/JSON'},
+        body:JSON.stringify(NewProductData)
+      })
+
+      if(postrequest.ok){
+        console.log("¡Exito!")
+        //Mostramos modal de exito
+        console.log(NewProductData)
+        showSuccessModal(NewProductData.Nombre)
+      }
+      else{
+        console.log("!Fracaso! status: ", postrequest)
+
+      }
+
+    }
+    catch (error){
+      console.error("Error en el Registro de nuevo Producto: ", error)
+
+
+    }
+}
+
+
+const SuccessModal = document.getElementById('ModalExito')
+const Successitle = document.getElementById('TituloExito')
+function showSuccessModal(productName){
+  Successitle.innerText = `Registro de ${productName} exitoso`
+  SuccessModal.showModal()
+
+}
+
+const Successbtn= document.getElementById('closeExito').addEventListener('click',(event) =>{
+  event.preventDefault()
+  closeAllModals()
+})
+
+
 
 // Funcion validar datos de Formulario
 function validarDatosRegistro (data) {
@@ -335,4 +387,19 @@ function limpiarModal (contenedor) {
   // BUSCA SOLO ADENTRO: contenedor.querySelectorAll en vez de document
   const dinamicos = contenedor.querySelectorAll('.is-dynamic')
   dinamicos.forEach(el => el.remove())
+}
+
+
+//Funcion para cerrar TODOS los modals
+function closeAllModals(){
+  // 1. Recolecta todos los <dialog> que tienen la clase 'modal'
+  const modales = document.querySelectorAll('dialog.mymodal');
+
+  // 2. Itera sobre cada modal encontrado
+  modales.forEach(modal => {
+    // 3. Cierra el modal usando el método nativo del DOM
+    modal.close();
+  });
+  
+  console.log(`${modales.length} modales cerrados.`);
 }

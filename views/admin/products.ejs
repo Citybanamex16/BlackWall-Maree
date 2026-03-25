@@ -23,9 +23,10 @@
         <span>Añadir Producto</span>
     </a>
 
+
 <!-- Sección de modals-->
 
-<dialog id="TypeFormsCU04">
+<dialog id="TypeFormsCU04" class="mymodal">
   <h2 id="tituloModal">Título dinámico</h2>
   <p>Elige una opción:</p>
   <br>
@@ -33,7 +34,7 @@
 </dialog>
 
 
-<dialog id="RegisterFormsCU04">
+<dialog id="RegisterFormsCU04" class="mymodal">
   <h2 id="formsRegistrarTitulo">Título dinámico</h2>
 
   <form id="formsRegistrarForm" novalidate>
@@ -65,16 +66,27 @@
 </dialog>
 
 
-<dialog id="SummaryCU04">
+<dialog id="SummaryCU04" class="mymodal">
   <h2 id="SummaryTitleModal">Título dinámico</h2>
   <p>Elige una opción:</p>
   <br>
   <button id="cerrarSummaryModal" style="margin-top: 10px;">Cerrar</button>
+  <button id="RegisterProduct" style="margin-top: 10px;">Registrar Nuevo Producto</button>
+</dialog>
+
+<!-- Dialogo de ¡EXITO!-->
+<dialog id="ModalExito" class="error-modal mymodal">
+    <h2 id = "TituloExito">Titulo Dinamico</h2>
+    <p>Tu platillo se a registrado de manera correcta</p>
+    <!-- Botón con ID para manipularlo desde JS -->
+    <button id="closeExito">Regresar a Catalogo</button>
 </dialog>
 
 
-<!-- Dialogo de error con ID -->
-<dialog id="InvalidaDataRegister" class="error-modal">
+
+
+<!-- Dialogo de error -->
+<dialog id="InvalidaDataRegister" class="error-modal mymodal">
     <h2>Error: Datos invalidos</h2>
     <p>Dato invalido en Formulario, favor de corregirlo</p>
     <!-- Botón con ID para manipularlo desde JS -->
