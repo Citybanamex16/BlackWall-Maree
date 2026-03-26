@@ -37,14 +37,14 @@ exports.getCatalogosEvento = async (req, res, next) => {
   try {
     const [promos] = await Eventos.fetchAllPromociones()
     const [royalties] = await Eventos.fetchAllRoyalties()
-    const [platillos] = await Eventos.fetchAllPlatillos()
+    const [productos] = await Eventos.fetchAllProductos()
 
     res.status(200).json({
       success: true,
       data: {
         promociones: promos,
         royalties,
-        platillos
+        productos
       }
     })
   } catch (error) {

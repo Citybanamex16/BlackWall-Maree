@@ -42,14 +42,14 @@ module.exports = class Producto {
   }
 
   static fetchAllPromociones () {
-    return db.execute('SELECT id, nombre FROM promociones')
+    return db.execute('SELECT id_promo, nombre FROM promociones')
   }
 
-  static fetchAllRoyalty () {
-    return db.execute('SELECT id, nombre FROM promociones')
+  static fetchAllRoyalties () {
+    return db.execute('SELECT nombre FROM status_royalty')
   }
 
-  static fetchAllPlatillos () {
-    return db.execute('SELECT id, nombre FROM promociones')
+  static fetchAllProductos () {
+    return db.execute('SELECT id_producto, nombre_producto FROM producto')
   }
 }
