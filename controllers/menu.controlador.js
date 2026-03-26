@@ -1,6 +1,6 @@
-// Llamar al model
+// Llamar a models
 const nav = require('../models/breadcrumbs.model.js')
-// const productos = require('../models/productos.model.js')
+const productos = require('../models/productos.model.js')
 
 exports.getMenu = (request, response, next) => {
   const breadcrumbs = nav.getBreadcrumbs('Menu')
@@ -57,8 +57,6 @@ const ingredientesDummy = [
   { id: 6, nombre: 'Champiñones', categoria: 'Salado', precio: 13.00 }
 ]
 
-  
-
 exports.getProductRegisterForms = (req, res, next) => {
   /*
   try{
@@ -87,12 +85,24 @@ exports.getProductRegisterForms = (req, res, next) => {
 }
 
 exports.postNewProduct = (req, res, nex) => {
+  console.log("POST recibido: ", req.body)
   const NewProductData = req.body
-  console.log(NewProductData)
-  console.log('Registrando nuevo producto: $')
+  const validation = productos.ValidarDatosRegistro(NewProductData)
 
-  res.status(500).json({
-    ok: false,
-    message: 'MEH esta mal hola desde Backend'
+  if(validation){
+    res.status(200).json({
+    ok: true,
+    message: 'Datos validados y correctos :)'
   })
+
+  }
+  else{
+    res.status(404).json({
+    ok: false,
+    message: 'Datos no validos'
+  })
+
+  }
+  
+  
 }

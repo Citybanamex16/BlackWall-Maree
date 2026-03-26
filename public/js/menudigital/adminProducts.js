@@ -1,5 +1,5 @@
 // JS FRONTEND de la vista de Productos del Admin
-let ProductType = null
+
 
 /* CU Registrar Nuevo Producto */
 // 1. Referencia a Boton
@@ -53,7 +53,7 @@ function registerButtonOnClick (event) {
         newbtn.onclick = async (event) => {
           event.preventDefault()
           typeFormsModal.close() // Cerramos el Modal Actual
-          ProductType = t.id
+          const ProductType =  t.id // Seguridad de Type :)
           await seleccionarTipoProducto(ProductType)
         }
         // 5. Lo inyectamos al DOM
@@ -72,7 +72,6 @@ function registerButtonOnClick (event) {
       console.error('Erro en datos Type product CU04: ', error)
     })
 }
-
 
 async function seleccionarTipoProducto (id) {
   // Equivalente a los .then()
@@ -98,10 +97,6 @@ async function seleccionarTipoProducto (id) {
     console.log('No se pudo cargar la configuración del producto.')
   }
 }
-
-
-
-
 
 /* == Funcion de creación de Modal Registrar Producto == */
 
@@ -175,47 +170,47 @@ function createFieldElement (field) {
 /* ══════════════════════════════════════════════════════
    REFERENCIAS DEL DOM
 ══════════════════════════════════════════════════════ */
-const RegisterFormModal  = document.getElementById('RegisterFormsCU04')
-const RegisterFormTitle  = document.getElementById('formsRegistrarTitulo')
-const RegisterFormClose  = document.getElementById('cerrarFormsRegistrar')
-const RegisterFormEl     = document.getElementById('formsRegistrarForm')
+const RegisterFormModal = document.getElementById('RegisterFormsCU04')
+const RegisterFormTitle = document.getElementById('formsRegistrarTitulo')
+const RegisterFormClose = document.getElementById('cerrarFormsRegistrar')
+const RegisterFormEl = document.getElementById('formsRegistrarForm')
 
 /* ══════════════════════════════════════════════════════
    ESTADO DE INGREDIENTES
 ══════════════════════════════════════════════════════ */
 const MAX_INGREDIENTES = 10
-let ingCount = 1             // empieza en 1 (la fila 0 que se crea en createProductRegisterForms)
-let catalogoIng = []         // se guarda al abrir el modal para reutilizar en cada fila nueva
+let ingCount = 1 // empieza en 1 (la fila 0 que se crea en createProductRegisterForms)
+let catalogoIng = [] // se guarda al abrir el modal para reutilizar en cada fila nueva
 
 /* ══════════════════════════════════════════════════════
    HELPERS DE INGREDIENTES
 ══════════════════════════════════════════════════════ */
 
 // Tu función original — crea un <option> para el dropdown
-function createIngElement(ing) {
+function createIngElement (ing) {
   console.log('Creando opción de ingrediente...')
   const opt = document.createElement('option')
-  opt.value       = ing.nombre
+  opt.value = ing.nombre
   opt.textContent = `${ing.nombre}: $${ing.precio}`
   return opt
 }
 
 // Rellena un <select> vacío usando createIngElement
-function populateDropdown(selectEl) {
+function populateDropdown (selectEl) {
   selectEl.innerHTML = '<option value="">Selecciona un ingrediente</option>'
   catalogoIng.forEach(ing => selectEl.appendChild(createIngElement(ing)))
 }
 
 // Actualiza el contador "N / 10" y bloquea el botón al llegar al límite
-function updateIngCounter() {
+function updateIngCounter () {
   const counter = document.getElementById('ingCounter')
-  const btnAdd  = document.getElementById('btnAddIngrediente')
+  const btnAdd = document.getElementById('btnAddIngrediente')
   if (counter) counter.textContent = `${ingCount} / ${MAX_INGREDIENTES}`
-  if (btnAdd)  btnAdd.disabled = ingCount >= MAX_INGREDIENTES
+  if (btnAdd) btnAdd.disabled = ingCount >= MAX_INGREDIENTES
 }
 
 // Crea una fila completa: dropdown + input cantidad [+ botón ✕ si no es la primera]
-function createIngRow(index, isFirst = false) {
+function createIngRow (index, isFirst = false) {
   const row = document.createElement('div')
   row.classList.add('ingredient-row')
   row.dataset.ingIndex = index
@@ -226,20 +221,19 @@ function createIngRow(index, isFirst = false) {
   const select = document.createElement('select')
   select.classList.add('ing-dropdown')
   select.name = `ingrediente_${index}`
-  select.dataset.ingField = 'true'    // añade data-ing-field="true"
+  select.dataset.ingField = 'true' // añade data-ing-field="true"
   populateDropdown(select)
   selectWrap.appendChild(select)
 
   // Input cantidad
   const inputCant = document.createElement('input')
   inputCant.classList.add('input', 'ing-cantidad')
-  inputCant.type        = 'number'
-  inputCant.name        = `cantidad_${index}`
+  inputCant.type = 'number'
+  inputCant.name = `cantidad_${index}`
   inputCant.placeholder = 'Cant.'
-  inputCant.min         = '1'
-  inputCant.value       = '1'
-  inputCant.dataset.ingField = 'true' 
-
+  inputCant.min = '1'
+  inputCant.value = '1'
+  inputCant.dataset.ingField = 'true'
 
   row.appendChild(selectWrap)
   row.appendChild(inputCant)
@@ -247,9 +241,9 @@ function createIngRow(index, isFirst = false) {
   // Botón ✕ — solo en filas que no son la primera
   if (!isFirst) {
     const btnRemove = document.createElement('button')
-    btnRemove.type      = 'button'
+    btnRemove.type = 'button'
     btnRemove.classList.add('btn-remove-ing')
-    btnRemove.title     = 'Quitar ingrediente'
+    btnRemove.title = 'Quitar ingrediente'
     btnRemove.textContent = '✕'
     btnRemove.addEventListener('click', () => {
       row.remove()
@@ -263,8 +257,8 @@ function createIngRow(index, isFirst = false) {
 }
 
 // Construye la sección de ingredientes completa e la inyecta en el form
-function buildIngredientsSection() {
-  console.log("BUILDING INGREDIENT SECTION......")
+function buildIngredientsSection () {
+  console.log('BUILDING INGREDIENT SECTION......')
   ingCount = 1
 
   const section = document.createElement('div')
@@ -296,7 +290,7 @@ function buildIngredientsSection() {
 }
 
 // Handler del botón "＋ Agregar ingrediente"
-function onBtnIngNewClick() {
+function onBtnIngNewClick () {
   if (ingCount >= MAX_INGREDIENTES) return
 
   const list = document.getElementById('ingredientsList')
@@ -309,17 +303,17 @@ function onBtnIngNewClick() {
 }
 
 // Lee todos los ingredientes seleccionados
-function getIngredientesSeleccionados() {
+function getIngredientesSeleccionados () {
   return Array.from(
     document.querySelectorAll('#ingredientsList .ingredient-row')
   ).map(row => ({
-    key:   row.querySelector('.ing-dropdown').value,
-    value: row.querySelector('.ing-cantidad').value,
+    key: row.querySelector('.ing-dropdown').value,
+    value: row.querySelector('.ing-cantidad').value
   })).filter(ing => ing.key !== '')
 }
 
 /* == Funcion Central == */
-function createProductRegisterForms(Fields, Ingredientes, type) {
+function createProductRegisterForms (Fields, Ingredientes, type) {
   // Guardar catálogo para usarlo en cada nueva fila
   catalogoIng = Ingredientes
 
@@ -337,6 +331,16 @@ function createProductRegisterForms(Fields, Ingredientes, type) {
   // Construir e inyectar la sección de ingredientes
   RegisterFormEl.appendChild(buildIngredientsSection())
 
+
+  /* ══════════════════════════════════════════════════════
+   LISTENER SUBMIT
+══════════════════════════════════════════════════════ */
+RegisterFormEl.addEventListener('submit', (event) => {
+  event.preventDefault()
+  PostNewProduct(Ingredientes, type)
+})
+
+
   RegisterFormModal.showModal()
 }
 
@@ -348,12 +352,8 @@ RegisterFormClose.addEventListener('click', () => {
   typeFormsModal.showModal()
 })
 
-/* ══════════════════════════════════════════════════════
-   LISTENER SUBMIT 
-══════════════════════════════════════════════════════ */
-RegisterFormEl.addEventListener('submit', (event) => {
-  event.preventDefault()
 
+function PostNewProduct(BackupIngredientes, ProductType) {
   // 1. Validación nativa HTML
   if (!RegisterFormEl.checkValidity()) {
     RegisterFormEl.reportValidity()
@@ -365,8 +365,8 @@ RegisterFormEl.addEventListener('submit', (event) => {
   const data = {}
   formData.forEach((value, key) => {
     const el = RegisterFormEl.querySelector(`[name="${key}"]`)
-    //El '?' sirve para comprobar si el existe -> no hacer ifs ilegibles :)
-    if (el?.dataset.ingField) return  // ← se salta este campo
+    // El '?' sirve para comprobar si el existe -> no hacer ifs ilegibles :)
+    if (el?.dataset.ingField) return // ← se salta este campo
     data[key] = value === '' ? null : value
   })
 
@@ -377,11 +377,14 @@ RegisterFormEl.addEventListener('submit', (event) => {
 
   // 4. Ingredientes — array separado de ingredientes
   const ingredientes = getIngredientesSeleccionados()
-  console.log('Ingredientes Get: ', ingredientes )
-  data.ingredientes = ingredientes   // también va al objeto data para el POST
+  console.log('Ingredientes Get: ', ingredientes)
+  data.ingredientes = ingredientes // también va al objeto data para el POST
+
+  //4.5 Añadir Tipo
+  data.type = ProductType
 
   // 5. Validación de Reglas de negocio
-  const validacion = validarDatosRegistro(data)
+  const validacion = validarDatosRegistro(data, BackupIngredientes)
 
   if (validacion) {
     console.log('Datos válidos :)')
@@ -389,7 +392,7 @@ RegisterFormEl.addEventListener('submit', (event) => {
 
     // Construir array para ShowProductSummary incluyendo ingredientes
     const summaryData = Object.entries(data)
-      .filter(([key]) => key !== 'ingredientes')   // los ingredientes se muestran aparte
+      .filter(([key]) => key !== 'ingredientes') // los ingredientes se muestran aparte
       .map(([key, value]) => ({ key, value }))
 
     // Añadir cada ingrediente como línea en el resumen
@@ -400,16 +403,14 @@ RegisterFormEl.addEventListener('submit', (event) => {
     ShowProductSummary(summaryData, ProductType)
   } else {
     console.log('Datos inválidos ;(')
-    ShowErrorModal('Datos inválidos','Datos Invalidos en Campos de Formulario, favor de corregir')
+    ShowErrorModal('Datos inválidos', 'Datos Invalidos en Campos de Formulario, favor de corregir')
   }
 
   console.log('📋 Datos del formulario:', data)
-})
+}
 /* == FIN Modal Registrar Producto == */
 
-
-
-/*== Conf y Show de Error Modal == */
+/* == Conf y Show de Error Modal == */
 // Error elements references
 const ErrorModal = document.getElementById('ErrorModal')
 const ErrorTitle = document.getElementById('ErrorTitle')
@@ -420,8 +421,7 @@ ErrorCloseBtn.addEventListener('click',
     ErrorModal.close()
   })
 
-
-function ShowErrorModal(title,content){
+function ShowErrorModal (title, content) {
   ErrorTitle.innerText = title
   ErrorContent.innerText = content
   ErrorModal.showModal()
@@ -470,14 +470,14 @@ function ShowProductSummary (Registerdata, type) {
   limpiarModal(SummaryModal)
   console.log('Summary getting: ', Registerdata)
   SummaryFormTitle.innerText = `Resumen de Nuevo ${type}`
-  
+
   // Despliegue de los datos
   Registerdata.forEach((content) => {
-    console.log("Key: ", content.key, " Value: ", content.value);
-    
-    const SummaryEl = createSummaryElement(content.key, content.value); 
-    SummaryModal.insertBefore(SummaryEl, SummaryFormClose);
-});
+    console.log('Key: ', content.key, ' Value: ', content.value)
+
+    const SummaryEl = createSummaryElement(content.key, content.value)
+    SummaryModal.insertBefore(SummaryEl, SummaryFormClose)
+  })
 
   SummaryFormClose.addEventListener('click', (event) => {
     // FA: Cancelar confirmacion
@@ -495,7 +495,7 @@ function ShowProductSummary (Registerdata, type) {
 }
 
 async function registerNewProduct (NewProductData) {
-  const nombre = NewProductData.find(item => item.key === 'Nombre')?.value || "Sin nombre";
+  const nombre = NewProductData.find(item => item.key === 'Nombre')?.value || 'Sin nombre'
   try {
     console.log('POST NEW PRODUCT')
     const postrequest = await fetch('/menu/registerNewProduct', {
@@ -508,9 +508,8 @@ async function registerNewProduct (NewProductData) {
     if (response.ok) {
       console.log('¡Exito!')
       // Mostramos modal de exito
-      showSuccessModal(nombre,ProductType)
-    } 
-    else {
+      showSuccessModal(nombre, ProductType)
+    } else {
       ShowErrorModal(`Error al Registrar ${ProductType}`, response.message || 'Error Desconocido')
 
       console.log('!Fracaso!')
@@ -538,12 +537,39 @@ Successbtn.addEventListener('click', (event) => {
 })
 
 // Funcion validar datos de Formulario
-function validarDatosRegistro (data) {
-  if (data.Precio < 0) {
-    return false
-  } else {
-    return true
+function validarDatosRegistro (Formsdata,catalogoIngredientes) {
+  console.log("Validador Data entrante: ", Formsdata)
+  const data = Object.entries(Formsdata)
+  console.log("Validador Data procesado: ", data)
+
+  const nombresValidos = new Set(catalogoIngredientes.map(ing => ing.nombre))
+
+  for (const field of data) {
+    if (field[1] === null || field[1] === undefined || field[1]=== '') {
+      console.warn(`Campo vacío: ${field[0]}`)
+      return false
+    }
+
+    if (field[0] === 'Precio') {
+      const precio = parseFloat(field[1])
+      if (isNaN(precio) || precio < 0) {
+        console.warn(`Precio inválido: ${field[1]}`)
+        return false
+      }
+    }
+
+    // A. Validar ingredientes contra el catálogo original
+    if (field[0].startsWith('Ingrediente')) {
+      const nombreIngrediente = field[1].split(' × ')[0]  // "Queso Crema × 1" → "Queso Crema"
+      if (!nombresValidos.has(nombreIngrediente)) {
+        console.warn(`Ingrediente no reconocido: ${nombreIngrediente}`)
+        return false
+      }
+    }
   }
+
+    return true
+  
 }
 
 // Funcion para limpiar elementos dinamicos de un Modal
