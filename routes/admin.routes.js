@@ -16,6 +16,7 @@ router.get('/royaltyMetrics', adminControlador.getRoyaltyMetrics)
 router.get('/colaboradores', adminControlador.getCollaborators)
 
 router.get('/ordenes', adminControlador.getOrders)
+router.post('/api/orders/:id/cancel', adminControlador.cancelActiveOrder)
 
 router.get('/promociones', adminControlador.getPromotions)
 
