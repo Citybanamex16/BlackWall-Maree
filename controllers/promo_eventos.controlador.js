@@ -1,4 +1,5 @@
 const Eventos = require('../models/eventos.model')
+const Promociones = require('../models/promociones.model')
 
 exports.getEvents = (req, res, next) => {
   res.render('admin/events')
@@ -55,8 +56,24 @@ exports.getCatalogosEvento = async (req, res, next) => {
   }
 }
 
-exports.getPromotions = (req, res, next) => {
+exports.getPromotionsPage = (req, res, next) => {
   res.render('admin/promotions')
+}
+
+exports.getPromotionsAPI = async (req, res, next) => {
+  try {
+    const [promociones] = await Promociones.fetchAll()
+    res.status(200).json({
+      success: true,
+      message: 'Envio de promociones exitosa',
+      data: promociones
+    })
+  } catch (error) {
+    res.status(500).json({
+      succes: false,
+      message: 'No se pudo hacer el envío promociones'
+    })
+  }
 }
 
 exports.getMensajes = (req, res, next) => {

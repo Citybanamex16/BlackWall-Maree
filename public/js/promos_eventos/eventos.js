@@ -1,11 +1,6 @@
 /* global alert, location */
 
 // eslint-disable-next-line no-unused-vars
-const abrirModal = () => {
-  document.getElementById('modal-evento').classList.add('is-active')
-}
-
-// eslint-disable-next-line no-unused-vars
 const cargarYMostrarModal = async () => {
   const btn = document.getElementById('btn-registrar-evento')
   btn.classList.add('is-loading')
