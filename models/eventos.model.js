@@ -52,4 +52,8 @@ module.exports = class Producto {
   static fetchAllProductos () {
     return db.execute('SELECT id_producto, nombre_producto FROM producto')
   }
+
+  static fetchAll () {
+    return db.execute('SELECT * FROM evento')
+  }
 }
