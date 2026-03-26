@@ -20,11 +20,36 @@ module.exports = class Producto {
     return db.execute('SELECT name FROM ?', ['insumos'])
   }
 
-  static async getAllcategorys(){
-    return db.execute("SELECT name FROM Categorías")
+  static async getAllcategorys () {
+    return db.execute('SELECT name FROM Categorías')
   }
 
   static async insertNewProduct () {
     return db.execute('INSERT INTO PRODUCTOS VALUES ()')
+  }
+
+  static ValidarDatosRegistro (data){
+    let mensaje_error = ''
+
+    for (const field of data) {
+    // 1. Nada puede ser null, undefined, ni string vacío
+    if (field.value === null || field.value === undefined || field.value === '') {
+      mensaje_error += `Campo vacío: ${field.key}, `
+      console.warn(`Campo vacío: ${field.key}`)
+      return false
+      }
+      
+    // 2. Precio no puede ser negativo
+    if (field.key === 'Precio') {
+      const precio = parseFloat(field.value)
+      if (isNaN(precio) || precio < 0) {
+        console.warn(`Precio inválido: ${field.value}`)
+        return false
+      }
+    }
+  }
+
+  return true 
+
   }
 }
