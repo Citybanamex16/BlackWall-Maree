@@ -42,12 +42,9 @@ exports.getModalForms = (req, res, next) => {
 }
 
 const dummyFields = [
-  { nombre: 'ID_Producto', type: 'int' },
   { nombre: 'Nombre', type: 'string' },
   { nombre: 'Precio', type: 'float' },
   { nombre: 'Disponible', type: 'boolean' },
-  { nombre: 'Tipo', type: 'string' },
-  { nombre: 'Tamaño', type: 'string' },
   { nombre: 'Imagen', type: 'string' }
 ]
 
@@ -59,6 +56,8 @@ const ingredientesDummy = [
   { id: 5, nombre: 'Cajeta', categoria: 'Dulce', precio: 11.50 },
   { id: 6, nombre: 'Champiñones', categoria: 'Salado', precio: 13.00 }
 ]
+
+  
 
 exports.getProductRegisterForms = (req, res, next) => {
   /*
@@ -87,14 +86,13 @@ exports.getProductRegisterForms = (req, res, next) => {
   */
 }
 
-exports.postNewProduct = (req,res,nex) => {
+exports.postNewProduct = (req, res, nex) => {
   const NewProductData = req.body
   console.log(NewProductData)
-  console.log(`Registrando nuevo producto: $`)
+  console.log('Registrando nuevo producto: $')
 
-  res.status(201).json({
-      ok: true,
-      message: 'Producto registrado exitosamente'
-    });
-
+  res.status(500).json({
+    ok: false,
+    message: 'MEH esta mal hola desde Backend'
+  })
 }
