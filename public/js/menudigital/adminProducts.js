@@ -1,6 +1,5 @@
 // JS FRONTEND de la vista de Productos del Admin
 
-
 /* CU Registrar Nuevo Producto */
 // 1. Referencia a Boton
 console.log('Iniciando Setup de CU')
@@ -19,6 +18,7 @@ function registerButtonOnClick (event) {
   fetch('/menu/formsTipoPlatillo')
     .then(response => {
       if (!response.ok) {
+        ShowErrorModal('Error Consulta', 'Error en Consulta Tipos de Productos')
         throw new Error('Error en Register Button Click')
       }
       return response.json()
@@ -26,7 +26,8 @@ function registerButtonOnClick (event) {
     .then(objeto => {
       console.log('Objeto recibido en Front')
       console.log('Estructura real de objeto:', objeto)
-      const tiposProductos = objeto.data
+      const tiposProductos = objeto.data[0]
+      console.log('Tipos de productos: ', tiposProductos)
       // console.log("¿Es realmente un Array?:", Array.isArray(tiposProductos));
 
       /* == Despliegue de Modal y HTML DOM == */
@@ -38,22 +39,22 @@ function registerButtonOnClick (event) {
 
       // Creación de Botones de Tipos
       tiposProductos.forEach(t => {
-        console.log(t.nombre)
+        console.log(t.Categoría)
         // 1. Creamos el boton en memoria
         const newbtn = document.createElement('button')
 
         // 2. Asignamos ID y Clases
-        newbtn.id = `btn${t.id}`
+        newbtn.id = `btn${t.Categoría}`
         newbtn.className = 'formsTypebtn button is-info is-dynamic' // aprovechar y poner CSS
 
-        // 3. SEGURIDAD: textContent escapa cualquier código HTML
-        newbtn.textContent = t.nombre
+        // 3. SEGURIDAD: textContent escapa inyección código HTML
+        newbtn.textContent = t.Categoría
 
         // 4. ESCUCHADOR DE CLICKS
         newbtn.onclick = async (event) => {
           event.preventDefault()
           typeFormsModal.close() // Cerramos el Modal Actual
-          const ProductType =  t.id // Seguridad de Type :)
+          const ProductType = t.Categoría // Seguridad de Type :)
           await seleccionarTipoProducto(ProductType)
         }
         // 5. Lo inyectamos al DOM
@@ -69,6 +70,7 @@ function registerButtonOnClick (event) {
       typeFormsModal.showModal()
     })
     .catch(error => {
+      ShowErrorModal('Error Interno', 'Error en Consulta Tipos de Productos')
       console.error('Erro en datos Type product CU04: ', error)
     })
 }
@@ -82,19 +84,18 @@ async function seleccionarTipoProducto (id) {
     const respuesta = await fetch(`/menu/formsRegistraPlatillo?id=${id}`)
 
     if (!respuesta.ok) {
-      throw new Error('Error al obtener formulario de Registro de Producto')
+      ShowErrorModal('Error', 'Error en Consulta campos de Producto e Ingredientes')
     }
 
     const object = await respuesta.json()
     console.log('Datos recibidos:', object)
     // Separación
-
-    const ProductFields = object.data.Fields
-    const AllIngredientes = object.data.Ingredientes
+    const ProductFields = object.data.fields
+    const AllIngredientes = object.data.ingredientes[0]
     createProductRegisterForms(ProductFields, AllIngredientes, id)
   } catch (error) {
     console.error('Hubo un fallo en la operación:', error)
-    console.log('No se pudo cargar la configuración del producto.')
+    ShowErrorModal('Error Interno', `Error en Consulta campos de Producto: ${error}`)
   }
 }
 
@@ -190,8 +191,8 @@ let catalogoIng = [] // se guarda al abrir el modal para reutilizar en cada fila
 function createIngElement (ing) {
   console.log('Creando opción de ingrediente...')
   const opt = document.createElement('option')
-  opt.value = ing.nombre
-  opt.textContent = `${ing.nombre}: $${ing.precio}`
+  opt.value = ing.Nombre
+  opt.textContent = `${ing.Nombre}: $${ing.Precio}`
   return opt
 }
 
@@ -306,15 +307,15 @@ function onBtnIngNewClick () {
 function getIngredientesSeleccionados () {
   return Array.from(
     document.querySelectorAll('#ingredientsList .ingredient-row')
-  ).map(row => ({
-    key: row.querySelector('.ing-dropdown').value,
-    value: row.querySelector('.ing-cantidad').value
-  })).filter(ing => ing.key !== '')
+  )
+    .map(row => row.querySelector('.ing-dropdown').value) // Solo traemos el valor del dropdown
+    .filter(key => key !== '') // Filtramos vacíos
 }
 
 /* == Funcion Central == */
 function createProductRegisterForms (Fields, Ingredientes, type) {
   // Guardar catálogo para usarlo en cada nueva fila
+  console.log('Catalogo de Ingredientes: ', Ingredientes)
   catalogoIng = Ingredientes
 
   // Limpieza del modal
@@ -331,15 +332,13 @@ function createProductRegisterForms (Fields, Ingredientes, type) {
   // Construir e inyectar la sección de ingredientes
   RegisterFormEl.appendChild(buildIngredientsSection())
 
-
   /* ══════════════════════════════════════════════════════
    LISTENER SUBMIT
 ══════════════════════════════════════════════════════ */
-RegisterFormEl.addEventListener('submit', (event) => {
-  event.preventDefault()
-  PostNewProduct(Ingredientes, type)
-})
-
+  RegisterFormEl.addEventListener('submit', (event) => {
+    event.preventDefault()
+    PostNewProduct(Ingredientes, type)
+  })
 
   RegisterFormModal.showModal()
 }
@@ -352,8 +351,7 @@ RegisterFormClose.addEventListener('click', () => {
   typeFormsModal.showModal()
 })
 
-
-function PostNewProduct(BackupIngredientes, ProductType) {
+function PostNewProduct (BackupIngredientes, ProductType) {
   // 1. Validación nativa HTML
   if (!RegisterFormEl.checkValidity()) {
     RegisterFormEl.reportValidity()
@@ -380,7 +378,7 @@ function PostNewProduct(BackupIngredientes, ProductType) {
   console.log('Ingredientes Get: ', ingredientes)
   data.ingredientes = ingredientes // también va al objeto data para el POST
 
-  //4.5 Añadir Tipo
+  // 4.5 Añadir Tipo
   data.type = ProductType
 
   // 5. Validación de Reglas de negocio
@@ -395,9 +393,8 @@ function PostNewProduct(BackupIngredientes, ProductType) {
       .filter(([key]) => key !== 'ingredientes') // los ingredientes se muestran aparte
       .map(([key, value]) => ({ key, value }))
 
-    // Añadir cada ingrediente como línea en el resumen
     ingredientes.forEach((ing, i) => {
-      summaryData.push({ key: `Ingrediente ${i + 1}`, value: `${ing.key} × ${ing.value}` })
+      summaryData.push({ key: `Ingrediente ${i + 1}`, value: ing })
     })
 
     ShowProductSummary(summaryData, ProductType)
@@ -488,13 +485,13 @@ function ShowProductSummary (Registerdata, type) {
   SummaryRegisterbtn.addEventListener('click', async (event) => {
     // Send de los Datos del Summary
     event.preventDefault()
-    registerNewProduct(Registerdata)
+    registerNewProduct(Registerdata, type)
   }, { once: true })
 
   SummaryModal.showModal()
 }
 
-async function registerNewProduct (NewProductData) {
+async function registerNewProduct (NewProductData, ProductType) {
   const nombre = NewProductData.find(item => item.key === 'Nombre')?.value || 'Sin nombre'
   try {
     console.log('POST NEW PRODUCT')
@@ -537,15 +534,15 @@ Successbtn.addEventListener('click', (event) => {
 })
 
 // Funcion validar datos de Formulario
-function validarDatosRegistro (Formsdata,catalogoIngredientes) {
-  console.log("Validador Data entrante: ", Formsdata)
+function validarDatosRegistro (Formsdata, catalogoIngredientes) {
+  console.log('Validador Data entrante: ', Formsdata)
   const data = Object.entries(Formsdata)
-  console.log("Validador Data procesado: ", data)
+  console.log('Validador Data procesado: ', data)
 
   const nombresValidos = new Set(catalogoIngredientes.map(ing => ing.nombre))
 
   for (const field of data) {
-    if (field[1] === null || field[1] === undefined || field[1]=== '') {
+    if (field[1] === null || field[1] === undefined || field[1] === '') {
       console.warn(`Campo vacío: ${field[0]}`)
       return false
     }
@@ -560,7 +557,7 @@ function validarDatosRegistro (Formsdata,catalogoIngredientes) {
 
     // A. Validar ingredientes contra el catálogo original
     if (field[0].startsWith('Ingrediente')) {
-      const nombreIngrediente = field[1].split(' × ')[0]  // "Queso Crema × 1" → "Queso Crema"
+      const nombreIngrediente = field[1].split(' × ')[0] // "Queso Crema × 1" → "Queso Crema"
       if (!nombresValidos.has(nombreIngrediente)) {
         console.warn(`Ingrediente no reconocido: ${nombreIngrediente}`)
         return false
@@ -568,8 +565,7 @@ function validarDatosRegistro (Formsdata,catalogoIngredientes) {
     }
   }
 
-    return true
-  
+  return true
 }
 
 // Funcion para limpiar elementos dinamicos de un Modal

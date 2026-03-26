@@ -23,31 +23,32 @@ exports.getProducts = (req, res, next) => {
   res.render('admin/products')
 }
 
-// Dummys
-const dummyTypes = [
-  { id: 1, nombre: 'Platillo' },
-  { id: 2, nombre: 'Bebida' }
-]
+exports.getTypes = async (req, res, next) => {
+  try {
+    const productTypes = await productos.getAllProductTypes()
 
-exports.getModalForms = (req, res, next) => {
-  // 1. Debemos de consultar los tipos de
-  // const productTypes = productos.getAllProductTypes().then().catch()
-  console.log('Controlador obteniendo tipos de Productos')
-  // Enviamos Datos JSON a Front
-  res.status(200).json({
-    succes: true,
-    message: 'Tipos recuperados',
-    data: dummyTypes // matriz [{},{}]
-  })
+    res.status(200).json({
+      success: true,
+      message: 'Tipos recuperados',
+      data: productTypes
+    })
+  } catch (error) {
+    console.error(error)
+    res.status(500).json({
+      success: false,
+      message: 'Error al obtener los tipos de la BD:'
+    })
+  }
 }
 
-const dummyFields = [
+const ProductFields = [
   { nombre: 'Nombre', type: 'string' },
   { nombre: 'Precio', type: 'float' },
   { nombre: 'Disponible', type: 'boolean' },
   { nombre: 'Imagen', type: 'string' }
 ]
 
+/*
 const ingredientesDummy = [
   { id: 1, nombre: 'Nutella', categoria: 'Dulce', precio: 15.50 },
   { id: 2, nombre: 'Queso Crema', categoria: 'Salado', precio: 12.00 },
@@ -56,53 +57,78 @@ const ingredientesDummy = [
   { id: 5, nombre: 'Cajeta', categoria: 'Dulce', precio: 11.50 },
   { id: 6, nombre: 'Champiñones', categoria: 'Salado', precio: 13.00 }
 ]
+*/
 
-exports.getProductRegisterForms = (req, res, next) => {
-  /*
-  try{
+exports.getProductfieldsAndIngredientes = async (req, res, next) => {
+  try {
+    const { id: typeId } = req.query
 
+    // 2. Validación (Recomendado)
+    if (!typeId) {
+      return res.status(400).json({ error: 'El ID es requerido' })
+    }
+
+    const allIngredientes = await productos.getAllIngredientes(typeId)
+    res.status(200).json({
+      success: true,
+      message: 'Campos e Ingredientes recuperados',
+      data: {
+        fields: ProductFields,
+        ingredientes: allIngredientes
+      }
+    })
+  } catch (error) {
+    console.error('Error en getProductfieldsAndIngredientes:', error)
+    res.status(500).json({ // 500 es más preciso que 404 aquí
+      success: false,
+      message: 'Error al obtener los Ingredientes/Campos del servidor'
+    })
   }
-  */
-  const typeId = req.query.id
-  console.log('Tipo de producto seleccionado fue: ', typeId)
-  // 1. Consultar Campos de Tabla
-  // const ProductFields = async productos.getProductFields()
-  const ProductFields = dummyFields
-
-  // 2. Consultar Ingredientes existentes
-  // const AllIngredientes = async productos.getAllIngredientes()
-  const AllIngredientes = ingredientesDummy
-  res.status(200).json({
-    succes: true,
-    message: 'Campos e Ingredientes recuperados',
-    data: { Fields: ProductFields, Ingredientes: AllIngredientes }
-  })
-  /*
-  catch{
-
-  }
-  */
 }
 
-exports.postNewProduct = (req, res, nex) => {
-  console.log("POST recibido: ", req.body)
-  const NewProductData = req.body
-  const validation = productos.ValidarDatosRegistro(NewProductData)
+exports.postNewProduct = async (req, res, nex) => {
+  console.log('POST recibido: ', req.body)
+  try {
+    const NewProductData = {}
+    req.body.forEach(item => {
+      NewProductData[item.key] = item.value
+    })
 
-  if(validation){
-    res.status(200).json({
-    ok: true,
-    message: 'Datos validados y correctos :)'
-  })
+    // Extracción tipo map
+    const {
+      Nombre,
+      Precio,
+      Disponible,
+      Imagen,
+      type: categoria, // Renombramos 'type' a 'categoria'
+      ingredientes
+    } = NewProductData
 
+    console.log('Nombre: ', Nombre)
+    console.log('Ingredientes: ', ingredientes)
+
+    const validation = await productos.ValidarDatosRegistro(req.body)
+    const AutoId = productos.generarID()
+    console.log('Nuevo ID: ', AutoId)
+
+    if (validation) {
+      await productos.insertNewProduct(AutoId, Nombre, categoria, Precio, Disponible, Imagen)
+
+      res.status(200).json({
+        ok: true,
+        message: 'Datos validados y correctos :)'
+      })
+    } else {
+      res.status(400).json({
+        ok: false,
+        message: 'Datos no validos'
+      })
+    }
+  } catch (error) {
+    console.log('Error en conexion a BD: ', error)
+    res.status(500).json({
+      ok: false,
+      message: 'Error en conexión a BD'
+    })
   }
-  else{
-    res.status(404).json({
-    ok: false,
-    message: 'Datos no validos'
-  })
-
-  }
-  
-  
 }
