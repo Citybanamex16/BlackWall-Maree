@@ -9,5 +9,6 @@ router.get('/menu', menuControlador.getMenu)
 router.get('/orden', menuControlador.getOrden)
 
 router.get('/consultaplatillo', menuControlador.getPlatillo)
+router.post('/agregaritem', menuControlador.agregarItem)
 
 module.exports = router
