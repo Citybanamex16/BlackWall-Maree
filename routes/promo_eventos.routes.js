@@ -5,6 +5,8 @@ const evenPromoControlador = require('../controllers/promo_eventos.controlador.j
 
 router.get('/eventos', evenPromoControlador.getEvents)
 
+router.get('/eventos/api/all', evenPromoControlador.getEventsAPI)
+
 router.post('/eventos', evenPromoControlador.postRegistrarEvento)
 
 router.get('/eventos/api/catalogos', evenPromoControlador.getCatalogosEvento)

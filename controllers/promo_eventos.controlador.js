@@ -5,6 +5,22 @@ exports.getEvents = (req, res, next) => {
   res.render('admin/events')
 }
 
+exports.getEventsAPI = async (req, res, next) => {
+  try {
+    const [eventos] = await Eventos.fetchAll()
+    res.status(200).json({
+      success: true,
+      message: 'Envio de eventos exitosa',
+      data: eventos
+    })
+  } catch (error) {
+    res.status(500).json({
+      succes: false,
+      message: 'No se pudo hacer el envío de eventos'
+    })
+  }
+}
+
 exports.postRegistrarEvento = (req, res, next) => {
   const { nombre, descripcion, fechaInicio, fechaFin, promociones, royalty, platillos } = req.body
 
@@ -71,7 +87,7 @@ exports.getPromotionsAPI = async (req, res, next) => {
   } catch (error) {
     res.status(500).json({
       succes: false,
-      message: 'No se pudo hacer el envío promociones'
+      message: 'No se pudo hacer el envío de promociones'
     })
   }
 }

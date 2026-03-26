@@ -1,5 +1,6 @@
 /* global alert, location */
 
+// --------------------------- Funcionalidad Registrar Evento  ---------------------------
 // eslint-disable-next-line no-unused-vars
 const cargarYMostrarModal = async () => {
   const btn = document.getElementById('btn-registrar-evento')
@@ -152,4 +153,77 @@ const guardarEvento = () => {
       }
     })
     .catch(err => console.error('Error en la petición:', err))
+}
+
+// --------------------------- Funcionalidad Visualizar Catalogo Eventos  ---------------------------
+document.addEventListener('DOMContentLoaded', () => {
+  cargarEventos()
+})
+
+const cargarEventos = async () => {
+  const spinner = document.getElementById('loading-spinner')
+
+  spinner.classList.remove('is-hidden')
+
+  try {
+    const response = await fetch('/admin/eventos/api/all')
+    const result = await response.json()
+
+    if (result.success) {
+      renderizarEventos(result.data)
+    }
+  } catch (error) {
+    console.error(error)
+    alert('Error al conectar con el servidor')
+  } finally {
+    spinner.classList.add('is-hidden')
+  }
+}
+
+function renderizarEventos (lista) {
+  const contenedor = document.getElementById('contenedor-eventos')
+  contenedor.innerHTML = ''
+
+  if (lista.length === 0) {
+    contenedor.innerHTML = '<p class="column is-full has-text-centered">No hay eventos registrados.</p>'
+    return
+  }
+
+  lista.forEach(evento => {
+    const cardHTML = `
+      <div class="column is-4">
+        <div class="card">
+          <div class="card-content">
+            <div class="media">
+              <div class="media-content">
+                <p class="title is-4">${evento.nombre}</p>
+              </div>
+            </div>
+            <div class="content">
+              ${evento.descripción || 'Sin descripción disponible.'}
+            </div>
+            <div class="content">
+              ${evento.fecha_inicio || 'Sin fecha de Inicio disponible.'}
+            </div>
+            <div class="content">
+              ${evento.fecha_fin || 'Sin fecha de Fin disponible.'}
+            </div>
+          </div>
+          <footer class="card-footer">
+            <a href="#" class="card-footer-item has-text-link" onclick="prepararModificacion(${evento.id_evento})">
+              Modificar
+            </a>
+          </footer>
+        </div>
+      </div>
+    `
+    contenedor.insertAdjacentHTML('beforeend', cardHTML)
+  })
+}
+
+// --------------------------- Funcionalidad Modificar Eventos  ---------------------------
+// eslint-disable-next-line no-unused-vars
+function prepararModificacion (id) {
+  console.log('Modificando evento:', id)
+  // Aquí irá la lógica del siguiente caso de uso
 }
