@@ -1,5 +1,5 @@
 /* global alert, location */
-// Funciones para abrir/cerrar modal en Bulma
+
 // eslint-disable-next-line no-unused-vars
 const abrirModal = () => {
   document.getElementById('modal-evento').classList.add('is-active')
@@ -8,27 +8,24 @@ const abrirModal = () => {
 // eslint-disable-next-line no-unused-vars
 const cargarYMostrarModal = async () => {
   const btn = document.getElementById('btn-registrar-evento')
-  btn.classList.add('is-loading') // Feedback visual de Bulma
+  btn.classList.add('is-loading')
 
   try {
     const response = await fetch('/admin/eventos/api/catalogos')
     const result = await response.json()
 
     if (result.success) {
-      // Extraemos los datos del objeto 'data' que definiste en tu controlador
-      const { promociones, royalties, platillos } = result.data
-
-      // Llenamos cada select (Usando tu lógica de creación de elementos)
+      const { promociones, royalties, productos } = result.data
       poblarSelect('promociones', promociones)
       poblarSelect('royalty', royalties)
-      poblarSelect('platillos', platillos)
+      poblarSelect('productos', productos)
 
       // Una vez lleno, mostramos el modal
       document.getElementById('modal-evento').classList.add('is-active')
     }
   } catch (error) {
     console.error('Error al cargar catálogos:', error)
-    alert('No se pudieron cargar las promociones o platillos.')
+    alert('No se pudieron cargar las promociones o productos.')
   } finally {
     btn.classList.remove('is-loading')
   }
@@ -38,7 +35,7 @@ const cargarYMostrarModal = async () => {
 // eslint-disable-next-line no-unused-vars
 function poblarSelect (idSelect, lista) {
   const select = document.getElementById(idSelect)
-  select.innerHTML = '' // Limpiamos cualquier opción previa
+  select.innerHTML = ''
 
   lista.forEach(item => {
     const option = document.createElement('option')
@@ -57,24 +54,20 @@ const cerrarModal = () => {
 // eslint-disable-next-line no-unused-vars
 const getSelectedValues = (id) => {
   const select = document.getElementById(id)
-  // Convertimos la HTMLCollection a Array para mapear los values
   return Array.from(select.selectedOptions).map(opt => opt.value)
 }
 
 // eslint-disable-next-line no-unused-vars
 function validarFormulario (datos) {
   let esValido = true
-  // Limpiar errores previos
   document.querySelectorAll('.input, .select').forEach(el => el.classList.remove('is-danger'))
   document.querySelectorAll('.help.is-danger').forEach(el => el.remove())
 
-  // Ejemplo: Validar Nombre
   if (!datos.nombre || datos.nombre.trim() === '') {
     marcarError('nombre', 'El nombre es obligatorio')
     esValido = false
   }
 
-  // Validar que seleccionó al menos una promoción
   if (datos.promociones.length === 0) {
     marcarError('selectPromos', 'Debes seleccionar al menos una promoción')
     esValido = false
@@ -88,7 +81,6 @@ function marcarError (id, mensaje) {
   const elemento = document.getElementById(id)
   elemento.classList.add('is-danger')
 
-  // Insertar texto de ayuda de Bulma
   const help = document.createElement('p')
   help.className = 'help is-danger'
   help.textContent = mensaje
@@ -104,7 +96,7 @@ const guardarEvento = () => {
     fechaFin: document.getElementById('fechaFin').value,
     promociones: getSelectedValues('promociones'),
     royalty: getSelectedValues('royalty'),
-    platillos: getSelectedValues('platillos')
+    productos: getSelectedValues('productos')
   }
 
   let error = false
@@ -112,9 +104,34 @@ const guardarEvento = () => {
     document.getElementById('nombre').classList.add('is-danger')
     error = true
   }
+
+  if (!datos.descripcion) {
+    document.getElementById('descripcion').classList.add('is-danger')
+    error = true
+  }
+
+  if (!datos.fechaInicio) {
+    document.getElementById('fechaInicio').classList.add('is-danger')
+    error = true
+  }
+
+  if (!datos.fechaFin) {
+    document.getElementById('fechaFin').classList.add('is-danger')
+    error = true
+  }
+
   if (datos.promociones.length === 0) {
-    // En Bulma, el error va en el contenedor del select
     document.getElementById('promociones').closest('.select').classList.add('is-danger')
+    error = true
+  }
+
+  if (datos.royalty.length === 0) {
+    document.getElementById('royalty').closest('.select').classList.add('is-danger')
+    error = true
+  }
+
+  if (datos.productos.length === 0) {
+    document.getElementById('productos').closest('.select').classList.add('is-danger')
     error = true
   }
 
