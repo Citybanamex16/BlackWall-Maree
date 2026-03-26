@@ -38,32 +38,20 @@
   <h2 id="formsRegistrarTitulo">Título dinámico</h2>
 
   <form id="formsRegistrarForm" novalidate>
-    <!-- Los campos se inyectan aquí dinámicamente -->
-        <!-- Contenedor del Dropdown -->
-    <div class="field">
-      <label class="label">Seleccionar un Ingrediente</label>
-      <div class="control">
-        <div class="select is-fullwidth"> 
-          <!-- Aquí es donde inyectarás los <option> -->
-          <select id="DropdownIngredientes" name="miDropdownDinamico">
-            <option value="">Selecciona un ingrediente</option>
-          </select>
-        </div>
-      </div>
-    </div>
+    <!-- Campos dinámicos (nombre, precio, etc.) se inyectan aquí -->
 
-
+    <!-- ═══════════════════════════════════════════
+         SECCIÓN INGREDIENTES
+    ════════════════════════════════════════════ -->
   </form>
-
-  <div class="field is-grouped is-grouped-right" style="margin-top: 16px;">
-    <div class="control">
-      <button id="cerrarFormsRegistrar" type="button" class="button is-light">Cancelar</button>
-    </div>
-    <div class="control">
-      <button id="submitFormsRegistrar" type="submit" form="formsRegistrarForm" class="button is-primary">Guardar</button>
-    </div>
+  <!-- Footer del modal -->
+  <div class="modal-footer">
+    <button id="cerrarFormsRegistrar" type="button" class="button is-light">Cancelar</button>
+    <button id="submitFormsRegistrar" type="submit" form="formsRegistrarForm" class="button is-primary">Guardar</button>
   </div>
 </dialog>
+
+
 
 
 <dialog id="SummaryCU04" class="mymodal">
@@ -74,10 +62,11 @@
   <button id="RegisterProduct" style="margin-top: 10px;">Registrar Nuevo Producto</button>
 </dialog>
 
+
 <!-- Dialogo de ¡EXITO!-->
 <dialog id="ModalExito" class="error-modal mymodal">
     <h2 id = "TituloExito">Titulo Dinamico</h2>
-    <p>Tu platillo se a registrado de manera correcta</p>
+    <p id="exitoContent">Contenido Dinámico</p>
     <!-- Botón con ID para manipularlo desde JS -->
     <button id="closeExito">Regresar a Catalogo</button>
 </dialog>
@@ -86,9 +75,9 @@
 
 
 <!-- Dialogo de error -->
-<dialog id="InvalidaDataRegister" class="error-modal mymodal">
-    <h2>Error: Datos invalidos</h2>
-    <p>Dato invalido en Formulario, favor de corregirlo</p>
+<dialog id="ErrorModal" class="error-modal mymodal">
+    <h2 id="ErrorTitle">Titulo Dinámico</h2>
+    <p id="ErrorMessage">Mensaje Dinámico</p>
     <!-- Botón con ID para manipularlo desde JS -->
     <button id="closeInvalidData">Cerrar</button>
 </dialog>

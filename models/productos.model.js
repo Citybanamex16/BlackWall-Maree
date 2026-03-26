@@ -17,11 +17,14 @@ module.exports = class Producto {
 
   // Función para obtener los ingredientes pertenecientes a un tipo
   static async getAllIngredientes () {
-    return db.execute('SELECT * FROM ?', ['insumos'])
+    return db.execute('SELECT name FROM ?', ['insumos'])
   }
 
+  static async getAllcategorys(){
+    return db.execute("SELECT name FROM Categorías")
+  }
 
-  sttaic async insertNewProduct(){
+  static async insertNewProduct () {
     return db.execute('INSERT INTO PRODUCTOS VALUES ()')
   }
 }

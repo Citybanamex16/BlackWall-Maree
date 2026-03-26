@@ -14,6 +14,6 @@ router.get('/consultaplatillo', menuControlador.getPlatillo)
 router.get('/productos', menuControlador.getProducts)
 router.get('/formsTipoPlatillo', menuControlador.getModalForms)
 router.get('/formsRegistraPlatillo', menuControlador.getProductRegisterForms)
-router.post('/registerNewProduct',menuControlador.postNewProduct)
+router.post('/registerNewProduct', menuControlador.postNewProduct)
 
 module.exports = router
