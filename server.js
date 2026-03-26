@@ -34,10 +34,12 @@ appServer.use(bodyParser.json())
 const clienteRutes = require('./routes/cliente.routes.js')
 const adminRutes = require('./routes/admin.routes.js')
 const menuRutes = require('./routes/menu.routes.js')
+const rutasEventosPromos = require('./routes/promo_eventos.routes.js')
 
 appServer.use('/cliente', clienteRutes)
 appServer.use('/admin', adminRutes)
 appServer.use('/menu', menuRutes)
+appServer.use('/admin', rutasEventosPromos)
 
 // ¡No debemos renderizar en Server!
 appServer.get('/', (req, response) => {
