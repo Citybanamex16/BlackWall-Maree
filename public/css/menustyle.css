@@ -293,3 +293,19 @@ body {
 .modal-close-btn:hover {
     color: #444;
 }
+
+.order-map-box {
+    border: 1px solid #eee;
+    border-radius: 10px;
+    padding: 16px 20px;
+    background: #fff;
+    margin-top: 16px;
+    width: 100%;
+}
+
+.order-map-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: #444;
+    margin-bottom: 10px;
+}
