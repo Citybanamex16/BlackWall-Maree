@@ -192,31 +192,31 @@ function renderizarEventos (lista) {
   lista.forEach(evento => {
     const cardHTML = `
       <div class="column is-4">
-        <div class="card">
-          <div class="card-content">
-            <div class="media">
-              <div class="media-content">
-                <p class="title is-4">${evento.nombre}</p>
+          <div class="card event-card">
+              <div class="card-content">
+                  <p class="title is-5 mb-2">${evento.nombre}</p>
+                  <p class="subtitle is-7 is-uppercase has-text-grey-light mb-4">Evento Marée</p>
+                  
+                  <div class="content is-size-6 has-text-grey">
+                      ${evento.descripción || 'Sin descripción disponible.'}
+                  </div>
+
+                  <hr class="my-4" style="background-color: #f5f5f5; height: 1px;">
+                  
+                  <div class="is-flex is-justify-content-space-between is-align-items-center">
+                      <div>
+                          <p class="is-size-7 has-text-grey-lighter is-uppercase">Vigencia</p>
+                          <span class="event-date-tag">${evento.fecha_inicio} - ${evento.fecha_fin}</span>
+                      </div>
+                  </div>
               </div>
-            </div>
-            <div class="content">
-              ${evento.descripción || 'Sin descripción disponible.'}
-            </div>
-            <div class="content">
-              ${evento.fecha_inicio || 'Sin fecha de Inicio disponible.'}
-            </div>
-            <div class="content">
-              ${evento.fecha_fin || 'Sin fecha de Fin disponible.'}
-            </div>
+              <footer class="card-footer" style="border-top: none; background-color: #fafafa;">
+                  <a href="#" class="card-footer-item has-text-grey" onclick="prepararModificacion(${evento.id_evento})">
+                      <span class="icon is-small mr-2"><i class="fas fa-edit"></i></span> Modificar
+                  </a>
+              </footer>
           </div>
-          <footer class="card-footer">
-            <a href="#" class="card-footer-item has-text-link" onclick="prepararModificacion(${evento.id_evento})">
-              Modificar
-            </a>
-          </footer>
-        </div>
-      </div>
-    `
+      </div>`
     contenedor.insertAdjacentHTML('beforeend', cardHTML)
   })
 }
