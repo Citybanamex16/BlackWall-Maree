@@ -7,6 +7,8 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@1.0.4/css/bulma.min.css">
     <link rel="stylesheet" href="/css/menustyle.css">
     <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=Jost:wght@300;400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 </head>
 <body>
 
@@ -79,9 +81,13 @@
             </div>
 
             <!-- ── CREPAS ESPECIALES ── -->
-            <div class="menu-section">
-                <h2 class="section-title">Crepas Especiales</h2>
-                <hr class="section-divider">
+            <div class="menu-section menu-section--collapsible" data-open="false">
+                <div class="section-header">
+                    <h2 class="section-title">Special Crepes</h2>
+                    <span class="section-arrow">▼</span>
+            </div>
+            <hr class="section-divider">
+            <div class="section-content" style="display:none;">
                 <div class="columns is-multiline">
 
                     <div class="column is-half">
@@ -294,11 +300,16 @@
 
                 </div>
             </div>
+        </div> 
 
             <!-- ── CREPAS SALADAS ── -->
-            <div class="menu-section">
-                <h2 class="section-title">Savoury Crêpe</h2>
-                <hr class="section-divider">
+            <div class="menu-section menu-section--collapsible" data-open="false">
+                <div class="section-header">
+                    <h2 class="section-title">Savoury Crepe</h2>
+                    <span class="section-arrow">▼</span>
+            </div>
+            <hr class="section-divider">
+            <div class="section-content" style="display:none;">
                 <div class="columns is-multiline">
 
                     <div class="column is-half">
@@ -420,11 +431,16 @@
 
                 </div>
             </div>
+        </div> 
 
             <!-- ── CREPAS ARTESANALES ── -->
-            <div class="menu-section">
-                <h2 class="section-title">Artesanal Crêpe</h2>
-                <hr class="section-divider">
+            <div class="menu-section menu-section--collapsible" data-open="false">
+                <div class="section-header">
+                    <h2 class="section-title">Artesanal Crepe</h2>
+                    <span class="section-arrow">▼</span>
+            </div>
+            <hr class="section-divider">
+            <div class="section-content" style="display:none;">
                 <div class="columns is-multiline">
 
                     <div class="column is-half">
@@ -494,11 +510,16 @@
 
                 </div>
             </div>
+        </div> 
 
             <!-- ── CREPAS ESPECIALES PT2 ? ── -->
-            <div class="menu-section">
-                <h2 class="section-title">Crepas Especiales PT2 ???</h2>
-                <hr class="section-divider">
+            <div class="menu-section menu-section--collapsible" data-open="false">
+                <div class="section-header">
+                    <h2 class="section-title">Special Crepes Extension</h2>
+                    <span class="section-arrow">▼</span>
+            </div>
+            <hr class="section-divider">
+            <div class="section-content" style="display:none;">
                 <div class="columns is-multiline">
 
                     <div class="column is-half">
@@ -518,7 +539,7 @@
                         <div class="product-card product-card--simple">
                             <div class="product-info">
                                 <div class="product-header">
-                                    <span class="product-name">Berry Lotus/span>
+                                    <span class="product-name">Berry Lotus</span>
                                     <span class="product-price">$150</span>
                                 </div>
                                 <p class="product-desc">-</p>
@@ -542,11 +563,16 @@
 
                 </div>
             </div>
+        </div> 
 
             <!-- ── BEBIDAS CALIENTES ── -->
-            <div class="menu-section">
-                <h2 class="section-title">Bebidas Calientes</h2>
-                <hr class="section-divider">
+            <div class="menu-section menu-section--collapsible" data-open="false">
+                <div class="section-header">
+                    <h2 class="section-title">Hot Drinks</h2>
+                    <span class="section-arrow">▼</span>
+            </div>
+            <hr class="section-divider">
+            <div class="section-content" style="display:none;">
                 <div class="columns is-multiline">
 
                     <div class="column is-half">
@@ -603,11 +629,16 @@
 
                 </div>
             </div>
+        </div> 
 
             <!-- ── BEBIDAS FRÍAS ── -->
-            <div class="menu-section">
-                <h2 class="section-title">Bebidas Frías</h2>
-                <hr class="section-divider">
+            <div class="menu-section menu-section--collapsible" data-open="false">
+                <div class="section-header">
+                        <h2 class="section-title">Cold Drinks</h2>
+                    <span class="section-arrow">▼</span>
+            </div>
+            <hr class="section-divider">
+            <div class="section-content" style="display:none;">
                 <div class="columns is-multiline">
 
                     <div class="column is-half">
@@ -664,11 +695,16 @@
 
                 </div>
             </div>
+        </div> 
 
             <!-- ── FRAPPES ── -->
-            <div class="menu-section">
-                <h2 class="section-title">Frappes</h2>
-                <hr class="section-divider">
+            <div class="menu-section menu-section--collapsible" data-open="false">
+                <div class="section-header">
+                    <h2 class="section-title">Frappes</h2>
+                    <span class="section-arrow">▼</span>
+            </div>
+            <hr class="section-divider">
+            <div class="section-content" style="display:none;">
                 <div class="columns is-multiline">
 
                     <div class="column is-half">
@@ -725,22 +761,32 @@
 
                 </div>
             </div>
+        </div> 
 
         </div>
 
 <!-- COLUMNA DERECHA: ORDER -->
-        <div class="order-column">
-            <a href="/cliente/orden" class="order-btn-card">
-                <div class="order-btn-icon">🛒</div>
-                <div class="order-btn-text">
-                    <span class="order-btn-title">Ver Resumen de Pedido</span>
-                    <span class="order-btn-sub">Revisa y confirma los artículos de tu orden</span>
-                </div>
-                <div class="order-btn-arrow">→</div>
-            </a>
-        </div>
+<div class="order-column">
 
+    <a href="/menu/orden" class="order-btn-card">
+        <div class="order-btn-icon">🛒</div>
+        <div class="order-btn-text">
+            <span class="order-btn-title">Ver Resumen de Pedido</span>
+            <span class="order-btn-sub">Revisa y confirma los artículos de tu orden</span>
+        </div>
+    </a>
+
+    <!-- MAPA -->
+    <div class="order-map-box">
+        <p class="order-map-title">Tu ubicación</p>
+        <div id="mapa" style="height:280px;border-radius:8px;"></div>
+        <p id="mapa-estado" style="font-size:12px;color:#aaa;margin-top:8px;">
+            Detectando ubicación...
+        </p>
     </div>
+
+</div>
+
 </section>
 
 <!-- MODAL -->
@@ -748,7 +794,7 @@
     <div id="modal-box" class="modal-box">
         <button id="modal-close" class="modal-close-btn">✕</button>
         <div id="modal-content">
-            <!-- Aquí se inyecta el contenido dinámicamente -->
+            <!-- Aqui se pone el contenido dinamicallyyy -->
         </div>
     </div>
 </div>
