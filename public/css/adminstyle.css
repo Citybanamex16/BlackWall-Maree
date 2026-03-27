@@ -1,61 +1,118 @@
-/* --- FUNDAMENTOS Y TIPOGRAFÍA --- */
+/* ============================================
+   MARÉE — ADMIN DASHBOARD STYLES
+   Cormorant Garamond + Jost, gold/beige palette
+   ============================================ */
+
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;600&family=Jost:wght@300;400;500;600&display=swap');
+
+/* BASE */
 body {
-    background-color: #ffffff;
+    font-family: 'Jost', sans-serif;
+    background-color: #fafaf8;
     color: #222;
 }
 
-/* Unificación de Títulos Marée */
-.title, 
-.modal-card-title, 
-.card-header-title, 
-.logo {
-    font-family: 'Cormorant Garamond', serif !important;
-    font-weight: 600 !important;
-    letter-spacing: 1px;
-    color: #222 !important;
-}
-
-.logo { 
-    font-size: 21px; 
-    letter-spacing: 3px; 
-}
-
-.subtitle { 
-    color: #777 !important; 
-}
-
-/* --- NAVEGACIÓN --- */
+/* NAV */
 .navbar {
-    background-color: #ffffff;
+    background-color: #ffffff !important;
     border-bottom: 1px solid #eee;
+    padding: 8px 32px;
+}
+
+.logo-area {
+    display: flex;
+    flex-direction: column;
+    line-height: 1.2;
+}
+
+.logo,
+.logo-text {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 22px;
+    font-weight: 600;
+    letter-spacing: 4px;
+    color: #222;
+}
+
+.logo-sub {
+    font-size: 9px;
+    letter-spacing: 2px;
+    color: #999;
+    text-transform: uppercase;
 }
 
 .navbar-item {
-    color: #444 !important;
+    color: #555 !important;
+    font-size: 14px;
+    font-family: 'Jost', sans-serif;
 }
 
-.navbar-item:hover, .navbar-link:hover {
+.active-link {
+    color: #b5956a !important;
+}
+
+.navbar-item:hover,
+.navbar-link:hover {
     background-color: transparent !important;
     color: #b5956a !important;
 }
 
-.active-link {
-    color: #8a9e8a !important; /* Verde suave para activos */
+/* Bulma overrides */
+.title {
+    color: #222 !important;
+    font-family: 'Cormorant Garamond', serif !important;
+    font-size: 48px !important;
+    font-weight: 400 !important;
+    letter-spacing: 0.5px;
+    margin-bottom: 4px !important;
 }
 
-/* --- DASHBOARD (CUADRÍCULA) --- */
+.subtitle {
+    color: #888 !important;
+    font-family: 'Jost', sans-serif !important;
+    font-size: 14px !important;
+    margin-bottom: 48px !important;
+}
+
+.box {
+    background-color: #ffffff;
+    border: 1px solid #eee;
+    box-shadow: none !important;
+    border-radius: 10px !important;
+}
+
+/* SECTION */
+.section {
+    padding-top: 48px;
+    padding-bottom: 64px;
+}
+
+/* DASHBOARD GRID — 4 columns */
 .dashboard-grid {
-    display: grid;
+    display: grid !important;
     grid-template-columns: repeat(4, 1fr);
     gap: 20px;
 }
 
+@media (max-width: 1024px) {
+    .dashboard-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 640px) {
+    .dashboard-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* DASHBOARD CARD */
 .dashboard-card {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 14px;
-    padding: 36px 20px;
+    gap: 16px;
+    padding: 40px 20px 32px;
     text-align: center;
     color: #222;
     text-decoration: none;
@@ -186,3 +243,299 @@ body {
 .pink { background-color: #E91E8C; }
 .teal { background-color: #1ABC9C; }
 .whatsapp { background-color: #25D366; }
+    color: #333;
+    text-decoration: none !important;
+    border: 1px solid #eee;
+    border-radius: 10px;
+    background: #fff;
+    transition: border-color 0.25s ease, box-shadow 0.25s ease, transform 0.2s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.dashboard-card::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 0;
+    height: 2px;
+    background: #b5956a;
+    transition: width 0.3s ease;
+    border-radius: 2px;
+}
+
+.dashboard-card:hover {
+    border-color: #e0c9a8;
+    box-shadow: 0 6px 24px rgba(181, 149, 106, 0.12);
+    transform: translateY(-2px);
+    color: #222 !important;
+}
+
+.dashboard-card:hover::after {
+    width: 40%;
+}
+
+/* Card label */
+.dashboard-card p {
+    font-family: 'Jost', sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: #555;
+    margin: 0;
+    transition: color 0.2s;
+}
+
+.dashboard-card:hover p {
+    color: #b5956a;
+}
+
+/* ICON CIRCLE*/
+.icon-circle {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    flex-shrink: 0;
+    transition: transform 0.2s ease;
+}
+
+.dashboard-card:hover .icon-circle {
+    transform: scale(1.08);
+}
+
+/* Soft color variants */
+.blue     { background-color: #dce8f5; }
+.green    { background-color: #d4eddf; }
+.yellow   { background-color: #fdeecf; }
+.purple   { background-color: #ecdff5; }
+.red      { background-color: #fde0da; }
+.pink     { background-color: #fce4ef; }
+.teal     { background-color: #d2f5ed; }
+.whatsapp { background-color: #d5f5e3; }
+
+/* Section divider — matching menu style */
+.admin-section-divider {
+    border: none;
+    border-top: 1px solid #e8e8e8;
+    margin: 0 0 40px;
+}
+
+/* Breadcrumbs area polish */
+nav.breadcrumb {
+    padding: 12px 0 0;
+    font-size: 13px;
+    color: #aaa;
+}
+
+nav.breadcrumb a {
+    color: #aaa !important;
+}
+
+nav.breadcrumb a:hover {
+    color: #b5956a !important;
+}
+
+
+
+/* Clase global para boton flotante en esquina inferior derecha Floating Action Button */
+.fab{
+     /* 1. Lo saca del flujo normal del documento */
+    position: fixed; 
+    
+    /* 2. Ubicación (puedes ajustar los pixeles a tu gusto) */
+    bottom: 24px;
+    right: 24px;
+    
+    /* 3. Asegura que siempre esté al frente */
+    z-index: 999; 
+    
+    /* 4. Evita que el botón se deforme si el texto es largo */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    
+    /* 5. Mejora la experiencia en móviles (opcional pero recomendado) */
+    cursor: pointer;
+    touch-action: manipulation;
+}
+
+/* Modals */
+
+/* ── Modal global ── */
+
+dialog {
+    border: 1px solid #e5e5e5;
+    border-radius: 8px;
+    padding: 32px 28px;
+    max-width: 480px;
+    width: 90%;
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.12);
+    background-color: #ffffff;
+    color: #222;
+}
+
+dialog::backdrop {
+    background-color: rgba(0, 0, 0, 0.45);
+}
+
+dialog h2 {
+    font-size: 20px;
+    font-weight: bold;
+    color: #222 !important;
+    margin-bottom: 8px;
+}
+
+dialog p {
+    color: #777;
+}
+
+
+/*Seccion de CU04*/
+/* ── Sección contenedora ──────────────────────── */
+.ingredients-section {
+  border: 1px solid #dbdbdb;
+  border-radius: 8px;
+  padding: 0 0 12px;
+  margin: 16px 0 8px;
+  background: #fafafa;
+}
+
+/* ── Header ───────────────────────────────────── */
+.ingredients-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px 8px;
+  border-bottom: 1px solid #ebebeb;
+  margin-bottom: 8px;
+}
+
+.ingredients-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: #363636;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.ing-icon { font-size: 16px; }
+
+.ing-counter {
+  font-size: 12px;
+  background: #eef3ff;
+  color: #3273dc;
+  border-radius: 20px;
+  padding: 2px 10px;
+  font-weight: 600;
+  min-width: 44px;
+  text-align: center;
+}
+
+/* ── Lista scrolleable ────────────────────────── */
+.ingredients-list {
+  max-height: 300px;        /* muestra ~6 filas, scroll después */
+  overflow-y: auto;
+  padding: 0 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  scrollbar-width: thin;
+  scrollbar-color: #dbdbdb transparent;
+}
+
+/* ── Fila de ingrediente ──────────────────────── */
+.ingredient-row {
+  display: grid;
+  grid-template-columns: 1fr 72px 28px;
+  gap: 8px;
+  align-items: center;
+  animation: fadeRowIn 0.18s ease;
+}
+
+/* Fila 0: sin botón ✕, solo dos columnas */
+.ingredient-row[data-ing-index="0"] {
+  grid-template-columns: 1fr 72px;
+}
+
+@keyframes fadeRowIn {
+  from { opacity: 0; transform: translateY(-6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.ing-select-wrap { width: 100%; }
+
+.ing-cantidad {
+  width: 72px;
+  text-align: center;
+  padding: 0 6px;
+  height: 36px;
+}
+
+/* ── Botón quitar (✕) ─────────────────────────── */
+.btn-remove-ing {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 1px solid #ffb3b3;
+  background: #fff5f5;
+  color: #cc0000;
+  font-size: 14px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s, border-color 0.15s;
+  flex-shrink: 0;
+}
+.btn-remove-ing:hover {
+  background: #ffe0e0;
+  border-color: #e00000;
+}
+
+/* ── Botón agregar ────────────────────────────── */
+.btn-add-ingredient {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: calc(100% - 24px);
+  margin: 10px 12px 0;
+  padding: 8px 0;
+  border: 1.5px dashed #b5c9f5;
+  border-radius: 7px;
+  background: transparent;
+  color: #3273dc;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+.btn-add-ingredient:hover {
+  background: #eef3ff;
+  border-color: #3273dc;
+}
+.btn-add-ingredient:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+.add-icon { font-size: 16px; font-weight: 400; }
+
+/* ── Footer del modal ─────────────────────────── */
+.modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 16px;
+  padding-top: 12px;
+  border-top: 1px solid #ebebeb;
+}
+
+
