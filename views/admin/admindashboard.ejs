@@ -4,21 +4,30 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Admin Dashboard - Marée</title>
-    
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;600&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
+
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@1.0.4/css/bulma.min.css">
     <link rel="stylesheet" href="/css/adminstyle.css">
 </head>
 
 <body>
 
+<!-- NAV — same structure as menu page -->
 <nav class="navbar" role="navigation">
     <div class="navbar-brand">
-        <span class="navbar-item logo">MARÉE</span>
+        <div class="navbar-item">
+            <div class="logo-area">
+                <span class="logo-text">MARÉE</span>
+                <span class="logo-sub">Love at First Crêpe</span>
+            </div>
+        </div>
     </div>
-
 </nav>
 
-    <%- include('../partials/breadcrumbs') %>
+<%- include('../partials/breadcrumbs') %>
 
 <section class="section">
     <div class="container">
@@ -26,63 +35,49 @@
         <h1 class="title">Admin Dashboard</h1>
         <p class="subtitle">Manage your cafeteria operations</p>
 
-        <div class="grid dashboard-grid">
+        <hr class="admin-section-divider">
 
-            <div class="cell">
-                <a href="/admin/ingredientes" class="box dashboard-card">
-                    <div class="icon-circle blue">📦</div>
-                    <p>Ingredients</p>
-                </a>
-            </div>
+        <div class="dashboard-grid">
 
-            <div class="cell">
-                <a href="/menu/productos" class="box dashboard-card">
-                    <div class="icon-circle green">🛍️</div>
-                    <p>Products</p>
-                </a>
-            </div>
+            <a href="/admin/ingredientes" class="box dashboard-card">
+                <div class="icon-circle blue">📦</div>
+                <p>Ingredients</p>
+            </a>
 
-            <div class="cell">
-                <a href="/admin/royalty" class="box dashboard-card">
-                    <div class="icon-circle yellow">🏅</div>
-                    <p>Royalty System</p>
-                </a>
-            </div>
+            <a href="/admin/productos" class="box dashboard-card">
+                <div class="icon-circle green">🛍️</div>
+                <p>Products</p>
+            </a>
 
-            <div class="cell">
-                <a href="/admin/colaboradores" class="box dashboard-card">
-                    <div class="icon-circle purple">👥</div>
-                    <p>Colaborators/Employees</p>
-                </a>
-            </div>
+            <a href="/admin/royalty" class="box dashboard-card">
+                <div class="icon-circle yellow">🏅</div>
+                <p>Royalty System</p>
+            </a>
 
-            <div class="cell">
-                <a href="/admin/ordenes" class="box dashboard-card">
-                    <div class="icon-circle red">📋</div>
-                    <p>Active Orders</p>
-                </a>
-            </div>
+            <a href="/admin/colaboradores" class="box dashboard-card">
+                <div class="icon-circle purple">👥</div>
+                <p>Collaborators</p>
+            </a>
 
-            <div class="cell">
-                <a href="/admin/promociones" class="box dashboard-card">
-                    <div class="icon-circle pink">🏷️</div>
-                    <p>Promotions</p>
-                </a>
-            </div>
+            <a href="/admin/ordenes" class="box dashboard-card">
+                <div class="icon-circle red">📋</div>
+                <p>Active Orders</p>
+            </a>
 
-            <div class="cell">
-                <a href="/admin/eventos" class="box dashboard-card">
-                    <div class="icon-circle teal">📅</div>
-                    <p>Events</p>
-                </a>
-            </div>
+            <a href="/admin/promociones" class="box dashboard-card">
+                <div class="icon-circle pink">🏷️</div>
+                <p>Promotions</p>
+            </a>
 
-            <div class="cell">
-                <a href="/admin/mensajes" class="box dashboard-card">
-                    <div class="icon-circle whatsapp">💬</div>
-                    <p>WhatsApp</p>
-                </a>
-            </div>
+            <a href="/admin/eventos" class="box dashboard-card">
+                <div class="icon-circle teal">📅</div>
+                <p>Events</p>
+            </a>
+
+            <a href="/admin/mensajes" class="box dashboard-card">
+                <div class="icon-circle whatsapp">💬</div>
+                <p>WhatsApp</p>
+            </a>
 
         </div>
     </div>
