@@ -4,39 +4,41 @@ module.exports = class Pedido {
   static async fetchOrders () {
     const query = `
       SELECT
-        p.IDPedido,
-        p.IDCliente,
-        p.EstatusPedido,
-        p.FechaPedido,
-        c.NombreCliente
-      FROM pedido p
-      LEFT JOIN cliente c ON p.IDCliente = c.IDCliente
-      ORDER BY p.IDPedido DESC
+        o.\`ID_Orden\` AS id_orden,
+        o.\`numero_telefonico_cliente\` AS numero_telefonico_cliente,
+        o.\`Estado\` AS estatus_orden,
+        o.\`Mesa\` AS mesa,
+        o.\`Fecha\` AS fecha,
+        c.\`Nombre\` AS nombre_cliente
+      FROM \`orden\` o
+      LEFT JOIN \`cliente\` c
+        ON o.\`numero_telefonico_cliente\` = c.\`numero_telefonico_cliente\`
+      ORDER BY o.\`ID_Orden\` DESC
     `
     return db.execute(query)
   }
 
-  static async fetchOne (idPedido) {
+  static async fetchOne (idOrden) {
     const query = `
       SELECT
-        IDPedido,
-        IDCliente,
-        EstatusPedido
-      FROM pedido
-      WHERE IDPedido = ?
+        o.\`ID_Orden\` AS id_orden,
+        o.\`numero_telefonico_cliente\` AS numero_telefonico_cliente,
+        o.\`Estado\` AS estatus_orden
+      FROM \`orden\` o
+      WHERE o.\`ID_Orden\` = ?
       LIMIT 1
     `
-    return db.execute(query, [idPedido])
+    return db.execute(query, [idOrden])
   }
 
-  static async cancelActiveOrder (idPedido) {
+  static async cancelActiveOrder (idOrden) {
     const query = `
-      UPDATE pedido
-      SET EstatusPedido = 'Cancelado'
-      WHERE IDPedido = ?
-        AND EstatusPedido NOT IN ('Cancelado', 'Entregado')
+      UPDATE \`orden\`
+      SET \`Estado\` = 'Cancelado'
+      WHERE \`ID_Orden\` = ?
+        AND \`Estado\` <> 'Cancelado'
       LIMIT 1
     `
-    return db.execute(query, [idPedido])
+    return db.execute(query, [idOrden])
   }
 }

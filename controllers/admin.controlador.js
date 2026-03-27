@@ -43,7 +43,15 @@ exports.getOrders = (req, res, next) => {
 exports.getOrders = async (req, res, next) => {
   try {
     const [pedidos] = await Pedido.fetchOrders()
-    res.render('admin/orders', { pedidos })
+
+    res.render('admin/orders', {
+      pedidos,
+      breadcrumbs: [
+        { name: 'Inicio', url: '/' },
+        { name: 'Admin', url: '/admin' },
+        { name: 'Órdenes', url: '/admin/ordenes' }
+      ]
+    })
   } catch (error) {
     console.error('Error al cargar órdenes:', error)
     res.status(500).send('Error al cargar órdenes.')
@@ -96,12 +104,12 @@ exports.cancelActiveOrder = async (req, res, next) => {
       return res.status(500).json({
         ok: false,
         partial: true,
-        message: 'La orden se canceló, pero no fue posible recuperar los datos del usuario.'
+        message: 'La orden se canceló, pero no fue posible recuperar los datos del cliente.'
       })
     }
 
     const cliente = clienteRows[0]
-    const mensaje = `Hola ${cliente.nombre || 'cliente'}, tu orden #${idOrden} ha sido cancelada.`
+    const mensaje = `Hola ${cliente.nombre_cliente || 'cliente'}, tu orden #${idOrden} ha sido cancelada.`
 
     return res.status(200).json({
       ok: true,
@@ -109,9 +117,10 @@ exports.cancelActiveOrder = async (req, res, next) => {
       pedidoId: idOrden,
       nuevoEstatus: 'Cancelado',
       cliente: {
-        nombre: cliente.nombre || null,
+        nombre: cliente.nombre_cliente || null,
         telefono: cliente.telefono || null,
-        correo: cliente.correo || null
+        correo: cliente.correo || null,
+        royalty: cliente.nombre_royalty || null
       },
       notificacion: mensaje
     })
