@@ -67,9 +67,6 @@ exports.getPlatillo = (request, response, next) => {
   const nombre = request.query.nombre
   console.log('ENCONTROLLER — buscando:', nombre)
 
-  // Cuando haya BD, borrar o comentar el dummy y descomentar esto:
-  // productos.fetchOne(nombre).then(data => response.status(200).json(data))
-
   const platillo = platillosDummy.find(p => p.nombre === nombre)
 
   if (platillo) {
@@ -84,4 +81,80 @@ exports.agregarItem = (request, response, next) => {
   console.log(`Item agregado: ${nombre} - $${precio}`)
   // Cuando haya BD/sesión, aquí se guarda
   response.status(200).json({ agregado: true, nombre, precio, desc })
+}
+
+exports.validarPedido = (request, response, next) => {
+  const { items } = request.body
+  console.log('Validando pedido:', items)
+
+  // Validar que items exista y sea array
+  if (!Array.isArray(items) || items.length === 0) {
+    return response.status(400).json({ pedidoValido: false, mensaje: 'El pedido está vacío' })
+  }
+
+  // Validar que cada item tenga los campos esperados y sean strings seguros
+  for (const item of items) {
+    if (
+      typeof item.nombre !== 'string' ||
+      typeof item.precio !== 'string' ||
+      typeof item.desc !== 'string' ||
+      item.nombre.trim() === '' ||
+      item.nombre.length > 100
+    ) {
+      return response.status(400).json({ pedidoValido: false, mensaje: 'Datos de pedido inválidos' })
+    }
+  }
+
+  // Cuando haya BD, descomentar:
+  // const ids = items.map(i => i.nombre)
+  // pedidos.verificarDisponibilidad(ids)
+  //   .then(resultado => {
+  //     response.status(200).json({ pedidoValido: resultado.count > 0 })
+  //   })
+  //   .catch(err => next(err))
+
+  response.status(200).json({ pedidoValido: true })
+}
+
+exports.confirmarPedido = (request, response, next) => {
+  const { items, forma, telefono } = request.body
+
+  // Validar forma — solo valores permitidos
+  const formasValidas = ['Pick-Up', 'On Site', 'Delivery']
+  if (!formasValidas.includes(forma)) {
+    return response.status(400).json({ pedidoConfirmado: false, mensaje: 'Forma de entrega inválida' })
+  }
+
+  // Validar teléfono — solo dígitos, 7 a 15 caracteres
+  const telefonoLimpio = String(telefono).replace(/[\s-]/g, '')
+  if (!/^\d{7,15}$/.test(telefonoLimpio)) {
+    return response.status(400).json({ pedidoConfirmado: false, mensaje: 'Teléfono inválido' })
+  }
+
+  // Validar items
+  if (!Array.isArray(items) || items.length === 0) {
+    return response.status(400).json({ pedidoConfirmado: false, mensaje: 'El pedido está vacío' })
+  }
+
+  for (const item of items) {
+    if (
+      typeof item.nombre !== 'string' ||
+      item.nombre.trim() === '' ||
+      item.nombre.length > 100
+    ) {
+      return response.status(400).json({ pedidoConfirmado: false, mensaje: 'Item inválido en el pedido' })
+    }
+  }
+
+  console.log('Confirmando pedido:', { items, forma, telefono: telefonoLimpio })
+
+  // Cuando haya BD, descomentar — los ? previenen SQL injection:
+  // db.execute(
+  //   'INSERT INTO Pedidos (telefono, forma, fecha) VALUES (?, ?, NOW())',
+  //   [telefonoLimpio, forma]
+  // )
+  //   .then(() => response.status(200).json({ pedidoConfirmado: true }))
+  //   .catch(err => response.status(500).json({ pedidoConfirmado: false, mensaje: 'Error al guardar' }))
+
+  response.status(200).json({ pedidoConfirmado: true })
 }

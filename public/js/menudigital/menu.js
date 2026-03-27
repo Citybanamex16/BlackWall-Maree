@@ -161,3 +161,17 @@ if (navigator.geolocation) {
   document.getElementById('mapa-estado').textContent =
     'Tu navegador no soporta geolocalización.'
 }
+
+// ── DROPDOWNS DE SECCIONES ──
+const seccionesCollapsible = document.querySelectorAll('.menu-section--collapsible')
+
+for (const seccion of seccionesCollapsible) {
+  const header = seccion.querySelector('.section-header')
+  const contenido = seccion.querySelector('.section-content')
+
+  header.addEventListener('click', () => {
+    const abierto = seccion.dataset.open === 'true'
+    seccion.dataset.open = abierto ? 'false' : 'true'
+    contenido.style.display = abierto ? 'none' : 'block'
+  })
+}
