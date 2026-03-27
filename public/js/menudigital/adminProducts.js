@@ -342,7 +342,7 @@ function createProductRegisterForms (Fields, Ingredientes, type) {
   RegisterFormEl.addEventListener('submit', (event) => {
     event.preventDefault()
     PostNewProduct(Ingredientes, type)
-  })
+  },{ once: true })
 
   RegisterFormModal.showModal()
 }
