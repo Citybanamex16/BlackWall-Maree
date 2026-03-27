@@ -5,8 +5,8 @@ module.exports = class Producto {
   constructor (nuevoEvento) {
     this.nombre = nuevoEvento.nombre
     this.descripcion = nuevoEvento.descripcion
-    this.fechaInicio = nuevoEvento.fechaInicio
-    this.fechaFin = nuevoEvento.fechaFin
+    this.fecha_inicio = nuevoEvento.fechaInicio
+    this.fecha_Fin = nuevoEvento.fechaFin
     this.promociones = nuevoEvento.promociones
     this.royalty = nuevoEvento.royalty
     this.platillos = nuevoEvento.platillos
@@ -14,7 +14,7 @@ module.exports = class Producto {
 
   save () {
     // Insertar evento
-    return db.execute('').then(([result]) => { // Falta Query
+    return db.execute('INSERT INTO evento (nombre, descripcion, fecha_inicio, fecha_Fin) VALUES (?, ?, ?, ?)').then(([result]) => {
       // const idEvento = result.insertId
 
       // Insertar relaciones con promociones
@@ -42,15 +42,15 @@ module.exports = class Producto {
   }
 
   static fetchAllPromociones () {
-    return db.execute('SELECT id_promo, nombre FROM promociones')
+    return db.execute('SELECT Id_Promo, Nombre FROM promociones')
   }
 
   static fetchAllRoyalties () {
-    return db.execute('SELECT nombre FROM status_royalty')
+    return db.execute('SELECT Nombre FROM status_royalty')
   }
 
   static fetchAllProductos () {
-    return db.execute('SELECT id_producto, nombre_producto FROM producto')
+    return db.execute('SELECT Id_Producto, nombre_producto FROM producto')
   }
 
   static fetchAll () {
