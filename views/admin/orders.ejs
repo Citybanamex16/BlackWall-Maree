@@ -3,16 +3,98 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Orders - Admin Marée</title>
+    <title>Ordenes</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@1.0.4/css/bulma.min.css">
-    <link rel="stylesheet" href="/css/adminstyle.css">
+    <link rel="stylesheet" href="/css/orders-panel.css">
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=Jost:wght@300;400;500&display=swap" rel="stylesheet">
 </head>
+
 <body>
+
+<nav class="navbar" role="navigation">
+    <div class="navbar-brand">
+        <a class="navbar-item logo-area" href="/">
+            <span class="logo-text">MARÉE</span>
+            <span class="logo-sub">LOVE AT FIRST CRÊPE</span>
+        </a>
+    </div>
+
+    <%- include('../partials/breadcrumbs') %>
+    <%- include('../partials/Sesion') %>
+  
+
+</nav>
     <section class="section">
         <div class="container">
-            <h1 class="title">Catálogo de Ordenes</h1>
-            <p class="subtitle">Aquí va el catálogo de ordenes activas o pasadas</p>
+            <h1 class="title">Catálogo de Órdenes</h1>
+            <p class="subtitle">Aquí se visualizan las órdenes registradas y se pueden cancelar las que sigan activas.</p>
+
+            <div id="alert-container"></div>
+
+            <div class="table-container">
+                <table class="table is-fullwidth is-striped is-hoverable">
+                    <thead>
+                        <tr>
+                            <th>ID Orden</th>
+                            <th>Cliente</th>
+                            <th>Teléfono</th>
+                            <th>Estatus</th>
+                            <th>Mesa</th>
+                            <th>Fecha</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="orders-table-body">
+                        <% if (pedidos && pedidos.length > 0) { %>
+                            <% pedidos.forEach((pedido) => { %>
+                                <tr id="order-row-<%= pedido.id_orden %>">
+                                    <td><%= pedido.id_orden %></td>
+                                    <td><%= pedido.nombre_cliente || 'Sin nombre' %></td>
+                                    <td><%= pedido.numero_telefonico_cliente || 'Sin teléfono' %></td>
+                                    <td class="order-status"><%= pedido.estatus_orden %></td>
+                                    <td><%= pedido.mesa %></td>
+                                    <td><%= pedido.fecha || 'Sin fecha' %></td>
+                                    <td class="order-actions">
+                                        <% if (pedido.estatus_orden !== 'Cancelado') { %>
+                                            <button
+                                                class="button is-danger is-light btn-cancel-order"
+                                                data-order-id="<%= pedido.id_orden %>">
+                                                Cancelar orden
+                                            </button>
+                                        <% } else { %>
+                                            <span class="tag is-light">Sin acción</span>
+                                        <% } %>
+                                    </td>
+                                </tr>
+                            <% }) %>
+                        <% } else { %>
+                            <tr>
+                                <td colspan="7" class="has-text-centered">No hay órdenes registradas.</td>
+                            </tr>
+                        <% } %>
+                    </tbody>
+                </table>
+            </div>
         </div>
     </section>
+
+    <div id="cancel-modal" class="modal">
+        <div class="modal-background"></div>
+        <div class="modal-card">
+            <header class="modal-card-head">
+                <p class="modal-card-title">Confirmar cancelación</p>
+                <button id="close-modal-x" class="delete" aria-label="close"></button>
+            </header>
+            <section class="modal-card-body">
+                <p id="cancel-modal-text">¿Deseas cancelar esta orden?</p>
+            </section>
+            <footer class="modal-card-foot">
+                <button id="confirm-cancel-btn" class="button is-danger">Sí, cancelar</button>
+                <button id="abort-cancel-btn" class="button">No, volver</button>
+            </footer>
+        </div>
+    </div>
+
+    <script src="/js/orders-cancel.js"></script>
 </body>
 </html>
