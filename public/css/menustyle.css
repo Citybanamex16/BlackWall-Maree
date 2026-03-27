@@ -103,6 +103,28 @@ body {
     margin-bottom: 20px;
 }
 
+.section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+    user-select: none;
+}
+
+.section-header:hover .section-title {
+    opacity: 0.75;
+}
+
+.section-arrow {
+    font-size: 13px;
+    color: #b5956a;
+    transition: transform 0.2s;
+}
+
+.menu-section--collapsible[data-open="true"] .section-arrow {
+    transform: rotate(180deg);
+}
+
 /* PRODUCT CARDS */
 .product-card {
     border: 1px solid #eee;
@@ -292,4 +314,20 @@ body {
 
 .modal-close-btn:hover {
     color: #444;
+}
+
+.order-map-box {
+    border: 1px solid #eee;
+    border-radius: 10px;
+    padding: 16px 20px;
+    background: #fff;
+    margin-top: 16px;
+    width: 100%;
+}
+
+.order-map-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: #444;
+    margin-bottom: 10px;
 }

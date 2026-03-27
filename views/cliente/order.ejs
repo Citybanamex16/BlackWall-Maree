@@ -10,12 +10,37 @@
 </head>
 <body>
     <%- include('../partials/breadcrumbs') %>
-    
+
     <section class="section">
         <div class="container">
-            <h1 class="page-title">Orden</h1>
-            <p class="page-subtitle">Aquí va la orden del cliente (el resumen del pedido)</p>
+
+            <h1 class="page-title">Resumen de Pedido</h1>
+            <p class="page-subtitle">Revisa tu orden antes de confirmar</p>
+
+            <!-- Lista de items -->
+            <div id="lista-pedido"></div>
+
+            <!-- Mensaje si está vacío -->
+            <div id="pedido-vacio" style="display:none;margin-top:32px;text-align:center;">
+                <p style="color:#aaa;font-size:15px;margin-bottom:12px;">
+                    No hay artículos en tu pedido.
+                </p>
+                <a href="/" style="color:#b5956a;font-size:14px;">← Regresar al menú</a>
+            </div>
+
+            <!-- Botón checkout -->
+            <div id="seccion-checkout" style="display:none;margin-top:24px;">
+                <button id="btn-checkout"
+                    style="padding:14px 32px;background:#b5956a;color:#fff;
+                           border:none;border-radius:6px;font-size:15px;
+                           cursor:pointer;font-family:'Jost',sans-serif;">
+                    Confirmar Pedido →
+                </button>
+            </div>
+
         </div>
     </section>
+
+    <script src="/js/menudigital/order.js"></script>
 </body>
 </html>

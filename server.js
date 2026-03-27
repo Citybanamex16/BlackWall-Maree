@@ -11,7 +11,7 @@ appServer.set('view engine', 'ejs')
 appServer.set('views', 'views')
 
 // Configuracion de POST & sesión
-appServer.use(express.json()) // Para recibir JSON (si mandas fetch/axios)
+appServer.use(express.json()) // Para recibir JSON (si mandamos fetch)
 appServer.use(express.urlencoded({ extended: true })) // Para recibir datos de formularios (el clásico POST de toda la vida)
 
 appServer.use(session({
@@ -19,6 +19,18 @@ appServer.use(session({
   resave: false, // La sesión no se guardará en cada petición, sino sólo se guardará si algo cambió
   saveUninitialized: false // Asegura que no se guarde una sesión para una petición que no lo necesita
 }))
+
+appServer.use((req, res, next) => {
+  if (!req.session.user) {
+    req.session.user = {
+      id: 999,
+      rol: 'admin',
+      nombre: 'Administrador de prueba'
+    }
+    req.session.name = 'Administrador de prueba'
+  }
+  next()
+})
 
 // Middlewares Globales de enrutamiento, redirects & locals
 appServer.use((req, res, next) => {
@@ -36,6 +48,7 @@ const adminRutes = require('./routes/admin.routes.js')
 const menuRutes = require('./routes/menu.routes.js')
 const rutasEventosPromos = require('./routes/promo_eventos.routes.js')
 
+// Prefijos De Routes
 appServer.use('/cliente', clienteRutes)
 appServer.use('/admin', adminRutes)
 appServer.use('/menu', menuRutes)
@@ -60,6 +73,6 @@ appServer.use((err, req, res, next) => {
   res.status(500)
 })
 
-appServer.listen(3000, () => {
-  console.log('Servidor activo en http://localhost:3000')
+appServer.listen(3005, () => {
+  console.log('Servidor activo en http://localhost:3005')
 })
