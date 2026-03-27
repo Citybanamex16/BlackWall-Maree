@@ -1,82 +1,214 @@
-.logo {
-    font-size: 21px;
-    font-weight: bold;
-    letter-spacing: 3px;
+/* ============================================
+   MARÉE — ADMIN DASHBOARD STYLES
+   Cormorant Garamond + Jost, gold/beige palette
+   ============================================ */
+
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;600&family=Jost:wght@300;400;500;600&display=swap');
+
+/* BASE */
+body {
+    font-family: 'Jost', sans-serif;
+    background-color: #fafaf8;
+    color: #222;
 }
 
-.active-link {
-    color: #8a9e8a !important;
+/* NAV */
+.navbar {
+    background-color: #ffffff !important;
+    border-bottom: 1px solid #eee;
+    padding: 8px 32px;
 }
 
-.dashboard-grid {
-    grid-template-columns: repeat(4, 1fr);
-}
-
-.dashboard-card {
+.logo-area {
     display: flex;
     flex-direction: column;
-    align-items: center;
-    gap: 14px;
-    padding: 36px 20px;
-    text-align: center;
-    color: #222;
-    text-decoration: none;
-    transition: box-shadow 0.2s;
+    line-height: 1.2;
 }
 
-.dashboard-card:hover {
-    box-shadow: 0 4px 20px rgba(0,0,0,0.12);
-}
-
-.icon-circle {
-    width: 64px;
-    height: 64px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 26px;
-}
-
-.blue     { background-color: #4A90D9; }
-.green    { background-color: #27AE60; }
-.yellow   { background-color: #F5A623; }
-.purple   { background-color: #9B59B6; }
-.red      { background-color: #E74C3C; }
-.pink     { background-color: #E91E8C; }
-.teal     { background-color: #1ABC9C; }
-.whatsapp { background-color: #25D366; }
-
-/* Todo esto es para contrarrestar el automatico color negro que tiene bulma */
-body {
-    background-color: #ffffff;
+.logo,
+.logo-text {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 22px;
+    font-weight: 600;
+    letter-spacing: 4px;
     color: #222;
 }
 
-.navbar {
-    background-color: #ffffff;
-    border-bottom: 1px solid #eee;
+.logo-sub {
+    font-size: 9px;
+    letter-spacing: 2px;
+    color: #999;
+    text-transform: uppercase;
 }
 
 .navbar-item {
-    color: #444 !important;
+    color: #555 !important;
+    font-size: 14px;
+    font-family: 'Jost', sans-serif;
 }
 
-.title {
-    color: #222 !important;
-}
-
-.subtitle {
-    color: #777 !important;
-}
-
-.box {
-    background-color: #ffffff;
-    border: 1px solid #e5e5e5;
+.active-link {
+    color: #b5956a !important;
 }
 
 .navbar-item:hover,
 .navbar-link:hover {
     background-color: transparent !important;
+    color: #b5956a !important;
+}
+
+/* Bulma overrides */
+.title {
+    color: #222 !important;
+    font-family: 'Cormorant Garamond', serif !important;
+    font-size: 48px !important;
+    font-weight: 400 !important;
+    letter-spacing: 0.5px;
+    margin-bottom: 4px !important;
+}
+
+.subtitle {
+    color: #888 !important;
+    font-family: 'Jost', sans-serif !important;
+    font-size: 14px !important;
+    margin-bottom: 48px !important;
+}
+
+.box {
+    background-color: #ffffff;
+    border: 1px solid #eee;
+    box-shadow: none !important;
+    border-radius: 10px !important;
+}
+
+/* SECTION */
+.section {
+    padding-top: 48px;
+    padding-bottom: 64px;
+}
+
+/* DASHBOARD GRID — 4 columns */
+.dashboard-grid {
+    display: grid !important;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 20px;
+}
+
+@media (max-width: 1024px) {
+    .dashboard-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 640px) {
+    .dashboard-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* DASHBOARD CARD */
+.dashboard-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+    padding: 40px 20px 32px;
+    text-align: center;
+    color: #333;
+    text-decoration: none !important;
+    border: 1px solid #eee;
+    border-radius: 10px;
+    background: #fff;
+    transition: border-color 0.25s ease, box-shadow 0.25s ease, transform 0.2s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.dashboard-card::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 0;
+    height: 2px;
+    background: #b5956a;
+    transition: width 0.3s ease;
+    border-radius: 2px;
+}
+
+.dashboard-card:hover {
+    border-color: #e0c9a8;
+    box-shadow: 0 6px 24px rgba(181, 149, 106, 0.12);
+    transform: translateY(-2px);
+    color: #222 !important;
+}
+
+.dashboard-card:hover::after {
+    width: 40%;
+}
+
+/* Card label */
+.dashboard-card p {
+    font-family: 'Jost', sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: #555;
+    margin: 0;
+    transition: color 0.2s;
+}
+
+.dashboard-card:hover p {
+    color: #b5956a;
+}
+
+/* ICON CIRCLE*/
+.icon-circle {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    flex-shrink: 0;
+    transition: transform 0.2s ease;
+}
+
+.dashboard-card:hover .icon-circle {
+    transform: scale(1.08);
+}
+
+/* Soft color variants */
+.blue     { background-color: #dce8f5; }
+.green    { background-color: #d4eddf; }
+.yellow   { background-color: #fdeecf; }
+.purple   { background-color: #ecdff5; }
+.red      { background-color: #fde0da; }
+.pink     { background-color: #fce4ef; }
+.teal     { background-color: #d2f5ed; }
+.whatsapp { background-color: #d5f5e3; }
+
+/* Section divider — matching menu style */
+.admin-section-divider {
+    border: none;
+    border-top: 1px solid #e8e8e8;
+    margin: 0 0 40px;
+}
+
+/* Breadcrumbs area polish */
+nav.breadcrumb {
+    padding: 12px 0 0;
+    font-size: 13px;
+    color: #aaa;
+}
+
+nav.breadcrumb a {
+    color: #aaa !important;
+}
+
+nav.breadcrumb a:hover {
     color: #b5956a !important;
 }
