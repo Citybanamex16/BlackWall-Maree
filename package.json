@@ -250,7 +250,8 @@
   },
   "scripts": {
     "launch": "node --watch server.js",
-    "prepare": "husky"
+    "prepare": "husky",
+    "santi": "SET USER=maree2& SET HOST=mysql-maree2.alwaysdata.net& SET DB=maree2_2& SET PASSWORD=maree123& node --watch server.js"
   },
   "repository": {
     "type": "git",
