@@ -19,10 +19,6 @@ exports.getIngredients = (req, res, next) => {
   res.render('admin/ingredients')
 }
 
-exports.getProducts = (req, res, next) => {
-  res.render('admin/products')
-}
-
 exports.getRoyalty = (req, res, next) => {
   res.render('admin/royalty')
 }
