@@ -17,10 +17,6 @@ exports.getHub = (req, res, next) => {
   res.render('admin/admindashboard', { breadcrumbs })
 }
 
-exports.getIngredients = (req, res, next) => {
-  res.render('admin/ingredients')
-}
-
 exports.getRoyalty = (req, res, next) => {
   res.render('admin/royalty')
 }
@@ -131,12 +127,12 @@ exports.getOrders = async (req, res, next) => {
   }
 }
 
-exports.getEvents = (req, res, next) => {
-  res.render('admin/events')
+exports.getCollaborators = (req, res, next) => {
+  res.render('admin/collaborators')
 }
 
-exports.getMensajes = (req, res, next) => {
-  res.render('admin/whatsapp')
+exports.getOrders = (req, res, next) => {
+  res.render('admin/orders')
 }
 exports.getPromotions = (req, res, next) => {
   res.render('admin/promotions')

@@ -11,7 +11,6 @@ router.get('/', adminControlador.getHub)
 router.get('/ingredientes', adminControlador.getIngredients)
 
 router.get('/royalty', adminControlador.getRoyalty)
-router.get('/royaltyMetrics', adminControlador.getRoyaltyMetrics)
 
 router.get('/colaboradores', isAuth, isAdmin, adminControlador.getCollaborators)
 router.get('/colaboradores/:id', isAuth, isAdmin, adminControlador.getCollaboratorsDetails)
@@ -20,10 +19,10 @@ router.post('/colaboradores/:id/baja', isAuth, isAdmin, adminControlador.postDar
 router.get('/ordenes', adminControlador.getOrders)
 router.post('/api/orders/:id/cancel', adminControlador.cancelActiveOrder)
 
-router.get('/promociones', adminControlador.getPromotions)
+router.get('/productos', adminControlador.getProducts)
 
-router.get('/eventos', adminControlador.getEvents)
+router.get('/colaboradores', adminControlador.getCollaborators)
 
-router.get('/mensajes', adminControlador.getMensajes)
+router.get('/ordenes', adminControlador.getOrders)
 
 module.exports = router

@@ -11,8 +11,125 @@
     <section class="section">
         <div class="container">
             <h1 class="title">Catálogo de Eventos</h1>
-            <p class="subtitle">Aquí va el catálogo de eventos</p>
+            <div class="level-right">
+                <div id="loading-spinner" class="button is-loading is-ghost is-hidden"></div>
+            </div>
+            <div id="contenedor-eventos" class="columns is-multiline">
         </div>
     </section>
+    <section class="section">
+  <div class="container">
+    <div class="level">
+      <div class="level-left">
+        <div class="level-item">
+          <h1 class="title">Gestión de Eventos</h1>
+        </div>
+      </div>
+
+      <div class="level-right">
+        <div class="level-item">
+          <button class="button is-primary is-rounded" id="btn-registrar-evento" onclick="cargarYMostrarModal()">
+            <span class="icon">
+              <i class="fas fa-plus"></i>
+            </span>
+            <span>Nuevo Evento</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <hr>
+
+    <div id="contenedor-eventos">
+        </div>
+  </div>
+</section>
+
+<div class="modal" id="modal-evento">
+  <div class="modal-background" onclick="cerrarModal()"></div>
+  <div class="modal-content">
+    <div class="box">
+      <h3 class="title is-4">Registrar Nuevo Evento</h3>
+      
+      <form id="form-evento">
+        <div class="field">
+          <label class="label">Nombre del Evento</label>
+          <div class="control">
+            <input class="input" type="text" id="nombre" placeholder="Ej. Noche de Crepas">
+          </div>
+        </div>
+
+        <div class="field">
+          <label class="label">Descripción</label>
+          <div class="control">
+            <input class="input" type="text" id="descripcion" placeholder="Ej. Disfruta de una deliciosa noche de crepas, donde tendremos promociones en platillos y una crepa única que solo se podra
+            pedir en este evento.">
+          </div>
+        </div>
+
+        <div class="columns">
+          <div class="column">
+            <div class="field">
+              <label class="label">Fecha Inicio</label>
+              <div class="control">
+                <input class="input" type="date" id="fechaInicio">
+              </div>
+            </div>
+          </div>
+          <div class="column">
+            <div class="field">
+              <label class="label">Fecha Fin</label>
+              <div class="control">
+                <input class="input" type="date" id="fechaFin">
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="field">
+          <label class="label">Promociones (Selección múltiple)</label>
+          <div class="control">
+            <div class="select is-multiple is-fullwidth">
+              <select id="promociones" multiple size="3">
+                </select>
+            </div>
+          </div>
+        </div>
+
+        <div class="field">
+          <label class="label">Estatus Royalty</label>
+          <div class="control">
+            <div class="select is-multiple is-fullwidth">
+              <select id="royalty" multiple size="2">
+                </select>
+            </div>
+          </div>
+        </div>
+
+        <div class="field">
+          <label class="label">Productos que afecta</label>
+          <div class="control">
+            <div class="select is-multiple is-fullwidth">
+              <select id="productos" multiple size="4">
+                </select>
+            </div>
+          </div>
+        </div>
+
+        <div class="field is-grouped is-grouped-right">
+          <p class="control">
+            <button type="button" class="button is-light" onclick="cerrarModal()">Cancelar</button>
+          </p>
+          <p class="control">
+            <button type="button" class="button is-primary" onclick="guardarEvento()">Guardar Evento</button>
+          </p>
+        </div>
+      </form>
+    </div>
+  </div>
+  <button class="modal-close is-large" aria-label="close" onclick="cerrarModal()"></button>
+</div>
+
+<script src="/js/promos_eventos/eventos.js"></script>
 </body>
 </html>
