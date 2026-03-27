@@ -46,6 +46,12 @@ module.exports = class Producto {
   8 Imagen
   */
 
+  /*
+  static async insertIngredientesProducto(){
+
+  }
+  */
+
   static ValidarDatosRegistro (data) {
     const mensajesError = [] // Lista para acumular errores
 
