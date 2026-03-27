@@ -80,7 +80,7 @@ async function seleccionarTipoProducto (id) {
   try {
     console.log(`Iniciando fetch para el ID: ${id}`)
 
-    /* 1. Fetch: Obtener campos del producto */
+    /* 1. Fetch: Obtener campos del producto e Ingredientes */
     const respuesta = await fetch(`/menu/formsRegistraPlatillo?id=${id}`)
 
     if (!respuesta.ok) {
@@ -247,9 +247,13 @@ function createIngRow (index, isFirst = false) {
     btnRemove.title = 'Quitar ingrediente'
     btnRemove.textContent = '✕'
     btnRemove.addEventListener('click', () => {
-      row.remove()
-      ingCount--
-      updateIngCounter()
+      row.classList.add('removing')
+      row.addEventListener('animationend', () => {
+        row.remove()
+        ingCount--
+        updateIngCounter()
+        // reindexRows()
+      }, { once: true })
     })
     row.appendChild(btnRemove)
   }
@@ -324,11 +328,11 @@ function createProductRegisterForms (Fields, Ingredientes, type) {
   RegisterFormTitle.textContent = `Registro de nuevo ${type}`
 
   // Inyectar campos dinámicos (nombre, precio, etc.)
-  Fields.forEach(field => {
+  Fields.forEach((field, index) => {
     const fieldEl = createFieldElement(field)
+    fieldEl.style.animationDelay = `${index * 0.05}s`
     RegisterFormEl.appendChild(fieldEl)
   })
-
   // Construir e inyectar la sección de ingredientes
   RegisterFormEl.appendChild(buildIngredientsSection())
 
@@ -463,9 +467,12 @@ Array -> .forEach
 
 */
 
+const SummaryContent = document.getElementById('summaryContent')
+
 function ShowProductSummary (Registerdata, type) {
   limpiarModal(SummaryModal)
   console.log('Summary getting: ', Registerdata)
+  SummaryContent.innerHTML = '' // limpiar filas anteriores
   SummaryFormTitle.innerText = `Resumen de Nuevo ${type}`
 
   // Despliegue de los datos
@@ -473,7 +480,7 @@ function ShowProductSummary (Registerdata, type) {
     console.log('Key: ', content.key, ' Value: ', content.value)
 
     const SummaryEl = createSummaryElement(content.key, content.value)
-    SummaryModal.insertBefore(SummaryEl, SummaryFormClose)
+    SummaryContent.appendChild(SummaryEl)
   })
 
   SummaryFormClose.addEventListener('click', (event) => {

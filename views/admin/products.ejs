@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Products - Admin Marée</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@1.0.4/css/bulma.min.css">
-    <link rel="stylesheet" href="/css/adminstyle.css">
+    <link rel="stylesheet" href="/css/productCatalog.css">
 </head>
 <body>
     <section class="section">
@@ -27,14 +27,16 @@
 <!-- Sección de modals-->
 
 <dialog id="TypeFormsCU04" class="mymodal">
+  <button class="modal-close-btn" id="closeRegisterX">✕</button>
   <h2 id="tituloModal">Título dinámico</h2>
   <p>Elige una opción:</p>
   <br>
-  <button id="cerrarModal" style="margin-top: 10px;">Cerrar</button>
+  <button id="cerrarModal"  style="margin-top: 10px;">Cerrar</button>
 </dialog>
 
 
 <dialog id="RegisterFormsCU04" class="mymodal">
+  <button class="modal-close-btn" id="closeRegisterX">✕</button>
   <h2 id="formsRegistrarTitulo">Título dinámico</h2>
 
   <form id="formsRegistrarForm" novalidate>
@@ -46,7 +48,7 @@
   </form>
   <!-- Footer del modal -->
   <div class="modal-footer">
-    <button id="cerrarFormsRegistrar" type="button" class="button is-light">Cancelar</button>
+    <button id="cerrarFormsRegistrar"  type="button" class="button is-light">Cancelar</button>
     <button id="submitFormsRegistrar" type="submit" form="formsRegistrarForm" class="button is-primary">Guardar</button>
   </div>
 </dialog>
@@ -55,20 +57,28 @@
 
 
 <dialog id="SummaryCU04" class="mymodal">
+  <button class="modal-close-btn" id="closeRegisterX">✕</button>
   <h2 id="SummaryTitleModal">Título dinámico</h2>
-  <p>Elige una opción:</p>
-  <br>
-  <button id="cerrarSummaryModal" style="margin-top: 10px;">Cerrar</button>
-  <button id="RegisterProduct" style="margin-top: 10px;">Registrar Nuevo Producto</button>
+  <p>Revisa los datos antes de registrar</p>
+   <hr style="border:none; border-top:1px solid #ebebeb; margin: 12px 0;">
+
+  <div id="summaryContent"></div> 
+
+
+   <div class="modal-footer">
+    <button id="cerrarSummaryModal" type="button" class="button is-light">Cerrar</button>
+    <button id="RegisterProduct"    type="button" class="button is-primary">Registrar Producto</button>
+  </div>
 </dialog>
 
 
 <!-- Dialogo de ¡EXITO!-->
 <dialog id="ModalExito" class="error-modal mymodal">
     <h2 id = "TituloExito">Titulo Dinamico</h2>
+    <div class="modal-accent-bar"></div>
     <p id="exitoContent">Contenido Dinámico</p>
     <!-- Botón con ID para manipularlo desde JS -->
-    <button id="closeExito">Regresar a Catalogo</button>
+    <button id="closeExito" class="modal-close-btn" class="modal-close-btn">Regresar a Catalogo</button>
 </dialog>
 
 
@@ -77,9 +87,10 @@
 <!-- Dialogo de error -->
 <dialog id="ErrorModal" class="error-modal mymodal">
     <h2 id="ErrorTitle">Titulo Dinámico</h2>
+    <div class="modal-accent-bar"></div>
     <p id="ErrorMessage">Mensaje Dinámico</p>
     <!-- Botón con ID para manipularlo desde JS -->
-    <button id="closeInvalidData">Cerrar</button>
+    <button id="closeInvalidData" class="modal-close-btn" >Cerrar</button>
 </dialog>
 
 
