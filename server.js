@@ -11,7 +11,7 @@ appServer.set('view engine', 'ejs')
 appServer.set('views', 'views')
 
 // Configuracion de POST & sesión
-appServer.use(express.json()) // Para recibir JSON (si mandas fetch/axios)
+appServer.use(express.json()) // Para recibir JSON (si mandamos fetch)
 appServer.use(express.urlencoded({ extended: true })) // Para recibir datos de formularios (el clásico POST de toda la vida)
 
 appServer.use(session({
@@ -47,9 +47,10 @@ const clienteRutes = require('./routes/cliente.routes.js')
 const adminRutes = require('./routes/admin.routes.js')
 const menuRutes = require('./routes/menu.routes.js')
 
+// Prefijos De Routes
 appServer.use('/cliente', clienteRutes)
 appServer.use('/admin', adminRutes)
-appServer.use('/menu', menuRutes)
+appServer.use('/menu', menuRutes) // Modulo de Menu Digital
 
 // ¡No debemos renderizar en Server!
 appServer.get('/', (req, response) => {
@@ -70,6 +71,6 @@ appServer.use((err, req, res, next) => {
   res.status(500)
 })
 
-appServer.listen(3000, () => {
-  console.log('Servidor activo en http://localhost:3000')
+appServer.listen(3005, () => {
+  console.log('Servidor activo en http://localhost:3005')
 })
