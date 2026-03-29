@@ -49,10 +49,10 @@ const menuRutes = require('./routes/menu.routes.js')
 const rutasEventosPromos = require('./routes/promo_eventos.routes.js')
 
 // Prefijos De Routes
-appServer.use('/cliente', clienteRutes) //Modulos a Quitar
-appServer.use('/admin', adminRutes) //Modulos a quitar
+appServer.use('/cliente', clienteRutes) // Modulos a Quitar
+appServer.use('/admin', adminRutes) // Modulos a quitar
 appServer.use('/menu', menuRutes) // Modulo de Menu Digital
-appServer.use('/promos',rutasEventosPromos)
+appServer.use('/promos', rutasEventosPromos)
 // Promociones -> /admin
 
 // ¡No debemos renderizar en Server!
