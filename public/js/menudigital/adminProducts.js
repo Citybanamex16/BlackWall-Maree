@@ -10,8 +10,6 @@ const typeFormsModal = document.getElementById('TypeFormsCU04')
 const typeFormsTitle = document.getElementById('tituloModal')
 const typeFormsCloseBtn = document.getElementById('cerrarModal')
 
-
-
 function registerButtonOnClick (event) {
   // Logica de Registrar Nuevo Producto
   event.preventDefault()
