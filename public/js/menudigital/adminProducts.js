@@ -10,6 +10,8 @@ const typeFormsModal = document.getElementById('TypeFormsCU04')
 const typeFormsTitle = document.getElementById('tituloModal')
 const typeFormsCloseBtn = document.getElementById('cerrarModal')
 
+
+
 function registerButtonOnClick (event) {
   // Logica de Registrar Nuevo Producto
   event.preventDefault()
@@ -339,6 +341,7 @@ function createProductRegisterForms (Fields, Ingredientes, type) {
   /* ══════════════════════════════════════════════════════
    LISTENER SUBMIT
 ══════════════════════════════════════════════════════ */
+
   RegisterFormEl.addEventListener('submit', (event) => {
     event.preventDefault()
     PostNewProduct(Ingredientes, type)
@@ -356,7 +359,7 @@ RegisterFormClose.addEventListener('click', () => {
 })
 
 function PostNewProduct (BackupIngredientes, ProductType) {
-  // 1. Validación nativa HTML
+  // 1. Validación front
   if (!RegisterFormEl.checkValidity()) {
     RegisterFormEl.reportValidity()
     return
