@@ -1,35 +1,37 @@
-document.addEventListener("DOMContentLoaded", () => {
-  const botones = document.querySelectorAll(".btn-baja");
+document.addEventListener('DOMContentLoaded', () => {
+  const botones = document.querySelectorAll('.btn-baja')
 
   botones.forEach((boton) => {
-    boton.addEventListener("click", async () => {
-      const id = boton.dataset.id;
-      const nombre = boton.dataset.nombre;
+    boton.addEventListener('click', async () => {
+      const id = boton.dataset.id
+      // const nombre = boton.dataset.nombre
 
-      const confirmado = confirm(`¿Seguro que deseas dar de baja a ${nombre}?`);
+      /*
+      const confirmado = confirm(`¿Seguro que deseas dar de baja a ${nombre}?`)
 
       if (!confirmado) {
-        return;
+        return
       }
+      */
 
       try {
         const response = await fetch(`/admin/colaboradores/${id}/baja`, {
-          method: "POST",
+          method: 'POST',
           headers: {
-            "Content-Type": "application/json"
+            'Content-Type': 'application/json'
           }
-        });
+        })
 
-        const data = await response.json();
+        const data = await response.json()
 
-        alert(data.mensaje);
+        console.log(data.mensaje)
 
         if (data.ok) {
-          window.location.href = "/admin/colaboradores"
+          window.location.href = '/admin/colaboradores'
         }
       } catch (error) {
-        alert("Error de red o del servidor al intentar dar de baja.");
+        console.log('Error de red o del servidor al intentar dar de baja.')
       }
-    });
-  });
-});
+    })
+  })
+})

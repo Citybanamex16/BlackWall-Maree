@@ -8,7 +8,7 @@ const isAdmin = require('../middleware/isAdmin.js')
 // Dashboard principal
 router.get('/', adminControlador.getHub)
 // Cada sección del dashboard uu que rico
-router.get('/ingredientes', adminControlador.getIngredients)
+// router.get('/ingredientes', adminControlador.getIngredientes)
 
 router.get('/royalty', adminControlador.getRoyalty)
 
@@ -18,8 +18,6 @@ router.post('/colaboradores/:id/baja', isAuth, isAdmin, adminControlador.postDar
 
 router.get('/ordenes', adminControlador.getOrders)
 router.post('/api/orders/:id/cancel', adminControlador.cancelActiveOrder)
-
-router.get('/productos', adminControlador.getProducts)
 
 router.get('/colaboradores', adminControlador.getCollaborators)
 
