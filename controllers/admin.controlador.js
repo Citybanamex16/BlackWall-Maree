@@ -1,6 +1,6 @@
 // Llamar al model
 const nav = require('../models/breadcrumbs.model.js')
-const Colaborador = require("../models/colaborador.model.js")
+const Colaborador = require('../models/colaborador.model.js')
 
 // const path = require('path')
 
@@ -25,88 +25,84 @@ exports.getRoyaltyMetrics = (req, res, next) => {
   res.render('admin/metricsRoyalty')
 }
 
-exports.getCollaborators = async(req, res, next) => {
-  try{
+exports.getCollaborators = async (req, res, next) => {
+  try {
     const colaboradores = await Colaborador.fetchActivos()
-    res.render("admin/collaborators", {
-      pageTitle: "Colaboradores",
+    res.render('admin/collaborators', {
+      pageTitle: 'Colaboradores',
       colaboradores,
       mensaje: null,
       error: null
     })
-  } catch(error){
+  } catch (error) {
     console.log(error)
-    res.status(500).render("admin/collaborators", {
-      pageTitle: "Colaboradores",
+    res.status(500).render('admin/collaborators', {
+      pageTitle: 'Colaboradores',
       colaboradores: [],
       mensaje: null,
-      error: "No se pudo cargar la lista de colaboradores."
+      error: 'No se pudo cargar la lista de colaboradores.'
     })
   }
 }
 
-exports.getCollaboratorsDetails = async(req, res, next) => {
-  try{
+exports.getCollaboratorsDetails = async (req, res, next) => {
+  try {
     const idColaborador = req.params.id
     const colaborador = await Colaborador.fetchById(idColaborador)
-    if (!colaborador){
-      return res.status(404).render("404")
+    if (!colaborador) {
+      return res.status(404).render('404')
     }
-    res.render("admin/collaboratorsDetails", {
-      pageTitle: "Detalles del colaborador",
+    res.render('admin/collaboratorsDetails', {
+      pageTitle: 'Detalles del colaborador',
       colaborador,
       error: null
     })
-  } catch (error){
+  } catch (error) {
     console.log(error)
-    res.status(500).render("admin/collaboratorsDetails", {
-      pageTitle: "Detalle del colaborador",
+    res.status(500).render('admin/collaboratorsDetails', {
+      pageTitle: 'Detalle del colaborador',
       colaborador: null,
-      error: "No se pudo cargar la información del colaborador."
+      error: 'No se pudo cargar la información del colaborador.'
     })
   }
 }
 
 exports.postDarDeBajaColaborador = async (req, res, next) => {
-  try{
+  try {
     const idColaborador = req.params.id
     const idAdminSesion = String(req.session.user.id)
 
-    console.log("ID colaborador recibido:", idColaborador)
-    console.log("ID admin en sesión:", idAdminSesion)
+    console.log('ID colaborador recibido:', idColaborador)
+    console.log('ID admin en sesión:', idAdminSesion)
 
-    if (idColaborador === idAdminSesion){
+    if (idColaborador === idAdminSesion) {
       return res.status(400).json({
         ok: false,
-        mensaje: "No puedes darte de baja a ti mismo."
+        mensaje: 'No puedes darte de baja a ti mismo.'
       })
     }
 
     const resultado = await Colaborador.darDeBaja(idColaborador)
-    console.log("Resultado darDeBaja:", resultado)
+    console.log('Resultado darDeBaja:', resultado)
 
-    if (!resultado){
+    if (!resultado) {
       return res.status(400).json({
         ok: false,
-        mensaje: "No fue posible dar de baja al colaborador."
+        mensaje: 'No fue posible dar de baja al colaborador.'
       })
     }
 
     return res.json({
       ok: true,
-      mensaje: "Empleado dado de baja exitosamente."
+      mensaje: 'Empleado dado de baja exitosamente.'
     })
   } catch (error) {
-    console.log("ERROR EN BAJA:", error)
+    console.log('ERROR EN BAJA:', error)
     res.status(500).json({
       ok: false,
-      mensaje: "Ocurrió un error al actualizar en la base de datos."
+      mensaje: 'Ocurrió un error al actualizar en la base de datos.'
     })
   }
-}
-
-exports.getOrders = (req, res, next) => {
-  res.render('admin/orders')
 }
 
 exports.getOrders = async (req, res, next) => {
@@ -123,17 +119,10 @@ exports.getOrders = async (req, res, next) => {
     })
   } catch (error) {
     console.error('Error al cargar órdenes:', error)
-    res.status(500).send('Error al cargar órdenes.')
+    res.status(500).send('Error al cargar órdenes de BD.')
   }
 }
 
-exports.getCollaborators = (req, res, next) => {
-  res.render('admin/collaborators')
-}
-
-exports.getOrders = (req, res, next) => {
-  res.render('admin/orders')
-}
 exports.getPromotions = (req, res, next) => {
   res.render('admin/promotions')
 }
