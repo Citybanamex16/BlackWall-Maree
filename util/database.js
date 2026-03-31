@@ -1,10 +1,10 @@
-const mysql = require('maree2')
+const mysql = require('mysql2')
 
 // Pool de conexiones
 const pool = mysql.createPool({
   host: 'localhost',
   user: 'root',
-  database: 'MareeBD',
+  database: 'maree2',
   password: '',
   waitForConnection: true,
   connectionLimit: 10

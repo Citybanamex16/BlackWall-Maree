@@ -3,12 +3,15 @@
 // Function to know if the input written is correct
 
 // Modal
+// function to open the pop up or the modal
 const abrirModal = () => {
   document.getElementById('modal-promocion').classList.add('is-active')
 }
 
+// Asyncronus petition
+// btn-registrar-promocion is going to use when we want to post on the main page
 const cargarYMostrarModal = async () => {
-  const btn = document.getElementById('btn-registrar-evento')
+  const btn = document.getElementById('btn-registrar-promocion')
   btn.classList.add('is-loading')
 
   try {
@@ -43,7 +46,9 @@ function poblarSelect (idSelect, lista) {
   })
 }
 
+// Option of cancelar, we close the modal
 const cerrarModal = () => {
+  console.log('Cerrando Pop-up')
   document.getElementById('modal-promocion').classList.remove('is-active')
   limpiarFormulario()
 }
@@ -64,18 +69,34 @@ function validarFormulario (datos) {
   // cleans the name and checks if it is empty
   // validates name
   if (!datos.nombre || datos.nombre.trim() === '') {
-    marcarError('nombre', 'El descuento es obligatorio')
+    console.log('Debes escribir un nombre')
+    marcarError('nombre', 'El nombre es obligatorio')
     esValido = false
   }
   // vatidates Discount
   if (!datos.descuento || datos.descuento.trim() === '') {
-    marcarError('descuento', 'El nombre es obligatorio')
+    console.log('Debes escribir un descuento')
+    marcarError('descuento', 'El descuento es obligatorio')
     esValido = false
   }
   // This makes this in HTML: <p class="help is-danger">El nombre es obligatorio</p>
   // validates Conditions
-  if (!datos.condiciones || datos.condiciones.trim() === '') {
+  if (!datos.condiciones || datos.condiciones === '') {
+    console.log('Debes escribir una condicion')
     marcarError('condiciones', 'Las condiciones no son válidas')
+    esValido = false
+  }
+
+  if (!datos.fechaInicio || datos.fechaInicio === '') {
+    console.log('Debes escribir una fecha de inicio')
+    // los parametros de marcar error deben coincidir con el id en el ejs
+    marcarError('fecha_de_Inicio', 'Debes colocar una fecha de inicio')
+    esValido = false
+  }
+  if (!datos.fechaInicio || datos.fechaInicio === '') {
+    console.log('Debes escribir una fecha de fin')
+    // los parametros de marcar error deben coincidir con el id en el ejs
+    marcarError('fecha_de_Fin', 'Debes colocar una fecha de inicio')
     esValido = false
   }
   return esValido
@@ -112,13 +133,18 @@ const guardarPromocion = () => {
   const datos = {
     nombre: document.getElementById('nombre').value.trim(),
     descuento: document.getElementById('descuento').value.trim(),
-    condiciones: document.getElementById('condiciones').value.trim()
+    condiciones: document.getElementById('condiciones').value.trim(),
+    fechaInicio: document.getElementById('fecha_de_Inicio').value,
+    fechaFinal: document.getElementById('fecha_de_Fin').value
   }
 
-  if (!validarFormulario(datos)) return
+  if (validarFormulario(datos) === false) return
   // Si el nombre esta vacío o no existe, pinta el input en rojo
   if (!datos.nombre) {
     document.getElementById('nombre').classList.add('is-danger')
+    document.getElementById('condiciones').classList.add('is-danger')
+    document.getElementById('fecha_de_Inicio').add('is-danger')
+    document.getElementById('fecha_de_Fin').add('is-danger')
     error = true
   }
   // it verifies that only one promotion has been selected

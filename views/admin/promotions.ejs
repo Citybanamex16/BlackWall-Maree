@@ -28,6 +28,7 @@
         <div class="level-right">
             <div class="level-item">
                 <div class="button is-primary is-rounded">
+                    <!-- Agregar la funcionalidad de abrirModal-->
                         <button class="button is-primary" onclick="abrirModal()">Nueva promoción</button>
                 </div>
             </div> 
@@ -43,24 +44,39 @@
                     <div class="field">
                         <label class="label">Nombre</label>
                         <div class="control">
-                            <input id = "nombre" class="input" type="text" placeholder="Ex. Crepas a mitad de precio" required>
+                            <input id = "nombre" class="input" type="text" placeholder="Ex. Crepas a mitad de precio">
                         </div>
                     </div>
                     <div class="field">
-                        <label class="label">Descuento</label>
+                        <label class="label" >Descuento</label>
                         <div class="control">
-                            <input class="input" type="text" placeholder=".50" required>
+                            <input class="input" id="descuento" type="text" placeholder="50">
                         </div>
                     </div>
                     <div class="field">
                         <label class="label">Condiciones</label>
                         <div class="control">
-                            <input class="input" type="text" placeholder="Es necesario comprar una crepa..." required>
+                            <input class="input" type="text" 
+                            id = "condiciones" placeholder="Es necesario comprar una crepa...">
+                        </div>
+                    </div>
+                    <div class="field">
+                        <label class="label">Fecha de Inicio</label>
+                        <div class="control">
+                            <input class="input" id= "fecha_de_Inicio" type="date">
+                        </div>
+                    </div>
+                    <div class="field">
+                        <label class="label">Fecha de Fin</label>
+                        <div class="control">
+                            <input class="input" type="date" id= "fecha_de_Fin">
                         </div>
                     </div>
                     <div class="buttons">
-                        <button type = "button" class="button is-primary" onclick="guardarPromocion()">Guardar</button>
-                        <button type="button" class="button" onclick="cerrarModal()"> Cancelar</button>
+                        <button type = "button" class="button is-primary" 
+                        onclick="guardarPromocion()">Guardar</button>
+                        <button type="button" class="button" 
+                        onclick="cerrarModal()"> Cancelar</button>
                     </div>
                 </form>
             </div>
