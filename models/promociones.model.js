@@ -26,6 +26,10 @@ module.exports = class Promociones {
     return db.execute('SELECT ID_Promocion FROM promocion')
   }
 
+  static obtenerProductos () {
+    return db.execute('SELECT Nombre FROM producto')
+  }
+
   nuevaPromocion () {
     return db.execute('INSERT INTO Promocion (nombre, descuento, condiciones) VALUES (?,?,?)')
   }
