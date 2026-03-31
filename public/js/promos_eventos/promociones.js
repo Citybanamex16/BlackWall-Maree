@@ -173,8 +173,14 @@ const guardarPromocion = () => {
     body: JSON.stringify(datos)
   }).then(res => res.json()).then(data => {
     if (data.success) {
-      alert('¡Se pudo hacer el metodo POST ' + data.message)
-      location.reload()
+      document.getElementById('modal-promocion').classList.remove('is-active')
+      const mensajeExito = document.querySelector('#modal-exito p') || document.getElementById('mensaje-exito')
+      if (mensajeExito) {
+        mensajeExito.textContent = data.message
+      }
+      document.getElementById('modal-exito').classList.add('is-active')
+      // location.reload()
+      // alert('¡Se pudo hacer el metodo POST ' + data.message)
     } else {
       alert('Error: ' + data.message)
     }
