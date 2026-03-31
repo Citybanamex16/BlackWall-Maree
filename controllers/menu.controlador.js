@@ -65,7 +65,7 @@ exports.getOrden = (request, response, next) => {
 
 exports.getPlatillo = (request, response, next) => {
   const nombre = request.query.nombre
-  console.log('ENCONTROLLER — buscando:', nombre)
+  console.log('EN CONTROLLER — buscando:', nombre)
 
   const platillo = platillosDummy.find(p => p.nombre === nombre)
 
@@ -76,12 +76,14 @@ exports.getPlatillo = (request, response, next) => {
   }
 }
 
+
 exports.agregarItem = (request, response, next) => {
   const { nombre, precio, desc } = request.body
   console.log(`Item agregado: ${nombre} - $${precio}`)
   // Cuando haya BD/sesión, aquí se guarda
   response.status(200).json({ agregado: true, nombre, precio, desc })
 }
+
 
 exports.validarPedido = (request, response, next) => {
   const { items } = request.body
@@ -115,6 +117,7 @@ exports.validarPedido = (request, response, next) => {
 
   response.status(200).json({ pedidoValido: true })
 }
+
 
 exports.confirmarPedido = (request, response, next) => {
   const { items, forma, telefono } = request.body
@@ -159,13 +162,14 @@ exports.confirmarPedido = (request, response, next) => {
   response.status(200).json({ pedidoConfirmado: true })
 }
 
+
 exports.getProducts = (req, res, next) => {
   res.render('admin/products')
 }
 
 exports.getTypes = async (req, res, next) => {
   try {
-    const productTypes = await productos.getAllProductTypes()
+    const productTypes = await productos.getAllcategorys()
 
     res.status(200).json({
       success: true,
@@ -180,6 +184,7 @@ exports.getTypes = async (req, res, next) => {
     })
   }
 }
+
 
 const ProductFields = [
   { nombre: 'Nombre', type: 'string' },
@@ -209,11 +214,12 @@ exports.getProductfieldsAndIngredientes = async (req, res, next) => {
     }
 
     const allIngredientes = await productos.getAllIngredientes(typeId)
+    const productFormsFields = ProductFields
     res.status(200).json({
       success: true,
       message: 'Campos e Ingredientes recuperados',
       data: {
-        fields: ProductFields,
+        fields: productFormsFields,
         ingredientes: allIngredientes
       }
     })
@@ -225,6 +231,8 @@ exports.getProductfieldsAndIngredientes = async (req, res, next) => {
     })
   }
 }
+
+
 
 exports.postNewProduct = async (req, res, nex) => {
   console.log('POST recibido: ', req.body)
@@ -252,12 +260,22 @@ exports.postNewProduct = async (req, res, nex) => {
     console.log('Nuevo ID: ', AutoId)
 
     if (validation) {
-      await productos.insertNewProduct(AutoId, Nombre, categoria, Precio, Disponible, Imagen)
+      const postResult = await productos.insertNewProduct(AutoId, Nombre, categoria, Precio, Disponible, Imagen)
 
-      res.status(200).json({
-        ok: true,
-        message: 'Datos validados y correctos :)'
-      })
+           // MariaDB responde con un objeto que tiene affectedRows
+      if (postResult.affectedRows > 0) {
+        console.log("Producto Insertado con exito")
+        res.status(200).json({
+          ok: true,
+          message: 'Producto registrado con éxito',
+        });
+      } else {
+        res.status(400).json({
+          ok: false,
+          message: 'No se pudo insertar el producto'
+        });
+      }
+
     } else {
       res.status(400).json({
         ok: false,
