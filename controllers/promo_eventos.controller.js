@@ -64,12 +64,35 @@ exports.getPromotions = (request, response, next) => {
 }
 
 exports.postRegistrarPromotions = (request, response, next) => {
+  // Para evitar peticiones fantasmas o que se hagan vacías
+  // Obtenemos todos los datos del body de una vez
+  const { nombre, descuento, condicion, fechaInicio, fechaFinal } = request.body
+  if (!nombre || descuento === undefined || !condicion || !fechaInicio || !fechaFinal) {
+    console.log('PETICIÓN RECHAZADA: Faltan datos en el body')
+    return response.status(400).json({
+      success: false,
+      message: 'Faltan datos obligatorios para registrar la promoción.'
+    })
+  }
+  // Logica para obtener ID's y si se encuentra activo
   // The class is made or done in the Model
-  const promociones = new Promociones(request.body.nombre, request.body.condiciones, request.body.descuento)
+  const numeroId = Math.floor(Math.random() * (Number.MAX_SAFE_INTEGER - 10000000)) + 10000000
+  const id = `PR${numeroId}`
+  // Se pone activo por default y se puede cambiar cuando se quiera editar una promocion
+  const activo = true
+  // cambiamos el descuento a decimal
+  const descuentoDecimal = request.body.descuento / 100
+  console.log('Datos recibidos:', request.body)
+  console.log('ID generado:', id)
+  // Valores deben coincidir con el FrontEnd, es decir, promotions.js
+  // Creamos la nueva promoción
+  const promociones = new Promociones(id, request.body.nombre, descuentoDecimal,
+    request.body.condicion, activo, request.body.fechaInicio, request.body.fechaFinal)
+  console.log('Objeto promocion:', promociones)
   promociones.save().then(() => {
     response.status(200).json({
       success: true,
-      message: 'Promocion registrada correctamenre'
+      message: 'Promocion registrada correctamente'
     })
   }).catch((error) => {
     console.log('error en guardar datos')

@@ -5,21 +5,25 @@ module.exports = class Promociones {
     this.nombre = miNombre
     this.descuento = miDescuento
     this.condicion = miCondicion
-    this.Activo = miActivo
+    this.activo = miActivo
     this.fechaInicio = miFechaInicio
     this.fechaFinal = miFechaFinal
   }
 
   save () {
-    console.log('Se ha logrado subir a la base de datos')
-    return db.execute('INSERT INTO promociones (ID_promocion, Nombre, Descuento, ' +
-        'Condiciones, Activo, FechaInicio, FechaFinal), VALUES (?,?,?,?,?,?,?)',
-    [this.nombre, this.descuento, this.condicion]
+    console.log('Intento de subir a la base de datos')
+    return db.execute('INSERT INTO Promocion (ID_promocion, Nombre, Descuento, ' +
+        'Condiciones, Activo, Fecha_inicio, Fecha_final) VALUES (?,?,?,?,?,?,?)',
+    [this.id, this.nombre, this.descuento, this.condicion, this.activo, this.fechaInicio, this.fechaFinal]
     )
   }
 
   static fetchAll () {
     return db.execute('SELECT * FROM Promociones')
+  }
+
+  static obtenerId () {
+    return db.execute('SELECT ID_Promocion FROM promocion')
   }
 
   nuevaPromocion () {
