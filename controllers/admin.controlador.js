@@ -119,7 +119,12 @@ exports.getOrders = async (req, res, next) => {
     })
   } catch (error) {
     console.error('Error al cargar órdenes:', error)
-    res.status(500).send('Error al cargar órdenes de BD.')
+
+    res.status(500).render('admin/orders', {
+      pageTitle: 'Órdenes',
+      pedidos: [],
+      error: 'No hay conexión con la base de datos.'
+    })
   }
 }
 
