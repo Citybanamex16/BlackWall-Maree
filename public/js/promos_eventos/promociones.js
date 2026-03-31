@@ -8,6 +8,24 @@ const abrirModal = () => {
   document.getElementById('modal-promocion').classList.add('is-active')
 }
 
+const nuevoDescuento = () => {
+  // Obtenemos los elementos del HTML
+  const checkbox = document.getElementById('check-descuento')
+  const seccion = document.getElementById('seccion-descuento')
+  const inputDescuento = document.getElementById('descuento')
+
+  // 2. Escuchamos cuando el usuario le da click a la checkbox
+  checkbox.addEventListener('change', function () {
+    if (this.checked) {
+      // Si es verdadero mostramos el bloque
+      seccion.style.display = 'block'
+    } else {
+      // Si no se marca se deja sin valor
+      seccion.style.display = 'none'
+      inputDescuento.value = ''
+    }
+  })
+}
 // Asyncronus petition
 // btn-registrar-promocion is going to use when we want to post on the main page
 const cargarYMostrarModal = async () => {
@@ -73,12 +91,16 @@ function validarFormulario (datos) {
     marcarError('nombre', 'El nombre es obligatorio')
     esValido = false
   }
-  // vatidates Discount
-  if (!datos.descuento || datos.descuento.trim() === '') {
-    console.log('Debes escribir un descuento')
-    marcarError('descuento', 'El descuento es obligatorio')
-    esValido = false
+  const checkboxDescuento = document.getElementById('check-descuento')
+  if (checkboxDescuento && checkboxDescuento.checked) {
+    // vatidates Discount
+    if (!datos.descuento || datos.descuento.trim() === '') {
+      console.log('Debes escribir un descuento')
+      marcarError('descuento', 'El descuento es obligatorio')
+      esValido = false
+    }
   }
+
   // This makes this in HTML: <p class="help is-danger">El nombre es obligatorio</p>
   // validates Conditions
   if (!datos.condicion || datos.condicion === '') {
@@ -151,7 +173,7 @@ const guardarPromocion = () => {
     body: JSON.stringify(datos)
   }).then(res => res.json()).then(data => {
     if (data.success) {
-      alert('¡Se pudo hacer el metodo POST' + data.message)
+      alert('¡Se pudo hacer el metodo POST ' + data.message)
       location.reload()
     } else {
       alert('Error: ' + data.message)
