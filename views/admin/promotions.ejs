@@ -28,42 +28,45 @@
         <div class="level-right">
             <div class="level-item">
                 <div class="button is-primary is-rounded">
-                    <a href = "admin/promociones">
-                        <button class="button is-primary">Nueva promoción</button>
-                    </a>
+                        <button class="button is-primary" onclick="abrirModal()">Nueva promoción</button>
                 </div>
             </div> 
         </div> 
     </section>
-    <div class="modal" id ="modal-evento">
+    <!-- Pop up de registrar una promocion-->
+    <div class="modal" id ="modal-promocion">
         <div class="modal-background"></div>
         <div class="modal-content">
             <div class="box">
                 <h3 class="title is-4"> Registrar Nueva Promoción </h3>
-                <form id="form-evento">
+                <form id="form-promocion">
                     <div class="field">
                         <label class="label">Nombre</label>
                         <div class="control">
-                            <input class="input" type="text" placeholder="Ex. Crepas a mitad de precio">
+                            <input id = "nombre" class="input" type="text" placeholder="Ex. Crepas a mitad de precio" required>
                         </div>
                     </div>
                     <div class="field">
                         <label class="label">Descuento</label>
                         <div class="control">
-                            <input class="input" type="text" placeholder=".50">
+                            <input class="input" type="text" placeholder=".50" required>
                         </div>
                     </div>
                     <div class="field">
                         <label class="label">Condiciones</label>
                         <div class="control">
-                            <input class="input" type="text" placeholder="Es necesario comprar una crepa...">
+                            <input class="input" type="text" placeholder="Es necesario comprar una crepa..." required>
                         </div>
+                    </div>
+                    <div class="buttons">
+                        <button type = "button" class="button is-primary" onclick="guardarPromocion()">Guardar</button>
+                        <button type="button" class="button" onclick="cerrarModal()"> Cancelar</button>
                     </div>
                 </form>
             </div>
         </div>
     </div>
-    <script></script>
+    <script src = "/js/promos_eventos/promociones.js"></script>
 
 </body>
 </html>
