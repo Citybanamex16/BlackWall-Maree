@@ -81,7 +81,7 @@ function validarFormulario (datos) {
   }
   // This makes this in HTML: <p class="help is-danger">El nombre es obligatorio</p>
   // validates Conditions
-  if (!datos.condiciones || datos.condiciones === '') {
+  if (!datos.condicion || datos.condicion === '') {
     console.log('Debes escribir una condicion')
     marcarError('condiciones', 'Las condiciones no son válidas')
     esValido = false
@@ -93,7 +93,7 @@ function validarFormulario (datos) {
     marcarError('fecha_de_Inicio', 'Debes colocar una fecha de inicio')
     esValido = false
   }
-  if (!datos.fechaInicio || datos.fechaInicio === '') {
+  if (!datos.fechaFinal || datos.fechaFinal === '') {
     console.log('Debes escribir una fecha de fin')
     // los parametros de marcar error deben coincidir con el id en el ejs
     marcarError('fecha_de_Fin', 'Debes colocar una fecha de inicio')
@@ -133,32 +133,19 @@ const guardarPromocion = () => {
   const datos = {
     nombre: document.getElementById('nombre').value.trim(),
     descuento: document.getElementById('descuento').value.trim(),
-    condiciones: document.getElementById('condiciones').value.trim(),
+    condicion: document.getElementById('condiciones').value.trim(),
     fechaInicio: document.getElementById('fecha_de_Inicio').value,
     fechaFinal: document.getElementById('fecha_de_Fin').value
   }
 
   if (validarFormulario(datos) === false) return
-  // Si el nombre esta vacío o no existe, pinta el input en rojo
-  if (!datos.nombre) {
-    document.getElementById('nombre').classList.add('is-danger')
-    document.getElementById('condiciones').classList.add('is-danger')
-    document.getElementById('fecha_de_Inicio').add('is-danger')
-    document.getElementById('fecha_de_Fin').add('is-danger')
-    error = true
-  }
-  // it verifies that only one promotion has been selected
-  if (datos.promociones.length === 0) {
-    document.getElementById('promociones').closest('.select')
-    error = true
-  }
 
   if (error) return
-
+  console.log('Registrando promocion')
   const btnGuardar = document.querySelector('#form-promocion .button.is-primary')
   btnGuardar.classList.add('is-loading')
   btnGuardar.disabled = true
-  fetch('/admin/promociones/registrar', {
+  fetch('/admin/promociones', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(datos)
