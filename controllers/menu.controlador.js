@@ -76,14 +76,12 @@ exports.getPlatillo = (request, response, next) => {
   }
 }
 
-
 exports.agregarItem = (request, response, next) => {
   const { nombre, precio, desc } = request.body
   console.log(`Item agregado: ${nombre} - $${precio}`)
   // Cuando haya BD/sesión, aquí se guarda
   response.status(200).json({ agregado: true, nombre, precio, desc })
 }
-
 
 exports.validarPedido = (request, response, next) => {
   const { items } = request.body
@@ -117,7 +115,6 @@ exports.validarPedido = (request, response, next) => {
 
   response.status(200).json({ pedidoValido: true })
 }
-
 
 exports.confirmarPedido = (request, response, next) => {
   const { items, forma, telefono } = request.body
@@ -162,7 +159,6 @@ exports.confirmarPedido = (request, response, next) => {
   response.status(200).json({ pedidoConfirmado: true })
 }
 
-
 exports.getProducts = (req, res, next) => {
   res.render('admin/products')
 }
@@ -184,7 +180,6 @@ exports.getTypes = async (req, res, next) => {
     })
   }
 }
-
 
 const ProductFields = [
   { nombre: 'Nombre', type: 'string' },
@@ -232,16 +227,13 @@ exports.getProductfieldsAndIngredientes = async (req, res, next) => {
   }
 }
 
-
-
+const pool = require('../util/database.js')
 exports.postNewProduct = async (req, res, nex) => {
   console.log('POST recibido: ', req.body)
-  try {
-    const NewProductData = {}
-    req.body.forEach(item => {
-      NewProductData[item.key] = item.value
-    })
+  const connection = await pool.getConnection()
 
+  try {
+    const NewProductData = req.body
     // Extracción tipo map
     const {
       Nombre,
@@ -249,33 +241,55 @@ exports.postNewProduct = async (req, res, nex) => {
       Disponible,
       Imagen,
       type: categoria, // Renombramos 'type' a 'categoria'
-      ingredientes
+      ingredientesID
     } = NewProductData
 
     console.log('Nombre: ', Nombre)
-    console.log('Ingredientes: ', ingredientes)
+    console.log('Ingredientes: ', ingredientesID)
 
-    const validation = await productos.ValidarDatosRegistro(req.body)
+    const validation = await productos.ValidarDatosRegistro(NewProductData)
     const AutoId = productos.generarID()
     console.log('Nuevo ID: ', AutoId)
 
     if (validation) {
-      const postResult = await productos.insertNewProduct(AutoId, Nombre, categoria, Precio, Disponible, Imagen)
+      // const postResult = await productos.insertNewProduct(AutoId, Nombre, categoria, Precio, Disponible, Imagen)
+      if (ingredientesID.length > 0) {
+        // Caso producto con ingredientes (transacción)
+        // 1. Iniciamos la transacción asincronica -> hasta commit
+        await connection.beginTransaction()
 
-           // MariaDB responde con un objeto que tiene affectedRows
-      if (postResult.affectedRows > 0) {
-        console.log("Producto Insertado con exito")
+        // 2. Inserción en Producto
+        await productos.insertNewProduct(connection, AutoId, Nombre, categoria, Precio, Disponible, Imagen)
+
+        // 3. Inserciones en Ingrediente-Producto
+        for (const ing of ingredientesID) {
+          console.log(`Insertando ingrediente: ${ing.nombre}`)
+          await productos.insertNewProductIng(connection, AutoId, ing.id)
+        }
+
+        // 4. Si llegamos aqui salvamos de forma permanente
+        await connection.commit()
+        console.log('¡Todo se guardó correctamente!')
         res.status(200).json({
           ok: true,
-          message: 'Producto registrado con éxito',
-        });
+          message: 'Producto e insumos registrado con éxito'
+        })
       } else {
-        res.status(400).json({
-          ok: false,
-          message: 'No se pudo insertar el producto'
-        });
+        // Caso producto Sin ingredientes
+        const postResult = await productos.insertNewProduct(AutoId, Nombre, categoria, Precio, Disponible, Imagen)
+        if (postResult.affectedRows > 0) {
+          console.log('Producto Insertado con exito')
+          res.status(200).json({
+            ok: true,
+            message: 'Producto registrado con éxito'
+          })
+        } else {
+          res.status(400).json({
+            ok: false,
+            message: 'No se pudo insertar el producto'
+          })
+        }
       }
-
     } else {
       res.status(400).json({
         ok: false,
@@ -288,5 +302,7 @@ exports.postNewProduct = async (req, res, nex) => {
       ok: false,
       message: 'Error en conexión a BD'
     })
+  } finally {
+    connection.release() // Siempre liberar la conexión
   }
 }
