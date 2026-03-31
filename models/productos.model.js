@@ -6,8 +6,8 @@ module.exports = class Producto {
   }
 
   // funcion para los tipos de productos existentes
-  static async getAllProductTypes () {
-    return db.execute('SELECT Categoría FROM categoría') // Query que regresa TODOS los tipos de productos
+  static async getAllcategorys () {
+    return db.execute('SELECT Nombre FROM categoría') // Query que regresa TODOS los tipos de productos
   }
 
   // Función para obtener los campos de la Tabla Productos
@@ -17,11 +17,7 @@ module.exports = class Producto {
 
   // Función para obtener los ingredientes pertenecientes a un tipo
   static async getAllIngredientes (categoria) {
-    return db.execute('SELECT Nombre, Precio FROM insumo WHERE Categoría = ?', [categoria])
-  }
-
-  static async getAllcategorys () {
-    return db.execute('SELECT name FROM Categoría')
+    return db.execute('SELECT ID_Insumo ,Nombre, Precio FROM insumo WHERE Categoría = ?', [categoria])
   }
 
   static generarID (prefijo = 'PD') {
@@ -30,27 +26,17 @@ module.exports = class Producto {
     return `${prefijo}${numero}` // "PD1823049231" — 12 chars, bien dentro del varchar(10)...
   }
 
-  static async insertNewProduct (id, nombre, categoria, Precio, Disponible, Imagen) {
-    return db.execute('INSERT INTO producto VALUES (?,?,?,?,?,?,?,?)'
-      , [id, 'basico', categoria, nombre, Precio, Disponible, 'Dulce', Imagen])
-  }
+ static async insertNewProduct (id, nombre, categoria, Precio, Disponible, Imagen) {
+    // Al usar await, recibes el resultado de la promesa
+    const [result] = await db.execute(
+      'INSERT INTO producto VALUES (?,?,?,?,?,?,?,?)',
+      [id, 'Básico', categoria, nombre, Precio, Disponible, 'Dulce', Imagen]
+    );
+    return result; // Este objeto contiene affectedRows e insertId
+}
 
-  /*
-  1 ID_Producto  Primaria varchar(10) utf8mb4_general_ci    No  Ninguna      Cambiar Cambiar   Eliminar Eliminar
-  2 Tamaño  PrimariaÍndice  varchar(100)  utf8mb4_general_ci    No  Ninguna      Cambiar Cambiar   Eliminar Eliminar
-  3 Categoría  PrimariaÍndice varchar(100)  utf8mb4_general_ci    No  Ninguna      Cambiar Cambiar   Eliminar Eliminar
-  4 Nombre  varchar(50) utf8mb4_general_ci    No  Ninguna      Cambiar Cambiar   Eliminar Eliminar
-  5 Precio  float     No  Ninguna      Cambiar Cambiar   Eliminar Eliminar
-  6 Disponible  varchar(100)  utf8mb4_general_ci    No  Ninguna      Cambiar Cambiar   Eliminar Eliminar
-  7 Tipo  varchar(100)  utf8mb4_general_ci    No  Ninguna      Cambiar Cambiar   Eliminar Eliminar
-  8 Imagen
-  */
 
-  /*
-  static async insertIngredientesProducto(){
-
-  }
-  */
+ 
 
   static ValidarDatosRegistro (data) {
     const mensajesError = [] // Lista para acumular errores

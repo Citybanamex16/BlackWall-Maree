@@ -1,10 +1,10 @@
 // JS FRONTEND de la vista de Productos del Admin
 
-/* CU Registrar Nuevo Producto */
+/* CU04 Registrar Nuevo Producto */
 // 1. Referencia a Boton
 console.log('Iniciando Setup de CU')
 const registerButton = document.getElementById('registrarNuevoProducto')
-registerButton.addEventListener('click', registerButtonOnClick)
+registerButton.addEventListener('click', registerButtonOnClick,{ once: true })
 
 const typeFormsModal = document.getElementById('TypeFormsCU04')
 const typeFormsTitle = document.getElementById('tituloModal')
@@ -39,22 +39,22 @@ function registerButtonOnClick (event) {
 
       // Creación de Botones de Tipos
       tiposProductos.forEach(t => {
-        console.log(t.Categoría)
+        console.log(t.Nombre)
         // 1. Creamos el boton en memoria
         const newbtn = document.createElement('button')
 
         // 2. Asignamos ID y Clases
-        newbtn.id = `btn${t.Categoría}`
+        newbtn.id = `btn${t.Nombre}`
         newbtn.className = 'formsTypebtn button is-info is-dynamic' // aprovechar y poner CSS
 
         // 3. SEGURIDAD: textContent escapa inyección código HTML
-        newbtn.textContent = t.Categoría
+        newbtn.textContent = t.Nombre
 
         // 4. ESCUCHADOR DE CLICKS
         newbtn.onclick = async (event) => {
           event.preventDefault()
           typeFormsModal.close() // Cerramos el Modal Actual
-          const ProductType = t.Categoría // Seguridad de Type :)
+          const ProductType = t.Nombre // Seguridad de Type :)
           await seleccionarTipoProducto(ProductType)
         }
         // 5. Lo inyectamos al DOM
@@ -84,7 +84,7 @@ async function seleccionarTipoProducto (id) {
     const respuesta = await fetch(`/menu/formsRegistraPlatillo?id=${id}`)
 
     if (!respuesta.ok) {
-      ShowErrorModal('Error', 'Error en Consulta campos de Producto e Ingredientes')
+      ShowErrorModal('Error', 'Error Interno en Consulta campos de Producto e Ingredientes')
     }
 
     const object = await respuesta.json()
@@ -95,7 +95,7 @@ async function seleccionarTipoProducto (id) {
     createProductRegisterForms(ProductFields, AllIngredientes, id)
   } catch (error) {
     console.error('Hubo un fallo en la operación:', error)
-    ShowErrorModal('Error Interno', `Error en Consulta campos de Producto: ${error}`)
+    ShowErrorModal('Error', `Error en Consulta campos de Producto: ${error}`)
   }
 }
 
@@ -354,7 +354,7 @@ function createProductRegisterForms (Fields, Ingredientes, type) {
 RegisterFormClose.addEventListener('click', () => {
   RegisterFormModal.close()
   typeFormsModal.showModal()
-})
+},{ once: true })
 
 function PostNewProduct (BackupIngredientes, ProductType) {
   // 1. Validación front
@@ -421,7 +421,7 @@ const ErrorCloseBtn = document.getElementById('closeInvalidData')
 ErrorCloseBtn.addEventListener('click',
   (event) => {
     ErrorModal.close()
-  })
+  },{ once: true })
 
 function ShowErrorModal (title, content) {
   ErrorTitle.innerText = title
@@ -539,7 +539,7 @@ const Successbtn = document.getElementById('closeExito')
 Successbtn.addEventListener('click', (event) => {
   event.preventDefault()
   closeAllModals()
-})
+},{ once: true })
 
 // Funcion validar datos de Formulario
 function validarDatosRegistro (Formsdata, catalogoIngredientes) {
