@@ -26,31 +26,33 @@ module.exports = class Producto {
     return `${prefijo}${numero}` // "PD1823049231" — 12 chars, bien dentro del varchar(10)...
   }
 
- static async insertNewProduct (id, nombre, categoria, Precio, Disponible, Imagen) {
+  static async insertNewProduct (connection, id, nombre, categoria, Precio, Disponible, Imagen) {
     // Al usar await, recibes el resultado de la promesa
-    const [result] = await db.execute(
+    const [result] = await connection.execute(
       'INSERT INTO producto VALUES (?,?,?,?,?,?,?,?)',
       [id, 'Básico', categoria, nombre, Precio, Disponible, 'Dulce', Imagen]
-    );
-    return result; // Este objeto contiene affectedRows e insertId
-}
+    )
+    return result // Este objeto contiene affectedRows e insertId
+  }
 
-
- 
+  static async insertNewProductIng (connection, productId, insumoId) {
+    const [result] = await connection.execute(
+      'INSERT INTO producto_tiene_insumo VALUES (?,?)',
+      [productId, insumoId])
+    return result
+  }
 
   static ValidarDatosRegistro (data) {
     const mensajesError = [] // Lista para acumular errores
 
-    for (const field of data) {
-    // 1. Validar vacío (null, undefined, string vacío)
-      if (field.value === null || field.value === undefined || field.value === '') {
-        mensajesError.push(`Campo vacío: ${field.key}`)
-        console.warn(`Campo vacío: ${field.key}`)
-      } else if (field.key === 'Precio') { // Precio no negativo
-        const precio = parseFloat(field.value)
+    for (const [key, value] of Object.entries(data)) {
+      // 1. Validar vacío
+      if (value === null || value === undefined || value === '') {
+        mensajesError.push(`Campo vacío: ${key}`)
+      } else if (key === 'Precio') {
+        const precio = parseFloat(value)
         if (isNaN(precio) || precio < 0) {
-          mensajesError.push(`Precio inválido: ${field.value}`)
-          console.warn(`Precio inválido: ${field.key}`)
+          mensajesError.push(`Precio inválido: ${value}`)
         }
       }
     }

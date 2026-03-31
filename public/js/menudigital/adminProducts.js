@@ -4,13 +4,14 @@
 // 1. Referencia a Boton
 console.log('Iniciando Setup de CU')
 const registerButton = document.getElementById('registrarNuevoProducto')
-registerButton.addEventListener('click', registerButtonOnClick,{ once: true })
+registerButton.addEventListener('click', registerButtonOnClick)
 
 const typeFormsModal = document.getElementById('TypeFormsCU04')
 const typeFormsTitle = document.getElementById('tituloModal')
 const typeFormsCloseBtn = document.getElementById('cerrarModal')
 
 function registerButtonOnClick (event) {
+  console.log('Nuevo Producto button detectado')
   // Logica de Registrar Nuevo Producto
   event.preventDefault()
   console.log('Iniciando CU Registrar Nuevo Producto...')
@@ -191,8 +192,12 @@ let catalogoIng = [] // se guarda al abrir el modal para reutilizar en cada fila
 function createIngElement (ing) {
   console.log('Creando opción de ingrediente...')
   const opt = document.createElement('option')
-  opt.value = ing.Nombre
+  opt.value = ing.ID_Insumo
   opt.textContent = `${ing.Nombre}: $${ing.Precio}`
+
+  // Atriutos del Boton -> se recuperan con -> .getAttribute('data-nombre')
+  opt.setAttribute('data-nombre', ing.Nombre)
+  opt.setAttribute('data-precio', ing.Precio)
   return opt
 }
 
@@ -307,13 +312,21 @@ function onBtnIngNewClick () {
   updateIngCounter()
 }
 
-// Lee todos los ingredientes seleccionados
 function getIngredientesSeleccionados () {
   return Array.from(
     document.querySelectorAll('#ingredientsList .ingredient-row')
   )
-    .map(row => row.querySelector('.ing-dropdown').value) // Solo traemos el valor del dropdown
-    .filter(key => key !== '') // Filtramos vacíos
+    .map(row => {
+      const dropdown = row.querySelector('.ing-dropdown')
+      const selectedOption = dropdown.options[dropdown.selectedIndex]
+
+      // Creamos un objeto con ambos datos
+      return {
+        id: dropdown.value,
+        nombre: selectedOption.dataset.nombre // Aquí usamos el dataset que configuramos antes
+      }
+    })
+    .filter(item => item.id !== '') // Filtramos los que no tengan ID seleccionado
 }
 
 /* == Funcion Central == */
@@ -345,16 +358,16 @@ function createProductRegisterForms (Fields, Ingredientes, type) {
     PostNewProduct(Ingredientes, type)
   }, { once: true })
 
-  RegisterFormModal.showModal()
-}
-
-/* ══════════════════════════════════════════════════════
+  /* ══════════════════════════════════════════════════════
    LISTENER CERRAR
 ══════════════════════════════════════════════════════ */
-RegisterFormClose.addEventListener('click', () => {
-  RegisterFormModal.close()
-  typeFormsModal.showModal()
-},{ once: true })
+  RegisterFormClose.addEventListener('click', () => {
+    RegisterFormModal.close()
+    typeFormsModal.showModal()
+  }, { once: true })
+
+  RegisterFormModal.showModal()
+}
 
 function PostNewProduct (BackupIngredientes, ProductType) {
   // 1. Validación front
@@ -381,7 +394,6 @@ function PostNewProduct (BackupIngredientes, ProductType) {
   // 4. Ingredientes — array separado de ingredientes
   const ingredientes = getIngredientesSeleccionados()
   console.log('Ingredientes Get: ', ingredientes)
-  data.ingredientes = ingredientes // también va al objeto data para el POST
 
   // 4.5 Añadir Tipo
   data.type = ProductType
@@ -399,10 +411,18 @@ function PostNewProduct (BackupIngredientes, ProductType) {
       .map(([key, value]) => ({ key, value }))
 
     ingredientes.forEach((ing, i) => {
-      summaryData.push({ key: `Ingrediente ${i + 1}`, value: ing })
+      summaryData.push({ key: `Ingrediente ${i + 1}`, value: ing.nombre })
     })
 
-    ShowProductSummary(summaryData, ProductType)
+    data.ingredientesID = []
+
+    // Salvamos todos los ingredientes
+    ingredientes.forEach((ing) => {
+      data.ingredientesID.push(ing)
+    })
+
+    console.log('Data save en Post new product: ', data)
+    ShowProductSummary(summaryData, ProductType, data)
   } else {
     console.log('Datos inválidos ;(')
     ShowErrorModal('Datos inválidos', 'Datos Invalidos en Campos de Formulario, favor de corregir')
@@ -421,7 +441,7 @@ const ErrorCloseBtn = document.getElementById('closeInvalidData')
 ErrorCloseBtn.addEventListener('click',
   (event) => {
     ErrorModal.close()
-  },{ once: true })
+  }, { once: true })
 
 function ShowErrorModal (title, content) {
   ErrorTitle.innerText = title
@@ -470,14 +490,15 @@ Array -> .forEach
 
 const SummaryContent = document.getElementById('summaryContent')
 
-function ShowProductSummary (Registerdata, type) {
+function ShowProductSummary (SummaryData, type, Registerdata) {
   limpiarModal(SummaryModal)
-  console.log('Summary getting: ', Registerdata)
+  console.log('Summary getting: ', SummaryData)
+  console.log('Register Data: ', Registerdata)
   SummaryContent.innerHTML = '' // limpiar filas anteriores
   SummaryFormTitle.innerText = `Resumen de Nuevo ${type}`
 
   // Despliegue de los datos
-  Registerdata.forEach((content) => {
+  SummaryData.forEach((content) => {
     console.log('Key: ', content.key, ' Value: ', content.value)
 
     const SummaryEl = createSummaryElement(content.key, content.value)
@@ -488,19 +509,20 @@ function ShowProductSummary (Registerdata, type) {
     // FA: Cancelar confirmacion
     RegisterFormModal.showModal() // Volvemos a abrir el Formulario de registro
     SummaryModal.close()
-  }, { once: true })
+  })
 
   SummaryRegisterbtn.addEventListener('click', async (event) => {
     // Send de los Datos del Summary
     event.preventDefault()
     registerNewProduct(Registerdata, type)
-  }, { once: true })
-
+  })
+  console.log('Mostrando Modal de Summary')
   SummaryModal.showModal()
 }
 
 async function registerNewProduct (NewProductData, ProductType) {
-  const nombre = NewProductData.find(item => item.key === 'Nombre')?.value || 'Sin nombre'
+  const nombre = NewProductData?.Nombre || 'Sin nombre'
+  console.log('Mandando datos a backend: ', NewProductData)
   try {
     console.log('POST NEW PRODUCT')
     const postrequest = await fetch('/menu/registerNewProduct', {
@@ -539,7 +561,7 @@ const Successbtn = document.getElementById('closeExito')
 Successbtn.addEventListener('click', (event) => {
   event.preventDefault()
   closeAllModals()
-},{ once: true })
+}, { once: true })
 
 // Funcion validar datos de Formulario
 function validarDatosRegistro (Formsdata, catalogoIngredientes) {
