@@ -1,6 +1,7 @@
 const db = require('../util/database')
 module.exports = class Promociones {
-  constructor (miId, miNombre, miDescuento, miCondicion, miActivo, miFechaInicio, miFechaFinal) {
+  constructor (miId, miNombre, miDescuento, miCondicion, miActivo,
+    miFechaInicio, miFechaFinal, miNombreProducto) {
     this.id = miId
     this.nombre = miNombre
     this.descuento = miDescuento
@@ -8,6 +9,7 @@ module.exports = class Promociones {
     this.activo = miActivo
     this.fechaInicio = miFechaInicio
     this.fechaFinal = miFechaFinal
+    this.nombreProducto = miNombreProducto
   }
 
   save () {
@@ -36,6 +38,15 @@ module.exports = class Promociones {
 
   nuevaPromocion () {
     return db.execute('INSERT INTO Promocion (nombre, descuento, condiciones) VALUES (?,?,?)')
+  }
+
+  // Guardamos promocion en base al producto
+  static guardarProductosPromocion (idPromocion, idsProductos) {
+    const valores = idsProductos.map(idProducto => [idProducto, idPromocion])
+    return db.query(
+      'INSERT INTO producto_tiene_promocion (ID_Producto, ID_Promocion) VALUES ?',
+      [valores]
+    )
   }
 
   static fetchProductos (categoria, tipo) {

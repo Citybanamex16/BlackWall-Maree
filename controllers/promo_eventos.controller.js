@@ -98,7 +98,7 @@ exports.getFilterProductos = async (request, response, next) => {
 exports.postRegistrarPromotions = (request, response, next) => {
   // Para evitar peticiones fantasmas o que se hagan vacías
   // Obtenemos todos los datos del body de una vez
-  const { nombre, descuento, condicion, fechaInicio, fechaFinal } = request.body
+  const { nombre, descuento, condicion, fechaInicio, fechaFinal, productos } = request.body
   if (!nombre || descuento === undefined || !condicion || !fechaInicio || !fechaFinal) {
     console.log('PETICIÓN RECHAZADA: Faltan datos en el body')
     return response.status(400).json({
@@ -108,7 +108,7 @@ exports.postRegistrarPromotions = (request, response, next) => {
   }
   // Logica para obtener ID's y si se encuentra activo
   // The class is made or done in the Model
-  const numeroId = Math.floor(Math.random() * (Number.MAX_SAFE_INTEGER - 10000000)) + 10000000
+  const numeroId = Math.floor(Math.random() * 90000000) + 10000000
   const id = `PR${numeroId}`
   // Se pone activo por default y se puede cambiar cuando se quiera editar una promocion
   const activo = true
@@ -119,9 +119,16 @@ exports.postRegistrarPromotions = (request, response, next) => {
   // Valores deben coincidir con el FrontEnd, es decir, promotions.js
   // Creamos la nueva promoción
   const promociones = new Promociones(id, request.body.nombre, descuentoDecimal,
-    request.body.condicion, activo, request.body.fechaInicio, request.body.fechaFinal)
+    request.body.condicion, activo, request.body.fechaInicio, request.body.fechaFinal,
+    request.body.nombreProducto)
   console.log('Objeto promocion:', promociones)
   promociones.save().then(() => {
+    // Guardamos los productos
+    if (productos && productos.length > 0) {
+      const idsProductos = productos.map(p => p.id)
+      return Promociones.guardarProductosPromocion(id, idsProductos)
+    }
+  }).then(() => {
     response.status(200).json({
       success: true,
       message: 'Promocion registrada correctamente'
