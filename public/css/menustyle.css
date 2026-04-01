@@ -331,3 +331,16 @@ body {
     color: #444;
     margin-bottom: 10px;
 }
+
+
+/*CU11 visualizar Menu */
+.categoria-section {
+    padding-top: 2rem;
+    border-bottom: 1px solid transparent; /* Espacio invisible para balance */
+}
+
+.title.is-3 {
+    color: #4a4a4a;
+    font-family: 'Cormorant Garamond', serif; /* Tu fuente elegante */
+    letter-spacing: 1px;
+}

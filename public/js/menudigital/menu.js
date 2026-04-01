@@ -201,10 +201,108 @@ obtenerMenu()
 
 /* ==Construcción de Menu Dinámico == */
 
+function construirFichaProductos (datosProducto, datosCategorias) {
+  console.log('Repartiendo productos en sus categorías...')
+  console.log('Datos productos: ', datosProducto)
+
+  // 1. Iteramos por cada categoría que ya existe en el DOM
+  datosCategorias.forEach(cat => {
+    // 2. Buscamos el contenedor específico de esta categoría
+    // Usamos el ID que generamos en la Capa 1
+    const sectionPrincipal = document.getElementById(cat.id)
+
+    // Seleccionamos el div con la clase .grid-productos que dejamos listo
+    const gridDestino = sectionPrincipal.querySelector('.grid-productos')
+
+    // 3. Filtramos: ¿Qué productos pertenecen a esta categoría?
+    const productosFiltrados = datosProducto.filter(prod => prod.categoria === cat.nombre)
+
+    // 4. Por cada producto filtrado, construimos su "Ficha" (Capa 2 + Capa 3)
+    productosFiltrados.forEach(prod => {
+      const cardHTML = `
+                <div class="column is-12-mobile is-6-tablet is-4-desktop">
+                    <div class="card product-card h-100">
+                        <div class="card-image">
+                            <figure class="image is-4by3">
+                                <img src="${prod.imagen}" alt="${prod.nombre}" style="object-fit: cover;">
+                            </figure>
+                        </div>
+                        
+                        <div class="card-content">
+                            <div class="media mb-2">
+                                <div class="media-content">
+                                    <p class="title is-5 mb-1">${prod.nombre}</p>
+                                    <p class="subtitle is-6 has-text-primary has-text-weight-bold">$${prod.precio}</p>
+                                </div>
+                            </div>
+
+                            <div class="content">
+                                <div class="tags" id="ingredientes-${prod.id}">
+                                    ${generarBadgesIngredientes(prod.ingredientes)}
+                                </div>
+                                
+                                <button class="button is-primary is-small is-fullwidth is-outlined mt-3">
+                                    + Agregar a la orden
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `
+
+      // Inyectamos la ficha en el grid de la categoría
+      gridDestino.insertAdjacentHTML('beforeend', cardHTML)
+    })
+  })
+}
+
+// Función auxiliar para la Capa 3: Los Ingredientes
+function generarBadgesIngredientes (listaIngredientes) {
+  if (!listaIngredientes || listaIngredientes.length === 0) return ''
+
+  return listaIngredientes.map(ing =>
+        `<span class="tag is-light is-rounded" style="font-size: 0.75rem;">${ing.nombre}</span>`
+  ).join(' ')
+}
+
+function construirCategoria (cat, contenedorMenu) {
+  // Crear el elemento de sección
+  const seccionCat = document.createElement('section')
+  seccionCat.className = 'categoria-section mb-6 is-dynamic' // Clase para CSS
+  seccionCat.id = `cat-${cat.Nombre.toLowerCase()}` // ID único por si necesitas anclas
+  const seccionID = seccionCat.id
+  // Estructura interna de la categoría
+  // Creamos un div específico para los productos de esta categoría
+  seccionCat.innerHTML = `
+            <h2 class="title is-3 is-italic mb-5">${cat.Nombre}</h2>
+            <hr class="mb-5" style="background-color: #eee; height: 1px;">
+            
+            <div class="columns is-multiline grid-productos">
+                </div>
+        `
+  // 5. Inyectar la sección en el DOM
+  contenedorMenu.appendChild(seccionCat)
+
+  return { id: seccionID, nombre: cat.Nombre }
+}
+
 function contruirMenuDinamico (datos) {
-  console.log('Constructor de Menu iniciando...')
+  // 1. Referencia al contenedor principal
+  const contenedorMenu = document.getElementById('menu-categorias')
+  contenedorMenu.innerHTML = ''
+
+  const categoríasInfo = []
+
   const categorías = datos.arrayCategorías[0]
-  console.log('Categorias listas: ', categorías)
+  // 2. Iteramos por cada categoría para crear su sección
+  categorías.forEach(cat => {
+    console.log(`Creando sección para catalogo ${cat.Nombre}`)
+    categoríasInfo.push(construirCategoria(cat, contenedorMenu))
+  })
+  console.log('ID de categorias en View: ', categoríasInfo)
+
   const productosInfo = datos.arrayProductsInfo
-  console.log('Productos listos: ', productosInfo)
+  construirFichaProductos(productosInfo, categoríasInfo)
+
+  console.log('Menu dinámico construido con exito')
 }
