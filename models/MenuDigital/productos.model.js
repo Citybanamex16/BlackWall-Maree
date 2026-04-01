@@ -1,4 +1,4 @@
-const db = require('../util/database.js')
+const db = require('../../util/database.js')
 
 module.exports = class Producto {
   static async fetchOne (id) {
@@ -35,23 +35,7 @@ module.exports = class Producto {
       , [id, 'basico', categoria, nombre, Precio, Disponible, 'Dulce', Imagen])
   }
 
-  /*
-  1 ID_Producto  Primaria varchar(10) utf8mb4_general_ci    No  Ninguna      Cambiar Cambiar   Eliminar Eliminar
-  2 Tamaño  PrimariaÍndice  varchar(100)  utf8mb4_general_ci    No  Ninguna      Cambiar Cambiar   Eliminar Eliminar
-  3 Categoría  PrimariaÍndice varchar(100)  utf8mb4_general_ci    No  Ninguna      Cambiar Cambiar   Eliminar Eliminar
-  4 Nombre  varchar(50) utf8mb4_general_ci    No  Ninguna      Cambiar Cambiar   Eliminar Eliminar
-  5 Precio  float     No  Ninguna      Cambiar Cambiar   Eliminar Eliminar
-  6 Disponible  varchar(100)  utf8mb4_general_ci    No  Ninguna      Cambiar Cambiar   Eliminar Eliminar
-  7 Tipo  varchar(100)  utf8mb4_general_ci    No  Ninguna      Cambiar Cambiar   Eliminar Eliminar
-  8 Imagen
-  */
-
-  /*
-  static async insertIngredientesProducto(){
-
-  }
-  */
-
+  
   static ValidarDatosRegistro (data) {
     const mensajesError = [] // Lista para acumular errores
 
@@ -79,4 +63,19 @@ module.exports = class Producto {
 
     return { valido: true, mensaje: '' }
   }
+
+  static async getValidProductData() {
+    return db.execute(`SELECT 
+    P.nombre AS productoNombre, 
+    P.precio AS productoPrecio, 
+    P.categoría AS productoCategoria, 
+    P.imagen AS productoImagen, 
+    I.nombre AS insumoNombre
+    FROM producto AS P
+    INNER JOIN producto_tiene_insumo AS PI ON P.ID_Producto = PI.ID_Producto
+    INNER JOIN insumo AS I ON PI.ID_Insumo = I.ID_Insumo
+    WHERE P.Disponible = 1;`)
+  }
+
+
 }
