@@ -157,7 +157,12 @@ const guardarPromocion = () => {
     descuento: document.getElementById('descuento').value.trim(),
     condicion: document.getElementById('condiciones').value.trim(),
     fechaInicio: document.getElementById('fecha_de_Inicio').value,
-    fechaFinal: document.getElementById('fecha_de_Fin').value
+    fechaFinal: document.getElementById('fecha_de_Fin').value,
+    productos: Array.from(
+      document.querySelectorAll('.checkbox-producto:checked')).map(cb => ({
+      id: cb.value,
+      nombre: cb.dataset.nombre
+    }))
   }
 
   if (validarFormulario(datos) === false) return
@@ -180,7 +185,7 @@ const guardarPromocion = () => {
       }
       document.getElementById('modal-exito').classList.add('is-active')
       // location.reload()
-      // alert('¡Se pudo hacer el metodo POST ' + data.message)
+      // alert('Se pudo hacer POST ' + data.message)
     } else {
       alert('Error: ' + data.message)
     }
