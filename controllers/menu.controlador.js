@@ -5,7 +5,12 @@ const Pedido = require('../models/pedidos.model.js')
 const db = require('../util/database.js')
 
 // CU11
-exports.getMenu = async (request, response, next) => {
+exports.getMenu = (request, response, next) => {
+  const breadcrumbs = nav.getBreadcrumbs('Menu')
+  response.render('cliente/menu', { breadcrumbs })
+}
+
+exports.getMenuData = async (request, response, next) => {
   console.log('GetMenu ejecutandose...')
   try {
     // 1. Llamado en paralelo de consultas con Promise.all()
@@ -13,9 +18,6 @@ exports.getMenu = async (request, response, next) => {
       categorías.fecthAll(), // Async BD call 1.
       productos.getValidProductData() // async BD call
     ])
-
-    // 2. llamadas sincronicas
-    const breadcrumbs = nav.getBreadcrumbs('Menu')
 
     console.log('All Promises realizada con exito')
     console.log('Categorías Info: ', Allcategories)
@@ -25,9 +27,9 @@ exports.getMenu = async (request, response, next) => {
       ok: true,
       message: 'Consultas realizadas con exito',
       arrayCategorías: Allcategories,
-      arrayProductsInfo: productsData,
-      breadcrumbsInfo: breadcrumbs
+      arrayProductsInfo: productsData
     })
+    console.log('Proceso finalizado con exito')
   } catch (err) {
     console.log('Error en get Menu: ', err)
     response.status(500).json({
