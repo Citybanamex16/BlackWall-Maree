@@ -26,11 +26,32 @@ module.exports = class Promociones {
     return db.execute('SELECT ID_Promocion FROM promocion')
   }
 
-  static obtenerProductos () {
-    return db.execute('SELECT Nombre FROM producto')
+  static fetchCategorías () {
+    return db.execute('SELECT DISTINCT Categoría FROM producto')
+  }
+
+  static fetchTipo () {
+    return db.execute('SELECT DISTINCT Tipo FROM producto')
   }
 
   nuevaPromocion () {
     return db.execute('INSERT INTO Promocion (nombre, descuento, condiciones) VALUES (?,?,?)')
+  }
+
+  static fetchProductos (categoria, tipo) {
+    let query = 'SELECT ID_Producto, Nombre FROM producto WHERE 1=1'
+    const params = []
+
+    if (categoria && categoria !== '') {
+      query += ' AND Categoría = ?'
+      params.push(categoria)
+    }
+
+    if (tipo && tipo !== '') {
+      query += ' AND Tipo = ?'
+      params.push(tipo)
+    }
+
+    return db.execute(query, params)
   }
 }

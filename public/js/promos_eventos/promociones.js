@@ -187,3 +187,57 @@ const guardarPromocion = () => {
   })
     .catch(err => console.error('Error en la peticion', err))
 }
+
+// Obtener produtos en base a la categoría y tipos
+const actualizarProductos = async () => {
+  // Obtenemos la categoria y tipo en base a lo seleccionado en la vista
+  const selectCat = document.querySelector('select[name="categoria"]')
+  const selectTipo = document.querySelector('select[name="tipo"]')
+
+  // Verificamos que si se encuentran antes de obtener .value
+  if (!selectCat || !selectTipo) {
+    console.log('Selects no encontrados')
+    return
+  }
+  // Obtenemos los valores de categoría y tipo
+  const categoria = selectCat.value
+  const tipo = selectTipo.value
+
+  console.log('Filtrando por:', categoria, tipo)
+  // Creamos una variable de parametros
+  const params = new URLSearchParams()
+  if (categoria) params.append('categoria', categoria)
+  if (tipo) params.append('tipo', tipo)
+
+  try {
+    // Obtenemos las rutas para hacer el filtrado
+    const res = await fetch(`/admin/promociones/producto-filtro?${params.toString()}`)
+    const data = await res.json()
+    console.log('Respuesta del servidor:', data)
+    // Obtenemos el id de los productos
+    const selectProductos = document.getElementById('select-productos')
+    selectProductos.innerHTML = ''
+
+    if (!data.success || data.data.length === 0) {
+      selectProductos.innerHTML = '<option value="">Sin resultados</option>'
+      return
+    }
+
+    data.data.forEach(producto => {
+      const label = document.createElement('label')
+      label.className = 'checkbox'// Bulma
+      label.style.display = 'block'
+      const input = document.createElement('input')
+      input.type = 'checkbox'
+      input.value = producto.ID_Producto
+      input.dataset.nombre = producto.Nombre
+      input.className = 'checkbox-producto mr-2'
+
+      label.appendChild(input)
+      label.appendChild(document.createTextNode(' ' + producto.Nombre))
+      selectProductos.appendChild(label)
+    })
+  } catch (error) {
+    console.error('Error al cargar productos', error)
+  }
+}

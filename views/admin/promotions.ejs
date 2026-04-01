@@ -55,8 +55,36 @@
                     <div class="field" id="seccion-descuento" style="display: none;">
                         <label class="label" >Descuento</label>
                         <div class="control">
-                            <input class="input" id="descuento" type="number" placeholder="50">
+                            <input class="input" id="descuento" type="text" placeholder="50">
                         </div>
+                        <div class="columns">
+                            <div class="column">
+                                <label class="label">Selecciona Categoría</label>
+                                <div class="select is-info is-fullwidth">
+                                    <select name="categoria" onchange="actualizarProductos()">
+                                        <option value="">Todas las categorías</option>
+                                        <% for (let cat of lista_categorias) { %>
+                                            <option value="<%= cat.Categoría %>"><%= cat.Categoría %></option>
+                                        <% } %>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="column">
+                                <label class="label">Selecciona Tipo</label>
+                                <div class="select is-info is-fullwidth">
+                                    <select name="tipo" onchange="actualizarProductos()">
+                                        <option value="">Todos los tipos</option>
+                                        <% for (let tipo of lista_tipos) { %>
+                                            <option value="<%= tipo.Tipo %>"><%= tipo.Tipo %></option>
+                                        <% } %>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                            <label class="label"> Selecciona el platillo o bebida</label>
+                       <div id="select-productos" class="box" style="max-height: 150px; overflow-y: auto;">
+                        <p class="has-text-grey">Selecciona categoría o tipo primero</p>
+                    </div> 
                     </div>
                     <div class="field">
                         <label class="label">Condiciones</label>
