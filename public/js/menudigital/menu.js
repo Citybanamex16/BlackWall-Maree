@@ -203,54 +203,64 @@ obtenerMenu()
 
 function construirFichaProductos (datosProducto, datosCategorias) {
   console.log('Repartiendo productos en sus categorías...')
-  console.log('Datos productos: ', datosProducto)
-
-  // 1. Iteramos por cada categoría que ya existe en el DOM
   datosCategorias.forEach(cat => {
-    // 2. Buscamos el contenedor específico de esta categoría
-    // Usamos el ID que generamos en la Capa 1
     const sectionPrincipal = document.getElementById(cat.id)
-
-    // Seleccionamos el div con la clase .grid-productos que dejamos listo
     const gridDestino = sectionPrincipal.querySelector('.grid-productos')
-
-    // 3. Filtramos: ¿Qué productos pertenecen a esta categoría?
     const productosFiltrados = datosProducto.filter(prod => prod.categoria === cat.nombre)
 
-    // 4. Por cada producto filtrado, construimos su "Ficha" (Capa 2 + Capa 3)
-    productosFiltrados.forEach(prod => {
+    if (productosFiltrados.length === 0) {
+      gridDestino.innerHTML = `
+        <div class="empty-state">
+          <span class="empty-icon">🥐</span>
+          <p>Sin productos en esta categoría por el momento.</p>
+        </div>`
+      return
+    }
+
+    productosFiltrados.forEach((prod, i) => {
       const cardHTML = `
-                <div class="column is-12-mobile is-6-tablet is-4-desktop">
-                    <div class="card product-card h-100">
-                        <div class="card-image">
-                            <figure class="image is-4by3">
-                                <img src="${prod.imagen}" alt="${prod.nombre}" style="object-fit: cover;">
-                            </figure>
-                        </div>
-                        
-                        <div class="card-content">
-                            <div class="media mb-2">
-                                <div class="media-content">
-                                    <p class="title is-5 mb-1">${prod.nombre}</p>
-                                    <p class="subtitle is-6 has-text-primary has-text-weight-bold">$${prod.precio}</p>
-                                </div>
-                            </div>
-
-                            <div class="content">
-                                <div class="tags" id="ingredientes-${prod.id}">
-                                    ${generarBadgesIngredientes(prod.ingredientes)}
-                                </div>
-                                
-                                <button class="button is-primary is-small is-fullwidth is-outlined mt-3">
-                                    + Agregar a la orden
-                                </button>
-                            </div>
-                        </div>
-                    </div>
+        <div class="column is-12-mobile is-6-tablet is-4-desktop">
+          <div class="card product-card h-100" style="animation-delay: ${i * 60}ms">
+            <div class="card-image">
+              <figure class="image is-4by3">
+                <img
+                  src="${prod.imagen}"
+                  alt="${prod.nombre}"
+                  class="product-thumb"
+                  loading="lazy"
+                  onerror="this.src='/img/placeholder.webp'"
+                >
+              </figure>
+            </div>
+            <div class="card-content">
+              <div class="media mb-2">
+                <div class="media-content">
+                  <p class="title is-5 mb-1">${prod.nombre}</p>
+                  <p class="product-price-tag">$${prod.precio}</p>
                 </div>
-            `
+              </div>
+              <div class="content">
+                ${prod.descripcion
+                  ? `<p class="product-desc-text">${prod.descripcion}</p>`
+                  : ''}
+                <div class="tags ingredient-tags" id="ingredientes-${prod.id}">
+                  ${generarBadgesIngredientes(prod.ingredientes)}
+                </div>
+                <button
+                  class="btn-agregar"
+                  data-id="${prod.id}"
+                  data-nombre="${prod.nombre}"
+                  data-precio="${prod.precio}"
+                  onclick="agregarAlCarrito(this)"
+                >
+                  <span class="btn-agregar-icon">＋</span>
+                  <span class="btn-agregar-label">Agregar a la orden</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>`
 
-      // Inyectamos la ficha en el grid de la categoría
       gridDestino.insertAdjacentHTML('beforeend', cardHTML)
     })
   })
@@ -259,31 +269,131 @@ function construirFichaProductos (datosProducto, datosCategorias) {
 // Función auxiliar para la Capa 3: Los Ingredientes
 function generarBadgesIngredientes (listaIngredientes) {
   if (!listaIngredientes || listaIngredientes.length === 0) return ''
-
-  return listaIngredientes.map(ing =>
-        `<span class="tag is-light is-rounded" style="font-size: 0.75rem;">${ing.nombre}</span>`
-  ).join(' ')
+  return listaIngredientes
+    .map(ing => `<span class="tag ing-tag is-rounded">${ing.nombre}</span>`)
+    .join('')
 }
 
+/* Sección de categoría */
 function construirCategoria (cat, contenedorMenu) {
-  // Crear el elemento de sección
   const seccionCat = document.createElement('section')
-  seccionCat.className = 'categoria-section mb-6 is-dynamic' // Clase para CSS
-  seccionCat.id = `cat-${cat.Nombre.toLowerCase()}` // ID único por si necesitas anclas
+  seccionCat.className = 'categoria-section mb-4 is-dynamic is-open'
+  seccionCat.id = `cat-${cat.Nombre.toLowerCase().replace(/\s+/g, '-')}`
   const seccionID = seccionCat.id
-  // Estructura interna de la categoría
-  // Creamos un div específico para los productos de esta categoría
-  seccionCat.innerHTML = `
-            <h2 class="title is-3 is-italic mb-5">${cat.Nombre}</h2>
-            <hr class="mb-5" style="background-color: #eee; height: 1px;">
-            
-            <div class="columns is-multiline grid-productos">
-                </div>
-        `
-  // 5. Inyectar la sección en el DOM
-  contenedorMenu.appendChild(seccionCat)
+  const idContenedor = `grid-${cat.Nombre.replace(/\s+/g, '-').toLowerCase()}`
 
+  seccionCat.innerHTML = `
+    <div class="cat-header toggle-menu" role="button" tabindex="0" aria-expanded="true">
+      <h2 class="cat-title">${cat.Nombre}</h2>
+      <span class="cat-chevron" aria-hidden="true">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+          <path d="M3 6l5 5 5-5" stroke="currentColor" stroke-width="1.8"
+                stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </span>
+    </div>
+    <div id="${idContenedor}" class="columns is-multiline grid-productos mt-2 grid-collapsible">
+    </div>`
+
+  const header = seccionCat.querySelector('.cat-header')
+  const grid = seccionCat.querySelector('.grid-productos')
+
+  /* Toggle con animación real de altura */
+
+  function toggleGrid () {
+    const open = seccionCat.classList.contains('is-open')
+
+    if (open) {
+      // Cerrar: fija la altura actual, luego anima a 0
+      grid.style.maxHeight = grid.scrollHeight + 'px'
+      grid.style.opacity = '1'
+      /* global requestAnimationFrame */
+      requestAnimationFrame(() => {
+        grid.style.maxHeight = '0'
+        grid.style.opacity = '0'
+      })
+      seccionCat.classList.remove('is-open')
+      header.setAttribute('aria-expanded', 'false')
+    } else {
+      // Abrir: anima desde 0 hasta el alto real
+      grid.style.maxHeight = grid.scrollHeight + 'px'
+      grid.style.opacity = '1'
+      seccionCat.classList.add('is-open')
+      header.setAttribute('aria-expanded', 'true')
+      // Una vez terminada la transición, suelta max-height para que
+      // el contenido pueda crecer si se añaden más items
+      grid.addEventListener('transitionend', () => {
+        if (seccionCat.classList.contains('is-open')) {
+          grid.style.maxHeight = 'none'
+        }
+      }, { once: true })
+    }
+  }
+
+  header.addEventListener('click', toggleGrid)
+  header.addEventListener('keydown', e => {
+    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleGrid() }
+  })
+
+  contenedorMenu.appendChild(seccionCat)
   return { id: seccionID, nombre: cat.Nombre }
+}
+
+/* Sticky tabs */
+function generarStickyTabs (categorias) {
+  const listaTabs = document.getElementById('lista-tabs')
+  listaTabs.innerHTML = ''
+
+  categorias.forEach((cat, index) => {
+    const idSeccion = `cat-${cat.Nombre.toLowerCase().replace(/\s+/g, '-')}`
+    const li = document.createElement('li')
+    if (index === 0) li.classList.add('is-active')
+
+    li.innerHTML = `<a href="#${idSeccion}"><span>${cat.Nombre}</span></a>`
+
+    li.querySelector('a').addEventListener('click', e => {
+      e.preventDefault()
+      document.querySelectorAll('#lista-tabs li').forEach(el => el.classList.remove('is-active'))
+      li.classList.add('is-active')
+
+      const target = document.getElementById(idSeccion)
+
+      // Si estaba cerrado, ábrir antes de hacer scroll
+      if (!target.classList.contains('is-open')) {
+        const grid = target.querySelector('.grid-productos')
+        grid.style.maxHeight = grid.scrollHeight + 'px'
+        grid.style.opacity = '1'
+        target.classList.add('is-open')
+        target.querySelector('.cat-header').setAttribute('aria-expanded', 'true')
+        grid.addEventListener('transitionend', () => {
+          grid.style.maxHeight = 'none'
+        }, { once: true })
+      }
+
+      // Offset por la sticky nav
+      const stickyH = document.getElementById('sticky-nav-wrapper')?.offsetHeight ?? 0
+      const top = target.getBoundingClientRect().top + window.scrollY - stickyH - 12
+      window.scrollTo({ top, behavior: 'smooth' })
+    })
+
+    listaTabs.appendChild(li)
+  })
+
+  /* IntersectionObserver — resalta el tab de la categoría visible */
+  /* global IntersectionObserver */
+  const observer = new IntersectionObserver(entries => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        const id = entry.target.id
+        document.querySelectorAll('#lista-tabs li').forEach(li => {
+          const href = li.querySelector('a')?.getAttribute('href')
+          li.classList.toggle('is-active', href === `#${id}`)
+        })
+      }
+    })
+  }, { rootMargin: '-30% 0px -60% 0px', threshold: 0 })
+
+  document.querySelectorAll('.categoria-section').forEach(s => observer.observe(s))
 }
 
 function contruirMenuDinamico (datos) {
@@ -299,6 +409,9 @@ function contruirMenuDinamico (datos) {
     console.log(`Creando sección para catalogo ${cat.Nombre}`)
     categoríasInfo.push(construirCategoria(cat, contenedorMenu))
   })
+
+  generarStickyTabs(categorías)
+
   console.log('ID de categorias en View: ', categoríasInfo)
 
   const productosInfo = datos.arrayProductsInfo
