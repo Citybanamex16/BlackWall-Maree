@@ -6,8 +6,9 @@ const pool = mysql.createPool({
   // para cada persona
   // host: 'localhost',
   host: '172.20.96.1',
+  port: 3307,
   user: 'root',
-  database: 'MareeBD',
+  database: 'mareebd',
   password: '',
   waitForConnection: true,
   connectionLimit: 10
