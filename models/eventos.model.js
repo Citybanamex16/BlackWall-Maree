@@ -2,11 +2,11 @@
 const db = require('../util/database.js')
 
 module.exports = class Evento {
-  constructor (nombre, descripcion, Fecha_Inicio, Fecha_Final, promociones, productos) {
+  constructor (nombre, descripcion, fechaInicio, fechaFinal, promociones, productos) {
     this.nombre = nombre
     this.descripcion = descripcion
-    this.Fecha_Inicio = Fecha_Inicio
-    this.Fecha_Final = Fecha_Final
+    this.fechaInicio = fechaInicio
+    this.fechaFinal = fechaFinal
     this.promociones = promociones
     this.platillos = productos
   }
@@ -30,7 +30,7 @@ module.exports = class Evento {
     try {
       const [result] = await db.execute(
         'INSERT INTO evento (ID_Evento, Nombre, Descripcion, Fecha_Inicio, Fecha_Final) VALUES (?, ?, ?, ?, ?)',
-        [idGenerado, this.nombre, this.descripcion, this.Fecha_Inicio, this.Fecha_Final]
+        [idGenerado, this.nombre, this.descripcion, this.fechaInicio, this.fechaFinal]
       )
 
       const promesas = []
