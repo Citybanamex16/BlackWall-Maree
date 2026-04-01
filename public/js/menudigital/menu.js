@@ -180,20 +180,31 @@ for (const seccion of seccionesCollapsible) {
 // Funcion para obtener los datos del Menu
 async function obtenerMenu () {
   try {
-    const response = await fetch('/menu/menu')
+    const response = await fetch('/menu/menuData')
 
     if (!response.ok) {
       console.log('Señal de Error desde Backend: ', response.message)
       throw new Error(`Error HTTP: ${response.status}`)
     }
 
-    console.log('Datos obtenidos de Backend: ', response)
-
     const data = await response.json()
-    console.log(data) // Aquí manejas los datos
+    console.log('Datos obtenidos de Backend: ', data)
+
+    /* === Llamada a Construcción de Menu Dinámico == */
+    contruirMenuDinamico(data)
   } catch (error) {
     console.error('Error al obtener el menú:', error)
   }
 }
 
 obtenerMenu()
+
+/* ==Construcción de Menu Dinámico == */
+
+function contruirMenuDinamico (datos) {
+  console.log('Constructor de Menu iniciando...')
+  const categorías = datos.arrayCategorías[0]
+  console.log('Categorias listas: ', categorías)
+  const productosInfo = datos.arrayProductsInfo
+  console.log('Productos listos: ', productosInfo)
+}
