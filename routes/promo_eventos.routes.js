@@ -9,6 +9,8 @@ router.post('/eventos', evenPromoControlador.postRegistrarEvento)
 
 router.post('/promociones', evenPromoControlador.postRegistrarPromotions)
 
+router.get('/promociones/producto-filtro', evenPromoControlador.getFilterProductos)
+
 router.get('/eventos/api/catalogos', evenPromoControlador.getCatalogosEvento)
 
 router.get('/promociones', evenPromoControlador.getPromotions)

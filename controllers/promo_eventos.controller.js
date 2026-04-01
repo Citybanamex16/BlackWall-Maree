@@ -58,9 +58,41 @@ exports.getCatalogosEvento = async (req, res, next) => {
 }
 
 // Promociones
-exports.getPromotions = (request, response, next) => {
-  // mandamos todos lo datos
-  response.render('admin/promotions')
+
+exports.getPromotions = async (request, response, next) => {
+  try {
+    // Ejecutamos todas las consultas en paralelo
+    const [
+      [categorias],
+      [tipos]
+    ] = await Promise.all([
+      Promociones.fetchCategorías(),
+      Promociones.fetchTipo()
+    ])
+
+    response.render('../views/admin/promotions', {
+      lista_categorias: categorias,
+      lista_tipos: tipos,
+      path: '/promociones'
+    })
+  } catch (error) {
+    console.log(error)
+    next(error)
+  }
+}
+
+exports.getFilterProductos = async (request, response, next) => {
+  try {
+    const { categoria, tipo } = request.query
+    const [productos] = await Promociones.fetchProductos(categoria, tipo)
+    response.status(200).json({
+      success: true,
+      data: productos
+    })
+  } catch (error) {
+    console.log(error)
+    next(error)
+  }
 }
 
 exports.postRegistrarPromotions = (request, response, next) => {
