@@ -1,10 +1,11 @@
-/* global localStorage, L */
 
+
+/* CU01 */
 const platillobotones = document.getElementsByClassName('platillo-btn')
 const overlay = document.getElementById('modal-overlay')
 const modalContent = document.getElementById('modal-content')
 const modalClose = document.getElementById('modal-close')
-
+/* global localStorage, L */
 const pedido = []
 
 // ── MODAL ──
@@ -175,3 +176,29 @@ for (const seccion of seccionesCollapsible) {
     contenido.style.display = abierto ? 'none' : 'block'
   })
 }
+
+
+/* CU11 Visualizar Menu Digital */
+
+//Funcion para obtener los datos del Menu
+async function obtenerMenu() {
+  try {
+
+    const response = await fetch('/menu/menu');
+
+    if (!response.ok) {
+      console.log("Señal de Error desde Backend: ", response.message)
+      throw new Error(`Error HTTP: ${response.status}`);
+    }
+
+    console.log("Datos obtenidos de Backend: ", response)
+
+    const data = await response.json();
+    console.log(data); // Aquí manejas los datos
+  } catch (error) {
+    console.error('Error al obtener el menú:', error);
+  }
+}
+
+
+
