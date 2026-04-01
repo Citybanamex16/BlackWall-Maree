@@ -11,7 +11,7 @@ const cargarYMostrarModal = async () => {
     const result = await response.json()
 
     if (result.success) {
-      const { promociones, royalties, productos } = result.data
+      const { promociones, productos } = result.data
       poblarSelect('promociones', promociones)
       poblarSelect('productos', productos)
 
