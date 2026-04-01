@@ -4,40 +4,36 @@ const categorías = require('../models/MenuDigital/categorías.model.js')
 const Pedido = require('../models/pedidos.model.js')
 const db = require('../util/database.js')
 
-//CU11
+// CU11
 exports.getMenu = async (request, response, next) => {
   console.log('GetMenu ejecutandose...')
-  try{
-    //1. Llamado en paralelo de consultas con Promise.all()
+  try {
+    // 1. Llamado en paralelo de consultas con Promise.all()
     const [Allcategories, productsData] = await Promise.all([
-      categorías.fecthAll(), //Async BD call 1.
-      productos.getValidProductData() //async BD call
+      categorías.fecthAll(), // Async BD call 1.
+      productos.getValidProductData() // async BD call
     ])
 
-    //2. llamadas sincronicas
+    // 2. llamadas sincronicas
     const breadcrumbs = nav.getBreadcrumbs('Menu')
 
-    console.log("All Promises realizada con exito")
-    console.log("Categorías Info: ", Allcategories)
-    console.log("Products Info: ", productsData)
-
+    console.log('All Promises realizada con exito')
+    console.log('Categorías Info: ', Allcategories)
+    console.log('Products Info: ', productsData)
 
     response.status(200).json({
-      ok:true,
-      message:'Consultas realizadas con exito',
+      ok: true,
+      message: 'Consultas realizadas con exito',
       arrayCategorías: Allcategories,
       arrayProductsInfo: productsData,
       breadcrumbsInfo: breadcrumbs
     })
-  }
-
-  catch (err) {
-    console.log("Error en get Menu: ", err)
+  } catch (err) {
+    console.log('Error en get Menu: ', err)
     response.status(500).json({
-      ok:false,
-      message:err
+      ok: false,
+      message: err
     })
-
   }
 
   // response.render('cliente/menu', { breadcrumbs })

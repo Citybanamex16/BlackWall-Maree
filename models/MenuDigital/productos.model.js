@@ -35,7 +35,6 @@ module.exports = class Producto {
       , [id, 'basico', categoria, nombre, Precio, Disponible, 'Dulce', Imagen])
   }
 
-  
   static ValidarDatosRegistro (data) {
     const mensajesError = [] // Lista para acumular errores
 
@@ -64,7 +63,7 @@ module.exports = class Producto {
     return { valido: true, mensaje: '' }
   }
 
-  static async getValidProductData() {
+  static async getValidProductData () {
     return db.execute(`SELECT 
     P.nombre AS productoNombre, 
     P.precio AS productoPrecio, 
@@ -76,6 +75,4 @@ module.exports = class Producto {
     INNER JOIN insumo AS I ON PI.ID_Insumo = I.ID_Insumo
     WHERE P.Disponible = 1;`)
   }
-
-
 }
