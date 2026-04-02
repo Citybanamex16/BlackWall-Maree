@@ -22,19 +22,15 @@ exports.getEventsAPI = async (req, res, next) => {
 }
 
 exports.postRegistrarEvento = (req, res, next) => {
-  const { nombre, descripcion, fechaInicio, fechaFin, promociones, royalty, platillos } = req.body
+  const { nombre, descripcion, fechaInicio, fechaFin, promociones, productos } = req.body
 
-  const nuevoEvento = new Eventos(nombre, descripcion, fechaInicio, fechaFin, promociones, royalty, platillos)
-
-  if (!nombre || !descripcion || !fechaInicio || !fechaFin ||
-        !promociones || promociones.length === 0 ||
-        !royalty || royalty.length === 0 ||
-        !platillos || platillos.length === 0) {
+  if (!nombre || !descripcion || !fechaInicio || !fechaFin) {
     return res.status(400).json({
       status: 'error',
-      message: 'Faltan datos obligatorios: un evento debe tener promociones, estatus royalty y platillos asociados.'
+      message: 'Faltan datos obligatorios'
     })
   }
+  const nuevoEvento = new Eventos(nombre, descripcion, fechaInicio, fechaFin, promociones, productos)
 
   nuevoEvento.save().then(() => {
     res.status(200).json({
@@ -53,14 +49,12 @@ exports.postRegistrarEvento = (req, res, next) => {
 exports.getCatalogosEvento = async (req, res, next) => {
   try {
     const [promos] = await Eventos.fetchAllPromociones()
-    const [royalties] = await Eventos.fetchAllRoyalties()
     const [productos] = await Eventos.fetchAllProductos()
 
     res.status(200).json({
       success: true,
       data: {
         promociones: promos,
-        royalties,
         productos
       }
     })
