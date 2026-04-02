@@ -10,7 +10,7 @@ const cargarPromociones = async () => {
   spinner.classList.remove('is-hidden')
 
   try {
-    const response = await fetch('/admin/promociones/api/all')
+    const response = await fetch('/promos/promociones/api/all')
     const result = await response.json()
 
     if (result.success) {
@@ -34,21 +34,37 @@ function renderizarPromociones (lista) {
   }
 
   lista.forEach(promo => {
+    const statusTag = promo.Activo
+      ? '<span class="tag is-success is-light">Sí</span>'
+      : '<span class="tag is-danger is-light">No</span>'
     const cardHTML = `
       <div class="column is-4">
         <div class="card">
           <div class="card-content">
             <div class="media">
               <div class="media-content">
-                <p class="title is-4">${promo.nombre}</p>
+                <p class="title is-4">${promo.Nombre}</p>
+                <div class="has-text-right">
+                    <p class="is-size-7 has-text-grey is-uppercase mb-1">Activo</p>
+                    ${statusTag}
+                </div>
               </div>
             </div>
             <div class="content">
-              ${promo.condición || 'Sin condición disponible.'}
+              ${promo.Condiciones || 'Sin condición disponible.'}
             </div>
+
+             <hr class="my-4" style="background-color: #f5f5f5; height: 1px;">
+                  
+                  <div class="is-flex is-justify-content-space-between is-align-items-center">
+                      <div>
+                          <p class="is-size-7 has-text-grey-lighter is-uppercase">Vigencia</p>
+                          <span class="event-date-tag">${promo.Fecha_inicio} - ${promo.Fecha_final}</span>
+                      </div>
+                  </div>
           </div>
           <footer class="card-footer">
-            <a href="#" class="card-footer-item has-text-link" onclick="prepararModificacion(${promo.id_promo})">
+            <a href="#" class="card-footer-item has-text-link" onclick="prepararModificacion(${promo.ID_Promocion})">
               Modificar
             </a>
           </footer>
