@@ -1,56 +1,63 @@
 // const reusify = require('reusify')
 const db = require('../util/database.js')
 
-module.exports = class Producto {
-  constructor (nuevoEvento) {
-    this.nombre = nuevoEvento.nombre
-    this.descripcion = nuevoEvento.descripcion
-    this.fecha_inicio = nuevoEvento.fechaInicio
-    this.fecha_Fin = nuevoEvento.fechaFin
-    this.promociones = nuevoEvento.promociones
-    this.royalty = nuevoEvento.royalty
-    this.platillos = nuevoEvento.platillos
+module.exports = class Evento {
+  constructor (nombre, descripcion, fechaInicio, fechaFinal, promociones, productos) {
+    this.nombre = nombre
+    this.descripcion = descripcion
+    this.fechaInicio = fechaInicio
+    this.fechaFinal = fechaFinal
+    this.promociones = promociones
+    this.platillos = productos
   }
 
-  save () {
-    // Insertar evento
-    return db.execute('INSERT INTO evento (nombre, descripcion, fecha_inicio, fecha_Fin) VALUES (?, ?, ?, ?)').then(([result]) => {
-      // const idEvento = result.insertId
+  async save () {
+    let idGenerado
+    let existe = true
 
-      // Insertar relaciones con promociones
-      if (this.promociones.length > 0) {
-        // const values = this.promociones.map(id => [idEvento, id])
-        return db.execute('') // Query
+    while (existe) {
+      const num = Math.floor(Math.random() * 100000000).toString().padStart(8, '0')
+      idGenerado = 'EV' + num
+
+      // Consultamos si el ID ya existe en la BD
+      const [filas] = await db.execute('SELECT ID_Evento FROM evento WHERE ID_Evento = ?', [idGenerado])
+
+      if (filas.length === 0) {
+        existe = false
+      }
+    }
+
+    try {
+      const [result] = await db.execute(
+        'INSERT INTO evento (ID_Evento, Nombre, Descripcion, Fecha_Inicio, Fecha_Final) VALUES (?, ?, ?, ?, ?)',
+        [idGenerado, this.nombre, this.descripcion, this.fechaInicio, this.fechaFinal]
+      )
+
+      const promesas = []
+      if (this.promociones && this.promociones.length > 0) {
+        const values = this.promociones.map(id => [idGenerado, id])
+        promesas.push(db.query('INSERT INTO evento_contiene_promocion (ID_Evento, ID_Promocion) VALUES ?', [values]))
       }
 
-      // Insertar relaciones con estatus royalty
-      if (this.royalty.length > 0) {
-        // const values = this.royalty.map(id => [idEvento, id])
-        return db.execute('') // Query
+      if (this.platillos && this.platillos.length > 0) {
+        const values = this.platillos.map(id => [idGenerado, id])
+        promesas.push(db.query('INSERT INTO producto_pertenece_evento (ID_Evento, ID_Producto) VALUES ?', [values]))
       }
 
-      // Insertar relaciones con platillos
-      if (this.platillos.length > 0) {
-        // const values = this.platillos.map(id => [idEvento, id])
-        return db.execute('') // Query
-      }
-      return result
-    }).catch((error) => {
-      console.log(error)
+      await Promise.all(promesas)
+      return { id: idGenerado, result }
+    } catch (error) {
+      console.error('Error en el guardado final:', error)
       throw error
-    })
+    }
   }
 
   static fetchAllPromociones () {
-    return db.execute('SELECT Id_Promo, Nombre FROM promociones')
-  }
-
-  static fetchAllRoyalties () {
-    return db.execute('SELECT Nombre FROM status_royalty')
+    return db.execute('SELECT ID_Promocion as id, Nombre as nombre FROM promocion')
   }
 
   static fetchAllProductos () {
-    return db.execute('SELECT Id_Producto, nombre_producto FROM producto')
+    return db.execute('SELECT ID_Producto as id, Nombre as nombre FROM producto')
   }
 
   static fetchAll () {

@@ -7,13 +7,12 @@ const cargarYMostrarModal = async () => {
   btn.classList.add('is-loading')
 
   try {
-    const response = await fetch('/admin/eventos/api/catalogos')
+    const response = await fetch('/promos/eventos/api/catalogos')
     const result = await response.json()
 
     if (result.success) {
-      const { promociones, royalties, productos } = result.data
+      const { promociones, productos } = result.data
       poblarSelect('promociones', promociones)
-      poblarSelect('royalty', royalties)
       poblarSelect('productos', productos)
 
       // Una vez lleno, mostramos el modal
@@ -85,59 +84,36 @@ function marcarError (id, mensaje) {
 
 // eslint-disable-next-line no-unused-vars
 const guardarEvento = () => {
+  const elNombre = document.getElementById('nombre')
+  const elDesc = document.getElementById('descripcion')
+  const elInicio = document.getElementById('fechaInicio')
+  const elFin = document.getElementById('fechaFin')
+
   const datos = {
-    nombre: document.getElementById('nombre').value,
-    descripcion: 'Evento Marée',
-    fechaInicio: document.getElementById('fechaInicio').value,
-    fechaFin: document.getElementById('fechaFin').value,
+    nombre: elNombre.value,
+    descripcion: elDesc.value,
+    fechaInicio: elInicio.value,
+    fechaFin: elFin.value,
     promociones: getSelectedValues('promociones'),
-    royalty: getSelectedValues('royalty'),
     productos: getSelectedValues('productos')
   }
 
-  let error = false
-  if (!datos.nombre) {
-    document.getElementById('nombre').classList.add('is-danger')
-    error = true
-  }
+  let error = false;
+  [elNombre, elDesc, elInicio, elFin].forEach(input => {
+    if (!input.value.trim()) {
+      input.classList.add('is-danger')
+      error = true
+    } else {
+      input.classList.remove('is-danger')
+    }
+  })
 
-  if (!datos.descripcion) {
-    document.getElementById('descripcion').classList.add('is-danger')
-    error = true
-  }
+  if (error) return
 
-  if (!datos.fechaInicio) {
-    document.getElementById('fechaInicio').classList.add('is-danger')
-    error = true
-  }
-
-  if (!datos.fechaFin) {
-    document.getElementById('fechaFin').classList.add('is-danger')
-    error = true
-  }
-
-  if (datos.promociones.length === 0) {
-    document.getElementById('promociones').closest('.select').classList.add('is-danger')
-    error = true
-  }
-
-  if (datos.royalty.length === 0) {
-    document.getElementById('royalty').closest('.select').classList.add('is-danger')
-    error = true
-  }
-
-  if (datos.productos.length === 0) {
-    document.getElementById('productos').closest('.select').classList.add('is-danger')
-    error = true
-  }
-
-  if (error) return // Detenemos si algo falta
-
-  // 3. Feedback de carga (Opcional pero recomendado)
   const btnGuardar = document.querySelector('.button.is-primary')
   btnGuardar.classList.add('is-loading')
 
-  fetch('/admin/eventos/registrar', {
+  fetch('/promos/eventos/registrar', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(datos)
@@ -166,7 +142,7 @@ const cargarEventos = async () => {
   spinner.classList.remove('is-hidden')
 
   try {
-    const response = await fetch('/admin/eventos/api/all')
+    const response = await fetch('/promos/eventos/api/all')
     const result = await response.json()
 
     if (result.success) {
@@ -190,15 +166,23 @@ function renderizarEventos (lista) {
   }
 
   lista.forEach(evento => {
+    const statusTag = evento.Activo
+      ? '<span class="tag is-success is-light">Sí</span>'
+      : '<span class="tag is-danger is-light">No</span>'
     const cardHTML = `
       <div class="column is-4">
           <div class="card event-card">
               <div class="card-content">
-                  <p class="title is-5 mb-2">${evento.nombre}</p>
+                  <p class="title is-5 mb-2">${evento.Nombre}</p>
                   <p class="subtitle is-7 is-uppercase has-text-grey-light mb-4">Evento Marée</p>
                   
+                  <div class="has-text-right">
+                      <p class="is-size-7 has-text-grey is-uppercase mb-1">Activo</p>
+                      ${statusTag}
+                  </div>
+
                   <div class="content is-size-6 has-text-grey">
-                      ${evento.descripción || 'Sin descripción disponible.'}
+                      ${evento.Descripcion || 'Sin descripción disponible.'}
                   </div>
 
                   <hr class="my-4" style="background-color: #f5f5f5; height: 1px;">
@@ -206,12 +190,12 @@ function renderizarEventos (lista) {
                   <div class="is-flex is-justify-content-space-between is-align-items-center">
                       <div>
                           <p class="is-size-7 has-text-grey-lighter is-uppercase">Vigencia</p>
-                          <span class="event-date-tag">${evento.fecha_inicio} - ${evento.fecha_fin}</span>
+                          <span class="event-date-tag">${evento.Fecha_Inicio} - ${evento.Fecha_Final}</span>
                       </div>
                   </div>
               </div>
               <footer class="card-footer" style="border-top: none; background-color: #fafafa;">
-                  <a href="#" class="card-footer-item has-text-grey" onclick="prepararModificacion(${evento.id_evento})">
+                  <a href="#" class="card-footer-item has-text-grey" onclick="prepararModificacion(${evento.ID_Evento})">
                       <span class="icon is-small mr-2"><i class="fas fa-edit"></i></span> Modificar
                   </a>
               </footer>

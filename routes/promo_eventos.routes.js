@@ -7,13 +7,17 @@ router.get('/eventos', evenPromoControlador.getEvents)
 
 router.get('/eventos/api/all', evenPromoControlador.getEventsAPI)
 
-router.post('/eventos', evenPromoControlador.postRegistrarEvento)
+router.post('/eventos/registrar', evenPromoControlador.postRegistrarEvento)
 
 router.get('/eventos/api/catalogos', evenPromoControlador.getCatalogosEvento)
 
 router.get('/promociones', evenPromoControlador.getPromotionsPage)
 
 router.get('/promociones/api/all', evenPromoControlador.getPromotionsAPI)
+
+router.post('/promociones', evenPromoControlador.postRegistrarPromotions)
+
+router.get('/promociones/producto-filtro', evenPromoControlador.getFilterProductos)
 
 router.get('/mensajes', evenPromoControlador.getMensajes)
 
