@@ -13,7 +13,6 @@ const clienteControlador = require('../controllers/cliente.controller.js')
 
 router.get('/menu', clienteControlador.getMenu)
 router.get('/logout', clienteControlador.logout)
-router.get('/royalty', clienteControlador.getRoyalty)
 router.get('/login', clienteControlador.getLogin)
 router.post('/login', clienteControlador.postLogin)
 
