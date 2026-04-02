@@ -25,6 +25,22 @@ exports.getRoyaltyMetrics = (req, res, next) => {
   res.render('admin/metricsRoyalty')
 }
 
+exports.getIngredients = (req, res, next) => {
+  res.render('admin/ingredients')
+}
+
+exports.getProducts = (req, res, next) => {
+  res.render('admin/products')
+}
+
+exports.getEvents = (req, res, next) => {
+  res.render('admin/events')
+}
+
+exports.getMensajes = (req, res, next) => {
+  res.render('admin/whatsapp')
+}
+
 exports.getCollaborators = async (req, res, next) => {
   try {
     const colaboradores = await Colaborador.fetchActivos()
@@ -50,7 +66,7 @@ exports.getCollaboratorsDetails = async (req, res, next) => {
     const idColaborador = req.params.id
     const colaborador = await Colaborador.fetchById(idColaborador)
     if (!colaborador) {
-      return res.status(404).render('404')
+      return res.status(404).send('Colaborador no encontrado')
     }
     res.render('admin/collaboratorsDetails', {
       pageTitle: 'Detalles del colaborador',
@@ -70,10 +86,7 @@ exports.getCollaboratorsDetails = async (req, res, next) => {
 exports.postDarDeBajaColaborador = async (req, res, next) => {
   try {
     const idColaborador = req.params.id
-    const idAdminSesion = String(req.session.user.id)
-
-    console.log('ID colaborador recibido:', idColaborador)
-    console.log('ID admin en sesión:', idAdminSesion)
+    const idAdminSesion = String(req.session.user.id);
 
     if (idColaborador === idAdminSesion) {
       return res.status(400).json({
@@ -82,8 +95,7 @@ exports.postDarDeBajaColaborador = async (req, res, next) => {
       })
     }
 
-    const resultado = await Colaborador.darDeBaja(idColaborador)
-    console.log('Resultado darDeBaja:', resultado)
+    const resultado = await Colaborador.darDeBaja(idColaborador);
 
     if (!resultado) {
       return res.status(400).json({
@@ -94,13 +106,13 @@ exports.postDarDeBajaColaborador = async (req, res, next) => {
 
     return res.json({
       ok: true,
-      mensaje: 'Empleado dado de baja exitosamente.'
+      mensaje: 'Colaborador eliminado exitosamente.'
     })
   } catch (error) {
     console.log('ERROR EN BAJA:', error)
-    res.status(500).json({
+    return res.status(500).json({
       ok: false,
-      mensaje: 'Ocurrió un error al actualizar en la base de datos.'
+      mensaje: 'Ocurrió un error al actualizar la base de datos.'
     })
   }
 }
