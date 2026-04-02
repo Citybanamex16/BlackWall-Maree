@@ -231,7 +231,6 @@ exports.getProductfieldsAndIngredientes = async (req, res, next) => {
   }
 }
 
-
 const pool = require('../util/database.js')
 exports.postNewProduct = async (req, res, nex) => {
   console.log('POST recibido: ', req.body)
