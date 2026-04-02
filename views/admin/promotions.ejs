@@ -18,6 +18,120 @@
             </div>
         </div>
     </section>
+
+        <section class = "section">
+        <div class = "container">
+            <div class = "level">
+                <div class = "level-left">
+                    <div class = "level-item">
+                        <h1 class = "title"> Gestión de Promociones</h1>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="level-right">
+            <div class="level-item">
+                <div class="button is-primary is-rounded">
+                    <!-- Agregar la funcionalidad de abrirModal-->
+                        <button class="button is-primary" onclick="abrirModal()">Nueva promoción</button>
+                </div>
+            </div> 
+        </div> 
+    </section>
+    <!-- Pop up de registrar una promocion-->
+    <div class="modal" id ="modal-promocion">
+        <div class="modal-background"></div>
+        <div class="modal-content">
+            <div class="box">
+                <h3 class="title is-4"> Registrar Nueva Promoción </h3>
+                <form id="form-promocion">
+                    <div class="field">
+                        <label class="label">Nombre</label>
+                        <div class="control">
+                            <input id = "nombre" class="input" type="text" placeholder="Ex. Crepas a mitad de precio">
+                        </div>
+                    </div>
+                    <div class = "field">
+                        <label class="checkbox">
+                        <input type="checkbox" id = "check-descuento" onclick="nuevoDescuento()"/>¿Descuento?
+                    </label>
+                    </div>
+                    <div class="field" id="seccion-descuento" style="display: none;">
+                        <label class="label" >Descuento</label>
+                        <div class="control">
+                            <input class="input" id="descuento" type="text" placeholder="50">
+                        </div>
+                        <div class="columns">
+                            <div class="column">
+                                <label class="label">Selecciona Categoría</label>
+                                <div class="select is-info is-fullwidth">
+                                    <select name="categoria" onchange="actualizarProductos()">
+                                        <option value="">Todas las categorías</option>
+                                        <% for (let cat of lista_categorias) { %>
+                                            <option value="<%= cat.Categoría %>"><%= cat.Categoría %></option>
+                                        <% } %>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="column">
+                                <label class="label">Selecciona Tipo</label>
+                                <div class="select is-info is-fullwidth">
+                                    <select name="tipo" onchange="actualizarProductos()">
+                                        <option value="">Todos los tipos</option>
+                                        <% for (let tipo of lista_tipos) { %>
+                                            <option value="<%= tipo.Tipo %>"><%= tipo.Tipo %></option>
+                                        <% } %>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                            <label class="label"> Selecciona el platillo o bebida</label>
+                       <div id="select-productos" class="box" style="max-height: 150px; overflow-y: auto;">
+                        <p class="has-text-grey">Selecciona categoría o tipo primero</p>
+                    </div> 
+                    </div>
+                    <div class="field">
+                        <label class="label">Condiciones</label>
+                        <div class="control">
+                            <input class="input" type="text" 
+                            id = "condiciones" placeholder="Es necesario comprar una crepa...">
+                        </div>
+                    </div>
+                    <div class="field">
+                        <label class="label">Fecha de Inicio</label>
+                        <div class="control">
+                            <input class="input" id= "fecha_de_Inicio" type="date">
+                        </div>
+                    </div>
+                    <div class="field">
+                        <label class="label">Fecha de Fin</label>
+                        <div class="control">
+                            <input class="input" type="date" id= "fecha_de_Fin">
+                        </div>
+                    </div>
+                    <div class="buttons">
+                        <button type = "button" class="button is-primary" 
+                        onclick="guardarPromocion()">Guardar</button>
+                        <button type="button" class="button" 
+                        onclick="cerrarModal()"> Cancelar</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    <div id="modal-exito" class="modal">
+  <div class="modal-background"></div>
+  <div class="modal-content">
+    <div class="box has-text-centered">
+      <h3 class="title is-4 mt-4">¡Registro Exitoso!</h3>
+      <p id="mensaje-exito">La promoción se ha guardado correctamente.</p>
+      <button class="button is-primary mt-5" onclick="location.reload()">Continuar</button>
+    </div>
+  </div>
+</div>
+    </div>
+  </div>
+</div>
 <script src="/js/promos_eventos/promos.js"></script>
 </body>
 </html>
