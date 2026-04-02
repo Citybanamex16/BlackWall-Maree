@@ -106,20 +106,29 @@ exports.postDarDeBajaColaborador = async (req, res, next) => {
 }
 
 exports.getOrders = async (req, res, next) => {
+  const breadcrumbs = [
+    { name: 'Inicio', url: '/' },
+    { name: 'Admin', url: '/admin' },
+    { name: 'Órdenes', url: '/admin/ordenes' }
+  ]
+
   try {
     const [pedidos] = await Pedido.fetchOrders()
-
     res.render('admin/orders', {
+      pageTitle: 'Órdenes',
       pedidos,
-      breadcrumbs: [
-        { name: 'Inicio', url: '/' },
-        { name: 'Admin', url: '/admin' },
-        { name: 'Órdenes', url: '/admin/ordenes' }
-      ]
+      breadcrumbs,
+      error: null
     })
   } catch (error) {
     console.error('Error al cargar órdenes:', error)
-    res.status(500).send('Error al cargar órdenes de BD.')
+
+    res.status(500).render('admin/orders', {
+      pageTitle: 'Órdenes',
+      pedidos: [],
+      breadcrumbs,
+      error: 'No hay conexión con la base de datos.'
+    })
   }
 }
 
@@ -157,17 +166,13 @@ exports.cancelActiveOrder = async (req, res, next) => {
     }
 
     const [clienteRows] = await Cliente.fetchContactDataByOrder(idOrden)
+    const cliente = clienteRows && clienteRows.length > 0 ? clienteRows[0] : null
 
-    if (!clienteRows || clienteRows.length === 0) {
-      return res.status(500).json({
-        ok: false,
-        partial: true,
-        message: 'La orden se canceló, pero no fue posible recuperar los datos del cliente.'
-      })
-    }
+    const nombreCliente = cliente && cliente.nombre_cliente
+      ? cliente.nombre_cliente
+      : ordenRows[0].nombre_cliente || 'cliente'
 
-    const cliente = clienteRows[0]
-    const mensaje = `Hola ${cliente.nombre_cliente || 'cliente'}, tu orden #${idOrden} ha sido cancelada.`
+    const mensaje = `Hola ${nombreCliente}, tu orden #${idOrden} ha sido cancelada.`
 
     return res.status(200).json({
       ok: true,
@@ -175,10 +180,10 @@ exports.cancelActiveOrder = async (req, res, next) => {
       pedidoId: idOrden,
       nuevoEstatus: 'Cancelado',
       cliente: {
-        nombre: cliente.nombre_cliente || null,
-        telefono: cliente.telefono || null,
-        correo: cliente.correo || null,
-        royalty: cliente.nombre_royalty || null
+        nombre: cliente ? cliente.nombre_cliente || null : null,
+        telefono: cliente ? cliente.telefono || null : null,
+        correo: cliente ? cliente.correo || null : null,
+        royalty: cliente ? cliente.nombre_royalty || null : null
       },
       notificacion: mensaje
     })
