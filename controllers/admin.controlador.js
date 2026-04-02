@@ -1,6 +1,7 @@
 // Llamar al model
 const nav = require('../models/breadcrumbs.model.js')
 const Colaborador = require('../models/colaborador.model.js')
+const Ingrediente = require('../models/ingrediente.model.js')
 
 // const path = require('path')
 
@@ -192,6 +193,150 @@ exports.cancelActiveOrder = async (req, res, next) => {
     return res.status(500).json({
       ok: false,
       message: 'Ocurrió un error al cancelar la orden.'
+    })
+  }
+}
+
+// GET /admin/ingredientes
+// Renderoza vista de gestion de ingredientes
+exports.getIngredientes = (req, res, next) => {
+  res.render('admin/ingredientes')
+}
+
+// GET /admin/api/ingredientes
+// Regresa lista de ingredientes activos (para llenar la tabla en el front yuhhhh)
+exports.getIngredientesLista = async (req, res, next) => {
+  try {
+    const [ingredientes] = await Ingrediente.fetchAll()
+    res.status(200).json({
+      success: true,
+      message: 'Ingredientes recuperados',
+      data: ingredientes
+    })
+  } catch (error) {
+    console.error('Error en getIngredientesLista:', error)
+    res.status(500).json({
+      success: false,
+      message: 'Error al obtener ingredientes de la BD'
+    })
+  }
+}
+
+// GET /admin/api/ingredientes/categorias
+// Regresa las categorías disponibles para el dropdown del formulario
+exports.getCategorias = async (req, res, next) => {
+  try {
+    const [categorias] = await Ingrediente.getCategorias()
+    res.status(200).json({
+      success: true,
+      message: 'Categorías recuperadas',
+      data: categorias
+    })
+  } catch (error) {
+    console.error('Error en getCategorias:', error)
+    res.status(500).json({
+      success: false,
+      message: 'Error al obtener categorías de la BD'
+    })
+  }
+}
+
+// GET /admin/api/ingredientes/verificarNombre
+// Verifica si ya existe un ingrediente con ese nombre
+exports.verificarNombreIngrediente = async (req, res, next) => {
+  try {
+    const { nombre } = req.query
+    console.log('=== VERIFICAR NOMBRE ===')
+    console.log('Nombre recibido:', nombre)
+
+    if (!nombre || String(nombre).trim() === '') {
+      return res.status(400).json({ success: false, message: 'Nombre requerido' })
+    }
+
+    const [rows] = await Ingrediente.buscarPorNombre(nombre.trim())
+    console.log('Rows encontrados:', rows)
+    console.log('Existe:', rows.length > 0)
+
+    const existe = rows.length > 0
+    res.status(200).json({ success: true, existe })
+  } catch (error) {
+    console.error('Error en verificarNombreIngrediente:', error)
+    res.status(500).json({ success: false, message: 'Error al verificar nombre' })
+  }
+}
+
+// POST /admin/api/ingredientes/validad
+// Valida campos
+exports.validarIngrediente = async (req, res, next) => {
+  try {
+    const resultado = Ingrediente.verificarCamposVacios(req.body)
+
+    if (resultado.camposVacios) {
+      return res.status(200).json({
+        success: true,
+        camposVacios: true,
+        campoFaltante: resultado.campoFaltante
+      })
+    }
+
+    res.status(200).json({ success: true, camposVacios: false })
+  } catch (error) {
+    console.error('Error en validarIngrediente:', error)
+    res.status(500).json({ success: false, message: 'Error al validar ingrediente' })
+  }
+}
+
+// IMPORTANT POST /admin/api/ingredientes/crear
+// Guarda el nuevo ingrediente en la BD
+exports.crearIngrediente = async (req, res, next) => {
+  try {
+    const { Nombre, Precio, Activo, Tipo, Imagen } = req.body
+    const Categoria = req.body['Categoría']
+
+    // Validación de campos obligatorios
+    const resultado = Ingrediente.verificarCamposVacios(req.body)
+    if (resultado.camposVacios) {
+      return res.status(400).json({
+        success: false,
+        message: `Campo requerido faltante: ${resultado.campoFaltante}`
+      })
+    }
+
+    // Verificar que el nombre no exista ya
+    const [existente] = await Ingrediente.buscarPorNombre(Nombre.trim())
+    console.log('Verificar nombre:', Nombre, '→ rows:', existente)
+    if (existente.length > 0) {
+      return res.status(409).json({
+        success: false,
+        message: 'Ya existe un ingrediente con ese nombre'
+      })
+    }
+
+    const nuevoID = Ingrediente.generarID()
+    console.log('Nuevo ID Ingrediente:', nuevoID)
+
+    console.log('Datos a insertar:', { nuevoID, Nombre, Categoria, Precio, Activo, Tipo, Imagen })
+
+    await Ingrediente.insertNuevoIngrediente(
+      nuevoID,
+      Nombre.trim(),
+      Categoria,
+      parseFloat(Precio),
+      Activo !== undefined ? Activo : true,
+      Tipo || null,
+      Imagen || null
+    )
+
+    res.status(200).json({
+      success: true,
+      message: 'Ingrediente registrado exitosamente',
+      registrado: true
+    })
+  } catch (error) {
+    console.error('Error en crearIngrediente:', error)
+    res.status(500).json({
+      success: false,
+      message: 'Error al guardar el ingrediente en la BD'
     })
   }
 }
