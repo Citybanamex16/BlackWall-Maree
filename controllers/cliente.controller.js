@@ -28,11 +28,6 @@ exports.logout = (request, response, next) => {
   })
 }
 
-exports.getRoyalty = (request, response, next) => {
-  const breadcrumbs = nav.getBreadcrumbs('Royalty')
-  response.render('cliente/royalty', { breadcrumbs })
-}
-
 exports.getLogin = (request, response, next) => {
   const breadcrumbs = nav.getBreadcrumbs('LogIn')
   response.render('cliente/login', { breadcrumbs })

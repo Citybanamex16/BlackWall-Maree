@@ -17,14 +17,6 @@ exports.getHub = (req, res, next) => {
   res.render('admin/admindashboard', { breadcrumbs })
 }
 
-exports.getRoyalty = (req, res, next) => {
-  res.render('admin/royalty')
-}
-
-exports.getRoyaltyMetrics = (req, res, next) => {
-  res.render('admin/metricsRoyalty')
-}
-
 exports.getIngredients = (req, res, next) => {
   res.render('admin/ingredients')
 }
@@ -86,7 +78,7 @@ exports.getCollaboratorsDetails = async (req, res, next) => {
 exports.postDarDeBajaColaborador = async (req, res, next) => {
   try {
     const idColaborador = req.params.id
-    const idAdminSesion = String(req.session.user.id);
+    const idAdminSesion = String(req.session.user.id)
 
     if (idColaborador === idAdminSesion) {
       return res.status(400).json({
@@ -95,7 +87,7 @@ exports.postDarDeBajaColaborador = async (req, res, next) => {
       })
     }
 
-    const resultado = await Colaborador.darDeBaja(idColaborador);
+    const resultado = await Colaborador.darDeBaja(idColaborador)
 
     if (!resultado) {
       return res.status(400).json({

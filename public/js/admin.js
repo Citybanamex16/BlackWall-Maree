@@ -6,7 +6,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const id = boton.dataset.id
       const nombre = boton.dataset.nombre
 
-      const confirmado = confirm(`¿Seguro que deseas dar de baja a ${nombre}?`)
+      const confirmado = window.confirm(`¿Seguro que deseas dar de baja a ${nombre}?`)
 
       if (!confirmado) {
         return
