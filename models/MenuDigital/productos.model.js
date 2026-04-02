@@ -1,4 +1,4 @@
-const db = require('../util/database.js')
+const db = require('../../util/database.js')
 
 module.exports = class Producto {
   static async fetchOne (id) {
@@ -66,5 +66,51 @@ module.exports = class Producto {
     }
 
     return { valido: true, mensaje: '' }
+  }
+
+  static async getValidProductData () {
+    // 1. ejecutamos Consulta
+    const [rows] = await db.execute(`SELECT 
+    P.ID_Producto AS productoID,
+    P.nombre AS productoNombre, 
+    P.precio AS productoPrecio, 
+    P.categoría AS productoCategoria, 
+    P.imagen AS productoImagen, 
+    I.ID_Insumo AS insumoID,
+    I.nombre AS insumoNombre
+    FROM producto AS P
+    INNER JOIN producto_tiene_insumo AS PI ON P.ID_Producto = PI.ID_Producto
+    INNER JOIN insumo AS I ON PI.ID_Insumo = I.ID_Insumo
+    WHERE P.Disponible = 1;`)
+
+    // console.log('Rows: ', rows)
+
+    // 2. Agrupamos utilizando Mapping
+    const productosMap = {}
+
+    rows.forEach(fila => {
+      // 3. Si el producto no existe en nuestro diccionario, lo creamos
+      if (!productosMap[fila.productoID]) {
+        productosMap[fila.productoID] = {
+          id: fila.productoID,
+          nombre: fila.productoNombre,
+          precio: fila.productoPrecio,
+          categoria: fila.productoCategoria,
+          imagen: fila.productoImagen,
+          ingredientes: [] // Inicializamos el array de ingredientes
+        }
+      }
+
+      // 4. Agregamos el ingrediente de esta fila al producto correspondiente
+      if (fila.insumoID) {
+        productosMap[fila.productoID].ingredientes.push({
+          id: fila.insumoID,
+          nombre: fila.insumoNombre
+        })
+      }
+    })
+
+    // 5. convertimos de diccionario a Array
+    return Object.values(productosMap)
   }
 }

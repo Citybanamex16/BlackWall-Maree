@@ -4,6 +4,7 @@ const menuControlador = require('../controllers/menu.controlador.js')
 
 // Rutas Menu cliente
 router.get('/menu', menuControlador.getMenu)
+router.get('/menuData', menuControlador.getMenuData)
 router.get('/orden', menuControlador.getOrden)
 router.get('/consultaplatillo', menuControlador.getPlatillo)
 router.post('/agregaritem', menuControlador.agregarItem)
