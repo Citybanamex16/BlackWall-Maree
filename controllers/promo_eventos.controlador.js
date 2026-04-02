@@ -116,7 +116,7 @@ exports.getFilterProductos = async (req, res, next) => {
 
 exports.postRegistrarPromotions = (req, res, next) => {
   const { nombre, descuento, condicion, fechaInicio, fechaFinal, productos } = req.body
-  
+
   if (!nombre || descuento === undefined || !condicion || !fechaInicio || !fechaFinal) {
     return res.status(400).json({
       success: false,
