@@ -23,4 +23,16 @@ router.get('/colaboradores', adminControlador.getCollaborators)
 
 router.get('/ordenes', adminControlador.getOrders)
 
+router.get('/ingredientes', adminControlador.getIngredientes)
+// ingredientes activos
+router.get('/api/ingredientes', adminControlador.getIngredientesLista)
+// categorías para el dropdown del formulario
+router.get('/api/ingredientes/categorias', adminControlador.getCategorias)
+router.get('/api/ingredientes/verificarNombre', adminControlador.verificarNombreIngrediente)
+
+// validar campos del formulario (sin guardar)
+router.post('/api/ingredientes/validar', adminControlador.validarIngrediente)
+// guardar nuevo ingrediente en BD
+router.post('/api/ingredientes/crear', adminControlador.crearIngrediente)
+
 module.exports = router
