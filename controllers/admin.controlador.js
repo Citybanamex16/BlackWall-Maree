@@ -2,6 +2,7 @@
 const nav = require('../models/breadcrumbs.model.js')
 const Colaborador = require('../models/colaborador.model.js')
 const Ingrediente = require('../models/ingrediente.model.js')
+const bcrypt = require('bcryptjs')
 
 // const path = require('path')
 
@@ -349,6 +350,88 @@ exports.crearIngrediente = async (req, res, next) => {
     res.status(500).json({
       success: false,
       message: 'Error al guardar el ingrediente en la BD'
+    })
+  }
+}
+
+exports.getNewCollaborator = (req, res, next) => {
+  res.render('admin/newCollaborator', {
+    pageTitle: 'Registrar colaborador',
+    error: null,
+    oldInput: {
+      id_colaborador: '',
+      nombre: '',
+      rol: 'Colaborador'
+    }
+  })
+}
+
+exports.postNewCollaborator = async (req, res, next) => {
+  try {
+    const idColaborador = String(req.body.id_colaborador || '').trim()
+    const nombre = String(req.body.nombre || '').trim()
+    const rol = String(req.body.rol || '').trim()
+    const contrasena = String(req.body.contrasena || '').trim()
+
+    if (!idColaborador || !nombre || !rol || !contrasena) {
+      return res.status(400).render('admin/newCollaborator', {
+        pageTitle: 'Registrar colaborador',
+        error: 'Datos incompletos o incorrectos.',
+        oldInput: {
+          id_colaborador: idColaborador,
+          nombre,
+          rol
+        }
+      })
+    }
+
+    if (rol !== 'Administrador' && rol !== 'Colaborador') {
+      return res.status(400).render('admin/newCollaborator', {
+        pageTitle: 'Registrar colaborador',
+        error: 'Rol inválido.',
+        oldInput: {
+          id_colaborador: idColaborador,
+          nombre,
+          rol: 'Colaborador'
+        }
+      })
+    }
+
+    const yaExiste = await Colaborador.existsById(idColaborador)
+
+    if (yaExiste) {
+      return res.status(400).render('admin/newCollaborator', {
+        pageTitle: 'Registrar colaborador',
+        error: 'Datos previamente registrados.',
+        oldInput: {
+          id_colaborador: idColaborador,
+          nombre,
+          rol
+        }
+      })
+    }
+
+    const contrasenaHasheada = await bcrypt.hash(contrasena, 12)
+
+    await Colaborador.create(
+      idColaborador,
+      rol,
+      nombre,
+      contrasenaHasheada
+    )
+
+    return res.redirect('/admin/colaboradores')
+  } catch (error) {
+    console.log('ERROR EN ALTA DE COLABORADOR:', error)
+
+    return res.status(500).render('admin/newCollaborator', {
+      pageTitle: 'Registrar colaborador',
+      error: 'Error al guardar el colaborador.',
+      oldInput: {
+        id_colaborador: req.body.id_colaborador || '',
+        nombre: req.body.nombre || '',
+        rol: req.body.rol || 'Colaborador'
+      }
     })
   }
 }
