@@ -4,10 +4,10 @@ const mysql = require('mysql2')
 const pool = mysql.createPool({
   // Si usas windows o mac usa localhost, el de abajo lo usas en caso de tener una WSL y cambia
   // para cada persona
-  host: 'mysql-maree2.alwaysdata.net',
-  user: 'maree2',
-  database: 'maree2_1',
-  password: 'maree123',
+  host: 'localhost',
+  user: 'root',
+  database: 'maree',
+  password: '',
   waitForConnection: true,
   connectionLimit: 10
 
