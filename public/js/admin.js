@@ -4,15 +4,13 @@ document.addEventListener('DOMContentLoaded', () => {
   botones.forEach((boton) => {
     boton.addEventListener('click', async () => {
       const id = boton.dataset.id
-      // const nombre = boton.dataset.nombre
+      const nombre = boton.dataset.nombre
 
-      /*
       const confirmado = confirm(`¿Seguro que deseas dar de baja a ${nombre}?`)
 
       if (!confirmado) {
         return
       }
-      */
 
       try {
         const response = await fetch(`/admin/colaboradores/${id}/baja`, {
