@@ -16,25 +16,15 @@ router.get('/productos', isAuth, isAdmin, adminControlador.getProducts)
 router.get('/royaltyMetrics', isAuth, isAdmin, adminControlador.getRoyaltyMetrics)
 
 router.get('/colaboradores', isAuth, isAdmin, adminControlador.getCollaborators)
+router.get('/colaboradores/nuevo', isAuth, isAdmin, adminControlador.getNewCollaborator)
+router.post('/colaboradores/nuevo', isAuth, isAdmin, adminControlador.postNewCollaborator)
 router.get('/colaboradores/:id', isAuth, isAdmin, adminControlador.getCollaboratorsDetails)
 router.post('/colaboradores/:id/baja', isAuth, isAdmin, adminControlador.postDarDeBajaColaborador)
 
 router.get('/ordenes', isAuth, isAdmin, adminControlador.getOrders)
-// router.post('/api/orders/:id/cancel', adminControlador.cancelActiveOrder)
+router.post('/api/orders/:id/cancel', adminControlador.cancelActiveOrder)
 router.get('/promociones', isAuth, isAdmin, adminControlador.getPromotions)
 router.get('/eventos', isAuth, isAdmin, adminControlador.getEvents)
 router.get('/mensajes', isAuth, isAdmin, adminControlador.getMensajes)
-
-router.get('/ingredientes', adminControlador.getIngredientes)
-// ingredientes activos
-router.get('/api/ingredientes', adminControlador.getIngredientesLista)
-// categorías para el dropdown del formulario
-router.get('/api/ingredientes/categorias', adminControlador.getCategorias)
-router.get('/api/ingredientes/verificarNombre', adminControlador.verificarNombreIngrediente)
-
-// validar campos del formulario (sin guardar)
-router.post('/api/ingredientes/validar', adminControlador.validarIngrediente)
-// guardar nuevo ingrediente en BD
-router.post('/api/ingredientes/crear', adminControlador.crearIngrediente)
 
 module.exports = router
