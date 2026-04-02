@@ -20,7 +20,7 @@ router.get('/colaboradores/:id', isAuth, isAdmin, adminControlador.getCollaborat
 router.post('/colaboradores/:id/baja', isAuth, isAdmin, adminControlador.postDarDeBajaColaborador)
 
 router.get('/ordenes', isAuth, isAdmin, adminControlador.getOrders)
-//router.post('/api/orders/:id/cancel', adminControlador.cancelActiveOrder)
+// router.post('/api/orders/:id/cancel', adminControlador.cancelActiveOrder)
 router.get('/promociones', isAuth, isAdmin, adminControlador.getPromotions)
 router.get('/eventos', isAuth, isAdmin, adminControlador.getEvents)
 router.get('/mensajes', isAuth, isAdmin, adminControlador.getMensajes)
