@@ -8,10 +8,56 @@
     <link rel="stylesheet" href="/css/productCatalog.css">
 </head>
 <body>
+
+    <%- include('../partials/breadcrumbs') %>
+
     <section class="section">
         <div class="container">
-            <h1 class="title">Catálogo de Productos</h1>
-            <p class="subtitle">Aquí va el catálogo de productos</p>
+
+            <!-- Encabezado de página -->
+            <div class="level mb-4">
+                <div class="level-left">
+                    <div>
+                        <h1 class="title mb-1">Catálogo de Productos</h1>
+                        <p class="subtitle is-6">Gestiona categorías, precios y disponibilidad</p>
+                    </div>
+                </div>
+                <div class="level-right">
+                    <!-- Buscador rápido por nombre -->
+                    <div class="field">
+                        <div class="control has-icons-left">
+                            <input id="filtroBusqueda" class="input" type="text" placeholder="Buscar producto...">
+                            <span class="icon is-left">🔍</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Resumen rápido — JS inyecta los números -->
+            <div class="level stats-bar mb-5">
+                <div class="level-item has-text-centered">
+                    <div>
+                        <p class="heading">Total productos</p>
+                        <p class="title" id="statTotal">—</p>
+                    </div>
+                </div>
+                <div class="level-item has-text-centered">
+                    <div>
+                        <p class="heading">Disponibles</p>
+                        <p class="title" id="statDisponibles">—</p>
+                    </div>
+                </div>
+                <div class="level-item has-text-centered">
+                    <div>
+                        <p class="heading">Categorías</p>
+                        <p class="title" id="statCategorias">—</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Contenedor principal — JS construye una sección por categoría -->
+            <div id="admin-catalogo"></div>
+
         </div>
     </section>
 
@@ -22,6 +68,16 @@
         </span>
         <span>Añadir Producto</span>
     </a>
+
+
+
+
+
+
+
+
+
+
 
 
 <!-- Sección de modals-->

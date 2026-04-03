@@ -32,10 +32,17 @@ exports.getBreadcrumbs = (page) => {
       { name: 'Log In', url: '' }
 
     ],
+    // Este breadcrumb es para el Dashboard en general
     Admin: [
       { name: 'Menu Cliente', url: '/menu/menu' },
       // Activa
       { name: 'Admin Hub', url: '' }
+    ],
+    // Este breadcrumb es prototipo para todas las seccion dentro del AdminDashboard (productos, Promos, etc)
+    AdminSection: [
+      {
+        name: 'Regresar a adminHub', url: '/admin/'
+      }
     ]
 
   }
