@@ -19,8 +19,8 @@
     <section class="section">
         <div class="container">
             <h1 class="title">Sistema Royalty</h1>
-
-            <div class="columns is-multiline" onclick="abrirModal()">
+            <!-- onclick = abrirModal()-->
+            <div class="columns is-multiline">
                 <% for (let royalty of royalties) { %>
                     <div class="column is-half">
                         <div class="card">
@@ -32,7 +32,7 @@
                                     <p><strong>Visitas mínimas:</strong> <%= royalty.Min_Visitas %></p>
                                     <p><strong>Visitas máximas:</strong> <%= royalty.Max_Visitas %></p>
                                 </div><footer class="card-footer">
-                                <button class="button is-danger card-footer-item">
+                                <button class="button is-danger card-footer-item" onclick = "borrarRoyalty('<%= royalty.Nombre_Royalty %>')">
                                     <span class="icon">
                                         <i class="fas fa-trash"></i>
                                     </span>
@@ -54,6 +54,6 @@
         </form>
     </section>
 
-    <!--<script src = "/public/js/Royalty/royalty.admin.js"></script>-->
+    <script src = "/js/Royalty/royalty.admin.js"></script>
 </body>
 </html>

@@ -20,6 +20,16 @@ exports.getRoyaltyAdmin = (request, response, next) => {
   })
 }
 
+exports.deleteRoyalty = (request, response, next) => {
+  const nombre = request.params.nombre
+  Royalty.deleteRoyaltyBD(nombre).then(() => {
+    response.status(200).json({ mensaje: 'Borrado correctamente' })
+  }).catch((error) => {
+    console.log(error)
+    next(error)
+  })
+}
+
 exports.getRoyaltyMetrics = (req, res, next) => {
   res.render('admin/metricsRoyalty')
 }
