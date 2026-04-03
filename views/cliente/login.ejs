@@ -1,83 +1,129 @@
 <!DOCTYPE html>
 <html>
 <head>
-	<meta charset="utf-8">
-	<meta name="viewport" content="width=device-width, initial-scale=1">
-	<link rel="stylesheet" href="/css/bulma.min.css">
-	<title></title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Log In - Maree</title>
+    <link rel="stylesheet" href="/css/bulma.min.css">
+    <link rel="stylesheet" href="/css/auth-style.css"> <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
 </head>
 <body>
+    <div class="login-shell">
+        <div class="breadcrumb-line">
+            <% breadcrumbs.forEach((crumb, index) => { %>
+                <% if (crumb.url) { %>
+                    <a href="<%= crumb.url %>"><%= crumb.name %></a>
+                <% } else { %>
+                    <span><%= crumb.name %></span>
+                <% } %>
+                <% if (index < breadcrumbs.length - 1) { %>&nbsp;—&nbsp;<% } %>
+            <% }) %>
+        </div>
+        <hr class="divider">
 
-<%- include('../partials/breadcrumbs') %>
+        <h1 class="page-title"><%= mode === 'login' ? 'Iniciar Sesión' : 'Crear Cuenta' %></h1>
 
+        <div class="tabs-row">
+            <a class="mode-tab <%= mode === 'login' ? 'active' : '' %>" href="/cliente/login?mode=login">Log In</a>
+            <a class="mode-tab <%= mode === 'signup' ? 'active' : '' %>" href="/cliente/login?mode=signup">Sign In</a>
+        </div>
 
+        <div class="auth-card">
+            <% if (error) { %>
+                <div class="notification is-danger is-light"><%= error %></div>
+            <% } %>
 
-	<div class="box ">
-		<h1> Iniciar Sesión</h1>
-	</div>
+            <% if (!otpStep) { %>
+                <form action="<%= mode === 'login' ? '/cliente/login' : '/cliente/signup' %>" method="POST">
+                    
+                    <div class="field">
+                        <label class="label">Identificador (Teléfono o ID)</label>
+                        <div class="control">
+                            <input class="input auth-input" type="text" name="telefono" placeholder="10 dígitos o CL..." value="<%= telefono %>" required <%= (passwordStep) ? 'readonly' : '' %>>
+                        </div>
+                    </div>
 
-<form action="/cliente/login" method="POST">
+                    <% if (passwordStep) { %>
+                        <div class="field mt-4">
+                            <label class="label">Contraseña de Colaborador</label>
+                            <div class="control">
+                                <input class="input auth-input" type="password" name="password" placeholder="••••••••" required autofocus>
+                            </div>
+                        </div>
+                        <button class="primary-btn mt-4" type="submit">Acceder al Panel</button>
 
-<!-- inicio de setting control -->
-<div class="columns is-centered">
-	<div class="column is-4">
-		<section class="box">
-			<!-- Fin de setting control -->
-			 <!-- Bloques campo para Name, Gender, etc. -->
-			  <div class="field">
-			    <label class="label">Numero Telefónico</label>
-			    <div class="control">
-			      <input class="input is-info" type="tel" placeholder="Phone Number"
-			      name="telefono" required />
-			    </div>
-			  </div>
-			 
+                    <% } else if (mode === 'signup') { %>
+                        <div class="field">
+                            <label class="label">Nombre Completo</label>
+                            <div class="control">
+                                <input class="input auth-input" type="text" name="nombre" placeholder="Ej. Juan Pérez" value="<%= nombre %>" required>
+                            </div>
+                        </div>
 
-			   <div class="field">
-			    <label class="label">Nombre de Usuario</label>
-			    <div class="control">
-			      <input class="input is-info" type="text" placeholder="Name & last name" name="nombre" required />
-			    </div>
-			  </div>
+                        <div class="field">
+                            <label class="label">Género</label>
+                            <div class="control">
+                                <div class="select is-fullwidth">
+                                    <select name="genero" required>
+                                        <option value="" disabled <%= !genero ? 'selected' : '' %>>Selecciona una opción</option>
+                                        <option value="Masculino" <%= genero === 'Masculino' ? 'selected' : '' %>>Hombre</option>
+                                        <option value="Femenino" <%= genero === 'Femenino' ? 'selected' : '' %>>Mujer</option>
+                                        <option value="Otro" <%= genero === 'Otro' ? 'selected' : '' %>>Prefiero no decir</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
 
-			   <div class="field">
-			    <label class="label">Gender</label>
-			    <div class="control">
-			      <input class="input is-info" type="text" placeholder="Gender" 
-			      name="genero" />
-			    </div>
-			  </div>
+                        <div class="field">
+                            <label class="label">Fecha de Nacimiento</label>
+                            <div class="control">
+                                <input class="input auth-input" type="date" name="birthday" value="<%= birthday %>" required>
+                            </div>
+                        </div>
 
-			  <div class="field">
-			    <label class="label">Birthday</label>
-			    <div class="control">
-			      <input class="input is-info" type="date" placeholder="¡Birthday!" 
-			      name="birthday"/>
-			    </div>
-			  </div>
+						<div class="field">
+                        	<label class="label">mail</label>
+                        	<div class="control">
+                            	<input class="input auth-input" type="email" name="mail" placeholder="@mail" value="<%= mail || '' %>" required>
+                        	</div>
+                    	</div>
 
+                        <button class="primary-btn mt-4" type="submit">Registrarse</button>
 
-			  <div class="field">
-			    <label class="label">Mail</label>
-			    <div class="control">
-			      <input class="input is-info" type="email" placeholder="@mail"
-			      name="mail" />
-			    </div>
-			  </div>
+                    <% } else { %>
+                        <button class="primary-btn mt-4" type="submit">Continuar</button>
+                    <% } %>
+                </form>
+            <% } %>
 
-			  
-			  	<button class="button is-primary is-fullwidth">Enviar</button>
-			  
-			  
+            <% if (otpStep) { %>
+                <div class="otp-panel">
+                    <p class="otp-title">Verificación</p>
+                    <p class="otp-meta mb-2">Código enviado al: <strong><%= telefono %></strong></p>
+                    
+                    <% if (debugCode) { %>
+                        <p class="otp-meta mb-4">Código (Dev Mode): <span class="otp-code"><%= debugCode %></span></p>
+                    <% } %>
 
-		</section>
-	</div>
-</div>
+                    <form action="/cliente/login/verify" method="POST">
+                        <div class="field">
+                            <div class="control">
+                                <input class="input auth-input" type="text" name="codigo" placeholder="123456" maxlength="6" required autofocus>
+                            </div>
+                        </div>
+                        <button class="primary-btn" type="submit">Validar código</button>
+                    </form>
 
-</form>
+                    <form action="/cliente/login/resend" method="POST">
+                        <button class="button secondary-btn is-small" type="submit">Reenviar código</button>
+                    </form>
+                </div>
+            <% } %>
 
-
-	
-
+            <div class="has-text-centered mt-4">
+                <a href="/cliente/login?reset=1" class="is-size-7 has-text-grey">Reiniciar inicio de sesión</a>
+            </div>
+        </div>
+    </div>
 </body>
 </html>
