@@ -37,6 +37,10 @@ module.exports = class Cliente {
     )
   }
 
+  static deleteVerificationCode (telefono) {
+    return db.execute('DELETE FROM codigo_verificacion WHERE Numero_Telefonico = ?', [telefono])
+  }
+
   static save (nuevoCliente) {
     return db.execute(
             `INSERT INTO cliente (Nombre, Numero_Telefonico, Correo, Genero, Fecha_Nacimiento,ID_Rol) 

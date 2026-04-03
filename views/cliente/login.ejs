@@ -34,7 +34,7 @@
             <% } %>
 
             <% if (!otpStep) { %>
-                <form action="<%= mode === 'login' ? '/cliente/login' : '/cliente/signup' %>" method="POST">
+                <form action="<%= (mode === 'signup') ? '/cliente/signup' : '/cliente/login' %>" method="POST">
                     
                     <div class="field">
                         <label class="label">Identificador (Teléfono o ID)</label>
