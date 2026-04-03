@@ -86,7 +86,7 @@ exports.getCollaboratorsDetails = async (req, res, next) => {
 exports.postDarDeBajaColaborador = async (req, res, next) => {
   try {
     const idColaborador = req.params.id
-    const idAdminSesion = String(req.session.user.id);
+    const idAdminSesion = String(req.session.user.id)
 
     if (idColaborador === idAdminSesion) {
       return res.status(400).json({
@@ -95,7 +95,7 @@ exports.postDarDeBajaColaborador = async (req, res, next) => {
       })
     }
 
-    const resultado = await Colaborador.darDeBaja(idColaborador);
+    const resultado = await Colaborador.darDeBaja(idColaborador)
 
     if (!resultado) {
       return res.status(400).json({

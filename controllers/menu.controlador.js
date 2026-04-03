@@ -20,8 +20,8 @@ exports.getMenuData = async (request, response, next) => {
     ])
 
     console.log('All Promises realizada con exito')
-    console.log('Categorías Info: ', Allcategories)
-    console.log('Products Info: ', productsData)
+    // console.log('Categorías Info: ', Allcategories)
+    // console.log('Products Info: ', productsData)
 
     response.status(200).json({
       ok: true,
@@ -37,9 +37,9 @@ exports.getMenuData = async (request, response, next) => {
       message: err
     })
   }
-
-  // response.render('cliente/menu', { breadcrumbs })
 }
+
+// Fin CU11
 
 exports.getOrden = (request, response, next) => {
   const breadcrumbs = nav.getBreadcrumbs('Orden')
@@ -175,13 +175,44 @@ exports.confirmarPedido = async (request, response, next) => {
   }
 }
 
+/* CU 14 Visualizar Catalogo Productos */
 exports.getProducts = (req, res, next) => {
-  res.render('admin/products')
+  const breadcrumbs = nav.getBreadcrumbs('AdminSection')
+  res.render('admin/products', { breadcrumbs })
 }
+
+exports.getProductsCatalog = async (req, res, next) => {
+  console.log('Backend obteniendo todos los Productos, ingredientes & catalogos')
+  try {
+    // 1. Llamado en paralelo de consultas con Promise.all()
+    const [Allcategories, allProductsData] = await Promise.all([
+      categorías.fecthAll(), // Async BD call 1.
+      productos.getAllProductsInfo() // async BD call
+    ])
+
+    // console.log('Categorías catalog: ', Allcategories)
+    // console.log('Products catalog: ', allProductsData)
+
+    res.status(200).json({
+      ok: true,
+      message: 'Catalogos Obtenido con exito',
+      arrayCategorías: Allcategories,
+      arrayProductsCatalog: allProductsData
+    })
+    console.log('Catalogos obtenidos con exito')
+  } catch (err) {
+    console.log('Error en get Menu: ', err)
+    res.status(500).json({
+      ok: false,
+      message: err
+    })
+  }
+}
+/* FIN Visualizar Catalogo */
 
 exports.getTypes = async (req, res, next) => {
   try {
-    const productTypes = await productos.getAllcategorys()
+    const productTypes = await categorías.fecthAll()
 
     res.status(200).json({
       success: true,
@@ -212,7 +243,7 @@ exports.getProductfieldsAndIngredientes = async (req, res, next) => {
       return res.status(400).json({ error: 'El ID es requerido' })
     }
 
-    const allIngredientes = await productos.getAllIngredientes(typeId)
+    const allIngredientes = await productos.getCategoryIngredientes(typeId)
     const productFormsFields = ProductFields
     res.status(200).json({
       success: true,
@@ -232,6 +263,7 @@ exports.getProductfieldsAndIngredientes = async (req, res, next) => {
 }
 
 const pool = require('../util/database.js')
+
 exports.postNewProduct = async (req, res, nex) => {
   console.log('POST recibido: ', req.body)
   const connection = await pool.getConnection()
@@ -251,7 +283,7 @@ exports.postNewProduct = async (req, res, nex) => {
     console.log('Nombre: ', Nombre)
     console.log('Ingredientes: ', ingredientesID)
     const validation = await productos.ValidarDatosRegistro(NewProductData)
-    const AutoId = productos.generarID()
+    const AutoId = productos.generarID('PD')
     console.log('Nuevo ID: ', AutoId)
 
     if (validation) {

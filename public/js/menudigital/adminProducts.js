@@ -1,5 +1,177 @@
 // JS FRONTEND de la vista de Productos del Admin
 
+/* CU Visualizar Catalogo de Productos */
+
+async function getCatalogoProductos () {
+  console.log('Obteniendo Catalogo de Productos')
+  try {
+    const response = await fetch('/menu/productosCatalog')
+    if (!response.ok) {
+      ShowErrorModal('Error Interno', 'Error en Obtener Catalogo')
+      throw new Error('Error en Register Button Click')
+    }
+
+    const object = await response.json()
+    console.log('object: ', object)
+    construirCatalogoAdmin(object)
+  } catch (error) {
+    console.log('Error obteniendo Catalogo: '.error)
+  }
+}
+getCatalogoProductos()
+
+/* == Construcción de Catálogo Admin == */
+
+function construirFichaProductos (datosProducto, datosCategorias) {
+  console.log('Repartiendo productos en sus categorías...')
+  datosCategorias.forEach(cat => {
+    const sectionPrincipal = document.getElementById(cat.id)
+    const gridDestino = sectionPrincipal.querySelector('.grid-productos')
+    const productosFiltrados = datosProducto.filter(prod => prod.categoria === cat.nombre)
+
+    if (productosFiltrados.length === 0) {
+      gridDestino.innerHTML = `
+        <div class="empty-state">
+          <span class="empty-icon">🥐</span>
+          <p>Sin productos en esta categoría por el momento.</p>
+        </div>`
+      return
+    }
+
+    productosFiltrados.forEach(prod => {
+      const fichaHTML = renderProductoAdmin(prod)
+      gridDestino.insertAdjacentHTML('beforeend', fichaHTML)
+    })
+
+    // Delegar clicks en todas las fichas de esta categoría
+    gridDestino.addEventListener('click', (e) => {
+      const ficha = e.target.closest('.admin-prod-row')
+      if (!ficha) return
+      const id = ficha.dataset.id
+      // TODO: abrir modal de detalle/edición del producto
+      console.log('Producto seleccionado:', id)
+    })
+  })
+}
+
+// ── Render de fila compacta  ──────────────────
+function renderProductoAdmin (prod) {
+  const disponibleTag = prod.activo
+    ? '<span class="tag is-success is-light">Activo</span>'
+    : '<span class="tag is-danger is-light">Inactivo</span>'
+
+  const ingredientesTexto = (prod.ingredientes && prod.ingredientes.length)
+    ? prod.ingredientes.map(i => i.nombre ?? i).join(', ')
+    : '—'
+
+  return `
+    <div class="admin-prod-row" data-id="${prod.id}" title="Ver detalle">
+      <span class="prod-nombre">${prod.nombre}</span>
+      <span class="prod-precio">$${prod.precio}</span>
+      <span class="prod-ingredientes">${ingredientesTexto}</span>
+      ${disponibleTag}
+    </div>`
+}
+
+// ── Sección de categoría  ───────────
+function construirCategoria (cat, contenedorMenu) {
+  const seccionCat = document.createElement('section')
+  seccionCat.className = 'categoria-section mb-4 is-dynamic is-open'
+  seccionCat.id = `cat-${cat.Nombre.toLowerCase().replace(/\s+/g, '-')}`
+  const idContenedor = `grid-${cat.Nombre.replace(/\s+/g, '-').toLowerCase()}`
+
+  seccionCat.innerHTML = `
+    <div class="cat-header toggle-menu" role="button" tabindex="0" aria-expanded="true">
+      <h2 class="cat-title">${cat.Nombre}</h2>
+      <span class="cat-badge" id="badge-${idContenedor}"></span>
+      <span class="cat-chevron" aria-hidden="true">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+          <path d="M3 6l5 5 5-5" stroke="currentColor" stroke-width="1.8"
+                stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </span>
+    </div>
+    <div id="${idContenedor}" class="grid-productos admin-grid mt-1 grid-collapsible">
+      <!-- Cabecera de columnas -->
+      <div class="admin-prod-header">
+        <span>Nombre</span>
+        <span>Precio</span>
+        <span>Ingredientes</span>
+        <span>Estado</span>
+      </div>
+    </div>`
+
+  const header = seccionCat.querySelector('.cat-header')
+  const grid = seccionCat.querySelector('.grid-productos')
+
+  function toggleGrid () {
+    const open = seccionCat.classList.contains('is-open')
+    if (open) {
+      grid.style.maxHeight = grid.scrollHeight + 'px'
+      grid.style.opacity = '1'
+      /* global requestAnimationFrame */
+      requestAnimationFrame(() => {
+        grid.style.maxHeight = '0'
+        grid.style.opacity = '0'
+      })
+      seccionCat.classList.remove('is-open')
+      header.setAttribute('aria-expanded', 'false')
+    } else {
+      grid.style.maxHeight = grid.scrollHeight + 'px'
+      grid.style.opacity = '1'
+      seccionCat.classList.add('is-open')
+      header.setAttribute('aria-expanded', 'true')
+      grid.addEventListener('transitionend', () => {
+        if (seccionCat.classList.contains('is-open')) grid.style.maxHeight = 'none'
+      }, { once: true })
+    }
+  }
+
+  header.addEventListener('click', toggleGrid)
+  header.addEventListener('keydown', e => {
+    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleGrid() }
+  })
+
+  contenedorMenu.appendChild(seccionCat)
+  return { id: seccionCat.id, nombre: cat.Nombre }
+}
+
+// ── Entry point (igual que el original) ───────────────────
+function construirCatalogoAdmin (datos) {
+  console.log('Construyendo catálogo admin...')
+  const categorias = datos.arrayCategorías[0]
+  const productosInfo = datos.arrayProductsCatalog
+
+  const contenedor = document.getElementById('admin-catalogo')
+  contenedor.innerHTML = ''
+
+  const categoriasInfo = []
+  categorias.forEach(cat => {
+    categoriasInfo.push(construirCategoria(cat, contenedor))
+  })
+
+  construirFichaProductos(productosInfo, categoriasInfo)
+
+  // Stats del encabezado
+  document.getElementById('statTotal').textContent = productosInfo.length
+  document.getElementById('statCategorias').textContent = categorias.length
+  document.getElementById('statDisponibles').textContent =
+    productosInfo.filter(p => p.activo).length
+
+  // Actualizar badge de cada categoría con su conteo
+  categoriasInfo.forEach(cat => {
+    const count = productosInfo.filter(p => p.categoria === cat.nombre).length
+    const badge = document.getElementById(
+      `badge-grid-${cat.nombre.replace(/\s+/g, '-').toLowerCase()}`
+    )
+    if (badge) badge.textContent = count
+  })
+
+  console.log('Catálogo admin construido con éxito')
+}
+
+/* Fin de CU Visualizar Catalogo */
+
 /* CU04 Registrar Nuevo Producto */
 // 1. Referencia a Boton
 console.log('Iniciando Setup de CU')
