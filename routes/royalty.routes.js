@@ -9,6 +9,7 @@ const isAdmin = require('../middleware/isAdmin.js')
 router.get('/royaltyAdmin', isAuth, isAdmin, royaltyControlador.getRoyaltyAdmin)
 router.get('/royaltyMetrics', isAuth, isAdmin, royaltyControlador.getRoyaltyMetrics)
 
+router.delete('/borrar/:nombre', isAuth, isAdmin, royaltyControlador.deleteRoyalty)
 // CLIENTE
 router.get('/royaltyUser', royaltyControlador.getRoyaltyCli)
 
