@@ -1,7 +1,14 @@
-// 1. UNIFICAMOS LOS MODELOS: Solo llamamos a login.model.js
 const Login = require('../models/login.model.js')
 const nav = require('../models/breadcrumbs.model.js')
 // const bcrypt = require('bcryptjs') NO BORRAR
+
+const formatearTelefono = (tel) => {
+  const soloNumeros = tel.replace(/\D/g, '')
+  if (soloNumeros.length === 10) {
+    return `${soloNumeros.slice(0, 2)}-${soloNumeros.slice(2, 6)}-${soloNumeros.slice(6)}`
+  }
+  return tel
+}
 
 exports.logout = (request, response, next) => {
   console.log('Llamando a logout')
@@ -54,16 +61,12 @@ exports.postLogin = async (request, response, next) => {
       }
 
       if (password) {
-        // Se usa ahora porque las contraseñas dummy son texto directo
         const doMatch = (password === colaborador.password)
-
-        // const doMatch = await bcrypt.compare(password, colaborador.password); Se usa cuando se esten encriptando las contraseñas por ahora no
-
         if (doMatch) {
           request.session.isLoggedIn = true
           request.session.user = colaborador.nombre
           request.session.rol = colaborador.id_rol
-          return response.redirect('/menu/menu')
+          return response.redirect('/royalty/royaltyUser')
         }
         return response.render('cliente/login', buildLoginViewModel({
           error: 'Contraseña incorrecta.',
@@ -79,16 +82,19 @@ exports.postLogin = async (request, response, next) => {
     }
 
     // --- LÓGICA DE CLIENTE ---
-    if (/^\d{10}$/.test(telefono)) {
-      const client = await Login.findByPhoneForLogin(telefono)
+    if (/^[\d\s-]{10,15}$/.test(telefono)) {
+      const telefonoFormateado = formatearTelefono(telefono)
+
+      const client = await Login.findByPhoneForLogin(telefonoFormateado)
       if (!client) {
         return response.render('cliente/login', buildLoginViewModel({
           error: 'Número no registrado. ¡Crea una cuenta!', telefono, mode: 'signup'
         }))
       }
 
-      const otpData = await issueOtpForClient(telefono)
-      request.session.pendingPhone = telefono
+      const otpData = await issueOtpForClient(telefonoFormateado)
+
+      request.session.pendingPhone = telefonoFormateado
 
       return response.render('cliente/login', buildLoginViewModel({
         telefono, otpStep: true, debugCode: otpData.code
@@ -104,11 +110,12 @@ exports.postLogin = async (request, response, next) => {
 exports.postSignUp = async (request, response, next) => {
   const { telefono, nombre, genero, birthday, mail } = request.body
   try {
-    // Todo a través de Login
-    await Login.save({ telefono, nombre, genero, birthday, mail })
+    const telefonoFormateado = formatearTelefono(telefono)
 
-    const otpData = await issueOtpForClient(telefono)
-    request.session.pendingPhone = telefono
+    await Login.save({ telefono: telefonoFormateado, nombre, genero, birthday, mail })
+
+    const otpData = await issueOtpForClient(telefonoFormateado)
+    request.session.pendingPhone = telefonoFormateado
 
     return response.render('cliente/login', buildLoginViewModel({
       telefono,
@@ -140,7 +147,7 @@ exports.postVerifyOtp = async (request, response, next) => {
   try {
     const client = await Login.findByPhoneForLogin(telefono)
 
-    if (client && String(client.codigoVerificion) === String(codigo)) {
+    if (client && String(client.codigoVerificacion) === String(codigo)) {
       const ahora = new Date()
       const fechaExpiracion = new Date(client.expiracionVerificacion)
 
@@ -156,7 +163,11 @@ exports.postVerifyOtp = async (request, response, next) => {
 
       await Login.deleteVerificationCode(telefono)
 
+      delete request.session.user
+
       request.session.isLoggedIn = true
+      request.session.rol = client.rol
+
       request.session.cliente = {
         nombre: client.nombre,
         telefono: client.telefono,
@@ -165,7 +176,7 @@ exports.postVerifyOtp = async (request, response, next) => {
       }
 
       delete request.session.pendingPhone
-      return response.redirect('/menu/menu')
+      return response.redirect('/royalty/royaltyUser')
     }
 
     return response.render('cliente/login', buildLoginViewModel({
@@ -183,7 +194,6 @@ const issueOtpForClient = async (telefono) => {
   const expirationDate = new Date(Date.now() + (15 * 60 * 1000))
 
   await Login.updateVerificationCodeByPhone(telefono, otpCode, expirationDate)
-
   console.log(`\n[TEST] OTP para ${telefono}: ${otpCode}\n`)
 
   return { code: otpCode, expires: expirationDate }
