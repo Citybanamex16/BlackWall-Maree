@@ -36,34 +36,40 @@
         <div class="modal-background"></div>
         <div class="modal-content">
             <div class="box">
-                <h3 class="title is-4">Modificar estado Royalty: <span id="modal-nombre"></span></h3>
+                <h3 class="title is-4">Modificar <span id="modal-nombre"></span></h3>
                 <form id="form-modificarRoyalty">
                     <div class="field">
                         <label class="label">Nombre</label>
                         <div class="control">
-                            <input id="nombre" class="input" type="text">
+                            <input id="input-nombre" class="input" type="text">
+                        </div>
+                    </div>
+                    <div class="field">
+                        <label class="label">Prioridad</label>
+                        <div class="control">
+                            <input id="input-prioridad" class="input" type="number">
                         </div>
                     </div>
                     <div class="field">
                         <label class="label">Descripcion</label>
                         <div class="control">
-                            <input id="nombre" class="input" type="text">
+                            <input id="input-descripcion" class="input" type="text">
                         </div>
                     </div>
                     <div class="field">
                         <label class="label">Visitas mínimas</label>
                         <div class="control">
-                            <input id="nombre" class="input" type="number">
+                            <input id="input-minVisitas" class="input" type="number">
                         </div>
                     </div>
                     <div class="field">
                         <label class="label">Visitas máximas</label>
                         <div class="control">
-                            <input id="nombre" class="input" type="number">
+                            <input id="input-maxVisitas" class="input" type="number">
                         </div>
                     </div>
                     <div class="buttons">
-                        <button type="button" class="button is-primary"> Guardar </button>
+                        <button type="button" class="button is-primary" onclick="guardarRoyalty()"> Guardar </button>
                         <button type="button" class="button" onclick="cerrarModal()">Cancelar</button>
                     </div>
                 </form>

@@ -43,6 +43,25 @@ exports.deleteRoyalty = (request, response, next) => {
   })
 }
 
+exports.updateRoyalty = async (request, response, next) => {
+  try {
+    const nombreOriginal = request.params.nombre
+    const { nombre, prioridad, descripcion, minVisitas, maxVisitas } = request.body
+    await Royalty.updateEstadoRoyalty(nombreOriginal, nombre, prioridad, descripcion, minVisitas, maxVisitas)
+    response.status(200).json({
+      success: true,
+      message: 'Se han modificado los datos correctamente'
+    })
+  } catch (error) {
+    console.log(error)
+    next(error)
+    response.status(500).json({
+      success: false,
+      message: 'No se pudo cambiar el estado royalty'
+    })
+  }
+}
+
 exports.getRoyaltyMetrics = (req, res, next) => {
   res.render('admin/metricsRoyalty')
 }
