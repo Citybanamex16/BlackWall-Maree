@@ -28,7 +28,7 @@ class Colaborador {
     return rows[0] || null
   }
 
-  static async existsById(id) {
+  static async existsById (id) {
     const [rows] = await db.execute(`
       SELECT ID_Colaborador
       FROM colaborador
@@ -39,7 +39,7 @@ class Colaborador {
     return rows.length > 0
   }
 
-  static async create(idColaborador, idRol, nombre, contrasena) {
+  static async create (idColaborador, idRol, nombre, contrasena) {
     const [result] = await db.execute(`
       INSERT INTO colaborador (ID_Colaborador, ID_Rol, Nombre, Contraseña)
       VALUES (?, ?, ?, ?)
