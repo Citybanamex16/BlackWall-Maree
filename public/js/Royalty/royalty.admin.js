@@ -3,11 +3,50 @@
 
 /* eslint-disable no-unused-vars */
 
+let royaltiesData = []
+let nombreOriginal = ''
 function modificarRoyalty (nombre) {
+  const royalty = royaltiesData.find(r => r.Nombre_Royalty === nombre)
+  nombreOriginal = nombre
+  // Obtenemos el modal
   document.getElementById('modal-nombre').textContent = nombre
   document.getElementById('modal-modificarRoyalty').classList.add('is-active')
+  document.getElementById('modal-nombre').textContent = nombre
+  document.getElementById('input-nombre').value = royalty.Nombre_Royalty
+  document.getElementById('input-prioridad').value = royalty.Número_de_prioridad
+  document.getElementById('input-descripcion').value = royalty.Descripción
+  document.getElementById('input-minVisitas').value = royalty.Min_Visitas
+  document.getElementById('input-maxVisitas').value = royalty.Max_Visitas
 }
 
+async function guardarRoyalty () {
+  const body = {
+    nombre: document.getElementById('input-nombre').value,
+    prioridad: document.getElementById('input-prioridad').value,
+    descripcion: document.getElementById('input-descripcion').value,
+    minVisitas: document.getElementById('input-minVisitas').value,
+    maxVisitas: document.getElementById('input-maxVisitas').value
+  }
+  try {
+    const response = await fetch('/royalty/royaltyAdmin/' + nombreOriginal, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    })
+
+    const data = await response.json()
+    if (data.success) {
+      // Falta mostrar confirmacion
+      cerrarModal()
+      window.location.reload()
+    } else {
+      alert('Error al guardar Royalty')
+    }
+  } catch (error) {
+    console.log(error)
+    alert('Error en conexión')
+  }
+}
 const abrirModal = () => {
   document.getElementById('modal-modificarRoyalty').classList.add('is-active')
 }
@@ -38,6 +77,7 @@ async function cargarRoyalty () {
 
     console.log('Mostrando los royalties en HTML')
     const container = document.getElementById('royaltyContainer')
+    royaltiesData = data.data
     data.data.forEach(royalty => {
       container.innerHTML += `
         <div class="column is-half">

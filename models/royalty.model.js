@@ -21,5 +21,29 @@ module.exports = class Royalty {
       })
   }
 
+  static async updateEstadoRoyalty (nombreOriginal, nombreNuevo, prioridad, descripcion, minVisitas, maxVisitas) {
+  // Desactivar llaves foraneas
+    await db.execute('SET FOREIGN_KEY_CHECKS = 0')
+
+    // Actualizar hijos
+    await db.execute(
+      'UPDATE cliente SET Nombre_Royalty = ? WHERE Nombre_Royalty = ?',
+      [nombreNuevo, nombreOriginal]
+    )
+    await db.execute(
+      'UPDATE estado_royalty_da_promociones SET Nombre_Royalty = ? WHERE Nombre_Royalty = ?',
+      [nombreNuevo, nombreOriginal]
+    )
+    // Actualizar la tabla de estdo royalty
+    await db.execute(
+    `UPDATE estado_royalty
+     SET Nombre_Royalty = ?, Número_de_prioridad = ?, Descripción = ?, Min_Visitas = ?, Max_Visitas = ?
+     WHERE Nombre_Royalty = ?`,
+    [nombreNuevo, prioridad, descripcion, minVisitas, maxVisitas, nombreOriginal]
+    )
+
+    // Reactiva llaves foráneas
+    await db.execute('SET FOREIGN_KEY_CHECKS = 1')
+  }
   // Cliente
 }
