@@ -9,13 +9,18 @@ document.addEventListener('DOMContentLoaded', () => {
     method: 'GET',
     headers: { 'Content-Type': 'application/json' }
   })
-    .then(response => {
+    .then(async (response) => {
+      const data = await response.json()
+
+      if (data.redirectUrl) {
+        window.location.href = data.redirectUrl
+        return null
+      }
       if (!response.ok) throw new Error('Error al obtener la información Royalty')
-      return response.json()
+      return data
     })
     .then(data => {
       contenedorPromociones.innerHTML = ''
-
       if (data.promociones.length > 0) {
         let htmlPromos = ''
         data.promociones.forEach(promo => {
@@ -54,7 +59,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         <div class="card h-100 shadow-sm">
                             <div class="card-body">
                                 <span class="badge bg-warning text-dark mb-2">Pase ${evento.Nombre_Royalty}</span>
-                                <h5 class="card-title">${evento.Nombre}</h5>
+                                <h5 class="card-title">${evento.Nombre_Evento}</h5>
                                 <p class="card-text">${evento.Descripcion}</p>
                             </div>
                             <div class="card-footer bg-transparent border-top-0">

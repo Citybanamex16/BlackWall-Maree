@@ -47,7 +47,7 @@ module.exports = class Royalty {
 
   static fetchEvents (nivel) {
     return db.execute(`
-        SELECT E.Nombre AS Nombre_Evento, E.Fecha_Inicio AS Fecha, E.Descripcion, ER.Nombre_Royalty
+        SELECT E.Nombre AS Nombre_Evento, E.Fecha_Inicio, E.Fecha_final, E.Descripcion, ER.Nombre_Royalty
         FROM evento E
         INNER JOIN estado_royalty_da_eventos RE ON e.ID_Evento = RE.ID_Evento
         INNER JOIN estado_royalty ER ON ER.Nombre_Royalty = RE.Nombre_Royalty

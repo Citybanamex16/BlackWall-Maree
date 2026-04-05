@@ -1,6 +1,5 @@
 const Login = require('../models/login.model.js')
 const nav = require('../models/breadcrumbs.model.js')
-// const bcrypt = require('bcryptjs') NO BORRAR
 
 const formatearTelefono = (tel) => {
   const soloNumeros = tel.replace(/\D/g, '')
@@ -11,137 +10,116 @@ const formatearTelefono = (tel) => {
 }
 
 exports.logout = (request, response, next) => {
-  console.log('Llamando a logout')
   request.session.destroy((err) => {
-    if (err) {
-      console.error('Error al cerrar sesión:', err)
-      return next(err)
-    }
+    if (err) return next(err)
     response.clearCookie('connect.sid')
     response.redirect('/cliente/menu')
   })
 }
 
-const buildLoginViewModel = (overrides = {}) => ({
-  breadcrumbs: nav.getBreadcrumbs('LogIn'),
-  error: null,
-  success: null,
-  telefono: '',
-  nombre: '',
-  genero: '',
-  birthday: '',
-  mail: '',
-  otpStep: false,
-  passwordStep: false,
-  debugCode: null,
-  mode: 'login',
-  ...overrides
-})
-
 exports.getLogin = (request, response, next) => {
-  const mode = request.query.mode || 'login'
-  response.render('cliente/login', buildLoginViewModel({ mode }))
+  response.render('cliente/login', {
+    breadcrumbs: nav.getBreadcrumbs('LogIn'),
+    mode: request.query.mode || 'login'
+  })
 }
 
 exports.postLogin = async (request, response, next) => {
   const { telefono, password } = request.body
 
   try {
-    // --- LÓGICA DE COLABORADOR ---
+    // --- LÓGICA COLABORADOR ---
     if (/^CL\d{8}$/i.test(telefono)) {
       const [rows] = await Login.fetchColaborador(telefono)
       const colaborador = rows[0]
 
       if (!colaborador) {
-        return response.render('cliente/login', buildLoginViewModel({
-          error: 'ID de Colaborador no encontrado o incorrecto.',
-          telefono,
-          mode: 'login'
-        }))
+        return response.status(404).json({ error: 'ID de Colaborador no encontrado.' })
       }
 
       if (password) {
-        const doMatch = (password === colaborador.password)
-        if (doMatch) {
+        if (password === colaborador.password) {
           request.session.isLoggedIn = true
           request.session.user = colaborador.nombre
           request.session.rol = colaborador.id_rol
-          return response.redirect('/royalty/royaltyUser')
+          return response.status(200).json({ success: true, redirectUrl: '/menu/menu' })
         }
-        return response.render('cliente/login', buildLoginViewModel({
-          error: 'Contraseña incorrecta.',
-          telefono,
-          passwordStep: true,
-          mode: 'login'
-        }))
+        return response.status(401).json({ error: 'Contraseña incorrecta.' })
       }
 
-      return response.render('cliente/login', buildLoginViewModel({
-        telefono, passwordStep: true, mode: 'login'
-      }))
+      return response.status(200).json({ requirePassword: true })
     }
 
-    // --- LÓGICA DE CLIENTE ---
+    // --- LÓGICA CLIENTE ---
     if (/^[\d\s-]{10,15}$/.test(telefono)) {
       const telefonoFormateado = formatearTelefono(telefono)
-
       const client = await Login.findByPhoneForLogin(telefonoFormateado)
+
       if (!client) {
-        return response.render('cliente/login', buildLoginViewModel({
-          error: 'Número no registrado. ¡Crea una cuenta!', telefono, mode: 'signup'
-        }))
+        return response.status(404).json({
+          error: 'Número no registrado. ¡Crea una cuenta!',
+          action: 'switch_to_signup'
+        })
       }
 
       const otpData = await issueOtpForClient(telefonoFormateado)
-
       request.session.pendingPhone = telefonoFormateado
 
-      return response.render('cliente/login', buildLoginViewModel({
-        telefono, otpStep: true, debugCode: otpData.code
-      }))
+      return response.status(200).json({
+        otpStep: true,
+        debugCode: otpData.code
+      })
     }
 
-    return response.render('cliente/login', buildLoginViewModel({
-      error: 'Formato inválido.', telefono
-    }))
-  } catch (error) { next(error) }
+    return response.status(400).json({ error: 'Formato inválido.' })
+  } catch (error) {
+    return response.status(500).json({
+      redirectUrl: '/menu/menu?authError=database'
+    })
+  }
 }
 
 exports.postSignUp = async (request, response, next) => {
   const { telefono, nombre, genero, birthday, mail } = request.body
-  try {
-    const telefonoFormateado = formatearTelefono(telefono)
+  const telefonoSoloNumeros = telefono.replace(/\D/g, '')
 
+  if (telefonoSoloNumeros.length !== 10) {
+    return response.status(400).json({ error: 'El teléfono debe tener exactamente 10 dígitos numéricos.' })
+  }
+
+  try {
+    const telefonoFormateado = formatearTelefono(telefonoSoloNumeros)
     await Login.save({ telefono: telefonoFormateado, nombre, genero, birthday, mail })
 
     const otpData = await issueOtpForClient(telefonoFormateado)
     request.session.pendingPhone = telefonoFormateado
 
-    return response.render('cliente/login', buildLoginViewModel({
-      telefono,
+    return response.status(201).json({
+      success: true,
       otpStep: true,
       debugCode: otpData.code,
-      success: '¡Cuenta creada con éxito! Por favor verifica tu código.'
-    }))
+      message: '¡Cuenta creada con éxito!'
+    })
   } catch (error) {
-    console.error('Error en SignUp:', error)
-    let msg = 'Hubo un error al crear la cuenta. Intenta de nuevo.'
     if (error.code === 'ER_DUP_ENTRY') {
-      msg = 'Este número de teléfono ya está registrado.'
+      return response.status(409).json({
+        error: 'Ya existe un Usuario con ese teléfono. Por favor inicia sesión',
+        action: 'switch_to_login'
+      })
     }
-
-    return response.render('cliente/login', buildLoginViewModel({
-      error: msg, mode: 'signup', telefono, nombre, genero, birthday, mail
-    }))
+    return response.status(500).json({
+      redirectUrl: '/menu/menu?authError=database'
+    })
   }
 }
 
+// 4. ENDPOINT: VERIFICAR OTP
 exports.postVerifyOtp = async (request, response, next) => {
   const { codigo } = request.body
   const telefono = request.session.pendingPhone
 
   if (!telefono) {
-    return response.redirect('/cliente/login')
+    return response.status(400).json({ error: 'Sesión expirada. Reinicia el proceso.' })
   }
 
   try {
@@ -149,52 +127,35 @@ exports.postVerifyOtp = async (request, response, next) => {
 
     if (client && String(client.codigoVerificacion) === String(codigo)) {
       const ahora = new Date()
-      const fechaExpiracion = new Date(client.expiracionVerificacion)
-
-      if (ahora > fechaExpiracion) {
+      if (ahora > new Date(client.expiracionVerificacion)) {
         await Login.deleteVerificationCode(telefono)
-
-        return response.render('cliente/login', buildLoginViewModel({
-          error: 'El código ha expirado. Regresa para generar uno nuevo.',
-          telefono,
-          otpStep: true
-        }))
+        return response.status(400).json({ error: 'El código ha expirado. Genera uno nuevo.' })
       }
 
       await Login.deleteVerificationCode(telefono)
-
-      delete request.session.user
-
       request.session.isLoggedIn = true
       request.session.rol = client.rol
-
-      request.session.cliente = {
-        nombre: client.nombre,
-        telefono: client.telefono,
-        genero: client.genero,
-        visitas: client.visitasActual || 0
-      }
-
+      request.session.cliente = { nombre: client.nombre, telefono: client.telefono, genero: client.genero, visitas: client.visitasActual || 0 }
       delete request.session.pendingPhone
-      return response.redirect('/royalty/royaltyUser')
+
+      return response.status(200).json({
+        success: true,
+        redirectUrl: '/royalty/royaltyUser'
+      })
     }
 
-    return response.render('cliente/login', buildLoginViewModel({
-      error: 'El código de verificación es incorrecto.',
-      telefono,
-      otpStep: true
-    }))
+    return response.status(400).json({ error: 'El código de verificación es incorrecto.' })
   } catch (error) {
-    next(error)
-  }
+    return response.status(500).json({
+      redirectUrl: '/menu/menu?authError=database'
+    })
+  };
 }
 
 const issueOtpForClient = async (telefono) => {
   const otpCode = Math.floor(100000 + Math.random() * 900000).toString()
   const expirationDate = new Date(Date.now() + (15 * 60 * 1000))
-
   await Login.updateVerificationCodeByPhone(telefono, otpCode, expirationDate)
   console.log(`\n[TEST] OTP para ${telefono}: ${otpCode}\n`)
-
   return { code: otpCode, expires: expirationDate }
 }

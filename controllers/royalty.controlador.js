@@ -38,10 +38,9 @@ exports.getRoyaltyMetrics = (req, res, next) => {
 // Cliente
 exports.getRoyaltyCli = async (request, response, next) => {
   if (!request.session.isLoggedIn) {
-    return response.render('cliente/login')
+    return response.redirect('/cliente/login')
   }
 
-  console.log('El rol exacto es:', `"${request.session.rol}"`)
   if (request.session.rol !== 'Usuario') {
     return response.redirect('/royalty/royaltyAdmin')
   }
@@ -62,13 +61,17 @@ exports.getRoyaltyCli = async (request, response, next) => {
     })
   } catch (error) {
     console.error('Error al cargar vista Royalty:', error)
-    next(error)
+    return response.redirect('/menu/menu?authError=database')
   }
 }
 
 exports.getRoyaltyDataAPI = async (request, response, next) => {
   if (!request.session.isLoggedIn || request.session.rol !== 'Usuario') {
-    return response.status(403).json({ message: 'Acceso denegado' })
+    return response.status(401).json({ redirectUrl: '/cliente/login' })
+  }
+
+  if (request.session.rol !== 'Usuario') {
+    return response.status(403).json({ redirectUrl: '/royalty/royaltyAdmin' })
   }
 
   const telefono = request.session.cliente.telefono
@@ -91,8 +94,7 @@ exports.getRoyaltyDataAPI = async (request, response, next) => {
   } catch (error) {
     console.error(error)
     return response.status(500).json({
-      message: 'Error al traer datos de nivel royalty de cliente',
-      error
+      redirectUrl: '/menu/menu?authError=database'
     })
   }
 }

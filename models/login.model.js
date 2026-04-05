@@ -42,15 +42,16 @@ module.exports = class Cliente {
 
   static save (nuevoCliente) {
     return db.execute(
-      `INSERT INTO cliente (Nombre, Numero_Telefonico, Correo, Genero, Fecha_Nacimiento, ID_Rol) 
-       VALUES (?, ?, ?, ?, ?, ?)`,
+      `INSERT INTO cliente (Nombre, Numero_Telefonico, Correo, Genero, Fecha_Nacimiento, ID_Rol, Nombre_Royalty) 
+       VALUES (?, ?, ?, ?, ?, ?, ?)`,
       [
         nuevoCliente.nombre,
         nuevoCliente.telefono,
         nuevoCliente.mail || null,
         nuevoCliente.genero,
         nuevoCliente.birthday,
-        'Usuario'
+        'Usuario',
+        'Fan'
       ]
     )
   }
