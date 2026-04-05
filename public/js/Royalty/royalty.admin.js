@@ -2,6 +2,25 @@
 /* global alert */
 
 /* eslint-disable no-unused-vars */
+
+function modificarRoyalty (nombre) {
+  document.getElementById('modal-nombre').textContent = nombre
+  document.getElementById('modal-modificarRoyalty').classList.add('is-active')
+}
+
+const abrirModal = () => {
+  document.getElementById('modal-modificarRoyalty').classList.add('is-active')
+}
+
+const limpiarFormulario = () => {
+  document.getElementById('form-modificarRoyalty').reset()
+}
+
+const cerrarModal = () => {
+  document.getElementById('modal-modificarRoyalty').classList.remove('is-active')
+  limpiarFormulario()
+}
+
 function borrarRoyalty (NombreRoyalty) {
   if (confirm('¿Estas seguro que deseas borrar ' + NombreRoyalty + ' ?')) {
     fetch('/royalty/borrar/' + NombreRoyalty, { method: 'DELETE' }).then(() => {
