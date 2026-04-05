@@ -10,14 +10,14 @@ router.get('/', isAuth, isAdmin, adminControlador.getHub)
 // Cada sección del dashboard uu que rico
 // router.get('/ingredientes', adminControlador.getIngredientes)
 
-router.get('/royalty', isAuth, isAdmin, adminControlador.getRoyalty)
 router.get('/ingredientes', isAuth, isAdmin, adminControlador.getIngredients)
 router.get('/productos', isAuth, isAdmin, adminControlador.getProducts)
 
-router.get('/royaltyMetrics', isAuth, isAdmin, adminControlador.getRoyaltyMetrics)
-router.get('/api/royaltyMetrics', isAuth, isAdmin, adminControlador.getRoyaltyMetricsData)
-router.get('/api/royaltyMetrics/export', isAuth, isAdmin, adminControlador.exportRoyaltyMetricsCsv)
-
+router.get('/royalty', isAuth, isAdmin, adminControlador.getRoyaltyMetrics)
+router.get('/api/royalty', isAuth, isAdmin, adminControlador.getRoyaltyMetricsData)
+router.get('/api/royalty/export', isAuth, isAdmin, adminControlador.exportRoyaltyMetricsCsv)
+router.get('/api/metricas-clientes', isAuth, isAdmin, adminControlador.getRoyaltyMetricsData)
+router.get('/api/metricas-clientes/export', isAuth, isAdmin, adminControlador.exportRoyaltyMetricsCsv)
 router.get('/colaboradores', isAuth, isAdmin, adminControlador.getCollaborators)
 router.get('/colaboradores/nuevo', isAuth, isAdmin, adminControlador.getNewCollaborator)
 router.post('/colaboradores/nuevo', isAuth, isAdmin, adminControlador.postNewCollaborator)
