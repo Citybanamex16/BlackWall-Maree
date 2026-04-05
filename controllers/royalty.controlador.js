@@ -2,22 +2,35 @@ const nav = require('../models/breadcrumbs.model.js')
 const Royalty = require('../models/royalty.model.js')
 
 // Admin
-exports.getRoyaltyAdmin = (request, response, next) => {
-  console.log('Obtenemos los estados Royalty de la base de datos')
-  Royalty.fetchAll().then(([rows, fieldData]) => {
-    console.log(fieldData)
-    return response.render('admin/royalty', {
-      nombre: request.session.nombre,
-      numero_prioridad: request.session.Número_de_prioridad,
-      descripcion: request.session.descripcion,
-      max_visitas: request.session.max_visitas,
-      min_visitas: request.session.min_visitas,
-      royalties: rows
-    })
-  }).catch((error) => {
+exports.getRoyaltyAdmin = async (request, response, next) => {
+  try {
+    const [royalties] = await Royalty.fetchAll()
+    console.log('Obtenemos los estados Royalty de la base de datos')
+    response.render('admin/royalty', { royalties })
+  } catch (error) {
     console.log(error)
-    next(error)
-  })
+    response.status(500).json({
+      succes: false,
+      message: 'No se pudo mandar los estados royalties'
+    })
+  }
+}
+
+exports.getRoyaltyAdminJSON = async (request, response, next) => {
+  try {
+    const [royalties] = await Royalty.fetchAll()
+    response.status(200).json({
+      succes: true,
+      message: 'Éxito al obtener estados royalty',
+      data: royalties
+    })
+  } catch (error) {
+    console.log(error)
+    response.status(500).json({
+      succes: false,
+      message: 'No se pudo mandar los estados royalties'
+    })
+  }
 }
 
 exports.deleteRoyalty = (request, response, next) => {
