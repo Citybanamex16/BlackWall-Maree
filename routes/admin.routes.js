@@ -30,4 +30,13 @@ router.get('/promociones', isAuth, isAdmin, adminControlador.getPromotions)
 router.get('/eventos', isAuth, isAdmin, adminControlador.getEvents)
 router.get('/mensajes', isAuth, isAdmin, adminControlador.getMensajes)
 
+router.get('/ingredientes', adminControlador.getIngredientes)
+router.get('/api/ingredientes', adminControlador.getIngredientesLista)
+router.get('/api/ingredientes/categorias', adminControlador.getCategorias)
+router.get('/api/ingredientes/verificarNombre', adminControlador.verificarNombreIngrediente)
+router.post('/api/ingredientes/validar', adminControlador.validarIngrediente)
+router.post('/api/ingredientes/crear', adminControlador.crearIngrediente)
+router.get('/api/ingredientes/:id/validarEliminable', adminControlador.validarIngredienteEliminable)
+router.delete('/api/ingredientes/:id/eliminar', adminControlador.eliminarIngrediente)
+
 module.exports = router

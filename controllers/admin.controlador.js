@@ -452,6 +452,36 @@ exports.crearIngrediente = async (req, res, next) => {
   }
 }
 
+exports.validarIngredienteEliminable = async (req, res, next) => {
+  try {
+    const { id } = req.params
+    if (!id) return res.status(400).json({ success: false, message: 'ID requerido' })
+
+    const [productos] = await Ingrediente.getProductosVinculados(id)
+    res.status(200).json({
+      success: true,
+      vinculado: productos.length > 0,
+      productos: productos.map(p => p.Nombre)
+    })
+  } catch (error) {
+    console.error('Error en validarIngredienteEliminable:', error)
+    res.status(500).json({ success: false, message: 'Error al validar ingrediente' })
+  }
+}
+
+exports.eliminarIngrediente = async (req, res, next) => {
+  try {
+    const { id } = req.params
+    if (!id) return res.status(400).json({ success: false, message: 'ID requerido' })
+
+    await Ingrediente.eliminarIngrediente(id)
+    res.status(200).json({ success: true, message: 'Ingrediente eliminado correctamente' })
+  } catch (error) {
+    console.error('Error en eliminarIngrediente:', error)
+    res.status(500).json({ success: false, message: 'Error al eliminar ingrediente' })
+  }
+}
+
 exports.getNewCollaborator = (req, res, next) => {
   res.render('admin/newCollaborator', {
     pageTitle: 'Registrar colaborador',

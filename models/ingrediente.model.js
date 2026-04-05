@@ -49,4 +49,20 @@ module.exports = class Ingrediente {
   static async getCategorias () {
     return db.execute('SELECT Nombre FROM categoría')
   }
+
+  // Busca en cuales productos aparece un ingrediente
+  static async getProductosVinculados (idInsumo) {
+    return db.execute(
+      `SELECT p.Nombre FROM producto_tiene_insumo pti
+      JOIN producto p ON pti.ID_Producto = p.ID_Producto
+      WHERE pti.ID_Insumo = ?`,
+      [idInsumo]
+    )
+  }
+
+  // Elimina de producto_tiene_insumo y luego de insumo
+  static async eliminarIngrediente (idInsumo) {
+    await db.execute('DELETE FROM producto_tiene_insumo WHERE ID_Insumo = ?', [idInsumo])
+    return db.execute('DELETE FROM insumo WHERE ID_Insumo = ?', [idInsumo])
+  }
 }
