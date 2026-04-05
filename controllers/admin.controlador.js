@@ -24,12 +24,12 @@ exports.getRoyalty = (req, res, next) => {
   res.render('admin/royalty')
 }
 
-exports.getMetricasClientesView = (req, res, next) => {
-  res.render('admin/metricasclientes', {
+exports.getRoyaltyMetrics = (req, res, next) => {
+  res.render('admin/metricsRoyalty', {
     pageTitle: 'Métricas de clientes'
   })
 }
-exports.getMetricasClientesData = async (req, res, next) => {
+exports.getRoyaltyMetricsData = async (req, res, next) => {
   try {
     const filtros = {
       fechaInicio: req.query.fechaInicio || '',
@@ -68,7 +68,7 @@ exports.getMetricasClientesData = async (req, res, next) => {
   }
 }
 
-exports.exportMetricasClientesCsv = async (req, res, next) => {
+exports.exportRoyaltyMetricsCsv = async (req, res, next) => {
   try {
     const filtros = {
       fechaInicio: req.query.fechaInicio || '',
