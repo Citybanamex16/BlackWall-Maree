@@ -2,6 +2,7 @@
 const nav = require('../models/breadcrumbs.model.js')
 const Colaborador = require('../models/colaborador.model.js')
 const Ingrediente = require('../models/ingrediente.model.js')
+const MetricasClientes = require('../models/metricasclientes.model.js')
 const bcrypt = require('bcryptjs')
 
 // const path = require('path')
@@ -23,10 +24,107 @@ exports.getRoyalty = (req, res, next) => {
   res.render('admin/royalty')
 }
 
-exports.getRoyaltyMetrics = (req, res, next) => {
-  res.render('admin/metricsRoyalty')
+exports.getMetricasClientesView = (req, res, next) => {
+  res.render('admin/metricasclientes', {
+    pageTitle: 'Métricas de clientes'
+  })
+}
+exports.getMetricasClientesData = async (req, res, next) => {
+  try {
+    const filtros = {
+      fechaInicio: req.query.fechaInicio || '',
+      fechaFin: req.query.fechaFin || '',
+      genero: req.query.genero || '',
+      royalty: req.query.royalty || ''
+    }
+
+    const data = await MetricasClientes.getDashboardData(filtros)
+
+    const hayDatos =
+      Number(data.resumen.clientes_activos) > 0 ||
+      data.topClientes.length > 0 ||
+      data.promociones.length > 0
+
+    if (!hayDatos) {
+      return res.status(200).json({
+        ok: true,
+        sinDatos: true,
+        mensaje: 'No hay información disponible para los filtros seleccionados.',
+        data
+      })
+    }
+
+    return res.status(200).json({
+      ok: true,
+      sinDatos: false,
+      data
+    })
+  } catch (error) {
+    console.error('Error al consultar métricas de clientes:', error)
+    return res.status(500).json({
+      ok: false,
+      mensaje: 'Ocurrió un error al consultar las métricas de clientes.'
+    })
+  }
 }
 
+exports.exportMetricasClientesCsv = async (req, res, next) => {
+  try {
+    const filtros = {
+      fechaInicio: req.query.fechaInicio || '',
+      fechaFin: req.query.fechaFin || '',
+      genero: req.query.genero || '',
+      royalty: req.query.royalty || ''
+    }
+
+    const rows = await MetricasClientes.getCsvData(filtros)
+
+    const encabezados = [
+      'Nombre',
+      'Teléfono',
+      'Género',
+      'Royalty',
+      'Órdenes',
+      'Productos comprados',
+      'Total gastado',
+      'Última compra'
+    ]
+
+    const escapeCsv = (valor) => {
+      if (valor === null || valor === undefined) return '""'
+      return `"${String(valor).replace(/"/g, '""')}"`
+    }
+
+    const lineas = rows.map((row) => {
+      return [
+        row.nombre,
+        row.telefono,
+        row.genero,
+        row.royalty,
+        row.total_ordenes,
+        row.productos_comprados,
+        row.total_gastado,
+        row.ultima_compra
+      ].map(escapeCsv).join(',')
+    })
+
+    const csv = [encabezados.join(','), ...lineas].join('\n')
+
+    res.setHeader('Content-Type', 'text/csv; charset=utf-8')
+    res.setHeader(
+      'Content-Disposition',
+      'attachment; filename="reporte_metricas_clientes.csv"'
+    )
+
+    return res.status(200).send(csv)
+  } catch (error) {
+    console.error('Error al exportar CSV de métricas de clientes:', error)
+    return res.status(500).json({
+      ok: false,
+      mensaje: 'No fue posible generar el reporte.'
+    })
+  }
+}
 exports.getIngredients = (req, res, next) => {
   res.render('admin/ingredientes')
 }
