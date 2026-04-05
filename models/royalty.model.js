@@ -22,38 +22,27 @@ module.exports = class Royalty {
   }
 
   // Cliente
-  static fetchClientStatus (telefono) {
-    return db.execute(`
-            SELECT 
-                Nombre, 
-                Numero_Telefonico AS telefono, 
-                Nombre_Royalty AS nivel, 
-                Visitas_Actuales AS visitas
-            FROM cliente 
-            WHERE Numero_Telefonico = ?
-        `, [telefono])
+  static async fetchClientStatus (telefono) {
+    const [rows] = await db.execute('CALL sp_EstadoCliente(?)', [telefono])
+
+    return [rows[0]]
   }
 
-  static fetchPromotions (nivel) {
-    return db.execute(`
-            SELECT P.Nombre, P.Descuento, P.Fecha_inicio, P.Fecha_final, E.Nombre_Royalty
-            FROM estado_royalty E JOIN estado_royalty_da_promociones EP ON E.Nombre_Royalty = EP.Nombre_Royalty 
-            JOIN promocion P ON P.ID_Promocion = EP.ID_Promocion 
-            WHERE E.Número_de_prioridad <= (
-            SELECT Número_de_prioridad FROM estado_royalty WHERE Nombre_Royalty = ?)
-            ORDER BY E.Número_de_prioridad DESC 
-        `, [nivel])
+  static async fetchPromotions (nivel) {
+    return db.execute('CALL sp_fetchPromociones(?)', [nivel])
+      .then(resultado => {
+        const rows = resultado[0]
+
+        return [rows[0]]
+      })
   }
 
   static fetchEvents (nivel) {
-    return db.execute(`
-        SELECT E.Nombre AS Nombre_Evento, E.Fecha_Inicio, E.Fecha_final, E.Descripcion, ER.Nombre_Royalty
-        FROM evento E
-        INNER JOIN estado_royalty_da_eventos RE ON e.ID_Evento = RE.ID_Evento
-        INNER JOIN estado_royalty ER ON ER.Nombre_Royalty = RE.Nombre_Royalty
-        WHERE ER.Número_de_prioridad <= (
-        SELECT Número_de_prioridad FROM estado_royalty WHERE Nombre_Royalty = ?)
-        ORDER BY ER.Número_de_prioridad DESC 
-        `, [nivel])
+    return db.execute('CALL sp_fetchEventos(?)', [nivel])
+      .then(resultado => {
+        const rows = resultado[0]
+
+        return [rows[0]]
+      })
   }
 }
