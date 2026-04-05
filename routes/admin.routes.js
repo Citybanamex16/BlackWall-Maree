@@ -14,9 +14,9 @@ router.get('/royalty', isAuth, isAdmin, adminControlador.getRoyalty)
 router.get('/ingredientes', isAuth, isAdmin, adminControlador.getIngredients)
 router.get('/productos', isAuth, isAdmin, adminControlador.getProducts)
 
-router.get('/metricasclientes', isAuth, isAdmin, adminControlador.getMetricasClientesView)
-router.get('/api/metricasclientes', isAuth, isAdmin, adminControlador.getMetricasClientesData)
-router.get('/api/metricasclientes/export', isAuth, isAdmin, adminControlador.exportMetricasClientesCsv)
+router.get('/royaltyMetrics', isAuth, isAdmin, adminControlador.getRoyaltyMetrics)
+router.get('/api/royaltyMetrics', isAuth, isAdmin, adminControlador.getRoyaltyMetricsData)
+router.get('/api/royaltyMetrics/export', isAuth, isAdmin, adminControlador.exportRoyaltyMetricsCsv)
 
 router.get('/colaboradores', isAuth, isAdmin, adminControlador.getCollaborators)
 router.get('/colaboradores/nuevo', isAuth, isAdmin, adminControlador.getNewCollaborator)
