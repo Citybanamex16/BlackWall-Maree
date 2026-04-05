@@ -84,8 +84,13 @@ async function cargarTablaIngredientes () {
         <td style="color:#b5956a;font-weight:500;">$${parseFloat(ing.Precio).toFixed(2)}</td>
         <td class="muted">${ing.Tipo ?? '—'}</td>
         <td>${badgeEstado}</td>
+        <td><button class="btn-eliminar" data-id="${ing.ID_Insumo}" data-nombre="${ing.Nombre}">Eliminar</button></td>
       `
       tbody.appendChild(tr)
+
+      tr.querySelector('.btn-eliminar').addEventListener('click', (e) => {
+        abrirModalEliminar(e.target.dataset.id, e.target.dataset.nombre)
+      })
     })
 
     tabla.appendChild(tbody)
@@ -283,3 +288,70 @@ function mostrarError (titulo, mensaje) {
   errorMensaje.textContent = mensaje
   modalError.showModal()
 }
+
+// Logica modal eliminar ingredientes
+const modalEliminar = document.getElementById('ModalEliminar')
+const eliminarNombre = document.getElementById('eliminarNombre')
+const eliminarAdvertencia = document.getElementById('eliminarAdvertencia')
+const btnConfirmarEliminar = document.getElementById('btnConfirmarEliminar')
+const btnCancelarEliminar = document.getElementById('btnCancelarEliminar')
+
+let idParaEliminar = null
+
+async function abrirModalEliminar (id, nombre) {
+  idParaEliminar = id
+  eliminarNombre.textContent = `¿Eliminar "${nombre}"?`
+  eliminarAdvertencia.innerHTML = '<p style="color:#888;font-size:13px;">Verificando platillos vinculados...</p>'
+  modalEliminar.showModal()
+
+  try {
+    const res = await fetch(`/admin/api/ingredientes/${id}/validarEliminable`)
+    const obj = await res.json()
+
+    if (obj.vinculado) {
+      eliminarAdvertencia.innerHTML = `
+        <div style="background:#fdf8f2;border:1px solid #e0c9a8;border-radius:8px;padding:14px;margin-bottom:4px;">
+          <p style="font-size:13px;color:#b5956a;font-weight:600;margin-bottom:8px;">⚠️ Este ingrediente está en los siguientes platillos:</p>
+          <ul style="font-size:13px;color:#555;padding-left:16px;margin:0;">
+            ${obj.productos.map(p => `<li>${p}</li>`).join('')}
+          </ul>
+          <p style="font-size:12px;color:#999;margin-top:8px;">Al eliminar, se quitará de todos ellos.</p>
+        </div>
+      `
+    } else {
+      eliminarAdvertencia.innerHTML = '<p style="font-size:13px;color:#888;">Este ingrediente no está vinculado a ningún platillo.</p>'
+    }
+  } catch (error) {
+    eliminarAdvertencia.innerHTML = '<p style="font-size:13px;color:#a03020;">Error al verificar vínculos.</p>'
+  }
+}
+
+btnCancelarEliminar.addEventListener('click', () => {
+  modalEliminar.close()
+  idParaEliminar = null
+})
+
+btnConfirmarEliminar.addEventListener('click', async () => {
+  if (!idParaEliminar) return
+
+  try {
+    const res = await fetch(`/admin/api/ingredientes/${idParaEliminar}/eliminar`, {
+      method: 'DELETE'
+    })
+    const obj = await res.json()
+
+    if (obj.success) {
+      modalEliminar.close()
+      exitoTitulo.textContent = 'Ingrediente eliminado'
+      exitoMensaje.textContent = 'El ingrediente fue eliminado correctamente del catálogo.'
+      modalExito.showModal()
+      cargarTablaIngredientes()
+    } else {
+      mostrarError('Error al eliminar', obj.message || 'Error desconocido')
+    }
+  } catch (error) {
+    mostrarError('Error interno', `${error}`)
+  } finally {
+    idParaEliminar = null
+  }
+})
