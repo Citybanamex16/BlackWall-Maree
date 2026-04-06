@@ -3,6 +3,7 @@ const nav = require('../models/breadcrumbs.model.js')
 const Colaborador = require('../models/colaborador.model.js')
 const Ingrediente = require('../models/ingrediente.model.js')
 const MetricasClientes = require('../models/metricasclientes.model.js')
+const MetricasProductos = require('../models/metricasproductos.model.js')
 const bcrypt = require('bcryptjs')
 
 // const path = require('path')
@@ -125,6 +126,105 @@ exports.exportRoyaltyMetricsCsv = async (req, res, next) => {
     })
   }
 }
+
+exports.getProductIngredientMetrics = (req, res, next) => {
+  res.render('admin/metricsProducts', {
+    pageTitle: 'Métricas de productos e ingredientes'
+  })
+}
+
+exports.getProductIngredientMetricsData = async (req, res, next) => {
+  try {
+    const filtros = {
+      fechaInicio: req.query.fechaInicio || '',
+      fechaFin: req.query.fechaFin || '',
+      categoria: req.query.categoria || '',
+      tipo: req.query.tipo || ''
+    }
+
+    const data = await MetricasProductos.getDashboardData(filtros)
+
+    const hayDatos =
+      Number(data.resumen.productos_vendidos) > 0 ||
+      data.topProductosCantidad.length > 0 ||
+      data.topProductosIngresos.length > 0 ||
+      data.ingredientesPopulares.length > 0
+
+    if (!hayDatos) {
+      return res.status(200).json({
+        ok: true,
+        sinDatos: true,
+        mensaje: 'No hay información disponible para los filtros seleccionados.',
+        data
+      })
+    }
+
+    return res.status(200).json({
+      ok: true,
+      sinDatos: false,
+      data
+    })
+  } catch (error) {
+    console.error('Error al consultar métricas de productos e ingredientes:', error)
+    return res.status(500).json({
+      ok: false,
+      mensaje: 'Ocurrió un error al consultar las métricas de productos e ingredientes.'
+    })
+  }
+}
+
+exports.exportProductIngredientMetricsCsv = async (req, res, next) => {
+  try {
+    const filtros = {
+      fechaInicio: req.query.fechaInicio || '',
+      fechaFin: req.query.fechaFin || '',
+      categoria: req.query.categoria || '',
+      tipo: req.query.tipo || ''
+    }
+
+    const rows = await MetricasProductos.getCsvData(filtros)
+
+    const encabezados = [
+      'Producto',
+      'Categoría',
+      'Tipo',
+      'Cantidad vendida',
+      'Ingresos'
+    ]
+
+    const escapeCsv = (valor) => {
+      if (valor === null || valor === undefined) return '""'
+      return `"${String(valor).replace(/"/g, '""')}"`
+    }
+
+    const lineas = rows.map((row) => {
+      return [
+        row.producto,
+        row.categoria,
+        row.tipo,
+        row.total_vendido,
+        row.ingresos
+      ].map(escapeCsv).join(',')
+    })
+
+    const csv = [encabezados.join(','), ...lineas].join('\n')
+
+    res.setHeader('Content-Type', 'text/csv; charset=utf-8')
+    res.setHeader(
+      'Content-Disposition',
+      'attachment; filename="reporte_metricas_productos_ingredientes.csv"'
+    )
+
+    return res.status(200).send(csv)
+  } catch (error) {
+    console.error('Error al exportar CSV de métricas de productos:', error)
+    return res.status(500).json({
+      ok: false,
+      mensaje: 'No fue posible generar el reporte.'
+    })
+  }
+}
+
 exports.getIngredients = (req, res, next) => {
   res.render('admin/ingredientes')
 }
