@@ -1,5 +1,3 @@
-/* global confirm, window */
-
 document.addEventListener('DOMContentLoaded', () => {
   const botones = document.querySelectorAll('.btn-baja')
 

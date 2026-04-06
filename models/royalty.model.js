@@ -45,6 +45,7 @@ module.exports = class Royalty {
     // Reactiva llaves foráneas
     await db.execute('SET FOREIGN_KEY_CHECKS = 1')
   }
+
   // Cliente
   static async fetchClientStatus (telefono) {
     const [rows] = await db.execute('CALL sp_EstadoCliente(?)', [telefono])
