@@ -128,7 +128,7 @@ exports.exportRoyaltyMetricsCsv = async (req, res, next) => {
 }
 
 exports.getProductIngredientMetrics = (req, res, next) => {
-  res.render('admin/metricsProducts', {
+  res.render('admin/metricsproducts', {
     pageTitle: 'Métricas de productos e ingredientes'
   })
 }
