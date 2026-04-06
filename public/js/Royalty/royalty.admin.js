@@ -11,7 +11,6 @@ function modificarRoyalty (nombre) {
   // Obtenemos el modal
   document.getElementById('modal-nombre').textContent = nombre
   document.getElementById('modal-modificarRoyalty').classList.add('is-active')
-  document.getElementById('modal-nombre').textContent = nombre
   document.getElementById('input-nombre').value = royalty.Nombre_Royalty
   document.getElementById('input-prioridad').value = royalty.Número_de_prioridad
   document.getElementById('input-descripcion').value = royalty.Descripción
@@ -27,6 +26,7 @@ async function guardarRoyalty () {
     minVisitas: document.getElementById('input-minVisitas').value,
     maxVisitas: document.getElementById('input-maxVisitas').value
   }
+  if (!validarFormulario(body)) return
   try {
     const response = await fetch('/royalty/royaltyAdmin/' + nombreOriginal, {
       method: 'PUT',
@@ -37,8 +37,7 @@ async function guardarRoyalty () {
     const data = await response.json()
     if (data.success) {
       // Falta mostrar confirmacion
-      cerrarModal()
-      window.location.reload()
+      document.getElementById('modal-confirmarModificarRoyalty').classList.add('is-active')
     } else {
       alert('Error al guardar Royalty')
     }
@@ -51,8 +50,44 @@ const abrirModal = () => {
   document.getElementById('modal-modificarRoyalty').classList.add('is-active')
 }
 
+function validarFormulario (datos) {
+  document.querySelectorAll('.input, .select').forEach(el => el.classList.remove('is-danger'))
+  document.querySelectorAll('.help.is-danger').forEach(el => el.remove())
+
+  let esValido = true
+  if (!datos.nombre.trim())      { marcarError('input-nombre', 'Obligatorio');      esValido = false }
+  if (!datos.prioridad.trim())   { marcarError('input-prioridad', 'Obligatorio');   esValido = false }
+  if (!datos.descripcion.trim()) { marcarError('input-descripcion', 'Requerido');   esValido = false }
+  if (!datos.minVisitas)  { marcarError('input-minVisitas', 'Requerido');    esValido = false }
+  if (!datos.maxVisitas)  { marcarError('input-maxVisitas', 'Requerido');    esValido = false }
+
+  return esValido
+}
+
+function marcarError (id, mensaje) {
+  const elemento = document.getElementById(id)
+  console.log('buscando elemento:', id, elemento)
+  if (!elemento) return 
+  elemento.classList.add('is-danger')
+  const help = document.createElement('p')
+  help.className = 'help is-danger'
+  help.textContent = mensaje
+  elemento.closest('.control').appendChild(help)
+}
+
 const limpiarFormulario = () => {
   document.getElementById('form-modificarRoyalty').reset()
+}
+
+const cerrarModalSoloConfirmacion = () => {
+  document.getElementById('modal-confirmarModificarRoyalty').classList.remove('is-active')
+}
+
+const cerrarModalConfirmacion = () => {
+  document.getElementById('modal-confirmarModificarRoyalty').classList.remove('is-active')
+  document.getElementById('modal-modificarRoyalty').classList.remove('is-active')
+  limpiarFormulario()
+  window.location.reload()
 }
 
 const cerrarModal = () => {
