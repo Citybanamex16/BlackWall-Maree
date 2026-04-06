@@ -434,7 +434,6 @@ exports.getFilterProductos = async (req, res, next) => {
   try {
     const { categoria, tipo } = req.query
     const [productos] = await Promociones.fetchProductos(categoria, tipo)
-
     res.status(200).json({
       success: true,
       data: productos
