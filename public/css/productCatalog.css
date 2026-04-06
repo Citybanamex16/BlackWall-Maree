@@ -568,3 +568,86 @@ dialog .checkbox {
   font-weight: 600;
 }
 
+
+
+/*Modif Producto */
+
+/* ── Cabecera de columnas ── */
+.modif-summary-header {
+  display: grid;
+  grid-template-columns: 1fr 2fr 2fr;
+  gap: 8px;
+  padding: 6px 10px;
+  background: #f5f5f5;
+  border-radius: 6px 6px 0 0;
+  border: 1px solid #ebebeb;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+  color: #888;
+}
+
+/* ── Contenedor de filas ── */
+.modif-summary-body {
+  border: 1px solid #ebebeb;
+  border-top: none;
+  border-radius: 0 0 6px 6px;
+  overflow: hidden;
+  max-height: 420px;
+  overflow-y: auto;
+}
+
+/* ── Fila base ── */
+.modif-summary-row {
+  display: grid;
+  grid-template-columns: 1fr 2fr 2fr;
+  gap: 8px;
+  padding: 8px 10px;
+  border-top: 1px solid #f0f0f0;
+  font-size: 13px;
+  align-items: center;
+  transition: background 0.12s;
+}
+
+/* Filas sin cambios — apagadas */
+.modif-summary-row.sin-cambio {
+  opacity: 0.45;
+}
+
+/* Filas con cambio — resaltadas */
+.modif-summary-row.con-cambio {
+  background: #fffbea;
+  border-left: 3px solid #f5c000;
+}
+
+.modif-col-label {
+  font-weight: 600;
+  color: #555;
+  font-size: 12px;
+  text-transform: capitalize;
+}
+
+.modif-col-old {
+  color: #999;
+  text-decoration: line-through;  /* tachado solo en filas con cambio */
+}
+
+/* Solo tachar el valor viejo cuando hay cambio */
+.modif-summary-row.sin-cambio .modif-col-old {
+  text-decoration: none;
+}
+
+.modif-col-new {
+  color: #257942;
+  font-weight: 500;
+}
+
+/* Si no hubo cambio, el "nuevo" se ve igual que el viejo */
+.modif-summary-row.sin-cambio .modif-col-new {
+  color: inherit;
+  font-weight: 400;
+}
+
+
+
