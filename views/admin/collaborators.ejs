@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Colaboradores - Marée</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@1.0.4/css/bulma.min.css">
+  <link rel="stylesheet" href="/css/adminstyle.css">
+</head>
+<body>
+
+<nav class="navbar" role="navigation">
+  <div class="navbar-brand">
+    <span class="navbar-item logo">MARÉE</span>
+  </div>
+</nav>
+
+<section class="section">
+  <div class="container">
+    <h1 class="title">Colaboradores</h1>
+    <p class="subtitle">Gestión de empleados</p>
+
+    <% if (error) { %>
+      <div class="notification is-danger"><%= error %></div>
+    <% } %>
+
+    <div class="mb-4">
+      <a href="/admin/colaboradores/nuevo" class="button is-primary">
+        Registrar nuevo colaborador
+      </a>
+    </div>
+
+    <div class="box">
+      <table class="table is-fullwidth is-striped is-hoverable">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Nombre</th>
+            <th>Rol</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% colaboradores.forEach(colaborador => { %>
+            <tr>
+              <td><%= colaborador.id_colaborador %></td>
+              <td><%= colaborador.nombre %></td>
+              <td><%= colaborador.rol %></td>
+              <td>
+                <a
+                  href="/admin/colaboradores/<%= colaborador.id_colaborador %>"
+                  class="button is-small is-info is-light">
+                  Ver detalle
+                </a>
+
+                <button
+                  class="button is-small is-danger is-light btn-baja"
+                  data-id="<%= colaborador.id_colaborador %>"
+                  data-nombre="<%= colaborador.nombre %>">
+                  Dar de baja
+                </button>
+              </td>
+            </tr>
+          <% }) %>
+        </tbody>
+      </table>
+    </div>
+
+    <a href="/admin" class="button is-light">Volver al dashboard</a>
+  </div>
+</section>
+
+<script src="/js/admin.js"></script>
+</body>
+</html>

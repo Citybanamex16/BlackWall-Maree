@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Gestión de Ingredientes - Marée</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@1.0.4/css/bulma.min.css">
+  <link rel="stylesheet" href="/css/adminstyle.css">
+  <link rel="stylesheet" href="/css/ingredientes.css">
+</head>
+
+<body>
+
+<!-- NAVIGATION Bar-->
+<nav class="navbar" role="navigation">
+  <div class="navbar-brand">
+    <div class="navbar-item">
+      <div class="logo-area">
+        <span class="logo-text">MARÉE</span>
+        <span class="logo-sub">Love at First Crêpe</span>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<section class="section">
+  <div class="container">
+
+    <a href="/admin" class="back-link">← Admin Dashboard</a>
+
+    <!-- Encabezado -->
+    <div class="ing-header">
+      <div>
+        <h1 class="page-title">Ingredientes</h1>
+        <p class="page-sub">Catálogo de insumos del restaurante</p>
+      </div>
+      <button id="btnRegistrarIngrediente" class="btn-maree">
+        + Nuevo Ingrediente
+      </button>
+    </div>
+
+    <!-- Tabla -->
+    <div class="ing-table-wrap">
+      <div id="tablaContainer">
+        <div class="ing-empty">Cargando ingredientes...</div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!--MODAL Formulario de Registro-->
+<dialog id="ModalRegistroIngrediente" class="maree-modal">
+  <div class="modal-inner">
+    <p class="modal-title">Nuevo Ingrediente</p>
+    <p class="modal-sub">Completa los datos del insumo a registrar</p>
+
+    <div class="maree-field">
+      <label class="maree-label" for="inputNombre">Nombre</label>
+      <input class="maree-input" type="text" id="inputNombre" placeholder="Ej. Nutella" maxlength="50">
+    </div>
+
+    <div class="maree-field">
+      <label class="maree-label" for="selectCategoria">Categoría</label>
+      <select class="maree-select" id="selectCategoria">
+        <option value="">Cargando...</option>
+      </select>
+    </div>
+
+    <div class="maree-field">
+      <label class="maree-label" for="inputPrecio">Precio adicional ($)</label>
+      <input class="maree-input" type="number" id="inputPrecio" placeholder="0.00" min="0" step="0.01">
+    </div>
+
+    <div class="maree-field">
+      <label class="maree-label" for="inputTipo">
+        Tipo <span style="font-weight:400;text-transform:none;letter-spacing:0;">(opcional)</span>
+      </label>
+      <input class="maree-input" type="text" id="inputTipo" placeholder="Ej. Dulce, Salado..." maxlength="20">
+    </div>
+
+    <div class="maree-field">
+      <label class="maree-label" for="inputImagen">
+        URL de Imagen <span style="font-weight:400;text-transform:none;letter-spacing:0;">(opcional)</span>
+      </label>
+      <input class="maree-input" type="text" id="inputImagen" placeholder="https://...">
+    </div>
+
+    <div class="maree-field">
+      <label class="maree-checkbox-row">
+        <input type="checkbox" id="checkActivo" checked>
+        Disponible
+      </label>
+    </div>
+
+    <div class="modal-actions">
+      <button id="btnConfirmarRegistro" class="btn-primary">Continuar</button>
+      <button id="btnCerrarRegistro" class="btn-secondary">Cancelar</button>
+    </div>
+  </div>
+</dialog>
+
+<!--MODAL Resumen-->
+<dialog id="ModalResumen" class="maree-modal">
+  <div class="modal-inner">
+    <p class="modal-title">Confirmar Registro</p>
+    <p class="modal-sub">Verifica los datos antes de guardar</p>
+    <div id="resumenContenido"></div>
+    <div class="modal-actions">
+      <button id="btnConfirmarCreacion" class="btn-success">Registrar Ingrediente</button>
+      <button id="btnVolverFormulario" class="btn-secondary">Regresar</button>
+    </div>
+  </div>
+</dialog>
+
+<!--MODAL Error-->
+<dialog id="ModalError" class="maree-modal">
+  <div class="modal-inner" style="text-align:center;">
+    <span class="modal-icon">⚠️</span>
+    <p class="modal-title modal-title-danger" id="errorTitulo">Error</p>
+    <p id="errorMensaje" style="font-size:14px;color:#555;margin-bottom:24px;"></p>
+    <button id="btnCerrarError" class="btn-danger">Cerrar</button>
+  </div>
+</dialog>
+
+<!--MODAL Exito-->
+<dialog id="ModalExito" class="maree-modal">
+  <div class="modal-inner" style="text-align:center;">
+    <span class="modal-icon">✓</span>
+    <p class="modal-title modal-title-success" id="exitoTitulo">¡Registrado!</p>
+    <p id="exitoMensaje" style="font-size:14px;color:#555;margin-bottom:24px;"></p>
+    <button id="btnCerrarExito" class="btn-success">Aceptar</button>
+  </div>
+</dialog>
+
+<script src="/js/menudigital/adminIngredientes.js"></script>
+</body>
+</html>
