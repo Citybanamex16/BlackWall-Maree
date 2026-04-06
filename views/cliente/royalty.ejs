@@ -11,11 +11,29 @@
 <body>
     <%- include('../partials/breadcrumbs') %>
     
-    <section class="section">
-        <div class="container">
-            <h1 class="page-title">Royalty System</h1>
-            <p class="page-subtitle">Aquí los clientes pueden ver su nivel en cuanto al systema de Royalty</p>
+    <main class="container my-5">
+    <div class="royalty-header text-center mb-5">
+        <h1 class="display-4">¡Hola, <%= cliente.Nombre %>!</h1>
+        <p class="lead">Tu nivel actual es: <strong id="cliente-nivel-badge"><%= cliente.nivel %></strong></p>
+        <p>Visitas acumuladas: <strong><%= cliente.visitas %></strong></p>
+    </div>
+
+    <hr>
+
+    <section class="mb-5">
+        <h2 class="mb-4">Tus Promociones Desbloqueadas</h2>
+        <div class="row" id="contenedor-promociones">
+            <div class="text-center"><div class="spinner-border text-primary" role="status"></div> Cargando promociones...</div>
         </div>
     </section>
+
+    <section class="mb-5">
+        <h2 class="mb-4">Tus Eventos Exclusivos</h2>
+        <div class="row" id="contenedor-eventos">
+            <div class="text-center"><div class="spinner-border text-primary" role="status"></div> Cargando eventos...</div>
+        </div>
+    </section>
+</main>
+    <script src="/js/Royalty/royalty.cliente.js"></script>
 </body>
 </html>
