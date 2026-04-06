@@ -55,11 +55,11 @@ function validarFormulario (datos) {
   document.querySelectorAll('.help.is-danger').forEach(el => el.remove())
 
   let esValido = true
-  if (!datos.nombre.trim())      { marcarError('input-nombre', 'Obligatorio');      esValido = false }
-  if (!datos.prioridad.trim())   { marcarError('input-prioridad', 'Obligatorio');   esValido = false }
-  if (!datos.descripcion.trim()) { marcarError('input-descripcion', 'Requerido');   esValido = false }
-  if (!datos.minVisitas)  { marcarError('input-minVisitas', 'Requerido');    esValido = false }
-  if (!datos.maxVisitas)  { marcarError('input-maxVisitas', 'Requerido');    esValido = false }
+  if (!datos.nombre.trim()) { marcarError('input-nombre', 'Obligatorio'); esValido = false }
+  if (!datos.prioridad.trim()) { marcarError('input-prioridad', 'Obligatorio'); esValido = false }
+  if (!datos.descripcion.trim()) { marcarError('input-descripcion', 'Requerido'); esValido = false }
+  if (!datos.minVisitas) { marcarError('input-minVisitas', 'Requerido'); esValido = false }
+  if (!datos.maxVisitas) { marcarError('input-maxVisitas', 'Requerido'); esValido = false }
 
   return esValido
 }
@@ -67,7 +67,7 @@ function validarFormulario (datos) {
 function marcarError (id, mensaje) {
   const elemento = document.getElementById(id)
   console.log('buscando elemento:', id, elemento)
-  if (!elemento) return 
+  if (!elemento) return
   elemento.classList.add('is-danger')
   const help = document.createElement('p')
   help.className = 'help is-danger'
