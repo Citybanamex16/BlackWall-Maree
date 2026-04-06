@@ -1,0 +1,588 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Promotions - Admin Marée</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@1.0.4/css/bulma.min.css">
+    <link rel="stylesheet" href="/css/adminstyle.css">
+    <style>
+        :root {
+            --promo-ivory: #fdf8f2;
+            --promo-cream: #f7efe3;
+            --promo-sand: #e9dcc8;
+            --promo-gold: #c5a06a;
+            --promo-gold-deep: #a67f4f;
+            --promo-ink: #3f3023;
+            --promo-copy: #6c5842;
+            --promo-line: #e7d9c6;
+            --promo-terra: #b96f5d;
+        }
+
+        body {
+            background: linear-gradient(180deg, #fffdf9 0%, #f8f1e6 100%);
+        }
+
+        .promotions-shell {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            gap: 24px;
+            margin-bottom: 28px;
+            flex-wrap: wrap;
+        }
+
+        .promotions-kicker,
+        .promotion-kicker {
+            display: inline-block;
+            padding: 8px 14px;
+            border-radius: 999px;
+            background: rgba(197, 160, 106, 0.14);
+            color: var(--promo-gold-deep);
+            font-size: 12px;
+            font-weight: 600;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+        }
+
+        .promotions-copy,
+        .promotion-help-copy {
+            max-width: 680px;
+            color: var(--promo-copy);
+            font-size: 15px;
+            line-height: 1.8;
+            margin-top: 14px;
+        }
+
+        .promotion-toolbar {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .maree-action-button {
+            background: linear-gradient(135deg, var(--promo-gold) 0%, var(--promo-gold-deep) 100%) !important;
+            border: none !important;
+            color: #fff !important;
+            padding-inline: 20px;
+            box-shadow: 0 16px 30px rgba(166, 127, 79, 0.2);
+        }
+
+        .maree-action-button:hover,
+        .maree-action-button:focus {
+            background: linear-gradient(135deg, #b9925f 0%, #946d40 100%) !important;
+            color: #fff !important;
+        }
+
+        .button.maree-ghost {
+            border-color: var(--promo-line);
+            color: var(--promo-copy);
+            background: #fff;
+        }
+
+        .button.maree-ghost:hover,
+        .button.maree-ghost:focus {
+            border-color: var(--promo-gold);
+            color: var(--promo-gold-deep);
+            background: #fffaf3;
+        }
+
+        .button.maree-danger {
+            background: var(--promo-terra);
+            border-color: var(--promo-terra);
+            color: #fff;
+        }
+
+        .button.maree-danger:hover,
+        .button.maree-danger:focus {
+            background: #a55f4f;
+            border-color: #a55f4f;
+            color: #fff;
+        }
+
+        .promo-card {
+            border: 1px solid var(--promo-line);
+            border-radius: 22px;
+            overflow: hidden;
+            box-shadow: 0 18px 38px rgba(86, 61, 35, 0.08);
+            background: linear-gradient(180deg, #ffffff 0%, #fdf9f3 100%);
+            height: 100%;
+        }
+
+        .promo-card.is-inactive {
+            opacity: 0.86;
+        }
+
+        .promo-card .card-content {
+            padding: 26px;
+        }
+
+        .promo-card .title {
+            font-size: 34px !important;
+            margin-bottom: 10px !important;
+        }
+
+        .promo-card-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 16px;
+            margin-bottom: 18px;
+        }
+
+        .promo-card-id,
+        .promo-card-label {
+            font-size: 11px;
+            letter-spacing: 1.4px;
+            text-transform: uppercase;
+            color: #8d7358;
+        }
+
+        .status-pill {
+            display: inline-flex;
+            align-items: center;
+            border-radius: 999px;
+            padding: 8px 12px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .status-pill.is-active {
+            background: #e7f0df;
+            color: #58713f;
+        }
+
+        .status-pill.is-inactive {
+            background: #f7e9e4;
+            color: #9c6457;
+        }
+
+        .promo-benefit {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 14px;
+            border-radius: 999px;
+            background: #f3e7d6;
+            color: var(--promo-gold-deep);
+            font-size: 13px;
+            font-weight: 600;
+            margin-bottom: 14px;
+        }
+
+        .promo-benefit.is-neutral {
+            background: #f5efe7;
+            color: #7f6950;
+        }
+
+        .promo-conditions {
+            min-height: 90px;
+            color: var(--promo-ink);
+            line-height: 1.8;
+        }
+
+        .promo-date-tag {
+            display: inline-flex;
+            align-items: center;
+            padding: 8px 14px;
+            border-radius: 999px;
+            border: 1px solid var(--promo-line);
+            background: #fff;
+            color: var(--promo-copy);
+            font-size: 13px;
+        }
+
+        .promo-card-footer {
+            border-top: 1px solid var(--promo-line);
+        }
+
+        .promo-footer-button {
+            border: none;
+            background: transparent;
+            color: var(--promo-gold-deep);
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.2s ease, color 0.2s ease;
+        }
+
+        .promo-footer-button:hover {
+            background: #fbf4eb;
+        }
+
+        .promo-footer-button.is-danger-text {
+            color: var(--promo-terra);
+        }
+
+        .promo-footer-button.is-disabled,
+        .promo-footer-button:disabled {
+            color: #bca58a;
+            cursor: not-allowed;
+            background: #faf4eb;
+        }
+
+        .promotion-help-box,
+        .promotion-modal-box {
+            border: 1px solid var(--promo-line);
+            border-radius: 24px !important;
+            background: linear-gradient(180deg, #fffdf9 0%, #f9f1e5 100%);
+            box-shadow: 0 24px 50px rgba(78, 54, 28, 0.08);
+            color-scheme: light;
+        }
+
+        .promotion-help-title {
+            font-size: 16px;
+            font-weight: 600;
+            letter-spacing: 0.8px;
+            text-transform: uppercase;
+            color: var(--promo-gold-deep);
+        }
+
+        .promotion-modal-box .title {
+            font-size: 40px !important;
+        }
+
+        .promotions-form-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 18px;
+        }
+
+        .promotions-form-grid .field.is-full {
+            grid-column: 1 / -1;
+        }
+
+        .input,
+        .textarea,
+        .select select {
+            border-color: var(--promo-line);
+            background-color: #fffaf4;
+            color: var(--promo-ink);
+            box-shadow: none;
+        }
+
+        .input::placeholder,
+        .textarea::placeholder {
+            color: #9b8467;
+        }
+
+        .input[type="date"] {
+            color-scheme: light;
+        }
+
+        .input[type="date"]::-webkit-calendar-picker-indicator {
+            opacity: 0.85;
+            cursor: pointer;
+        }
+
+        .input:focus,
+        .textarea:focus,
+        .select select:focus {
+            border-color: var(--promo-gold);
+            box-shadow: 0 0 0 0.125em rgba(197, 160, 106, 0.2);
+        }
+
+        .label,
+        .promo-checkbox {
+            color: var(--promo-ink);
+        }
+
+        .promo-checkbox {
+            font-weight: 500;
+        }
+
+        .helper-note,
+        .promo-inline-note {
+            color: #8b745c;
+            font-size: 12px;
+            line-height: 1.6;
+            margin-top: 6px;
+        }
+
+        .promo-selection-box {
+            min-height: 140px;
+            max-height: 220px;
+            overflow-y: auto;
+            border: 1px dashed var(--promo-line);
+            border-radius: 18px;
+            padding: 14px;
+            background: #fffdfa;
+        }
+
+        .promo-selection-box.promotion-box-error {
+            border-color: var(--promo-terra);
+            background: #fff6f3;
+        }
+
+        .promo-product-option {
+            display: block;
+            padding: 8px 0;
+            color: var(--promo-copy);
+        }
+
+        .promo-selected-summary {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            min-height: 42px;
+        }
+
+        .promo-chip {
+            display: inline-flex;
+            align-items: center;
+            border-radius: 999px;
+            padding: 8px 12px;
+            background: #efe2cf;
+            color: var(--promo-gold-deep);
+            font-size: 13px;
+            font-weight: 500;
+        }
+
+        .promo-chip.empty {
+            background: #f5eee4;
+            color: #8d7358;
+        }
+
+        .modal-background {
+            background: rgba(63, 48, 35, 0.48);
+        }
+
+        .is-centered-copy {
+            margin-inline: auto;
+        }
+
+        @media (max-width: 768px) {
+            .promotions-form-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .promo-card .title,
+            .promotion-modal-box .title {
+                font-size: 30px !important;
+            }
+
+            .promotion-toolbar {
+                width: 100%;
+                justify-content: space-between;
+            }
+        }
+    </style>
+</head>
+<body>
+    <section class="section">
+        <div class="container">
+            <div class="promotions-shell">
+                <div>
+                    <span class="promotions-kicker">Promociones y beneficios</span>
+                    <h1 class="title">Catálogo de Promociones</h1>
+                    <p class="promotions-copy">
+                        Gestiona promociones vigentes, descuentos por producto y restricciones del catálogo
+                        administrativo de Marée sin salir del flujo actual del módulo.
+                    </p>
+                </div>
+                <div class="promotion-toolbar">
+                    <a href="/admin" class="button maree-ghost is-medium" type="button">
+                        Volver al dashboard
+                    </a>
+                    <div id="loading-spinner" class="button is-loading is-ghost is-hidden"></div>
+                    <button id="btn-nueva-promocion" class="button maree-action-button is-rounded is-medium" type="button">
+                        Nueva promoción
+                    </button>
+                </div>
+            </div>
+
+            <div id="contenedor-promociones" class="columns is-multiline"></div>
+        </div>
+    </section>
+
+    <section class="section pt-0">
+        <div class="container">
+            <div class="box promotion-help-box">
+                <p class="promotion-help-title">Gestión de Promociones</p>
+                <p class="promotion-help-copy">
+                    Las modificaciones validan fechas, porcentaje y consistencia de la promoción antes de guardar.
+                    Las eliminaciones se confirman y se restringen si la promoción ya está ligada a eventos,
+                    canjes de clientes o beneficios de royalty.
+                </p>
+            </div>
+        </div>
+    </section>
+
+    <div class="modal" id="modal-promocion">
+        <div class="modal-background" data-close-modal="modal-promocion"></div>
+        <div class="modal-content">
+            <div class="box promotion-modal-box">
+                <form id="form-promocion" novalidate>
+                    <input type="hidden" id="id_promocion">
+
+                    <div class="promotions-form-grid">
+                        <div class="field is-full">
+                            <span class="promotion-kicker" id="kicker-modal-promocion">Registro administrativo</span>
+                            <h3 class="title is-4 mt-4" id="titulo-modal-promocion">Registrar Nueva Promoción</h3>
+                            <p class="helper-note" id="descripcion-modal-promocion">
+                                Captura un beneficio nuevo y asígnalo a los productos correspondientes del catálogo.
+                            </p>
+                        </div>
+
+                        <div class="field">
+                            <label class="label" for="nombre">Nombre</label>
+                            <div class="control">
+                                <input id="nombre" class="input" type="text" maxlength="100" placeholder="Ej. Martes de Crepas Dulces">
+                            </div>
+                        </div>
+
+                        <div class="field">
+                            <label class="label">Estado</label>
+                            <label class="checkbox promo-checkbox">
+                                <input type="checkbox" id="activo" checked>
+                                Promoción activa en catálogo
+                            </label>
+                        </div>
+
+                        <div class="field is-full">
+                            <label class="checkbox promo-checkbox">
+                                <input type="checkbox" id="check-descuento">
+                                Incluir descuento porcentual y vincular productos
+                            </label>
+                        </div>
+
+                        <div class="field is-full" id="seccion-descuento" style="display: none;">
+                            <div class="promotions-form-grid">
+                                <div class="field">
+                                    <label class="label" for="descuento">Descuento (%)</label>
+                                    <div class="control">
+                                        <input class="input" id="descuento" type="number" min="0" max="100" step="0.01" placeholder="Ej. 15">
+                                    </div>
+                                </div>
+
+                                <div class="field">
+                                    <label class="label">Nota</label>
+                                    <p class="promo-inline-note">
+                                        Usa el porcentaje real del beneficio. Por ejemplo, 15 representa un 15% de descuento.
+                                    </p>
+                                </div>
+
+                                <div class="field">
+                                    <label class="label" for="filtro-categoria">Selecciona Categoría</label>
+                                    <div class="select is-fullwidth">
+                                        <select id="filtro-categoria" name="categoria">
+                                            <option value="">Todas las categorías</option>
+                                            <% for (let cat of lista_categorias) { %>
+                                                <option value="<%= cat.Categoría %>"><%= cat.Categoría %></option>
+                                            <% } %>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <div class="field">
+                                    <label class="label" for="filtro-tipo">Selecciona Tipo</label>
+                                    <div class="select is-fullwidth">
+                                        <select id="filtro-tipo" name="tipo">
+                                            <option value="">Todos los tipos</option>
+                                            <% for (let tipo of lista_tipos) { %>
+                                                <option value="<%= tipo.Tipo %>"><%= tipo.Tipo %></option>
+                                            <% } %>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <div class="field is-full">
+                                    <label class="label">Selecciona el platillo o bebida</label>
+                                    <div id="select-productos" class="promo-selection-box">
+                                        <p class="has-text-grey">Activa el descuento para cargar los productos del catálogo.</p>
+                                    </div>
+                                    <p class="helper-note">
+                                        La promoción se vinculará a los productos marcados en este catálogo.
+                                    </p>
+                                </div>
+
+                                <div class="field is-full">
+                                    <label class="label">Productos vinculados</label>
+                                    <div id="resumen-productos" class="promo-selected-summary">
+                                        <span class="promo-chip empty">Sin productos seleccionados</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="field is-full">
+                            <label class="label" for="condiciones">Condiciones y restricciones</label>
+                            <div class="control">
+                                <textarea class="textarea" rows="3" id="condiciones" placeholder="Ej. Válida en crepas dulces individuales, no acumulable con otras promociones."></textarea>
+                            </div>
+                        </div>
+
+                        <div class="field">
+                            <label class="label" for="fecha_de_Inicio">Fecha de Inicio</label>
+                            <div class="control">
+                                <input class="input" id="fecha_de_Inicio" type="date">
+                            </div>
+                        </div>
+
+                        <div class="field">
+                            <label class="label" for="fecha_de_Fin">Fecha de Fin</label>
+                            <div class="control">
+                                <input class="input" id="fecha_de_Fin" type="date">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="buttons is-right mt-5">
+                        <button type="button" class="button maree-ghost" data-close-modal="modal-promocion">Cancelar</button>
+                        <button type="submit" class="button maree-action-button" id="boton-guardar-promocion">Guardar promoción</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div id="modal-resultado" class="modal">
+        <div class="modal-background" data-close-modal="modal-resultado"></div>
+        <div class="modal-content">
+            <div class="box promotion-modal-box has-text-centered">
+                <span class="promotion-kicker" id="kicker-modal-resultado">Actualización de promociones</span>
+                <h3 class="title is-4 mt-4" id="titulo-modal-resultado">Operación completada</h3>
+                <p id="mensaje-modal-resultado" class="promotions-copy is-centered-copy">
+                    La promoción se procesó correctamente.
+                </p>
+                <button class="button maree-action-button mt-5" type="button" id="boton-modal-resultado">Continuar</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="modal-confirmar-desactivacion" class="modal">
+        <div class="modal-background" data-close-modal="modal-confirmar-desactivacion"></div>
+        <div class="modal-content">
+            <div class="box promotion-modal-box">
+                <span class="promotion-kicker">Estado de promociones</span>
+                <h3 class="title is-4 mt-4" id="titulo-confirmar-estado-promocion">Cambiar estado de promoción</h3>
+                <p id="mensaje-confirmar-desactivar" class="promotions-copy">
+                    ¿Deseas desactivar esta promoción? Permanecerá registrada, pero dejará de mostrarse como activa.
+                </p>
+                <div class="buttons is-right mt-5">
+                    <button type="button" class="button maree-ghost" data-close-modal="modal-confirmar-desactivacion">Cancelar</button>
+                    <button type="button" class="button maree-action-button" id="boton-confirmar-desactivar">Confirmar cambio</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="modal-confirmar-eliminacion" class="modal">
+        <div class="modal-background" data-close-modal="modal-confirmar-eliminacion"></div>
+        <div class="modal-content">
+            <div class="box promotion-modal-box">
+                <span class="promotion-kicker">Eliminación de promociones</span>
+                <h3 class="title is-4 mt-4">Eliminar promoción</h3>
+                <p id="mensaje-confirmar-eliminar" class="promotions-copy">
+                    ¿Deseas eliminar esta promoción? Esta acción no se puede deshacer.
+                </p>
+                <div class="buttons is-right mt-5">
+                    <button type="button" class="button maree-ghost" data-close-modal="modal-confirmar-eliminacion">Cancelar</button>
+                    <button type="button" class="button maree-danger" id="boton-confirmar-eliminar">Eliminar promoción</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/js/promos_eventos/promos.js"></script>
+</body>
+</html>
