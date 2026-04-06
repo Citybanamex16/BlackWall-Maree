@@ -13,38 +13,8 @@
         <div class="container">
             <h1 class="title">Catálogo de Royalty System</h1>
             <p class="subtitle">Aquí va el catálogo del sistema de lealtad</p>
-        </div>
-    </section>
-
-    <section class="section">
-        <div class="container">
-            <h1 class="title">Sistema Royalty</h1>
             <!-- onclick = abrirModal()-->
-            <div class="columns is-multiline">
-                <% for (let royalty of royalties) { %>
-                    <div class="column is-half">
-                        <div class="card">
-                            <div class="card-content">
-                                <p class="title is-5"><%= royalty.Nombre_Royalty %></p>
-                                <div class="content">
-                                    <p><strong>Prioridad:</strong> <%= royalty.Número_de_prioridad %></p>
-                                    <p><strong>Descripción:</strong> <%= royalty.Descripción %></p>
-                                    <p><strong>Visitas mínimas:</strong> <%= royalty.Min_Visitas %></p>
-                                    <p><strong>Visitas máximas:</strong> <%= royalty.Max_Visitas %></p>
-                                </div><footer class="card-footer">
-                                <button class="button is-danger card-footer-item" onclick = "borrarRoyalty('<%= royalty.Nombre_Royalty %>')">
-                                    <span class="icon">
-                                        <i class="fas fa-trash"></i>
-                                    </span>
-                                    <span>Borrar</span>
-                                </button>
-                            </footer>
-                            </div>
-                            
-                        </div>
-                    </div>
-                <% } %>
-            </div>
+            <div class = "columns is-multiline" id = "royaltyContainer"></div>
         </div>
     </section>
 
@@ -54,6 +24,71 @@
         </form>
     </section>
 
+   <section class="section">
+        <div class="container">
+            <h1 class="title">Agregar estados Royalty</h1>
+            <p class="subtitle">Aquí se agregan estados royalty</p>
+        </div>
+    </section>
+
+    <!-- Pop- up  Modificar estado royalty -->
+     <div class="modal" id="modal-modificarRoyalty">
+        <div class="modal-background"></div>
+        <div class="modal-content">
+            <div class="box">
+                <h3 class="title is-4">Modificar <span id="modal-nombre"></span></h3>
+                <form id="form-modificarRoyalty">
+                    <div class="field">
+                        <label class="label">Nombre</label>
+                        <div class="control">
+                            <input id="input-nombre" class="input" type="text">
+                        </div>
+                    </div>
+                    <div class="field">
+                        <label class="label">Prioridad</label>
+                        <div class="control">
+                            <input id="input-prioridad" class="input" type="number">
+                        </div>
+                    </div>
+                    <div class="field">
+                        <label class="label">Descripcion</label>
+                        <div class="control">
+                            <input id="input-descripcion" class="input" type="text">
+                        </div>
+                    </div>
+                    <div class="field">
+                        <label class="label">Visitas mínimas</label>
+                        <div class="control">
+                            <input id="input-minVisitas" class="input" type="number">
+                        </div>
+                    </div>
+                    <div class="field">
+                        <label class="label">Visitas máximas</label>
+                        <div class="control">
+                            <input id="input-maxVisitas" class="input" type="number">
+                        </div>
+                    </div>
+                    <div class="buttons">
+                        <button type="button" class="button is-primary" onclick="guardarRoyalty()"> Guardar </button>
+                        <button type="button" class="button" onclick="cerrarModal()">Cancelar</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+     </div>
+    <!-- Pop up Confirmacion de modificar estado royalty-->
+    <div class="modal" id="modal-confirmarModificarRoyalty">
+    <div class="modal-background"></div>
+    <div class="modal-content">
+        <div class="box has-text-centered">
+            <h3 class="title is-4">¿Deseas guardar los cambios?</h3>
+            <div class="buttons">
+                <button type="button" class="button is-primary" onclick="cerrarModalConfirmacion()">Confirmar</button>
+                <button type="button" class="button" onclick="cerrarModalSoloConfirmacion()">Cancelar</button>
+            </div>
+        </div>
+    </div>
+</div>
     <script src = "/js/Royalty/royalty.admin.js"></script>
 </body>
 </html>
