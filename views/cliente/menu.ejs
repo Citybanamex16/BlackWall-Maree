@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Menú - Marée</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@1.0.4/css/bulma.min.css">
+    <link rel="stylesheet" href="/css/menustyle.css">
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=Jost:wght@300;400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+</head>
+<body>
+
+<nav class="navbar" role="navigation">
+    <div class="navbar-brand">
+        <a class="navbar-item logo-area" href="/">
+            <span class="logo-text">MARÉE</span>
+            <span class="logo-sub">LOVE AT FIRST CRÊPE</span>
+        </a>
+    </div>
+
+    <%- include('../partials/breadcrumbs') %>
+    <%- include('../partials/Sesion') %>
+
+</nav>
+
+<section class="section">
+    <div class="container-fluid menu-layout">
+
+        <!-- COLUMNA IZQUIERDA: MENÚ -->
+        <div class="menu-column">
+
+            <h1 class="page-title">Menu</h1>
+            <p class="page-subtitle">Browse our selection and add items to your order</p>
+
+            <!-- Sticky de Categorías -->
+
+             <div id="sticky-nav-wrapper" class="sticky-nav-container">
+            <div class="tabs is-centered is-toggle is-toggle-rounded" id="tabs-categorias">
+            <ul id="lista-tabs">
+            </ul>
+            </div>
+            </div>
+
+
+            <!-- Las categorías y productos se inyectan aquí dinámicamente desde JS -->
+            <div id="menu-categorias">
+                <div class="has-text-centered py-6">
+        <p class="is-size-5 has-text-grey">Explorando el menú de Marée...</p>
+        <progress class="progress is-small is-primary mt-4" max="100">15%</progress>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- COLUMNA DERECHA: ORDER -->
+        <div class="order-column">
+
+            <a href="/menu/orden" class="order-btn-card">
+                <div class="order-btn-icon">🛒</div>
+                <div class="order-btn-text">
+                    <span class="order-btn-title">Ver Resumen de Pedido</span>
+                    <span class="order-btn-sub">Revisa y confirma los artículos de tu orden</span>
+                </div>
+            </a>
+
+            <!-- MAPA -->
+            <div class="order-map-box">
+                <p class="order-map-title">Tu ubicación</p>
+                <div id="mapa" style="height:280px;border-radius:8px;"></div>
+                <p id="mapa-estado" style="font-size:12px;color:#aaa;margin-top:8px;">
+                    Detectando ubicación...
+                </p>
+            </div>
+
+        </div>
+
+    </div>
+</section>
+
+<!-- MODAL -->
+<div id="modal-overlay" class="modal-overlay">
+    <div id="modal-box" class="modal-box">
+        <button id="modal-close" class="modal-close-btn">✕</button>
+        <div id="modal-content">
+            <!-- Aqui se pone el contenido dinamicallyyy -->
+        </div>
+    </div>
+</div>
+
+<script src="/js/menudigital/menu.js"></script>
+
+</body>
+</html>

@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title><%= pageTitle %> - Admin Marée</title>
+
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@1.0.4/css/bulma.min.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;600&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --gold: #b5956a;
+      --bg: #fdfaf7;
+      --border: #ede8e0;
+      --text: #222;
+      --muted: #7a7a7a;
+      --soft: #f7f1ea;
+      --danger: #b94a48;
+      --success: #2d8a56;
+    }
+
+    body {
+      font-family: 'Jost', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+    }
+
+    .navbar {
+      background: #fff;
+      border-bottom: 1px solid var(--border);
+      padding: 10px 28px;
+    }
+
+    .logo-text {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 24px;
+      letter-spacing: 4px;
+      font-weight: 600;
+    }
+
+    .logo-sub {
+      font-size: 10px;
+      letter-spacing: 2px;
+      color: var(--muted);
+      text-transform: uppercase;
+    }
+
+    .page-wrap {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 28px;
+    }
+
+    .page-title {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 44px;
+      margin-bottom: 8px;
+    }
+
+    .page-subtitle {
+      color: var(--muted);
+      margin-bottom: 28px;
+    }
+
+    .card-box {
+      background: #fff;
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 22px;
+      margin-bottom: 20px;
+    }
+
+    .filters-grid,
+    .kpi-grid,
+    .tables-grid {
+      display: grid;
+      gap: 16px;
+    }
+
+    .filters-grid {
+      grid-template-columns: repeat(4, 1fr);
+      align-items: end;
+    }
+
+    .kpi-grid {
+      grid-template-columns: repeat(5, 1fr);
+    }
+
+    .tables-grid {
+      grid-template-columns: 1.4fr 1fr;
+    }
+
+    .kpi-card {
+      background: #fff;
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 22px;
+    }
+
+    .kpi-label {
+      font-size: 12px;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 12px;
+    }
+
+    .kpi-value {
+      font-size: 34px;
+      font-weight: 600;
+      color: var(--gold);
+    }
+
+    .section-title {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 28px;
+      margin-bottom: 14px;
+    }
+
+    .small-note {
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    .status-box {
+      display: none;
+      margin-bottom: 16px;
+      border-radius: 12px;
+      padding: 14px 16px;
+      font-size: 14px;
+    }
+
+    .status-box.error {
+      display: block;
+      background: #fff3f2;
+      color: var(--danger);
+      border: 1px solid #f0d2cf;
+    }
+
+    .status-box.info {
+      display: block;
+      background: #faf7f2;
+      color: #8a6b45;
+      border: 1px solid #eadfce;
+    }
+
+    .table {
+      background: transparent;
+    }
+
+    .table th {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--muted);
+    }
+
+    .pill {
+      display: inline-block;
+      padding: 4px 10px;
+      border-radius: 999px;
+      background: var(--soft);
+      color: #7a5c3a;
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .actions-row {
+      display: flex;
+      gap: 10px;
+      justify-content: flex-end;
+      margin-top: 12px;
+    }
+
+    .loading {
+      opacity: 0.6;
+      pointer-events: none;
+    }
+
+    @media (max-width: 1024px) {
+      .filters-grid,
+      .kpi-grid,
+      .tables-grid {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+
+    @media (max-width: 768px) {
+      .filters-grid,
+      .kpi-grid,
+      .tables-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .page-title {
+        font-size: 34px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <nav class="navbar">
+    <div class="navbar-brand">
+      <div class="navbar-item" style="display:flex; flex-direction:column; align-items:flex-start;">
+        <div class="logo-text">MARÉE</div>
+        <div class="logo-sub">Admin</div>
+      </div>
+    </div>
+    <div class="navbar-end" style="display:flex;">
+      <a href="/admin" class="navbar-item">Dashboard</a>
+      <a href="/admin/royaltyMetrics" class="navbar-item" style="color: var(--gold);">Métricas clientes</a>
+    </div>
+  </nav>
+
+  <section class="page-wrap">
+    <h1 class="page-title">Métricas de clientes</h1>
+    <p class="page-subtitle">
+      Consulta clientes activos, clientes nuevos aproximados por primera compra,
+      frecuencia de visita, historial de consumo y promociones usadas.
+    </p>
+
+    <div id="statusBox" class="status-box"></div>
+
+    <div class="card-box">
+      <h2 class="section-title">Filtros</h2>
+
+      <form id="filtersForm" class="filters-grid">
+        <div>
+          <label class="label">Fecha inicio</label>
+          <input class="input" type="date" name="fechaInicio">
+        </div>
+
+        <div>
+          <label class="label">Fecha fin</label>
+          <input class="input" type="date" name="fechaFin">
+        </div>
+
+        <div>
+          <label class="label">Género</label>
+          <div class="select is-fullwidth">
+            <select name="genero">
+              <option value="">Todos</option>
+              <option value="f">Femenino</option>
+              <option value="m">Masculino</option>
+            </select>
+          </div>
+        </div>
+
+        <div>
+          <label class="label">Nivel royalty</label>
+          <div class="select is-fullwidth">
+            <select name="royalty">
+              <option value="">Todos</option>
+              <option value="Fan">Fan</option>
+              <option value="Super Fan">Super Fan</option>
+              <option value="Mega Fan">Mega Fan</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="actions-row" style="grid-column: 1 / -1;">
+          <button type="button" id="btnLimpiar" class="button is-light">Limpiar</button>
+          <button type="submit" id="btnConsultar" class="button" style="background:#b5956a; color:white;">
+            Consultar métricas
+          </button>
+          <button type="button" id="btnExportar" class="button is-dark">
+            Exportar CSV
+          </button>
+        </div>
+      </form>
+    </div>
+
+    <div id="dashboardContent">
+      <div class="kpi-grid">
+        <div class="kpi-card">
+          <div class="kpi-label">Clientes activos</div>
+          <div id="kpiActivos" class="kpi-value">0</div>
+        </div>
+
+        <div class="kpi-card">
+          <div class="kpi-label">Clientes nuevos aprox.</div>
+          <div id="kpiNuevos" class="kpi-value">0</div>
+        </div>
+
+        <div class="kpi-card">
+          <div class="kpi-label">Frecuencia promedio</div>
+          <div id="kpiFrecuencia" class="kpi-value">0</div>
+        </div>
+
+        <div class="kpi-card">
+          <div class="kpi-label">Ticket promedio</div>
+          <div id="kpiTicket" class="kpi-value">$0</div>
+        </div>
+
+        <div class="kpi-card">
+          <div class="kpi-label">Clientes con promoción</div>
+          <div id="kpiPromos" class="kpi-value">0</div>
+        </div>
+      </div>
+
+      <div class="tables-grid" style="margin-top:20px;">
+        <div class="card-box">
+          <h2 class="section-title">Top clientes por consumo</h2>
+          <p class="small-note">Historial consolidado por rango seleccionado</p>
+
+          <div class="table-container" style="margin-top:14px;">
+            <table class="table is-fullwidth is-hoverable">
+              <thead>
+                <tr>
+                  <th>Cliente</th>
+                  <th>Royalty</th>
+                  <th>Órdenes</th>
+                  <th>Gastado</th>
+                  <th>Última compra</th>
+                </tr>
+              </thead>
+              <tbody id="topClientesBody">
+                <tr>
+                  <td colspan="5">Sin datos aún</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="card-box">
+          <h2 class="section-title">Promociones usadas</h2>
+          <p class="small-note">Promociones ligadas al comportamiento del cliente</p>
+
+          <div class="table-container" style="margin-top:14px;">
+            <table class="table is-fullwidth is-hoverable">
+              <thead>
+                <tr>
+                  <th>Promoción</th>
+                  <th>Usos</th>
+                  <th>Clientes</th>
+                </tr>
+              </thead>
+              <tbody id="promocionesBody">
+                <tr>
+                  <td colspan="3">Sin datos aún</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <div class="card-box">
+        <h2 class="section-title">Distribución por género</h2>
+        <p class="small-note">Clientes y órdenes asociadas</p>
+
+        <div class="table-container" style="margin-top:14px;">
+          <table class="table is-fullwidth is-hoverable">
+            <thead>
+              <tr>
+                <th>Género</th>
+                <th>Clientes</th>
+                <th>Órdenes</th>
+              </tr>
+            </thead>
+            <tbody id="generoBody">
+              <tr>
+                <td colspan="3">Sin datos aún</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <p class="small-note" style="margin-top:10px;">
+          Nota: “clientes nuevos” se calcula aquí como primera compra en el rango, porque tu esquema actual no guarda fecha de registro real del cliente.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <script src="/js/adminMetricsClientes.js"></script>
+</body>
+</html>
