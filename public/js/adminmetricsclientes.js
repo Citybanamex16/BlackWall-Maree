@@ -117,7 +117,7 @@ async function cargarMetricas () {
 
   try {
     const params = getQueryParams()
-    const response = await fetch(`/admin/api/metricas-clientes?${params.toString()}`)
+    const response = await fetch(`/royalty/royaltyAdmin/metricsRoyalty/api/royalty?${params.toString()}`)
 
     const result = await response.json()
 
@@ -152,7 +152,7 @@ btnLimpiar.addEventListener('click', async () => {
 
 btnExportar.addEventListener('click', () => {
   const params = getQueryParams()
-  window.open(`/admin/api/metricas-clientes/export?${params.toString()}`, '_blank')
+  window.open(`/royalty/royaltyAdmin/metricsRoyalty/api/royalty/export?${params.toString()}`, '_blank')
 })
 
 window.addEventListener('DOMContentLoaded', async () => {

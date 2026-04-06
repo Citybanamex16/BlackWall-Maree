@@ -21,10 +21,6 @@ exports.getHub = (req, res, next) => {
   res.render('admin/admindashboard', { breadcrumbs })
 }
 
-exports.getRoyalty = (req, res, next) => {
-  res.render('admin/royalty')
-}
-
 exports.getRoyaltyMetrics = (req, res, next) => {
   res.render('admin/metricsRoyalty', {
     pageTitle: 'Métricas de clientes'
@@ -128,7 +124,7 @@ exports.exportRoyaltyMetricsCsv = async (req, res, next) => {
 }
 
 exports.getProductIngredientMetrics = (req, res, next) => {
-  res.render('admin/metricsProducts', {
+  res.render('admin/metricsproducts', {
     pageTitle: 'Métricas de productos e ingredientes'
   })
 }

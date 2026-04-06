@@ -63,10 +63,6 @@ exports.updateRoyalty = async (request, response, next) => {
   }
 }
 
-exports.getRoyaltyMetrics = (req, res, next) => {
-  res.render('/royalty/royaltyAdmin')
-}
-
 // Cliente
 exports.getRoyaltyCli = async (request, response, next) => {
   if (!request.session.isLoggedIn) {
