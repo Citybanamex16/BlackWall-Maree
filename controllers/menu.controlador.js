@@ -338,3 +338,102 @@ exports.postNewProduct = async (req, res, nex) => {
     connection.release() // Siempre liberar la conexión
   }
 }
+
+
+exports.postModifProduct = async (req, res, next) => {
+    console.log("Recibiendo datos: ", req.body);
+    const connection = await pool.getConnection()
+
+    try {
+        const newdata = req.body;
+        const newIngredientesRaw = newdata.ingredientes || []; // Evitamos fallos si viene vacío
+        const oldIngredientesRaw = await productos.fetchOneProductIngredientes(newdata.id);
+
+        // 1. LIMPIEZA DE DATOS: Convertimos los objetos complejos en arrays de IDs simples
+        // newIds quedará como: ['IN37891778', 'IN12345678']
+        const newIds = newIngredientesRaw.map(ing => ing.id);
+        
+        // oldIds quedará como: ['IN37891778']. Ojo: usamos [0] para ignorar la metadata de MySQL
+        const oldIds = oldIngredientesRaw[0].map(ing => ing.id);
+
+        console.log("IDs Nuevos a evaluar: ", newIds);
+        console.log("IDs Viejos en la BD: ", oldIds);
+
+        // 2. EL ALGORITMO DIFERENCIAL (La Magia)
+        // aEliminar: IDs que estaban en la BD (old) pero ya NO vienen en los nuevos.
+        const aEliminar = oldIds.filter(id => !newIds.includes(id));
+
+        // aInsertar: IDs que vienen en los nuevos pero NO estaban en la BD (old).
+        const aInsertar = newIds.filter(id => !oldIds.includes(id));
+
+        console.log("Array a Eliminar: ", aEliminar);
+        console.log("Array a Insertar: ", aInsertar);
+
+        // 3. EJECUCIÓN EN BASE DE DATOS (Con Placeholders)
+          //Setup 
+        await connection.beginTransaction()
+
+          //A. Cambio de datos en el Producto
+          await productos.modifyProduct(connection, newdata.id, newdata.nombre, newdata.Categoria, newdata.precio, newdata.activo, newdata.imagen)
+
+          //B. Eliminacion de ingredientes removidos
+        if (aEliminar.length > 0) {
+            console.log(`Eliminando ${aEliminar.length} relaciones obsoletas...`);
+            // TODO: Placeholder para Modelo
+            for(let ingElim of aEliminar){
+              await productos.eliminateIngProduct(connection,newdata.id, ingElim);
+            }
+            
+        }
+          //C. Insercion de ingredientes nuevos :)
+        if (aInsertar.length > 0) {
+            console.log(`Insertando ${aInsertar.length} relaciones nuevas...`);
+            // TODO: Placeholder para Modelo
+            for(let ingInsert of aInsertar){
+              await productos.insertNewProductIng(connection,newdata.id, ingInsert);
+            }
+            
+        }
+
+        //Fin de llamado ¿Todos lo lograron ?
+       await connection.commit()
+
+        // 4. RESPUESTA AL FRONTEND
+        res.status(200).json({ 
+            ok: true, 
+            message: "Producto e ingredientes modificados correctamente" 
+        });
+
+    } catch (error) {
+        console.log("Error crítico en modificación: ", error);
+        await connection.rollback();
+        res.status(500).json({ 
+            ok: false, 
+            message: "Error al actualizar el producto", 
+            error: error.message 
+        });
+    }
+    finally{
+      if (connection) connection.release();
+    }
+};
+
+
+exports.getIngredientesFullCatalog = async (req, res, next) => {
+  try {
+    console.log('Backend: Obteniendo Catalogo de ingredientes ')
+    const ingredientesCatalog = await productos.getAllIngredientes()
+
+    res.status(200).json({
+      ok: true,
+      message: 'Catalogo de Ingredientes Obtenido',
+      ingCatalog: ingredientesCatalog
+    })
+  } catch (err) {
+    console.log('Error en get Ingredientes: ', err)
+    res.status(500).json({
+      ok: false,
+      message: err
+    })
+  }
+}

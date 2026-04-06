@@ -70,18 +70,6 @@
     </a>
 
 
-
-
-
-
-
-
-
-
-
-
-<!-- Sección de modals-->
-
 <dialog id="TypeFormsCU04" class="mymodal">
   <button class="modal-close-btn" id="closeRegisterX">✕</button>
   <h2 id="tituloModal">Título dinámico</h2>
@@ -94,7 +82,7 @@
 <dialog id="RegisterFormsCU04" class="mymodal">
   <button class="modal-close-btn" id="closeRegisterX">✕</button>
   <h2 id="formsRegistrarTitulo">Título dinámico</h2>
-
+  <h3 id ="idSection"></h3>
   <form id="formsRegistrarForm" novalidate>
     <!-- Campos dinámicos (nombre, precio, etc.) se inyectan aquí -->
 
@@ -117,15 +105,45 @@
   <h2 id="SummaryTitleModal">Título dinámico</h2>
   <p>Revisa los datos antes de registrar</p>
    <hr style="border:none; border-top:1px solid #ebebeb; margin: 12px 0;">
-
     <div id="summaryContent"></div> 
 
-
-   <div class="modal-footer">
+    <div class="modal-footer">
     <button id="cerrarSummaryModal" type="button" class="button is-light">Cerrar</button>
     <button id="RegisterProduct"    type="button" class="button is-primary">Registrar Producto</button>
   </div>
+
 </dialog>
+
+
+<dialog id="modifSummaryCU05" class="mymodal">
+  <button class="modal-close-btn" id="closeRegisterX">✕</button>
+
+  <h2 id="SummaryTitleModif">Título dinámico</h2>
+  <p style="font-size:13px; color:#888; margin-top:2px;">
+    Revisa los cambios antes de confirmar la modificación
+  </p>
+
+  <hr style="border:none; border-top:1px solid #ebebeb; margin: 12px 0;">
+
+  <!-- Cabecera de columnas -->
+  <div class="modif-summary-header">
+    <span class="modif-col-label">Campo</span>
+    <span class="modif-col-old">Original</span>
+    <span class="modif-col-new">Nuevo</span>
+  </div>
+
+  <!-- Filas generadas por JS -->
+  <div id="modifSummaryContent" class="modif-summary-body"></div>
+
+  <hr style="border:none; border-top:1px solid #ebebeb; margin: 12px 0;">
+
+  <div class="modal-footer">
+    <button id="cerrarSummaryModif" type="button" class="button is-light">Regresar</button>
+    <button id="RegisterModification" type="button" class="button is-primary">Registrar Modificación</button>
+  </div>
+
+</dialog>
+ 
 
 
 <!-- Dialogo de ¡EXITO!-->
@@ -134,7 +152,7 @@
     <div class="modal-accent-bar"></div>
     <p id="exitoContent">Contenido Dinámico</p>
     <!-- Botón con ID para manipularlo desde JS -->
-    <button id="closeExito" class="modal-close-btn" class="modal-close-btn">Regresar a Catalogo</button>
+    <button id="closeExito" type="submit" class="modal-close-btn" class="modal-close-btn">Regresar a Catalogo</button>
 </dialog>
 
 
@@ -152,6 +170,7 @@
 
 
 
-<script src="/js/menudigital/adminProducts.js"></script>
+<script src="/js/menudigital/AdminProductsScripts/adminProducts.js"></script>
+<script src="/js/menudigital/AdminProductsScripts/ModifElimProducts.js"></script>
 </body>
 </html>
