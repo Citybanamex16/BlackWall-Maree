@@ -22,6 +22,10 @@ getCatalogoProductos()
 
 /* == Construcción de Catálogo Admin == */
 
+
+//Estructuras de Datos 
+const catalogoProductosMap = new Map()
+
 function construirFichaProductos (datosProducto, datosCategorias) {
   console.log('Repartiendo productos en sus categorías...')
   datosCategorias.forEach(cat => {
@@ -39,6 +43,7 @@ function construirFichaProductos (datosProducto, datosCategorias) {
     }
 
     productosFiltrados.forEach(prod => {
+      catalogoProductosMap.set(String(prod.id), prod) //Guardamos la info en la memoria
       const fichaHTML = renderProductoAdmin(prod)
       gridDestino.insertAdjacentHTML('beforeend', fichaHTML)
     })
@@ -48,13 +53,14 @@ function construirFichaProductos (datosProducto, datosCategorias) {
       const ficha = e.target.closest('.admin-prod-row')
       if (!ficha) return
       const id = ficha.dataset.id
+      const prod = catalogoProductosMap.get(id)
       // TODO: abrir modal de detalle/edición del producto
-      console.log('Producto seleccionado:', id)
+      ConstruirModifModal(prod, datosCategorias)
     })
   })
 }
 
-// ── Render de fila compacta  ──────────────────
+//Render de fila compacta 
 function renderProductoAdmin (prod) {
   const disponibleTag = prod.activo
     ? '<span class="tag is-success is-light">Activo</span>'
@@ -73,7 +79,7 @@ function renderProductoAdmin (prod) {
     </div>`
 }
 
-// ── Sección de categoría  ───────────
+//Sección de categoría 
 function construirCategoria (cat, contenedorMenu) {
   const seccionCat = document.createElement('section')
   seccionCat.className = 'categoria-section mb-4 is-dynamic is-open'
@@ -136,7 +142,7 @@ function construirCategoria (cat, contenedorMenu) {
   return { id: seccionCat.id, nombre: cat.Nombre }
 }
 
-// ── Entry point (igual que el original) ───────────────────
+//Entry point 
 function construirCatalogoAdmin (datos) {
   console.log('Construyendo catálogo admin...')
   const categorias = datos.arrayCategorías[0]
@@ -172,9 +178,12 @@ function construirCatalogoAdmin (datos) {
 
 /* Fin de CU Visualizar Catalogo */
 
+
+
+
+
 /* CU04 Registrar Nuevo Producto */
 // 1. Referencia a Boton
-console.log('Iniciando Setup de CU')
 const registerButton = document.getElementById('registrarNuevoProducto')
 registerButton.addEventListener('click', registerButtonOnClick)
 
@@ -360,7 +369,7 @@ let catalogoIng = [] // se guarda al abrir el modal para reutilizar en cada fila
    HELPERS DE INGREDIENTES
 ══════════════════════════════════════════════════════ */
 
-// Tu función original — crea un <option> para el dropdown
+//función original — crea un <option> para el dropdown
 function createIngElement (ing) {
   console.log('Creando opción de ingrediente...')
   const opt = document.createElement('option')
@@ -388,7 +397,7 @@ function updateIngCounter () {
 }
 
 // Crea una fila completa: dropdown + input cantidad [+ botón ✕ si no es la primera]
-function createIngRow (index, isFirst = false) {
+function createIngRow (index, isFirst = false,mostrarCantidad = true) {
   const row = document.createElement('div')
   row.classList.add('ingredient-row')
   row.dataset.ingIndex = index
@@ -414,7 +423,11 @@ function createIngRow (index, isFirst = false) {
   inputCant.dataset.ingField = 'true'
 
   row.appendChild(selectWrap)
-  row.appendChild(inputCant)
+
+  if (mostrarCantidad){
+    row.appendChild(inputCant)
+  }
+  
 
   // Botón ✕ — solo en filas que no son la primera
   if (!isFirst) {
@@ -438,8 +451,8 @@ function createIngRow (index, isFirst = false) {
   return row
 }
 
-// Construye la sección de ingredientes completa e la inyecta en el form
-function buildIngredientsSection () {
+// Construye la sección de ingredientes completa y la inyecta en el form
+function buildIngredientsSection ({ mostrarCantidad = true } = {}) {
   console.log('BUILDING INGREDIENT SECTION......')
   ingCount = 1
 
@@ -462,7 +475,7 @@ function buildIngredientsSection () {
 
   // Insertar fila 0 (obligatoria, sin ✕)
   const list = section.querySelector('#ingredientsList')
-  list.appendChild(createIngRow(0, true))
+  list.appendChild(createIngRow(0, true,mostrarCantidad))
 
   // Evento del botón agregar
   section.querySelector('#btnAddIngrediente')
@@ -505,7 +518,6 @@ function getIngredientesSeleccionados () {
 function createProductRegisterForms (Fields, Ingredientes, type) {
   // Guardar catálogo para usarlo en cada nueva fila
   console.log('Catalogo de Ingredientes: ', Ingredientes)
-  catalogoIng = Ingredientes
 
   // Limpieza del modal
   limpiarModal(RegisterFormModal)
@@ -519,7 +531,7 @@ function createProductRegisterForms (Fields, Ingredientes, type) {
     RegisterFormEl.appendChild(fieldEl)
   })
   // Construir e inyectar la sección de ingredientes
-  RegisterFormEl.appendChild(buildIngredientsSection())
+  RegisterFormEl.appendChild(buildIngredientsSection({ mostrarCantidad: false }))
 
   /* ══════════════════════════════════════════════════════
    LISTENER SUBMIT
