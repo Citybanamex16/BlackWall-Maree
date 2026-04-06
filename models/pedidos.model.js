@@ -95,13 +95,4 @@ module.exports = class Pedido {
       }
     }
   }
-
-  static async cancelActiveOrder (idOrden) {
-    const query = `
-      UPDATE orden
-      SET Estado_Orden = 'Cancelada'
-      WHERE ID_Orden = ? AND Estado_Orden != 'Cancelada'
-    `
-    return db.execute(query, [idOrden])
-  }
 }
