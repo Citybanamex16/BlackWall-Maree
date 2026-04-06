@@ -28,6 +28,26 @@ class Colaborador {
     return rows[0] || null
   }
 
+  static async existsById (id) {
+    const [rows] = await db.execute(`
+      SELECT ID_Colaborador
+      FROM colaborador
+      WHERE ID_Colaborador = ?
+      LIMIT 1
+    `, [id])
+
+    return rows.length > 0
+  }
+
+  static async create (idColaborador, idRol, nombre, contrasena) {
+    const [result] = await db.execute(`
+      INSERT INTO colaborador (ID_Colaborador, ID_Rol, Nombre, Contraseña)
+      VALUES (?, ?, ?, ?)
+    `, [idColaborador, idRol, nombre, contrasena])
+
+    return result
+  }
+
   static async darDeBaja (id) {
     const connection = await db.getConnection()
 

@@ -32,6 +32,11 @@ appServer.use((req, res, next) => {
   next()
 })
 
+// ESTO Hace que no salga /Ruta fallida por cada foto, no lo borren porfa
+appServer.use('/img/placeholder.webp', (req, res) => {
+  res.redirect('https://placehold.co/400x300/fdf8f2/b5956a?text=Marée')
+})
+
 // Middlewares Globales de enrutamiento, redirects & locals
 appServer.use((req, res, next) => {
   // res.locals es lo que EJS lee por defecto
@@ -76,6 +81,6 @@ appServer.use((err, req, res, next) => {
   res.status(500)
 })
 
-appServer.listen(3000, () => {
-  console.log('Servidor activo en http://localhost:3000')
+appServer.listen(3005, () => {
+  console.log('Servidor activo en http://localhost:3005')
 })

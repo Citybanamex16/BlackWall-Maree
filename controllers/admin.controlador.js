@@ -1,6 +1,10 @@
 // Llamar al model
 const nav = require('../models/breadcrumbs.model.js')
 const Colaborador = require('../models/colaborador.model.js')
+const Ingrediente = require('../models/ingrediente.model.js')
+const MetricasClientes = require('../models/metricasclientes.model.js')
+const MetricasProductos = require('../models/metricasproductos.model.js')
+const bcrypt = require('bcryptjs')
 
 // const path = require('path')
 
@@ -17,8 +21,212 @@ exports.getHub = (req, res, next) => {
   res.render('admin/admindashboard', { breadcrumbs })
 }
 
+exports.getRoyalty = (req, res, next) => {
+  res.render('admin/royalty')
+}
+
+exports.getRoyaltyMetrics = (req, res, next) => {
+  res.render('admin/metricsRoyalty', {
+    pageTitle: 'Métricas de clientes'
+  })
+}
+exports.getRoyaltyMetricsData = async (req, res, next) => {
+  try {
+    const filtros = {
+      fechaInicio: req.query.fechaInicio || '',
+      fechaFin: req.query.fechaFin || '',
+      genero: req.query.genero || '',
+      royalty: req.query.royalty || ''
+    }
+
+    const data = await MetricasClientes.getDashboardData(filtros)
+
+    const hayDatos =
+      Number(data.resumen.clientes_activos) > 0 ||
+      data.topClientes.length > 0 ||
+      data.promociones.length > 0
+
+    if (!hayDatos) {
+      return res.status(200).json({
+        ok: true,
+        sinDatos: true,
+        mensaje: 'No hay información disponible para los filtros seleccionados.',
+        data
+      })
+    }
+
+    return res.status(200).json({
+      ok: true,
+      sinDatos: false,
+      data
+    })
+  } catch (error) {
+    console.error('Error al consultar métricas de clientes:', error)
+    return res.status(500).json({
+      ok: false,
+      mensaje: 'Ocurrió un error al consultar las métricas de clientes.'
+    })
+  }
+}
+
+exports.exportRoyaltyMetricsCsv = async (req, res, next) => {
+  try {
+    const filtros = {
+      fechaInicio: req.query.fechaInicio || '',
+      fechaFin: req.query.fechaFin || '',
+      genero: req.query.genero || '',
+      royalty: req.query.royalty || ''
+    }
+
+    const rows = await MetricasClientes.getCsvData(filtros)
+
+    const encabezados = [
+      'Nombre',
+      'Teléfono',
+      'Género',
+      'Royalty',
+      'Órdenes',
+      'Productos comprados',
+      'Total gastado',
+      'Última compra'
+    ]
+
+    const escapeCsv = (valor) => {
+      if (valor === null || valor === undefined) return '""'
+      return `"${String(valor).replace(/"/g, '""')}"`
+    }
+
+    const lineas = rows.map((row) => {
+      return [
+        row.nombre,
+        row.telefono,
+        row.genero,
+        row.royalty,
+        row.total_ordenes,
+        row.productos_comprados,
+        row.total_gastado,
+        row.ultima_compra
+      ].map(escapeCsv).join(',')
+    })
+
+    const csv = [encabezados.join(','), ...lineas].join('\n')
+
+    res.setHeader('Content-Type', 'text/csv; charset=utf-8')
+    res.setHeader(
+      'Content-Disposition',
+      'attachment; filename="reporte_metricas_clientes.csv"'
+    )
+
+    return res.status(200).send(csv)
+  } catch (error) {
+    console.error('Error al exportar CSV de métricas de clientes:', error)
+    return res.status(500).json({
+      ok: false,
+      mensaje: 'No fue posible generar el reporte.'
+    })
+  }
+}
+
+exports.getProductIngredientMetrics = (req, res, next) => {
+  res.render('admin/metricsProducts', {
+    pageTitle: 'Métricas de productos e ingredientes'
+  })
+}
+
+exports.getProductIngredientMetricsData = async (req, res, next) => {
+  try {
+    const filtros = {
+      fechaInicio: req.query.fechaInicio || '',
+      fechaFin: req.query.fechaFin || '',
+      categoria: req.query.categoria || '',
+      tipo: req.query.tipo || ''
+    }
+
+    const data = await MetricasProductos.getDashboardData(filtros)
+
+    const hayDatos =
+      Number(data.resumen.productos_vendidos) > 0 ||
+      data.topProductosCantidad.length > 0 ||
+      data.topProductosIngresos.length > 0 ||
+      data.ingredientesPopulares.length > 0
+
+    if (!hayDatos) {
+      return res.status(200).json({
+        ok: true,
+        sinDatos: true,
+        mensaje: 'No hay información disponible para los filtros seleccionados.',
+        data
+      })
+    }
+
+    return res.status(200).json({
+      ok: true,
+      sinDatos: false,
+      data
+    })
+  } catch (error) {
+    console.error('Error al consultar métricas de productos e ingredientes:', error)
+    return res.status(500).json({
+      ok: false,
+      mensaje: 'Ocurrió un error al consultar las métricas de productos e ingredientes.'
+    })
+  }
+}
+
+exports.exportProductIngredientMetricsCsv = async (req, res, next) => {
+  try {
+    const filtros = {
+      fechaInicio: req.query.fechaInicio || '',
+      fechaFin: req.query.fechaFin || '',
+      categoria: req.query.categoria || '',
+      tipo: req.query.tipo || ''
+    }
+
+    const rows = await MetricasProductos.getCsvData(filtros)
+
+    const encabezados = [
+      'Producto',
+      'Categoría',
+      'Tipo',
+      'Cantidad vendida',
+      'Ingresos'
+    ]
+
+    const escapeCsv = (valor) => {
+      if (valor === null || valor === undefined) return '""'
+      return `"${String(valor).replace(/"/g, '""')}"`
+    }
+
+    const lineas = rows.map((row) => {
+      return [
+        row.producto,
+        row.categoria,
+        row.tipo,
+        row.total_vendido,
+        row.ingresos
+      ].map(escapeCsv).join(',')
+    })
+
+    const csv = [encabezados.join(','), ...lineas].join('\n')
+
+    res.setHeader('Content-Type', 'text/csv; charset=utf-8')
+    res.setHeader(
+      'Content-Disposition',
+      'attachment; filename="reporte_metricas_productos_ingredientes.csv"'
+    )
+
+    return res.status(200).send(csv)
+  } catch (error) {
+    console.error('Error al exportar CSV de métricas de productos:', error)
+    return res.status(500).json({
+      ok: false,
+      mensaje: 'No fue posible generar el reporte.'
+    })
+  }
+}
+
 exports.getIngredients = (req, res, next) => {
-  res.render('admin/ingredients')
+  res.render('admin/ingredientes')
 }
 
 exports.getProducts = (req, res, next) => {
@@ -196,6 +404,262 @@ exports.cancelActiveOrder = async (req, res, next) => {
     return res.status(500).json({
       ok: false,
       message: 'Ocurrió un error al cancelar la orden.'
+    })
+  }
+}
+
+// GET /admin/ingredientes
+// Renderoza vista de gestion de ingredientes
+exports.getIngredientes = (req, res, next) => {
+  res.render('admin/ingredientes')
+}
+
+// GET /admin/api/ingredientes
+// Regresa lista de ingredientes activos (para llenar la tabla en el front yuhhhh)
+exports.getIngredientesLista = async (req, res, next) => {
+  try {
+    const [ingredientes] = await Ingrediente.fetchAll()
+    res.status(200).json({
+      success: true,
+      message: 'Ingredientes recuperados',
+      data: ingredientes
+    })
+  } catch (error) {
+    console.error('Error en getIngredientesLista:', error)
+    res.status(500).json({
+      success: false,
+      message: 'Error al obtener ingredientes de la BD'
+    })
+  }
+}
+
+// GET /admin/api/ingredientes/categorias
+// Regresa las categorías disponibles para el dropdown del formulario
+exports.getCategorias = async (req, res, next) => {
+  try {
+    const [categorias] = await Ingrediente.getCategorias()
+    res.status(200).json({
+      success: true,
+      message: 'Categorías recuperadas',
+      data: categorias
+    })
+  } catch (error) {
+    console.error('Error en getCategorias:', error)
+    res.status(500).json({
+      success: false,
+      message: 'Error al obtener categorías de la BD'
+    })
+  }
+}
+
+// GET /admin/api/ingredientes/verificarNombre
+// Verifica si ya existe un ingrediente con ese nombre
+exports.verificarNombreIngrediente = async (req, res, next) => {
+  try {
+    const { nombre } = req.query
+    console.log('=== VERIFICAR NOMBRE ===')
+    console.log('Nombre recibido:', nombre)
+
+    if (!nombre || String(nombre).trim() === '') {
+      return res.status(400).json({ success: false, message: 'Nombre requerido' })
+    }
+
+    const [rows] = await Ingrediente.buscarPorNombre(nombre.trim())
+    console.log('Rows encontrados:', rows)
+    console.log('Existe:', rows.length > 0)
+
+    const existe = rows.length > 0
+    res.status(200).json({ success: true, existe })
+  } catch (error) {
+    console.error('Error en verificarNombreIngrediente:', error)
+    res.status(500).json({ success: false, message: 'Error al verificar nombre' })
+  }
+}
+
+// POST /admin/api/ingredientes/validad
+// Valida campos
+exports.validarIngrediente = async (req, res, next) => {
+  try {
+    const resultado = Ingrediente.verificarCamposVacios(req.body)
+
+    if (resultado.camposVacios) {
+      return res.status(200).json({
+        success: true,
+        camposVacios: true,
+        campoFaltante: resultado.campoFaltante
+      })
+    }
+
+    res.status(200).json({ success: true, camposVacios: false })
+  } catch (error) {
+    console.error('Error en validarIngrediente:', error)
+    res.status(500).json({ success: false, message: 'Error al validar ingrediente' })
+  }
+}
+
+// IMPORTANT POST /admin/api/ingredientes/crear
+// Guarda el nuevo ingrediente en la BD
+exports.crearIngrediente = async (req, res, next) => {
+  try {
+    const { Nombre, Precio, Activo, Tipo, Imagen } = req.body
+    const Categoria = req.body['Categoría']
+
+    // Validación de campos obligatorios
+    const resultado = Ingrediente.verificarCamposVacios(req.body)
+    if (resultado.camposVacios) {
+      return res.status(400).json({
+        success: false,
+        message: `Campo requerido faltante: ${resultado.campoFaltante}`
+      })
+    }
+
+    // Verificar que el nombre no exista ya
+    const [existente] = await Ingrediente.buscarPorNombre(Nombre.trim())
+    console.log('Verificar nombre:', Nombre, '→ rows:', existente)
+    if (existente.length > 0) {
+      return res.status(409).json({
+        success: false,
+        message: 'Ya existe un ingrediente con ese nombre'
+      })
+    }
+
+    const nuevoID = Ingrediente.generarID()
+    console.log('Nuevo ID Ingrediente:', nuevoID)
+
+    console.log('Datos a insertar:', { nuevoID, Nombre, Categoria, Precio, Activo, Tipo, Imagen })
+
+    await Ingrediente.insertNuevoIngrediente(
+      nuevoID,
+      Nombre.trim(),
+      Categoria,
+      parseFloat(Precio),
+      Activo !== undefined ? Activo : true,
+      Tipo || null,
+      Imagen || null
+    )
+
+    res.status(200).json({
+      success: true,
+      message: 'Ingrediente registrado exitosamente',
+      registrado: true
+    })
+  } catch (error) {
+    console.error('Error en crearIngrediente:', error)
+    res.status(500).json({
+      success: false,
+      message: 'Error al guardar el ingrediente en la BD'
+    })
+  }
+}
+
+exports.validarIngredienteEliminable = async (req, res, next) => {
+  try {
+    const { id } = req.params
+    if (!id) return res.status(400).json({ success: false, message: 'ID requerido' })
+
+    const [productos] = await Ingrediente.getProductosVinculados(id)
+    res.status(200).json({
+      success: true,
+      vinculado: productos.length > 0,
+      productos: productos.map(p => p.Nombre)
+    })
+  } catch (error) {
+    console.error('Error en validarIngredienteEliminable:', error)
+    res.status(500).json({ success: false, message: 'Error al validar ingrediente' })
+  }
+}
+
+exports.eliminarIngrediente = async (req, res, next) => {
+  try {
+    const { id } = req.params
+    if (!id) return res.status(400).json({ success: false, message: 'ID requerido' })
+
+    await Ingrediente.eliminarIngrediente(id)
+    res.status(200).json({ success: true, message: 'Ingrediente eliminado correctamente' })
+  } catch (error) {
+    console.error('Error en eliminarIngrediente:', error)
+    res.status(500).json({ success: false, message: 'Error al eliminar ingrediente' })
+  }
+}
+
+exports.getNewCollaborator = (req, res, next) => {
+  res.render('admin/newCollaborator', {
+    pageTitle: 'Registrar colaborador',
+    error: null,
+    oldInput: {
+      id_colaborador: '',
+      nombre: '',
+      rol: 'Colaborador'
+    }
+  })
+}
+
+exports.postNewCollaborator = async (req, res, next) => {
+  try {
+    const idColaborador = String(req.body.id_colaborador || '').trim()
+    const nombre = String(req.body.nombre || '').trim()
+    const rol = String(req.body.rol || '').trim()
+    const contrasena = String(req.body.contrasena || '').trim()
+
+    if (!idColaborador || !nombre || !rol || !contrasena) {
+      return res.status(400).render('admin/newCollaborator', {
+        pageTitle: 'Registrar colaborador',
+        error: 'Datos incompletos o incorrectos.',
+        oldInput: {
+          id_colaborador: idColaborador,
+          nombre,
+          rol
+        }
+      })
+    }
+
+    if (rol !== 'Administrador' && rol !== 'Colaborador') {
+      return res.status(400).render('admin/newCollaborator', {
+        pageTitle: 'Registrar colaborador',
+        error: 'Rol inválido.',
+        oldInput: {
+          id_colaborador: idColaborador,
+          nombre,
+          rol: 'Colaborador'
+        }
+      })
+    }
+
+    const yaExiste = await Colaborador.existsById(idColaborador)
+
+    if (yaExiste) {
+      return res.status(400).render('admin/newCollaborator', {
+        pageTitle: 'Registrar colaborador',
+        error: 'Datos previamente registrados.',
+        oldInput: {
+          id_colaborador: idColaborador,
+          nombre,
+          rol
+        }
+      })
+    }
+
+    const contrasenaHasheada = await bcrypt.hash(contrasena, 12)
+
+    await Colaborador.create(
+      idColaborador,
+      rol,
+      nombre,
+      contrasenaHasheada
+    )
+
+    return res.redirect('/admin/colaboradores')
+  } catch (error) {
+    console.log('ERROR EN ALTA DE COLABORADOR:', error)
+
+    return res.status(500).render('admin/newCollaborator', {
+      pageTitle: 'Registrar colaborador',
+      error: 'Error al guardar el colaborador.',
+      oldInput: {
+        id_colaborador: req.body.id_colaborador || '',
+        nombre: req.body.nombre || '',
+        rol: req.body.rol || 'Colaborador'
+      }
     })
   }
 }
