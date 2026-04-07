@@ -1,8 +1,185 @@
+/* global ConstruirModifModal, ModifyProduct */
 // JS FRONTEND de la vista de Productos del Admin
+
+/* CU Visualizar Catalogo de Productos */
+
+async function getCatalogoProductos () {
+  console.log('Obteniendo Catalogo de Productos')
+  try {
+    const response = await fetch('/menu/productosCatalog')
+    if (!response.ok) {
+      ShowErrorModal('Error Interno', 'Error en Obtener Catalogo')
+      throw new Error('Error en Register Button Click')
+    }
+
+    const object = await response.json()
+    console.log('object: ', object)
+    construirCatalogoAdmin(object)
+  } catch (error) {
+    console.log('Error obteniendo Catalogo: '.error)
+  }
+}
+getCatalogoProductos()
+
+/* == Construcción de Catálogo Admin == */
+
+// Estructuras de Datos
+const catalogoProductosMap = new Map()
+
+function construirFichaProductos (datosProducto, datosCategorias) {
+  console.log('Repartiendo productos en sus categorías...')
+  datosCategorias.forEach(cat => {
+    const sectionPrincipal = document.getElementById(cat.id)
+    const gridDestino = sectionPrincipal.querySelector('.grid-productos')
+    const productosFiltrados = datosProducto.filter(prod => prod.categoria === cat.nombre)
+
+    if (productosFiltrados.length === 0) {
+      gridDestino.innerHTML = `
+        <div class="empty-state">
+          <span class="empty-icon">🥐</span>
+          <p>Sin productos en esta categoría por el momento.</p>
+        </div>`
+      return
+    }
+
+    productosFiltrados.forEach(prod => {
+      catalogoProductosMap.set(String(prod.id), prod) // Guardamos la info en la memoria
+      const fichaHTML = renderProductoAdmin(prod)
+      gridDestino.insertAdjacentHTML('beforeend', fichaHTML)
+    })
+
+    // Delegar clicks en todas las fichas de esta categoría
+    gridDestino.addEventListener('click', (e) => {
+      const ficha = e.target.closest('.admin-prod-row')
+      if (!ficha) return
+      const id = ficha.dataset.id
+      const prod = catalogoProductosMap.get(id)
+      // TODO: abrir modal de detalle/edición del producto
+      ConstruirModifModal(prod, datosCategorias)
+    })
+  })
+}
+
+// Render de fila compacta
+function renderProductoAdmin (prod) {
+  const disponibleTag = prod.activo
+    ? '<span class="tag is-success is-light">Activo</span>'
+    : '<span class="tag is-danger is-light">Inactivo</span>'
+
+  const ingredientesTexto = (prod.ingredientes && prod.ingredientes.length)
+    ? prod.ingredientes.map(i => i.nombre ?? i).join(', ')
+    : '—'
+
+  return `
+    <div class="admin-prod-row" data-id="${prod.id}" title="Ver detalle">
+      <span class="prod-nombre">${prod.nombre}</span>
+      <span class="prod-precio">$${prod.precio}</span>
+      <span class="prod-ingredientes">${ingredientesTexto}</span>
+      ${disponibleTag}
+    </div>`
+}
+
+// Sección de categoría
+function construirCategoria (cat, contenedorMenu) {
+  const seccionCat = document.createElement('section')
+  seccionCat.className = 'categoria-section mb-4 is-dynamic is-open'
+  seccionCat.id = `cat-${cat.Nombre.toLowerCase().replace(/\s+/g, '-')}`
+  const idContenedor = `grid-${cat.Nombre.replace(/\s+/g, '-').toLowerCase()}`
+
+  seccionCat.innerHTML = `
+    <div class="cat-header toggle-menu" role="button" tabindex="0" aria-expanded="true">
+      <h2 class="cat-title">${cat.Nombre}</h2>
+      <span class="cat-badge" id="badge-${idContenedor}"></span>
+      <span class="cat-chevron" aria-hidden="true">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+          <path d="M3 6l5 5 5-5" stroke="currentColor" stroke-width="1.8"
+                stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </span>
+    </div>
+    <div id="${idContenedor}" class="grid-productos admin-grid mt-1 grid-collapsible">
+      <!-- Cabecera de columnas -->
+      <div class="admin-prod-header">
+        <span>Nombre</span>
+        <span>Precio</span>
+        <span>Ingredientes</span>
+        <span>Estado</span>
+      </div>
+    </div>`
+
+  const header = seccionCat.querySelector('.cat-header')
+  const grid = seccionCat.querySelector('.grid-productos')
+
+  function toggleGrid () {
+    const open = seccionCat.classList.contains('is-open')
+    if (open) {
+      grid.style.maxHeight = grid.scrollHeight + 'px'
+      grid.style.opacity = '1'
+      /* global requestAnimationFrame */
+      requestAnimationFrame(() => {
+        grid.style.maxHeight = '0'
+        grid.style.opacity = '0'
+      })
+      seccionCat.classList.remove('is-open')
+      header.setAttribute('aria-expanded', 'false')
+    } else {
+      grid.style.maxHeight = grid.scrollHeight + 'px'
+      grid.style.opacity = '1'
+      seccionCat.classList.add('is-open')
+      header.setAttribute('aria-expanded', 'true')
+      grid.addEventListener('transitionend', () => {
+        if (seccionCat.classList.contains('is-open')) grid.style.maxHeight = 'none'
+      }, { once: true })
+    }
+  }
+
+  header.addEventListener('click', toggleGrid)
+  header.addEventListener('keydown', e => {
+    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleGrid() }
+  })
+
+  contenedorMenu.appendChild(seccionCat)
+  return { id: seccionCat.id, nombre: cat.Nombre }
+}
+
+// Entry point
+function construirCatalogoAdmin (datos) {
+  console.log('Construyendo catálogo admin...')
+  const categorias = datos.arrayCategorías[0]
+  const productosInfo = datos.arrayProductsCatalog
+
+  const contenedor = document.getElementById('admin-catalogo')
+  contenedor.innerHTML = ''
+
+  const categoriasInfo = []
+  categorias.forEach(cat => {
+    categoriasInfo.push(construirCategoria(cat, contenedor))
+  })
+
+  construirFichaProductos(productosInfo, categoriasInfo)
+
+  // Stats del encabezado
+  document.getElementById('statTotal').textContent = productosInfo.length
+  document.getElementById('statCategorias').textContent = categorias.length
+  document.getElementById('statDisponibles').textContent =
+    productosInfo.filter(p => p.activo).length
+
+  // Actualizar badge de cada categoría con su conteo
+  categoriasInfo.forEach(cat => {
+    const count = productosInfo.filter(p => p.categoria === cat.nombre).length
+    const badge = document.getElementById(
+      `badge-grid-${cat.nombre.replace(/\s+/g, '-').toLowerCase()}`
+    )
+    if (badge) badge.textContent = count
+  })
+
+  console.log('Catálogo admin construido con éxito')
+}
+
+/* Fin de CU Visualizar Catalogo */
 
 /* CU04 Registrar Nuevo Producto */
 // 1. Referencia a Boton
-console.log('Iniciando Setup de CU')
 const registerButton = document.getElementById('registrarNuevoProducto')
 registerButton.addEventListener('click', registerButtonOnClick)
 
@@ -175,7 +352,7 @@ function createFieldElement (field) {
 const RegisterFormModal = document.getElementById('RegisterFormsCU04')
 const RegisterFormTitle = document.getElementById('formsRegistrarTitulo')
 const RegisterFormClose = document.getElementById('cerrarFormsRegistrar')
-const RegisterFormEl = document.getElementById('formsRegistrarForm')
+const registerForm = document.getElementById('formsRegistrarForm')
 
 /* ══════════════════════════════════════════════════════
    ESTADO DE INGREDIENTES
@@ -188,22 +365,24 @@ let catalogoIng = [] // se guarda al abrir el modal para reutilizar en cada fila
    HELPERS DE INGREDIENTES
 ══════════════════════════════════════════════════════ */
 
-// Tu función original — crea un <option> para el dropdown
+// función original — crea un <option> para el dropdown
 function createIngElement (ing) {
   console.log('Creando opción de ingrediente...')
   const opt = document.createElement('option')
-  opt.value = ing.ID_Insumo
-  opt.textContent = `${ing.Nombre}: $${ing.Precio}`
+  opt.value = ing.id
+  opt.textContent = `${ing.nombre}: $${ing.precio}`
 
   // Atriutos del Boton -> se recuperan con -> .getAttribute('data-nombre')
-  opt.setAttribute('data-nombre', ing.Nombre)
-  opt.setAttribute('data-precio', ing.Precio)
+  opt.setAttribute('data-nombre', ing.nombre)
+  opt.setAttribute('data-precio', ing.precio)
   return opt
 }
 
 // Rellena un <select> vacío usando createIngElement
 function populateDropdown (selectEl) {
+  console.log('Llenando opciones de Ingredientes')
   selectEl.innerHTML = '<option value="">Selecciona un ingrediente</option>'
+  console.log('Ing Catalog: ', catalogoIng)
   catalogoIng.forEach(ing => selectEl.appendChild(createIngElement(ing)))
 }
 
@@ -216,7 +395,7 @@ function updateIngCounter () {
 }
 
 // Crea una fila completa: dropdown + input cantidad [+ botón ✕ si no es la primera]
-function createIngRow (index, isFirst = false) {
+function createIngRow (index, isFirst = false, mostrarCantidad = true) {
   const row = document.createElement('div')
   row.classList.add('ingredient-row')
   row.dataset.ingIndex = index
@@ -226,6 +405,7 @@ function createIngRow (index, isFirst = false) {
   selectWrap.classList.add('select', 'is-fullwidth', 'ing-select-wrap')
   const select = document.createElement('select')
   select.classList.add('ing-dropdown')
+  console.log('index: ', index)
   select.name = `ingrediente_${index}`
   select.dataset.ingField = 'true' // añade data-ing-field="true"
   populateDropdown(select)
@@ -242,7 +422,10 @@ function createIngRow (index, isFirst = false) {
   inputCant.dataset.ingField = 'true'
 
   row.appendChild(selectWrap)
-  row.appendChild(inputCant)
+
+  if (mostrarCantidad) {
+    row.appendChild(inputCant)
+  }
 
   // Botón ✕ — solo en filas que no son la primera
   if (!isFirst) {
@@ -266,8 +449,8 @@ function createIngRow (index, isFirst = false) {
   return row
 }
 
-// Construye la sección de ingredientes completa e la inyecta en el form
-function buildIngredientsSection () {
+// Construye la sección de ingredientes completa y la inyecta en el form
+function buildIngredientsSection ({ mostrarCantidad = true } = {}) {
   console.log('BUILDING INGREDIENT SECTION......')
   ingCount = 1
 
@@ -290,7 +473,7 @@ function buildIngredientsSection () {
 
   // Insertar fila 0 (obligatoria, sin ✕)
   const list = section.querySelector('#ingredientsList')
-  list.appendChild(createIngRow(0, true))
+  list.appendChild(createIngRow(0, true, mostrarCantidad))
 
   // Evento del botón agregar
   section.querySelector('#btnAddIngrediente')
@@ -333,61 +516,82 @@ function getIngredientesSeleccionados () {
 function createProductRegisterForms (Fields, Ingredientes, type) {
   // Guardar catálogo para usarlo en cada nueva fila
   console.log('Catalogo de Ingredientes: ', Ingredientes)
-  catalogoIng = Ingredientes
+  catalogoIng = Ingredientes // Indispensable
 
   // Limpieza del modal
   limpiarModal(RegisterFormModal)
-  limpiarModal(RegisterFormEl)
+  limpiarModal(registerForm)
   RegisterFormTitle.textContent = `Registro de nuevo ${type}`
 
   // Inyectar campos dinámicos (nombre, precio, etc.)
   Fields.forEach((field, index) => {
     const fieldEl = createFieldElement(field)
     fieldEl.style.animationDelay = `${index * 0.05}s`
-    RegisterFormEl.appendChild(fieldEl)
+    registerForm.appendChild(fieldEl)
   })
   // Construir e inyectar la sección de ingredientes
-  RegisterFormEl.appendChild(buildIngredientsSection())
+  registerForm.appendChild(buildIngredientsSection({ mostrarCantidad: false }))
 
-  /* ══════════════════════════════════════════════════════
-   LISTENER SUBMIT
-══════════════════════════════════════════════════════ */
+  SetRegisterButtons('POST', Ingredientes, type)
 
-  RegisterFormEl.addEventListener('submit', (event) => {
+  RegisterFormModal.showModal()
+}
+
+// Setting de Botones
+// 1. Definimos una variable global para el control de eventos
+let formController = new AbortController()
+
+function SetRegisterButtons (tipoAccion, datos1, datos2) {
+  // 2. "Limpiamos" cualquier listener previo cancelando el controlador anterior
+  formController.abort()
+
+  // 3. Creamos uno nuevo para esta nueva configuración
+  formController = new AbortController()
+
+  // 4. Añadimos el listener usando la señal (signal)
+  registerForm.addEventListener('submit', (event) => {
     event.preventDefault()
-    PostNewProduct(Ingredientes, type)
-  }, { once: true })
 
-  /* ══════════════════════════════════════════════════════
-   LISTENER CERRAR
-══════════════════════════════════════════════════════ */
+    if (tipoAccion === 'POST') {
+      PostNewProduct(datos1, datos2)
+    } else if (tipoAccion === 'MODIFY') {
+      ModifyProduct(datos1, datos2)
+    }
+  }, {
+    once: true,
+    signal: formController.signal // <-- Esto permite que abort() lo borre
+  })
+
+  // Listener de cerrar (también con signal para que no se acumulen)
   RegisterFormClose.addEventListener('click', () => {
     RegisterFormModal.close()
-    typeFormsModal.showModal()
-  }, { once: true })
+    if (tipoAccion === 'POST') {
+      typeFormsModal.showModal()
+    }
+  }, { once: true, signal: formController.signal })
 
   RegisterFormModal.showModal()
 }
 
 function PostNewProduct (BackupIngredientes, ProductType) {
   // 1. Validación front
-  if (!RegisterFormEl.checkValidity()) {
-    RegisterFormEl.reportValidity()
+  if (!registerForm.checkValidity()) {
+    registerForm.reportValidity()
     return
   }
 
   // 2. Recolectar campos normales (FormData)
-  const formData = new FormData(RegisterFormEl)
+  const formData = new FormData(registerForm)
   const data = {}
   formData.forEach((value, key) => {
-    const el = RegisterFormEl.querySelector(`[name="${key}"]`)
+    const el = registerForm.querySelector(`[name="${key}"]`)
     // El '?' sirve para comprobar si el existe -> no hacer ifs ilegibles :)
     if (el?.dataset.ingField) return // ← se salta este campo
     data[key] = value === '' ? null : value
   })
 
   // 3. Checkboxes manuales
-  RegisterFormEl.querySelectorAll('input[type="checkbox"]').forEach(cb => {
+  registerForm.querySelectorAll('input[type="checkbox"]').forEach(cb => {
     data[cb.name] = cb.checked
   })
 
@@ -561,6 +765,7 @@ const Successbtn = document.getElementById('closeExito')
 Successbtn.addEventListener('click', (event) => {
   event.preventDefault()
   closeAllModals()
+  window.location.reload() // Fuerza la recarga manualmente
 }, { once: true })
 
 // Funcion validar datos de Formulario
