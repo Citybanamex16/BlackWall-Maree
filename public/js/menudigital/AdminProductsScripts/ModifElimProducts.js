@@ -121,7 +121,6 @@ function precargarIngredientes (ingData) {
   })
 }
 
-
 function ModifyProduct (BackupIngredientes, oldProductData) {
   // 1. Validación front
   if (!ModifForm.checkValidity()) {
@@ -170,7 +169,7 @@ function ModifyProduct (BackupIngredientes, oldProductData) {
       data.ingredientes.push(ing)
     })
 
-    //Agregamos el id
+    // Agregamos el id
 
     data.id = oldProductData.id
 
@@ -188,7 +187,7 @@ function ModifyProduct (BackupIngredientes, oldProductData) {
     if (verifModif.huboCambios) {
       console.log('Cambios Detectados')
       ModifModal.close()
-      ShowModifySummary(formattedNewData, oldProductData, data,verifModif.campos)
+      ShowModifySummary(formattedNewData, oldProductData, data, verifModif.campos)
     } else {
       ShowErrorModal('Cambios No detectados', 'No hubo cambios en el producto')
     }
@@ -197,18 +196,17 @@ function ModifyProduct (BackupIngredientes, oldProductData) {
     ShowErrorModal('Datos inválidos', 'Datos Invalidos en Campos de Formulario, favor de corregir')
   }
 
-  //console.log('Datos de Modificación:', data)
+  // console.log('Datos de Modificación:', data)
 }
 
-/*Crear vista old vs new */
-const modifSummaryModal       = document.getElementById('modifSummaryCU05')
-const modifSummaryFormTitle   = document.getElementById('SummaryTitleModif')
-const modifSummaryCloseBtn    = document.getElementById('cerrarSummaryModif')
+/* Crear vista old vs new */
+const modifSummaryModal = document.getElementById('modifSummaryCU05')
+const modifSummaryFormTitle = document.getElementById('SummaryTitleModif')
+const modifSummaryCloseBtn = document.getElementById('cerrarSummaryModif')
 const modifSummaryRegisterbtn = document.getElementById('RegisterModification')
-const modifSummaryContent     = document.getElementById('modifSummaryContent')
+const modifSummaryContent = document.getElementById('modifSummaryContent')
 
-
-function conectarBotonesSummaryModif(modifiedData) {
+function conectarBotonesSummaryModif (modifiedData) {
   modifSummaryCloseBtn.addEventListener('click', (event) => {
     event.preventDefault()
     modifSummaryModal.close()
@@ -222,7 +220,7 @@ function conectarBotonesSummaryModif(modifiedData) {
 }
 
 // ── Normaliza cualquier valor a string legible para el usuario ──
-function formatearValor(valor) {
+function formatearValor (valor) {
   if (Array.isArray(valor)) {
     // Array de ingredientes [{id, nombre}] → "Bubulubu, Mocha"
     return valor.map(v => v.nombre ?? v).join(', ') || '—'
@@ -235,8 +233,8 @@ function formatearValor(valor) {
 }
 
 // ── Construye una fila de la tabla comparativa ──
-function crearFilaComparativa(key, valorOld, valorNew, huboCambio) {
-  const clase    = huboCambio ? 'con-cambio' : 'sin-cambio'
+function crearFilaComparativa (key, valorOld, valorNew, huboCambio) {
+  const clase = huboCambio ? 'con-cambio' : 'sin-cambio'
   const oldTexto = formatearValor(valorOld)
   const newTexto = formatearValor(valorNew)
 
@@ -248,21 +246,21 @@ function crearFilaComparativa(key, valorOld, valorNew, huboCambio) {
     </div>`
 }
 
-function ShowModifySummary(NewData, oldProductData, PostData, camposModif) {
-  /*console.log('New product Data:', NewData)
+function ShowModifySummary (NewData, oldProductData, PostData, camposModif) {
+  /* console.log('New product Data:', NewData)
   console.log('Old product Data:', oldProductData)
   console.log('Campos diferentes:', camposModif)
   */
 
-  console.log("Construyendo Modal de COmparación")
+  console.log('Construyendo Modal de COmparación')
   // Limpiar filas anteriores
   modifSummaryContent.innerHTML = ''
   modifSummaryFormTitle.textContent = `Modificar ${oldProductData.nombre ?? ''}`
 
   // Iteramos por las keys de oldProductData — tiene todas, incluyendo id
   Object.keys(oldProductData).forEach(key => {
-    const valorOld  = oldProductData[key]
-    const valorNew  = NewData[key]        // undefined si NewData no tiene esa key
+    const valorOld = oldProductData[key]
+    const valorNew = NewData[key] // undefined si NewData no tiene esa key
     const hubocambio = camposModif.includes(key)
 
     // El ID solo se muestra como referencia, sin columna "nuevo"
@@ -282,49 +280,44 @@ function ShowModifySummary(NewData, oldProductData, PostData, camposModif) {
     )
   })
 
-  console.log("Conectar botones y mostrar")
+  console.log('Conectar botones y mostrar')
   // Conectar botones y mostrar
   conectarBotonesSummaryModif(PostData)
-  modifSummaryModal.close(); // 
-  modifSummaryModal.showModal();
-  console.log('¿Está abierto?:', modifSummaryModal.open);
-  console.log('Display actual:', window.getComputedStyle(modifSummaryModal).display);
-  
+  modifSummaryModal.close() //
+  modifSummaryModal.showModal()
+  console.log('¿Está abierto?:', modifSummaryModal.open)
+  console.log('Display actual:', window.getComputedStyle(modifSummaryModal).display)
 }
 
-async function postModifiedProduct(data) {
+async function postModifiedProduct (data) {
   console.log('Sending data to backend:', data)
-  try{
-    const postrequest = await fetch(`/menu/modifProduct/${data.id}`,{
-    method:'PUT',
-    headers:{ 'Content-Type': 'application/json' },
-    body:JSON.stringify(data)
-  })
+  try {
+    const postrequest = await fetch(`/menu/modifProduct/${data.id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    })
     const response = await postrequest.json()
 
-    if(!response.ok){
-      ShowErrorModal("Error Registrar Modificacion","La modificacion no se pudo registrar en la base de datos")
+    if (!response.ok) {
+      ShowErrorModal('Error Registrar Modificacion', 'La modificacion no se pudo registrar en la base de datos')
       return
     }
 
-    //Exito
-    showSuccessModal("Modificaciones Exitosas", "Modificacion en la Base de Datos")
-
-  } catch (error){
+    // Exito
+    showSuccessModal('Modificaciones Exitosas', 'Modificacion en la Base de Datos')
+  } catch (error) {
 
   }
-
-  
 }
 
-
-//Funciones Auxiliares
-function verificarCambiosNormalizados(obj1, obj2) {
-  const llavesAIgnorar = ['id', 'prototype', 'createdat', 'updatedat'];
-  const camposModificados = []; // Array para guardar las llaves diferentes
+// Funciones Auxiliares
+function verificarCambiosNormalizados (obj1, obj2) {
+  const llavesAIgnorar = ['id', 'prototype', 'createdat', 'updatedat']
+  const camposModificados = [] // Array para guardar las llaves diferentes
 
   const obtenerValorNormalizado = (llave, valor) => {
-    if (valor === null || valor === undefined) return '';
+    if (valor === null || valor === undefined) return ''
 
     if (llave.toLowerCase() === 'ingredientes' && Array.isArray(valor)) {
       return JSON.stringify(
@@ -332,32 +325,32 @@ function verificarCambiosNormalizados(obj1, obj2) {
           .filter(ing => ing && (ing.id !== undefined && ing.id !== null))
           .map(ing => String(ing.id))
           .sort()
-      );
+      )
     }
-    return String(valor).trim();
-  };
+    return String(valor).trim()
+  }
 
   const normalizarObjeto = (obj) => {
-    const nuevo = {};
-    if (!obj) return nuevo;
-    Object.keys(obj).forEach(k => nuevo[k.toLowerCase()] = obj[k]);
-    return nuevo;
-  };
+    const nuevo = {}
+    if (!obj) return nuevo
+    Object.keys(obj).forEach(k => nuevo[k.toLowerCase()] = obj[k])
+    return nuevo
+  }
 
-  const plano1 = normalizarObjeto(obj1);
-  const plano2 = normalizarObjeto(obj2);
-  const todasLasLlaves = Array.from(new Set([...Object.keys(plano1), ...Object.keys(plano2)]));
+  const plano1 = normalizarObjeto(obj1)
+  const plano2 = normalizarObjeto(obj2)
+  const todasLasLlaves = Array.from(new Set([...Object.keys(plano1), ...Object.keys(plano2)]))
 
   for (const llave of todasLasLlaves) {
-    if (llavesAIgnorar.includes(llave.toLowerCase())) continue;
+    if (llavesAIgnorar.includes(llave.toLowerCase())) continue
 
-    const val1 = obtenerValorNormalizado(llave, plano1[llave]);
-    const val2 = obtenerValorNormalizado(llave, plano2[llave]);
+    const val1 = obtenerValorNormalizado(llave, plano1[llave])
+    const val2 = obtenerValorNormalizado(llave, plano2[llave])
 
     if (val1 !== val2) {
       // En lugar de salir, guardamos la llave que cambió
-      camposModificados.push(llave);
-      console.log(`%c Diferencia en: ${llave}`, 'color: yellow; background: black;');
+      camposModificados.push(llave)
+      console.log(`%c Diferencia en: ${llave}`, 'color: yellow; background: black;')
     }
   }
 
@@ -366,19 +359,14 @@ function verificarCambiosNormalizados(obj1, obj2) {
     return {
       huboCambios: true,
       campos: camposModificados
-    };
+    }
   }
 
-  ShowErrorModal('Sin cambios', 'No se detectaron modificaciones en el producto.');
+  ShowErrorModal('Sin cambios', 'No se detectaron modificaciones en el producto.')
   return {
     huboCambios: false,
     campos: []
-  };
+  }
 }
-
-
-
-
-
 
 /* Fin de Modificar Platillo existente */

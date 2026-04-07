@@ -1,6 +1,7 @@
 {
   "devDependencies": {
     "husky": "^9.1.7",
+    "lint-staged": "^16.4.0",
     "standard": "^17.1.2"
   },
   "name": "blackwall-maree",
@@ -253,6 +254,9 @@
     "prepare": "husky",
     "santi": "SET USER=maree2& SET HOST=mysql-maree2.alwaysdata.net& SET DB=maree2_2& SET PASSWORD=maree123& node --watch server.js"
   },
+  "lint-staged": {
+    "*.js": "standard --fix"
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/Citybanamex16/BlackWall-Maree.git"
@@ -264,5 +268,10 @@
   "bugs": {
     "url": "https://github.com/Citybanamex16/BlackWall-Maree/issues"
   },
-  "homepage": "https://github.com/Citybanamex16/BlackWall-Maree#readme"
+  "homepage": "https://github.com/Citybanamex16/BlackWall-Maree#readme",
+    "standard": {
+    "env": [ "browser" ]
+  }
+
+
 }

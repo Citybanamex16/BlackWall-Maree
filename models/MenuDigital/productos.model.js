@@ -1,7 +1,6 @@
 const db = require('../../util/database.js')
 
 module.exports = class Producto {
-
   // Obtiene todos los productos y sus ingredientes correspondientes disponibles y no disponibles
   static async getAllProductsInfo () {
     // 1. ejecutamos Consulta
@@ -124,7 +123,7 @@ module.exports = class Producto {
     return result // Este objeto contiene affectedRows e insertId
   }
 
-   static async modifyProduct(connection, id, nombre, categoria, Precio, Disponible, Imagen){
+  static async modifyProduct (connection, id, nombre, categoria, Precio, Disponible, Imagen) {
     const result = await connection.execute(`
     UPDATE producto
     SET 
@@ -133,9 +132,8 @@ module.exports = class Producto {
       Precio = ?,
       Disponible = ?,
       Imagen = ?
-  WHERE ID_Producto = ?;`,[categoria,nombre,Precio,Disponible,Imagen,id])
+  WHERE ID_Producto = ?;`, [categoria, nombre, Precio, Disponible, Imagen, id])
   }
-
 
   static async insertNewProductIng (connection, productId, insumoId) {
     const [result] = await connection.execute(
@@ -144,10 +142,11 @@ module.exports = class Producto {
     return result
   }
 
-  static async eliminateIngProduct(connection,productId, insumoId){
+  static async eliminateIngProduct (connection, productId, insumoId) {
     const [result] = await connection.execute(
       'DELETE FROM producto_tiene_insumo WHERE ID_Producto = ? AND ID_Insumo = ?'
-      ,[productId, insumoId])
+      , [productId, insumoId])
+    return result
   }
 
   static ValidarDatosRegistro (data) {
@@ -183,18 +182,11 @@ module.exports = class Producto {
 
   /* Modificar Un producto */
 
-  static async fecthOneProduct(id){
+  static async fecthOneProduct (id) {
     return db.execute('SELECT * FROM PRODUCTO WHERE ID_Producto = ?', [id])
-
   }
 
-  static async fetchOneProductIngredientes(id){
+  static async fetchOneProductIngredientes (id) {
     return db.execute('SELECT ID_Insumo as id FROM producto_tiene_insumo WHERE ID_Producto = ?', [id])
-
   }
-
-
 }
-
-
-
