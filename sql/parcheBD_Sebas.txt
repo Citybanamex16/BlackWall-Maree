@@ -1,0 +1,70 @@
+-- Para la BD se tiene que agregar la tabla estado_royalty_da_eventos, peguen estas lineas de código
+-- en su phpAdmin y corranlo.
+
+CREATE TABLE IF NOT EXISTS `estado_royalty_da_eventos` (
+  `Nombre_Royalty` varchar(50) NOT NULL,
+  `ID_Evento` varchar(20) NOT NULL,
+  PRIMARY KEY (`Nombre_Royalty`, `ID_Evento`),
+  CONSTRAINT `fk_royalty_nombre` FOREIGN KEY (`Nombre_Royalty`) REFERENCES `estado_royalty` (`Nombre_Royalty`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `fk_evento_id` FOREIGN KEY (`ID_Evento`) REFERENCES `evento` (`ID_Evento`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish2_ci;
+
+INSERT INTO `estado_royalty_da_eventos` (`Nombre_Royalty`, `ID_Evento`) VALUES
+('Fan', 'EV23858748'),
+('Mega Fan', 'EV41575412'),
+('Super Fan', 'EV63596263');
+
+
+-- Aparte de esto cree estas Stored Procedures como parte de mi laboratorio 23, las uso en las funcionalidades de Royalty
+-- Por lo que les pido agregarlas también a sus BD.
+
+-- Consultar Estado de cliente:
+DELIMITER //
+
+CREATE PROCEDURE sp_EstadoCliente (
+    IN p_telefono VARCHAR(20)
+)
+BEGIN
+    SELECT 
+        c.Nombre, 
+        c.Numero_Telefonico AS telefono, 
+        c.Nombre_Royalty AS nivel, 
+        c.Visitas_Actuales AS visitas
+    FROM cliente c
+    WHERE c.Numero_Telefonico = p_telefono;
+END //
+
+DELIMITER ;
+
+-- Consultar Promociones por nivel de Royalty
+DELIMITER //
+CREATE PROCEDURE sp_fetchPromociones(
+    IN p_Nombre_Royalty VARCHAR(50)
+)
+BEGIN
+SELECT P.Nombre, P.Descuento, P.Fecha_inicio, P.Fecha_final, E.Nombre_Royalty
+            FROM estado_royalty E JOIN estado_royalty_da_promociones EP ON E.Nombre_Royalty = EP.Nombre_Royalty 
+            JOIN promocion P ON P.ID_Promocion = EP.ID_Promocion 
+            WHERE E.Número_de_prioridad <= (
+            SELECT Número_de_prioridad FROM estado_royalty WHERE Nombre_Royalty = p_Nombre_Royalty)
+            ORDER BY E.Número_de_prioridad DESC;
+END //
+
+DELIMITER ;     
+
+-- Consultar Eventos por nivel de Royalty
+DELIMITER //
+CREATE PROCEDURE sp_fetchEventos(
+    IN p_Nombre_Royalty VARCHAR(50)
+)
+BEGIN
+SELECT E.Nombre AS Nombre_Evento, E.Fecha_Inicio, E.Fecha_final, E.Descripcion, ER.Nombre_Royalty
+        FROM evento E
+        INNER JOIN estado_royalty_da_eventos RE ON e.ID_Evento = RE.ID_Evento
+        INNER JOIN estado_royalty ER ON ER.Nombre_Royalty = RE.Nombre_Royalty
+        WHERE ER.Número_de_prioridad <= (
+        SELECT Número_de_prioridad FROM estado_royalty WHERE Nombre_Royalty = p_Nombre_Royalty)
+        ORDER BY ER.Número_de_prioridad DESC;
+END //
+
+DELIMITER ;  

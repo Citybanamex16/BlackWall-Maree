@@ -4,9 +4,9 @@ document.addEventListener('DOMContentLoaded', () => {
   botones.forEach((boton) => {
     boton.addEventListener('click', async () => {
       const id = boton.dataset.id
-      // const nombre = boton.dataset.nombre
-      // eslint-disable-next-line no-alert
-      const confirmado = true
+      const nombre = boton.dataset.nombre
+
+      const confirmado = window.confirm(`¿Seguro que deseas dar de baja a ${nombre}?`)
 
       if (!confirmado) {
         return
