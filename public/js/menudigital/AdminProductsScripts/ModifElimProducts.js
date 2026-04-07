@@ -23,14 +23,15 @@ async function getAllIngredientesCatalog () {
 const ModifModal = document.getElementById('RegisterFormsCU04')
 const ModifForm = document.getElementById('formsRegistrarForm')
 const ModifTitle = document.getElementById('formsRegistrarTitulo')
-document.getElementById('cerrarFormsRegistrar').addEventListener((event) => {
+document.getElementById('cerrarFormsRegistrar').addEventListener("click",(event) => {
   event.preventDefault()
   ModifModal.close()
 })
-const ModifIdSection = document.getElementById('idSection')
 
 async function ConstruirModifModal (productData, AllCategorys) {
   console.log('¡Hola desde otro Script!')
+  const ModifIdSection = document.getElementById('idSection')
+
 
   const ingData = productData.ingredientes
   console.log('Ingrediente data: ', ingData)
