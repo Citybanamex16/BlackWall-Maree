@@ -3,123 +3,538 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Events - Admin Marée</title>
+    <title>Events - Admin Maree</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@1.0.4/css/bulma.min.css">
     <link rel="stylesheet" href="/css/adminstyle.css">
+    <style>
+        :root {
+            --event-cream: #f8f2ea;
+            --event-sand: #e9dac7;
+            --event-cocoa: #4a3426;
+            --event-copy: #70584a;
+            --event-accent: #c6674d;
+            --event-accent-deep: #a64e39;
+            --event-sage: #8aa57a;
+            --event-sage-soft: #edf5e8;
+            --event-line: #eadbca;
+        }
+
+        body {
+            background: linear-gradient(180deg, #fffdfa 0%, #f7efe6 100%);
+        }
+
+        .events-shell {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            gap: 24px;
+            flex-wrap: wrap;
+            margin-bottom: 28px;
+        }
+
+        .events-kicker,
+        .event-kicker {
+            display: inline-block;
+            padding: 8px 14px;
+            border-radius: 999px;
+            background: rgba(198, 103, 77, 0.12);
+            color: var(--event-accent-deep);
+            font-size: 12px;
+            font-weight: 700;
+            letter-spacing: 1.4px;
+            text-transform: uppercase;
+        }
+
+        .events-copy,
+        .event-help-copy {
+            max-width: 700px;
+            margin-top: 14px;
+            color: var(--event-copy);
+            font-size: 15px;
+            line-height: 1.8;
+        }
+
+        .events-toolbar {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .event-primary-button {
+            background: linear-gradient(135deg, var(--event-accent) 0%, var(--event-accent-deep) 100%) !important;
+            border: none !important;
+            color: #fff !important;
+            box-shadow: 0 18px 32px rgba(166, 78, 57, 0.2);
+        }
+
+        .event-primary-button:hover,
+        .event-primary-button:focus {
+            background: linear-gradient(135deg, #bc5c43 0%, #954430 100%) !important;
+            color: #fff !important;
+        }
+
+        .button.event-ghost {
+            border-color: var(--event-line);
+            color: var(--event-copy);
+            background: #fff;
+        }
+
+        .button.event-ghost:hover,
+        .button.event-ghost:focus {
+            border-color: var(--event-accent);
+            color: var(--event-accent-deep);
+            background: #fff7f3;
+        }
+
+        .button.event-danger {
+            background: #b85f4c;
+            border-color: #b85f4c;
+            color: #fff;
+        }
+
+        .button.event-danger:hover,
+        .button.event-danger:focus {
+            background: #a15141;
+            border-color: #a15141;
+            color: #fff;
+        }
+
+        .event-card {
+            border: 1px solid var(--event-line);
+            border-radius: 24px;
+            overflow: hidden;
+            background: linear-gradient(180deg, #ffffff 0%, #fff9f4 100%);
+            box-shadow: 0 20px 38px rgba(88, 56, 36, 0.09);
+            height: 100%;
+        }
+
+        .event-card.is-inactive {
+            opacity: 0.85;
+        }
+
+        .event-card .card-content {
+            padding: 28px;
+        }
+
+        .event-card .title {
+            font-size: 32px !important;
+            margin-bottom: 10px !important;
+        }
+
+        .event-card-head {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 16px;
+            margin-bottom: 18px;
+        }
+
+        .event-card-label {
+            font-size: 11px;
+            letter-spacing: 1.4px;
+            text-transform: uppercase;
+            color: #8d725d;
+        }
+
+        .event-status-pill {
+            display: inline-flex;
+            align-items: center;
+            border-radius: 999px;
+            padding: 8px 12px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .event-status-pill.is-active {
+            background: var(--event-sage-soft);
+            color: #58704a;
+        }
+
+        .event-status-pill.is-inactive {
+            background: #f8ebe5;
+            color: #9b6256;
+        }
+
+        .event-description {
+            min-height: 96px;
+            color: var(--event-cocoa);
+            line-height: 1.8;
+        }
+
+        .event-badges {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 18px;
+        }
+
+        .event-chip {
+            display: inline-flex;
+            align-items: center;
+            border-radius: 999px;
+            padding: 8px 12px;
+            background: #f4e3d4;
+            color: var(--event-accent-deep);
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        .event-chip.secondary {
+            background: #edf3e7;
+            color: #59724c;
+        }
+
+        .event-date-tag {
+            display: inline-flex;
+            align-items: center;
+            padding: 8px 14px;
+            border-radius: 999px;
+            border: 1px solid var(--event-line);
+            background: #fff;
+            color: var(--event-copy);
+            font-size: 13px;
+        }
+
+        .event-card-footer {
+            border-top: 1px solid var(--event-line);
+        }
+
+        .event-footer-button {
+            border: none;
+            background: transparent;
+            color: var(--event-accent-deep);
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.2s ease, color 0.2s ease;
+        }
+
+        .event-footer-button:hover {
+            background: #fff2ea;
+        }
+
+        .event-footer-button.is-danger-text {
+            color: #b85f4c;
+        }
+
+        .event-footer-button.is-disabled,
+        .event-footer-button:disabled {
+            color: #bea08a;
+            cursor: not-allowed;
+            background: #faf3ed;
+        }
+
+        .event-help-box,
+        .event-modal-box {
+            border: 1px solid var(--event-line);
+            border-radius: 26px !important;
+            background: linear-gradient(180deg, #fffdf9 0%, #f8efe4 100%);
+            box-shadow: 0 24px 50px rgba(78, 54, 28, 0.08);
+            color-scheme: light;
+        }
+
+        .event-help-title {
+            font-size: 16px;
+            font-weight: 700;
+            letter-spacing: 0.8px;
+            text-transform: uppercase;
+            color: var(--event-accent-deep);
+        }
+
+        .event-modal-box .title {
+            font-size: 38px !important;
+        }
+
+        .events-form-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 18px;
+        }
+
+        .events-form-grid .field.is-full {
+            grid-column: 1 / -1;
+        }
+
+        .input,
+        .textarea {
+            border-color: var(--event-line);
+            background-color: #fff8f2;
+            color: var(--event-cocoa);
+            box-shadow: none;
+        }
+
+        .input::placeholder,
+        .textarea::placeholder {
+            color: #9d7d65;
+        }
+
+        .input[type="date"] {
+            color-scheme: light;
+        }
+
+        .input[type="date"]::-webkit-calendar-picker-indicator {
+            opacity: 0.85;
+            cursor: pointer;
+        }
+
+        .input:focus,
+        .textarea:focus {
+            border-color: var(--event-accent);
+            box-shadow: 0 0 0 0.125em rgba(198, 103, 77, 0.18);
+        }
+
+        .label,
+        .event-checkbox {
+            color: var(--event-cocoa);
+        }
+
+        .event-checkbox {
+            font-weight: 500;
+        }
+
+        .helper-note {
+            color: #8a735e;
+            font-size: 12px;
+            line-height: 1.6;
+            margin-top: 6px;
+        }
+
+        .event-selection-box {
+            min-height: 180px;
+            max-height: 240px;
+            overflow-y: auto;
+            border: 1px dashed var(--event-line);
+            border-radius: 18px;
+            padding: 14px;
+            background: #fffdfa;
+        }
+
+        .event-selection-box.event-box-error {
+            border-color: #b85f4c;
+            background: #fff5f1;
+        }
+
+        .event-option {
+            display: block;
+            padding: 8px 0;
+            color: var(--event-copy);
+        }
+
+        .event-selected-summary {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            min-height: 42px;
+        }
+
+        .modal-background {
+            background: rgba(74, 52, 38, 0.5);
+        }
+
+        .is-centered-copy {
+            margin-inline: auto;
+        }
+
+        @media (max-width: 768px) {
+            .events-form-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .event-card .title,
+            .event-modal-box .title {
+                font-size: 30px !important;
+            }
+
+            .events-toolbar {
+                width: 100%;
+                justify-content: space-between;
+            }
+        }
+    </style>
 </head>
 <body>
     <section class="section">
         <div class="container">
-            <h1 class="title">Catálogo de Eventos</h1>
-            <div class="level-right">
-                <div id="loading-spinner" class="button is-loading is-ghost is-hidden"></div>
+            <div class="events-shell">
+                <div>
+                    <span class="events-kicker">Eventos, promociones y catalogo</span>
+                    <h1 class="title">Catalogo de Eventos</h1>
+                    <p class="events-copy">
+                        Administra eventos vigentes, sus fechas, estado y los productos o promociones
+                        que participan en cada experiencia de Maree.
+                    </p>
+                </div>
+                <div class="events-toolbar">
+                    <a href="/admin" class="button event-ghost is-medium" type="button">
+                        Volver al dashboard
+                    </a>
+                    <div id="loading-spinner" class="button is-loading is-ghost is-hidden"></div>
+                    <button id="btn-nuevo-evento" class="button event-primary-button is-rounded is-medium" type="button">
+                        Nuevo evento
+                    </button>
+                </div>
             </div>
-            <div id="contenedor-eventos" class="columns is-multiline">
+
+            <div id="contenedor-eventos" class="columns is-multiline"></div>
         </div>
     </section>
-    <section class="section">
-  <div class="container">
-    <div class="level">
-      <div class="level-left">
-        <div class="level-item">
-          <h1 class="title">Gestión de Eventos</h1>
-        </div>
-      </div>
 
-      <div class="level-right">
-        <div class="level-item">
-          <button class="button is-primary is-rounded" id="btn-registrar-evento" onclick="cargarYMostrarModal()">
-            <span class="icon">
-              <i class="fas fa-plus"></i>
-            </span>
-            <span>Nuevo Evento</span>
-          </button>
+    <section class="section pt-0">
+        <div class="container">
+            <div class="box event-help-box">
+                <p class="event-help-title">Gestion de Eventos</p>
+                <p class="event-help-copy">
+                    Las altas y modificaciones validan vigencia y al menos una relacion activa con promociones
+                    o productos. Tambien puedes desactivar un evento sin perder su historial o eliminarlo
+                    por completo cuando ya no sea necesario.
+                </p>
+            </div>
         </div>
-      </div>
+    </section>
+
+    <div class="modal" id="modal-evento">
+        <div class="modal-background" data-close-modal="modal-evento"></div>
+        <div class="modal-content">
+            <div class="box event-modal-box">
+                <form id="form-evento" novalidate>
+                    <input type="hidden" id="id_evento">
+
+                    <div class="events-form-grid">
+                        <div class="field is-full">
+                            <span class="event-kicker" id="kicker-modal-evento">Registro administrativo</span>
+                            <h3 class="title is-4 mt-4" id="titulo-modal-evento">Registrar Nuevo Evento</h3>
+                            <p class="helper-note" id="descripcion-modal-evento">
+                                Captura el evento, define su vigencia y selecciona las promociones o productos vinculados.
+                            </p>
+                        </div>
+
+                        <div class="field">
+                            <label class="label" for="nombre">Nombre</label>
+                            <div class="control">
+                                <input id="nombre" class="input" type="text" maxlength="100" placeholder="Ej. Noche de Crepas">
+                            </div>
+                        </div>
+
+                        <div class="field">
+                            <label class="label">Estado</label>
+                            <label class="checkbox event-checkbox">
+                                <input type="checkbox" id="activo" checked>
+                                Evento activo en catalogo
+                            </label>
+                        </div>
+
+                        <div class="field is-full">
+                            <label class="label" for="descripcion">Descripcion</label>
+                            <div class="control">
+                                <textarea id="descripcion" class="textarea" rows="3" placeholder="Describe el concepto del evento, sus reglas o el contexto general."></textarea>
+                            </div>
+                        </div>
+
+                        <div class="field">
+                            <label class="label" for="fechaInicio">Fecha de Inicio</label>
+                            <div class="control">
+                                <input id="fechaInicio" class="input" type="date">
+                            </div>
+                        </div>
+
+                        <div class="field">
+                            <label class="label" for="fechaFin">Fecha de Fin</label>
+                            <div class="control">
+                                <input id="fechaFin" class="input" type="date">
+                            </div>
+                        </div>
+
+                        <div class="field is-full">
+                            <label class="label">Promociones vinculadas</label>
+                            <div id="lista-promociones" class="event-selection-box">
+                                <p class="has-text-grey">Cargando catalogo...</p>
+                            </div>
+                            <p class="helper-note">
+                                Puedes ligar una o varias promociones activas o historicas al evento.
+                            </p>
+                        </div>
+
+                        <div class="field is-full">
+                            <label class="label">Resumen de promociones</label>
+                            <div id="resumen-promociones" class="event-selected-summary">
+                                <span class="event-chip">Sin promociones seleccionadas</span>
+                            </div>
+                        </div>
+
+                        <div class="field is-full">
+                            <label class="label">Productos vinculados</label>
+                            <div id="lista-productos" class="event-selection-box">
+                                <p class="has-text-grey">Cargando catalogo...</p>
+                            </div>
+                            <p class="helper-note">
+                                Agrega los productos especiales o afectados por el evento.
+                            </p>
+                        </div>
+
+                        <div class="field is-full">
+                            <label class="label">Resumen de productos</label>
+                            <div id="resumen-productos" class="event-selected-summary">
+                                <span class="event-chip secondary">Sin productos seleccionados</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="buttons is-right mt-5">
+                        <button type="button" class="button event-ghost" data-close-modal="modal-evento">Cancelar</button>
+                        <button type="submit" class="button event-primary-button" id="boton-guardar-evento">Guardar evento</button>
+                    </div>
+                </form>
+            </div>
+        </div>
     </div>
 
-    <hr>
-
-    <div id="contenedor-eventos">
-        </div>
-  </div>
-</section>
-
-<div class="modal" id="modal-evento">
-  <div class="modal-background" onclick="cerrarModal()"></div>
-  <div class="modal-content">
-    <div class="box">
-      <h3 class="title is-4">Registrar Nuevo Evento</h3>
-      
-      <form id="form-evento">
-        <div class="field">
-          <label class="label">Nombre del Evento</label>
-          <div class="control">
-            <input class="input" type="text" id="nombre" placeholder="Ej. Noche de Crepas">
-          </div>
-        </div>
-
-        <div class="field">
-          <label class="label">Descripción</label>
-          <div class="control">
-            <input class="input" type="text" id="descripcion" placeholder="Ej. Disfruta de una deliciosa noche de crepas, donde tendremos promociones en platillos y una crepa única que solo se podra
-            pedir en este evento.">
-          </div>
-        </div>
-
-        <div class="columns">
-          <div class="column">
-            <div class="field">
-              <label class="label">Fecha Inicio</label>
-              <div class="control">
-                <input class="input" type="date" id="fechaInicio">
-              </div>
+    <div id="modal-resultado" class="modal">
+        <div class="modal-background" data-close-modal="modal-resultado"></div>
+        <div class="modal-content">
+            <div class="box event-modal-box has-text-centered">
+                <span class="event-kicker" id="kicker-modal-resultado">Actualizacion de eventos</span>
+                <h3 class="title is-4 mt-4" id="titulo-modal-resultado">Operacion completada</h3>
+                <p id="mensaje-modal-resultado" class="events-copy is-centered-copy">
+                    El evento se proceso correctamente.
+                </p>
+                <button class="button event-primary-button mt-5" type="button" id="boton-modal-resultado">Continuar</button>
             </div>
-          </div>
-          <div class="column">
-            <div class="field">
-              <label class="label">Fecha Fin</label>
-              <div class="control">
-                <input class="input" type="date" id="fechaFin">
-              </div>
-            </div>
-          </div>
         </div>
-
-        <div class="field">
-          <label class="label">Promociones (Selección múltiple)</label>
-          <div class="control">
-            <div class="select is-multiple is-fullwidth">
-              <select id="promociones" multiple size="3">
-                </select>
-            </div>
-          </div>
-        </div>
-
-        <div class="field">
-          <label class="label">Productos que afecta</label>
-          <div class="control">
-            <div class="select is-multiple is-fullwidth">
-              <select id="productos" multiple size="4">
-                </select>
-            </div>
-          </div>
-        </div>
-
-        <div class="field is-grouped is-grouped-right">
-          <p class="control">
-            <button type="button" class="button is-light" onclick="cerrarModal()">Cancelar</button>
-          </p>
-          <p class="control">
-            <button type="button" class="button is-primary" onclick="guardarEvento()">Guardar Evento</button>
-          </p>
-        </div>
-      </form>
     </div>
-  </div>
-  <button class="modal-close is-large" aria-label="close" onclick="cerrarModal()"></button>
-</div>
 
-<script src="/js/promos_eventos/eventos.js"></script>
+    <div id="modal-confirmar-desactivacion" class="modal">
+        <div class="modal-background" data-close-modal="modal-confirmar-desactivacion"></div>
+        <div class="modal-content">
+            <div class="box event-modal-box">
+                <span class="event-kicker">Estado de eventos</span>
+                <h3 class="title is-4 mt-4" id="titulo-confirmar-estado-evento">Cambiar estado de evento</h3>
+                <p id="mensaje-confirmar-desactivar" class="events-copy">
+                    Deseas desactivar este evento? Permanecera registrado, pero dejara de mostrarse como activo.
+                </p>
+                <div class="buttons is-right mt-5">
+                    <button type="button" class="button event-ghost" data-close-modal="modal-confirmar-desactivacion">Cancelar</button>
+                    <button type="button" class="button event-primary-button" id="boton-confirmar-desactivar">Confirmar cambio</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="modal-confirmar-eliminacion" class="modal">
+        <div class="modal-background" data-close-modal="modal-confirmar-eliminacion"></div>
+        <div class="modal-content">
+            <div class="box event-modal-box">
+                <span class="event-kicker">Eliminacion de eventos</span>
+                <h3 class="title is-4 mt-4">Eliminar evento</h3>
+                <p id="mensaje-confirmar-eliminar" class="events-copy">
+                    Deseas eliminar este evento? Esta accion no se puede deshacer.
+                </p>
+                <div class="buttons is-right mt-5">
+                    <button type="button" class="button event-ghost" data-close-modal="modal-confirmar-eliminacion">Cancelar</button>
+                    <button type="button" class="button event-danger" id="boton-confirmar-eliminar">Eliminar evento</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/js/promos_eventos/eventos.js"></script>
 </body>
 </html>
