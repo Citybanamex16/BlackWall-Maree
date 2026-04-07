@@ -1,3 +1,4 @@
+/* global ConstruirModifModal, ModifyProduct */
 // JS FRONTEND de la vista de Productos del Admin
 
 /* CU Visualizar Catalogo de Productos */

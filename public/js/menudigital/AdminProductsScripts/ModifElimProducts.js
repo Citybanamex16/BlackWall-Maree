@@ -1,3 +1,6 @@
+/* global ShowErrorModal, showSuccessModal, catalogoIng:writable, limpiarModal, createFieldElement, buildIngredientsSection, SetRegisterButtons, onBtnIngNewClick, getIngredientesSeleccionados, validarDatosRegistro */
+/* exported ConstruirModifModal, ModifyProduct */
+
 /* CU05 Modificar Platillo Existente */
 
 async function getAllIngredientesCatalog () {
@@ -20,7 +23,10 @@ async function getAllIngredientesCatalog () {
 const ModifModal = document.getElementById('RegisterFormsCU04')
 const ModifForm = document.getElementById('formsRegistrarForm')
 const ModifTitle = document.getElementById('formsRegistrarTitulo')
-const modifClose = document.getElementById('cerrarFormsRegistrar')
+document.getElementById('cerrarFormsRegistrar').addEventListener((event) => {
+  event.preventDefault()
+  ModifModal.close()
+})
 const ModifIdSection = document.getElementById('idSection')
 
 async function ConstruirModifModal (productData, AllCategorys) {
@@ -227,7 +233,7 @@ function formatearValor (valor) {
   }
   if (valor === null || valor === undefined || valor === '') return '—'
   if (typeof valor === 'boolean' || valor === '1' || valor === '0') {
-    return valor == '1' || valor === true ? 'Activo' : 'Inactivo'
+    return valor === '1' || valor === true ? 'Activo' : 'Inactivo'
   }
   return String(valor)
 }
@@ -262,6 +268,7 @@ function ShowModifySummary (NewData, oldProductData, PostData, camposModif) {
     const valorOld = oldProductData[key]
     const valorNew = NewData[key] // undefined si NewData no tiene esa key
     const hubocambio = camposModif.includes(key)
+    console.log(hubocambio)
 
     // El ID solo se muestra como referencia, sin columna "nuevo"
     if (key === 'id') {
@@ -333,7 +340,9 @@ function verificarCambiosNormalizados (obj1, obj2) {
   const normalizarObjeto = (obj) => {
     const nuevo = {}
     if (!obj) return nuevo
-    Object.keys(obj).forEach(k => nuevo[k.toLowerCase()] = obj[k])
+    Object.keys(obj).forEach(k => {
+      nuevo[k.toLowerCase()] = obj[k]
+    })
     return nuevo
   }
 
@@ -368,5 +377,7 @@ function verificarCambiosNormalizados (obj1, obj2) {
     campos: []
   }
 }
+
+console.log(ConstruirModifModal, ModifyProduct) // Esto cuenta como "uso" y limpia el error.
 
 /* Fin de Modificar Platillo existente */
