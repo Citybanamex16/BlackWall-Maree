@@ -373,8 +373,8 @@ exports.postModifProduct = async (req, res, next) => {
     await connection.beginTransaction()
 
     // A. Cambio de datos en el Producto
-    await productos.modifyProduct(connection, newdata.id, newdata.nombre, newdata.Categoria, newdata.precio, newdata.activo, newdata.imagen)
-
+    const modifyResult = await productos.modifyProduct(connection, newdata.id, newdata.nombre, newdata.Categoria, newdata.precio, newdata.activo, newdata.imagen)
+    console.log(modifyResult)
     // B. Eliminacion de ingredientes removidos
     if (aEliminar.length > 0) {
       console.log(`Eliminando ${aEliminar.length} relaciones obsoletas...`)

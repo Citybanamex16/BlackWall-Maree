@@ -133,6 +133,7 @@ module.exports = class Producto {
       Disponible = ?,
       Imagen = ?
   WHERE ID_Producto = ?;`, [categoria, nombre, Precio, Disponible, Imagen, id])
+    return result
   }
 
   static async insertNewProductIng (connection, productId, insumoId) {
