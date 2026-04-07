@@ -62,7 +62,6 @@ module.exports = class Ingrediente {
 
   // Elimina de producto_tiene_insumo y luego de insumo
   static async eliminarIngrediente (idInsumo) {
-    await db.execute('DELETE FROM producto_tiene_insumo WHERE ID_Insumo = ?', [idInsumo])
-    return db.execute('DELETE FROM insumo WHERE ID_Insumo = ?', [idInsumo])
+    return db.execute('CALL EliminarIngrediente(?)', [idInsumo])
   }
 }
