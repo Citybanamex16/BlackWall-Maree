@@ -13,8 +13,13 @@ router.post('/pedidos/confirmar', menuControlador.confirmarPedido)
 
 // Rutas Admin
 router.get('/productos', menuControlador.getProducts)
+router.get('/productosCatalog', menuControlador.getProductsCatalog)
 router.get('/formsTipoPlatillo', menuControlador.getTypes)
 router.get('/formsRegistraPlatillo', menuControlador.getProductfieldsAndIngredientes)
 router.post('/registerNewProduct', menuControlador.postNewProduct)
+router.put('/modifProduct/:id', menuControlador.postModifProduct) // ¡ Ese es PUT !
+
+// Rutas Global: Rutas utilizadas por cualquier CU, devuelven información general
+router.get('/globalAdminIngredientes', menuControlador.getIngredientesFullCatalog)
 
 module.exports = router
