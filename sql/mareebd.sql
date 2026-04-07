@@ -6,7 +6,6 @@
 -- Tiempo de generación: 30-03-2026 a las 21:41:50
 -- Versión del servidor: 10.4.32-MariaDB
 -- Versión de PHP: 8.2.12
-
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 START TRANSACTION;
 SET time_zone = "+00:00";
@@ -407,6 +406,26 @@ INSERT INTO `estado_royalty_da_promociones` (`Nombre_Royalty`, `ID_Promocion`) V
 ('Fan', 'PR44805876'),
 ('Mega Fan', 'PR33274771'),
 ('Super Fan', 'PR19912809');
+
+-- --------------------------------------------------------
+
+--
+-- Estructura de tabla para la tabla `estado_royalty_da_eventos`
+--
+
+CREATE TABLE `estado_royalty_da_eventos` (
+  `Nombre_Royalty` varchar(50) NOT NULL,
+  `ID_Evento` varchar(20) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish2_ci;
+
+--
+-- Volcado de datos para la tabla `estado_royalty_da_eventos`
+--
+
+INSERT INTO `estado_royalty_da_eventos` (`Nombre_Royalty`, `ID_Evento`) VALUES
+('Fan', 'EV23858748'),
+('Mega Fan', 'EV41575412'),
+('Super Fan', 'EV63596263');
 
 -- --------------------------------------------------------
 
@@ -1635,6 +1654,13 @@ ALTER TABLE `estado_royalty_da_promociones`
   ADD KEY `ID_Promocion` (`ID_Promocion`);
 
 --
+-- Indices de la tabla `estado_royalty_da_eventos`
+--
+ALTER TABLE `estado_royalty_da_eventos`
+  ADD PRIMARY KEY (`Nombre_Royalty`,`ID_Evento`),
+  ADD KEY `ID_Evento` (`ID_Evento`);
+
+--
 -- Indices de la tabla `evento`
 --
 ALTER TABLE `evento`
@@ -1824,6 +1850,13 @@ ALTER TABLE `colaborador_tiene_turno`
 ALTER TABLE `estado_royalty_da_promociones`
   ADD CONSTRAINT `estado_royalty_da_promociones_ibfk_1` FOREIGN KEY (`Nombre_Royalty`) REFERENCES `estado_royalty` (`Nombre_Royalty`),
   ADD CONSTRAINT `estado_royalty_da_promociones_ibfk_2` FOREIGN KEY (`ID_Promocion`) REFERENCES `promocion` (`ID_Promocion`);
+
+--
+-- Filtros para la tabla `estado_royalty_da_eventos`
+--
+ALTER TABLE `estado_royalty_da_eventos`
+  ADD CONSTRAINT `estado_royalty_da_eventos_ibfk_1` FOREIGN KEY (`Nombre_Royalty`) REFERENCES `estado_royalty` (`Nombre_Royalty`),
+  ADD CONSTRAINT `estado_royalty_da_eventos_ibfk_2` FOREIGN KEY (`ID_Evento`) REFERENCES `evento` (`ID_Evento`);
 
 --
 -- Filtros para la tabla `evento_contiene_promocion`

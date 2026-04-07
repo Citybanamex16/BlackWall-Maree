@@ -4,7 +4,7 @@ exports.getBreadcrumbs = (page) => {
   // Diccioario de Diccionarios de breadcrumbs y sus valores a los cuales cualquier EJS puede acceder
   const dictionary = {
     Menu: [
-      { name: 'Estado Royalty', url: '/cliente/royalty' },
+      { name: 'Estado Royalty', url: '/royalty/royaltyUser' },
       { name: 'Carrito', url: '/cliente/orden' },
       { name: 'Log In', url: '/cliente/login' },
       { name: 'AdminHub', url: '/admin/' },
@@ -20,7 +20,7 @@ exports.getBreadcrumbs = (page) => {
     ],
     Orden: [
       { name: 'Menu', url: '/menu/menu' },
-      { name: 'Estado Royalty', url: '/cliente/royalty' },
+      { name: 'Estado Royalty', url: '/royalty/royaltyUser' },
       { name: 'Log In', url: '/cliente/login' },
       // Activa
       { name: 'Carrito', url: '' }
