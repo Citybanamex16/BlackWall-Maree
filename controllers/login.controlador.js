@@ -73,6 +73,7 @@ exports.postLogin = async (request, response, next) => {
 
     return response.status(400).json({ error: 'Formato inválido.' })
   } catch (error) {
+    console.error('ERROR EN postLogin:', error)
     return response.status(500).json({
       redirectUrl: '/menu/menu?authError=database'
     })
@@ -101,6 +102,7 @@ exports.postSignUp = async (request, response, next) => {
       message: '¡Cuenta creada con éxito!'
     })
   } catch (error) {
+    console.error('ERROR EN postSignUp:', error)
     if (error.code === 'ER_DUP_ENTRY') {
       return response.status(409).json({
         error: 'Ya existe un Usuario con ese teléfono. Por favor inicia sesión',
@@ -146,6 +148,7 @@ exports.postVerifyOtp = async (request, response, next) => {
 
     return response.status(400).json({ error: 'El código de verificación es incorrecto.' })
   } catch (error) {
+      console.error('ERROR EN postVerifyOtp:', error)
     return response.status(500).json({
       redirectUrl: '/menu/menu?authError=database'
     })
