@@ -264,11 +264,12 @@ exports.getProductfieldsAndIngredientes = async (req, res, next) => {
 
 const pool = require('../util/database.js')
 
-exports.postNewProduct = async (req, res, nex) => {
+exports.postNewProduct = async (req, res, next) => {
   console.log('POST recibido: ', req.body)
-  const connection = await pool.getConnection()
-
+  let connection
   try {
+    connection = await pool.getConnection()
+
     const NewProductData = req.body
     // Extracción tipo map
     const {
@@ -319,7 +320,7 @@ exports.postNewProduct = async (req, res, nex) => {
             message: 'Producto registrado con éxito'
           })
         } else {
-          res.status(400).json({
+          res.status(500).json({
             ok: false,
             message: 'No se pudo insertar el producto'
           })
@@ -368,7 +369,7 @@ exports.postModifProduct = async (req, res, next) => {
     console.log('Array a Eliminar: ', aEliminar)
     console.log('Array a Insertar: ', aInsertar)
 
-    // 3. EJECUCIÓN EN BASE DE DATOS (Con Placeholders)
+    // 3. EJECUCIÓN EN BASE DE DATOS
     // Setup
     await connection.beginTransaction()
 

@@ -148,7 +148,7 @@ exports.postVerifyOtp = async (request, response, next) => {
 
     return response.status(400).json({ error: 'El código de verificación es incorrecto.' })
   } catch (error) {
-      console.error('ERROR EN postVerifyOtp:', error)
+    console.error('ERROR EN postVerifyOtp:', error)
     return response.status(500).json({
       redirectUrl: '/menu/menu?authError=database'
     })

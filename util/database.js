@@ -27,7 +27,7 @@ Pass: CL006901!
 const pool = mysql.createPool({
   host: 'localhost',
   user: 'root',
-  database: 'maree',
+  database: 'mareebd',
   password: '',
   waitForConnection: true,
   connectionLimit: 10
