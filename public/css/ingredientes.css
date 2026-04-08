@@ -356,3 +356,15 @@ dialog.maree-modal::backdrop {
   background: #fde0da;
   color: #a03020;
 }
+
+.ing-table tbody tr {
+  cursor: pointer;
+}
+
+.ing-table tbody tr:hover td {
+  background: #fdf8f2;
+}
+
+.ing-table thead th:last-child {
+  width: 100px;
+}

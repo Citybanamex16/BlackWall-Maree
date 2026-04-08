@@ -65,6 +65,7 @@ async function cargarTablaIngredientes () {
           <th>Precio</th>
           <th>Tipo</th>
           <th>Estado</th>
+          <th></th>
         </tr>
       </thead>
     `
@@ -90,6 +91,11 @@ async function cargarTablaIngredientes () {
 
       tr.querySelector('.btn-eliminar').addEventListener('click', (e) => {
         abrirModalEliminar(e.target.dataset.id, e.target.dataset.nombre)
+      })
+
+      tr.addEventListener('click', (e) => {
+        if (e.target.classList.contains('btn-eliminar')) return
+        abrirModalEditar(ing)
       })
     })
 
@@ -353,5 +359,86 @@ btnConfirmarEliminar.addEventListener('click', async () => {
     mostrarError('Error interno', `${error}`)
   } finally {
     idParaEliminar = null
+  }
+})
+
+// Modal modificar ingredientes
+const modalEditar = document.getElementById('ModalEditar')
+const editarSubtitulo = document.getElementById('editarSubtitulo')
+const editNombre = document.getElementById('editNombre')
+const editCategoria = document.getElementById('editCategoria')
+const editPrecio = document.getElementById('editPrecio')
+const editTipo = document.getElementById('editTipo')
+const editImagen = document.getElementById('editImagen')
+const editActivo = document.getElementById('editActivo')
+const btnGuardarEditar = document.getElementById('btnGuardarEditar')
+const btnCancelarEditar = document.getElementById('btnCancelarEditar')
+
+let idParaEditar = null
+
+async function abrirModalEditar (ing) {
+  idParaEditar = ing.ID_Insumo
+  editarSubtitulo.textContent = `Editando: ${ing.Nombre}`
+
+  // Llena campos con datos actuales
+  editNombre.value = ing.Nombre
+  editPrecio.value = ing.Precio
+  editTipo.value = ing.Tipo ?? ''
+  editImagen.value = ing.Imagen ?? ''
+  editActivo.checked = ing.Activo === 1
+
+  // Carga categorias y selecciona la que ya esta seleccionada
+  const res = await fetch('/admin/api/ingredientes/categorias')
+  const obj = await res.json()
+  editCategoria.innerHTML = ''
+  obj.data.forEach(cat => {
+    const opt = document.createElement('option')
+    opt.value = cat.Nombre
+    opt.textContent = cat.Nombre
+    if (cat.Nombre === ing.Categoría) opt.selected = true
+    editCategoria.appendChild(opt)
+  })
+
+  modalEditar.showModal()
+}
+
+btnCancelarEditar.addEventListener('click', () => {
+  modalEditar.close()
+  idParaEditar = null
+})
+
+btnGuardarEditar.addEventListener('click', async () => {
+  if (!idParaEditar) return
+
+  const body = {
+    Nombre: editNombre.value.trim(),
+    Categoría: editCategoria.value,
+    Precio: editPrecio.value,
+    Activo: editActivo.checked,
+    Tipo: editTipo.value.trim(),
+    Imagen: editImagen.value.trim()
+  }
+
+  try {
+    const res = await fetch(`/admin/api/ingredientes/${idParaEditar}/actualizar`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    })
+    const obj = await res.json()
+
+    if (obj.success) {
+      modalEditar.close()
+      exitoTitulo.textContent = 'Ingrediente actualizado'
+      exitoMensaje.textContent = 'Los cambios fueron guardados correctamente.'
+      modalExito.showModal()
+      cargarTablaIngredientes()
+    } else {
+      mostrarError('Error al actualizar', obj.message || 'Error desconocido')
+    }
+  } catch (error) {
+    mostrarError('Error interno', `${error}`)
+  } finally {
+    idParaEditar = null
   }
 })
