@@ -8,10 +8,56 @@
     <link rel="stylesheet" href="/css/productCatalog.css">
 </head>
 <body>
+
+    <%- include('../partials/breadcrumbs') %>
+
     <section class="section">
         <div class="container">
-            <h1 class="title">Catálogo de Productos</h1>
-            <p class="subtitle">Aquí va el catálogo de productos</p>
+
+            <!-- Encabezado de página -->
+            <div class="level mb-4">
+                <div class="level-left">
+                    <div>
+                        <h1 class="title mb-1">Catálogo de Productos</h1>
+                        <p class="subtitle is-6">Gestiona categorías, precios y disponibilidad</p>
+                    </div>
+                </div>
+                <div class="level-right">
+                    <!-- Buscador rápido por nombre -->
+                    <div class="field">
+                        <div class="control has-icons-left">
+                            <input id="filtroBusqueda" class="input" type="text" placeholder="Buscar producto...">
+                            <span class="icon is-left">🔍</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Resumen rápido — JS inyecta los números -->
+            <div class="level stats-bar mb-5">
+                <div class="level-item has-text-centered">
+                    <div>
+                        <p class="heading">Total productos</p>
+                        <p class="title" id="statTotal">—</p>
+                    </div>
+                </div>
+                <div class="level-item has-text-centered">
+                    <div>
+                        <p class="heading">Disponibles</p>
+                        <p class="title" id="statDisponibles">—</p>
+                    </div>
+                </div>
+                <div class="level-item has-text-centered">
+                    <div>
+                        <p class="heading">Categorías</p>
+                        <p class="title" id="statCategorias">—</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Contenedor principal — JS construye una sección por categoría -->
+            <div id="admin-catalogo"></div>
+
         </div>
     </section>
 
@@ -23,8 +69,6 @@
         <span>Añadir Producto</span>
     </a>
 
-
-<!-- Sección de modals-->
 
 <dialog id="TypeFormsCU04" class="mymodal">
   <button class="modal-close-btn" id="closeRegisterX">✕</button>
@@ -38,7 +82,7 @@
 <dialog id="RegisterFormsCU04" class="mymodal">
   <button class="modal-close-btn" id="closeRegisterX">✕</button>
   <h2 id="formsRegistrarTitulo">Título dinámico</h2>
-
+  <h3 id ="idSection"></h3>
   <form id="formsRegistrarForm" novalidate>
     <!-- Campos dinámicos (nombre, precio, etc.) se inyectan aquí -->
 
@@ -61,15 +105,45 @@
   <h2 id="SummaryTitleModal">Título dinámico</h2>
   <p>Revisa los datos antes de registrar</p>
    <hr style="border:none; border-top:1px solid #ebebeb; margin: 12px 0;">
-
     <div id="summaryContent"></div> 
 
-
-   <div class="modal-footer">
+    <div class="modal-footer">
     <button id="cerrarSummaryModal" type="button" class="button is-light">Cerrar</button>
     <button id="RegisterProduct"    type="button" class="button is-primary">Registrar Producto</button>
   </div>
+
 </dialog>
+
+
+<dialog id="modifSummaryCU05" class="mymodal">
+  <button class="modal-close-btn" id="closeRegisterX">✕</button>
+
+  <h2 id="SummaryTitleModif">Título dinámico</h2>
+  <p style="font-size:13px; color:#888; margin-top:2px;">
+    Revisa los cambios antes de confirmar la modificación
+  </p>
+
+  <hr style="border:none; border-top:1px solid #ebebeb; margin: 12px 0;">
+
+  <!-- Cabecera de columnas -->
+  <div class="modif-summary-header">
+    <span class="modif-col-label">Campo</span>
+    <span class="modif-col-old">Original</span>
+    <span class="modif-col-new">Nuevo</span>
+  </div>
+
+  <!-- Filas generadas por JS -->
+  <div id="modifSummaryContent" class="modif-summary-body"></div>
+
+  <hr style="border:none; border-top:1px solid #ebebeb; margin: 12px 0;">
+
+  <div class="modal-footer">
+    <button id="cerrarSummaryModif" type="button" class="button is-light">Regresar</button>
+    <button id="RegisterModification" type="button" class="button is-primary">Registrar Modificación</button>
+  </div>
+
+</dialog>
+ 
 
 
 <!-- Dialogo de ¡EXITO!-->
@@ -78,7 +152,7 @@
     <div class="modal-accent-bar"></div>
     <p id="exitoContent">Contenido Dinámico</p>
     <!-- Botón con ID para manipularlo desde JS -->
-    <button id="closeExito" class="modal-close-btn" class="modal-close-btn">Regresar a Catalogo</button>
+    <button id="closeExito" type="submit" class="modal-close-btn" class="modal-close-btn">Regresar a Catalogo</button>
 </dialog>
 
 
@@ -96,6 +170,7 @@
 
 
 
-<script src="/js/menudigital/adminProducts.js"></script>
+<script src="/js/menudigital/AdminProductsScripts/adminProducts.js"></script>
+<script src="/js/menudigital/AdminProductsScripts/ModifElimProducts.js"></script>
 </body>
 </html>

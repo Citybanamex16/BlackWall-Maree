@@ -1,0 +1,204 @@
+/* ── Resumen instantáneo ── */
+.feedback-resumen {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+    padding: 20px 24px 0;
+}
+
+.resumen-card {
+    background: #fff;
+    border: 1px solid #e5e5e5;
+    border-radius: 10px;
+    padding: 16px 20px;
+    text-align: center;
+}
+
+.resumen-label {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: .05em;
+    color: #999;
+    margin-bottom: 6px;
+}
+
+.resumen-valor {
+    font-size: 28px;
+    font-weight: 700;
+    color: #222;
+    line-height: 1;
+}
+
+/* ── Filtros sticky ── */
+.feedback-filtros {
+    display: flex;
+    align-items: flex-end;
+    gap: 16px;
+    padding: 16px 24px;
+    background: #fff;
+    border-bottom: 1px solid #eee;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+
+.filtro-grupo {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.filtro-label {
+    font-size: 11px;
+    font-weight: 600;
+    color: #888;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+}
+
+.filtro-resultado {
+    margin-left: auto;
+    font-size: 12px;
+    color: #aaa;
+    align-self: center;
+}
+
+/* ── Layout dos columnas ── */
+.feedback-layout {
+    display: grid;
+    grid-template-columns: 1fr 320px;
+    gap: 24px;
+    padding: 24px;
+    align-items: start;
+}
+
+/* ── Columna comentarios ── */
+.comentarios-columna {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+/* ── Columna KPIs sticky ── */
+.kpis-columna {
+    position: sticky;
+    top: 73px;        /* altura de la barra de filtros */
+    background: #fff;
+    border: 1px solid #e5e5e5;
+    border-radius: 10px;
+    padding: 20px;
+    min-height: 200px;
+}
+
+.kpis-placeholder {
+    color: #bbb;
+    font-size: 13px;
+    text-align: center;
+    margin-top: 60px;
+}
+
+
+/* Sección CSS de Sección 1 Lectura de Reviews */
+
+/* ── Tarjeta de review ── */
+.review-card {
+    display: flex;
+    background: #fff;
+    border: 1px solid #e5e5e5;
+    border-radius: 10px;
+    overflow: hidden;
+    cursor: pointer;
+    transition: box-shadow 0.15s, transform 0.15s;
+}
+
+.review-card:hover {
+    box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+    transform: translateY(-1px);
+}
+
+/* Barra de color izquierda según puntaje */
+.review-borde-color {
+    width: 5px;
+    flex-shrink: 0;
+}
+
+.review-body {
+    padding: 14px 16px;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+/* ── Header de la tarjeta ── */
+.review-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.review-estrellas {
+    display: flex;
+    gap: 2px;
+    font-size: 16px;
+    line-height: 1;
+}
+
+.estrella.llena  { color: #f5c000; }
+.estrella.vacia  { color: #ddd; }
+
+.review-puntaje-num {
+    font-size: 12px;
+    font-weight: 700;
+    color: #555;
+}
+
+.review-fecha {
+    font-size: 12px;
+    color: #aaa;
+    margin-left: auto;
+}
+
+.review-id-orden {
+    font-size: 11px;
+    background: #f0f4ff;
+    color: #3273dc;
+    border-radius: 20px;
+    padding: 2px 8px;
+    font-weight: 600;
+    letter-spacing: .02em;
+}
+
+/* ── Comentario ── */
+.review-comentario {
+    font-size: 14px;
+    color: #333;
+    line-height: 1.6;
+    margin: 0;
+}
+
+/* ── ID pequeño al pie ── */
+.review-id-small {
+    font-size: 11px;
+    color: #ccc;
+    margin: 0;
+}
+
+/* ── Estado vacío ── */
+.reviews-empty {
+    text-align: center;
+    padding: 60px 20px;
+    color: #bbb;
+}
+
+.reviews-empty-icon {
+    font-size: 36px;
+    display: block;
+    margin-bottom: 12px;
+}
+
+.is-sticky {
+    position: sticky;
+    top: 20px; /* Se queda pegado a 20px del borde superior */
+}
