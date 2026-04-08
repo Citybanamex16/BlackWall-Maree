@@ -197,3 +197,8 @@
     display: block;
     margin-bottom: 12px;
 }
+
+.is-sticky {
+    position: sticky;
+    top: 20px; /* Se queda pegado a 20px del borde superior */
+}

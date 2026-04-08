@@ -21,6 +21,8 @@ async function getFeedbackData () {
 
     const summaryReciente = buildSectionRecentSummary(feedbackData)
     console.log('Summary Reciente: ', summaryReciente)
+    buildSectionKPIs(feedbackData)
+
   } catch (err) {
     console.log('Error detectado en buildFeedbackCatalog: ', err)
   }
@@ -73,7 +75,7 @@ function buildSectionRecentSummary (AllData) {
   }
 }
 
-// Auxiliares de Sección 1 y 2:
+// Auxiliares de Sección 1:
 const filtroDate = document.getElementById('filtro-date')
 const filtroPuntaje = document.getElementById('filtro-puntaje')
 const filtroId = document.getElementById('filtro-id')
@@ -160,7 +162,7 @@ function applyFilter (AllData) {
 
   // 6. constuir vistas:
   buildSectionComments(filteredData)
-  buildSectionKPIs(filteredData)
+  
 }
 
 // Construcción de Sección 1: Lectura de Comentarios
@@ -247,6 +249,106 @@ function formatearFecha (fechaISO) {
 }
 
 /// /Construcción de Sección 2: Graficas de KPIs
-function buildSectionKPIs (data) {
-  console.log('KPIs data: ', data)
+// Variable global para almacenar el gráfico y poder destruirlo al re-filtrar
+let timeChartInstance = null;
+
+// 1. Función Auxiliar: Procesamiento de datos para la gráfica
+function processDataForTimeChart(data) {
+    const dailyData = {};
+
+    // A. Agrupar por fecha y sumar puntajes
+    data.forEach(review => {
+        //Agrupación por Lapos de tiempo
+        //const dateString = review.Fecha.split('T')[0]; // Por día
+      const dateString = review.Fecha.slice(0, 7); // Por mes
+        
+        if (!dailyData[dateString]) {
+            dailyData[dateString] = { sum: 0, count: 0 };
+        }
+        
+        dailyData[dateString].sum += review.Puntaje;
+        dailyData[dateString].count += 1;
+    });
+
+    // B. Convertir el objeto a un array y calcular el promedio
+    const chartArray = Object.keys(dailyData).map(date => {
+        return {
+            date: date,
+            // Calculamos promedio y lo limitamos a 2 decimales
+            average: parseFloat((dailyData[date].sum / dailyData[date].count).toFixed(2))
+        };
+    });
+
+    // C. Ordenar cronológicamente (Eje X debe ir del pasado al presente)
+    chartArray.sort((a, b) => new Date(a.date) - new Date(b.date));
+
+    return chartArray;
+}
+
+// 2. Construcción de Sección 2: Graficas de KPIs
+function buildSectionKPIs(data) {
+    console.log('KPIs data: ', data);
+
+    const kpiContainer = document.getElementById('seccion-kpis');
+
+    // Si no hay datos, mostramos un mensaje y salimos
+    if (data.length === 0) {
+        kpiContainer.innerHTML = '<p class="kpis-placeholder">No hay datos en este periodo.</p>';
+        return;
+    }
+
+    // A. Preparamos el HTML: Inyectamos un canvas fresco
+    kpiContainer.innerHTML = '<canvas id="kpi-chart" style="width:100%; height:300px;"></canvas>';
+    
+    // B. Procesamos los datos
+    const chartData = processDataForTimeChart(data);
+
+    // C. Extraemos los ejes X e Y para Chart.js
+    const xAxisLabels = chartData.map(item => item.date);   // ["2026-05-01", "2026-05-02"...]
+    const yAxisValues = chartData.map(item => item.average); // [4.5, 3.2, 5.0...]
+
+    // D. Dibujamos la gráfica
+    const ctx = document.getElementById('kpi-chart').getContext('2d');
+
+    // IMPORTANTE: Si ya existía una gráfica, debemos destruirla antes de crear la nueva
+    // Esto evita el bug donde al pasar el mouse parpadean los datos viejos
+    if (timeChartInstance) {
+        timeChartInstance.destroy();
+    }
+
+    timeChartInstance = new Chart(ctx, {
+        type: 'line', // Tipo línea para "a través del tiempo"
+        data: {
+            labels: xAxisLabels,
+            datasets: [{
+                label: 'Promedio de Satisfacción Diario',
+                data: yAxisValues,
+                borderColor: '#4CAF50', // Un verde estilo restaurante
+                backgroundColor: 'rgba(76, 175, 80, 0.2)', // Relleno semitransparente debajo de la línea
+                borderWidth: 3,
+                tension: 0.3, // Le da una curva suave a la línea (no tan angular)
+                fill: true,
+                pointRadius: 4,
+                pointHoverRadius: 6
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    min: 1, // El mínimo es 1 estrella
+                    max: 5, // El máximo es 5 estrellas
+                    ticks: {
+                        stepSize: 1 // Que el eje Y marque 1, 2, 3, 4, 5
+                    }
+                }
+            },
+            plugins: {
+                legend: {
+                    position: 'top',
+                }
+            }
+        }
+    });
 }
