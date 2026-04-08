@@ -21,9 +21,7 @@ Pass: CL006901!
 
 */
 
-
-
-//Charly 
+// Charly
 
 // Pool de conexiones
 const pool = mysql.createPool({

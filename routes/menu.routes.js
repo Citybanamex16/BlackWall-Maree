@@ -1,6 +1,7 @@
 const express = require('express')
 const router = express.Router()
 const menuControlador = require('../controllers/menu.controlador.js')
+const feedBackControlador = require('../controllers/feedback.controlador.js')
 
 // Rutas Menu cliente
 router.get('/menu', menuControlador.getMenu)
@@ -18,6 +19,10 @@ router.get('/formsTipoPlatillo', menuControlador.getTypes)
 router.get('/formsRegistraPlatillo', menuControlador.getProductfieldsAndIngredientes)
 router.post('/registerNewProduct', menuControlador.postNewProduct)
 router.put('/modifProduct/:id', menuControlador.postModifProduct) // ¡ Ese es PUT !
+
+// rutas feedback
+router.get('/feedback', feedBackControlador.getFeedback)
+router.get('/feedbackCatalog', feedBackControlador.getFeedbackCatalog)
 
 // Rutas Global: Rutas utilizadas por cualquier CU, devuelven información general
 router.get('/globalAdminIngredientes', menuControlador.getIngredientesFullCatalog)

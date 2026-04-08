@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Feedback - Admin Marée</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@1.0.4/css/bulma.min.css">
+    <link rel="stylesheet" href="/css/adminstyle.css">
+    <link rel="stylesheet" href="/css/feedbackStyle.css">
+</head>
+<body>
+
+    <%- include('../partials/breadcrumbs') %>
+
+    <!-- ══════════════════════════════════════════
+         SECCIÓN 0 — Barra de resumen instantáneo
+         JS inyecta los 4 números al cargar
+    ══════════════════════════════════════════ -->
+    <section id="seccion-resumen" class="feedback-resumen">
+        <div class="resumen-card">
+            <p class="resumen-label">Promedio general</p>
+            <p class="resumen-valor" id="kpi-promedio">—</p>
+        </div>
+        <div class="resumen-card">
+            <p class="resumen-label">Total reviews</p>
+            <p class="resumen-valor" id="kpi-total">—</p>
+        </div>
+        <div class="resumen-card">
+            <p class="resumen-label">Positivas (4-5 ⭐)</p>
+            <p class="resumen-valor" id="kpi-positivas">—</p>
+        </div>
+        <div class="resumen-card">
+            <p class="resumen-label">Más reciente</p>
+            <p class="resumen-valor" id="kpi-reciente">—</p>
+        </div>
+    </section>
+
+    <!-- ══════════════════════════════════════════
+         BARRA DE FILTROS — sticky, siempre visible
+         Los 3 controles afectan ambas secciones
+    ══════════════════════════════════════════ -->
+    <section id="seccion-filtros" class="feedback-filtros">
+        <div class="filtro-grupo">
+            <label class="filtro-label">Ordenar por</label>
+            <div class="select">
+                <select id="filtro-date">
+                    <option value="1">Hoy</option>
+                    <option value="7">Esta Semana</option>
+                    <option value="30">Este Mes</option>
+                    <option value="90">Este Trimestre</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="filtro-grupo">
+            <label class="filtro-label">Puntaje</label>
+            <div class="select">
+                <select id="filtro-puntaje">
+                    <option value="todos">Todos</option>
+                    <option value="5">⭐⭐⭐⭐⭐</option>
+                    <option value="4">⭐⭐⭐⭐</option>
+                    <option value="3">⭐⭐⭐</option>
+                    <option value="2">⭐⭐</option>
+                    <option value="1">⭐</option>
+                </select>
+            </div>
+
+        </div>
+
+        <div class="filtro-grupo">
+            <label class="filtro-label">Buscar por ID de orden</label>
+            <input id="filtro-id" class="input" type="text" placeholder="Ej. OR-00123">
+        </div>
+
+        <p class="filtro-resultado" id="filtro-conteo">— comentarios</p>
+
+        <div class="control">
+            <button id="btn-filtrar" type="button is-info">Filtrar</button>
+            </div>
+
+    </section>
+
+    <!-- ══════════════════════════════════════════
+         LAYOUT PRINCIPAL — dos columnas
+    ══════════════════════════════════════════ -->
+    <section id="seccion-principal" class="feedback-layout">
+
+        <!-- ── SECCIÓN 1: Lista de comentarios ── -->
+        <div id="seccion-comentarios" class="comentarios-columna">
+            <!-- JS construye las tarjetas aquí -->
+        </div>
+
+        <!-- ── SECCIÓN 2: KPIs (sticky) ── -->
+        <aside id="seccion-kpis" class="kpis-columna">
+            <!-- JS inyecta gráficas y métricas aquí — próxima iteración -->
+            <p class="kpis-placeholder">📊 KPIs próximamente</p>
+        </aside>
+
+    </section>
+
+<script src="/js/menudigital/feedbackScripts/feedbackCatalog.js"></script>
+</body>
+</html>
