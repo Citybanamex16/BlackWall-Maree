@@ -149,6 +149,45 @@
   </div>
 </dialog>
 
+<dialog id="ModalEditar" class="maree-modal">
+  <div class="modal-inner">
+    <p class="modal-title">Editar Ingrediente</p>
+    <p class="modal-sub" id="editarSubtitulo"></p>
+
+    <div class="maree-field">
+      <label class="maree-label">Nombre</label>
+      <input class="maree-input" type="text" id="editNombre" maxlength="50">
+    </div>
+    <div class="maree-field">
+      <label class="maree-label">Categoría</label>
+      <select class="maree-select" id="editCategoria"></select>
+    </div>
+    <div class="maree-field">
+      <label class="maree-label">Precio ($)</label>
+      <input class="maree-input" type="number" id="editPrecio" min="0" step="0.01">
+    </div>
+    <div class="maree-field">
+      <label class="maree-label">Tipo <span style="font-weight:400;text-transform:none;letter-spacing:0;">(opcional)</span></label>
+      <input class="maree-input" type="text" id="editTipo" maxlength="20">
+    </div>
+    <div class="maree-field">
+      <label class="maree-label">URL Imagen <span style="font-weight:400;text-transform:none;letter-spacing:0;">(opcional)</span></label>
+      <input class="maree-input" type="text" id="editImagen">
+    </div>
+    <div class="maree-field">
+      <label class="maree-checkbox-row">
+        <input type="checkbox" id="editActivo">
+        Disponible
+      </label>
+    </div>
+
+    <div class="modal-actions">
+      <button id="btnGuardarEditar" class="btn-primary">Guardar cambios</button>
+      <button id="btnCancelarEditar" class="btn-secondary">Cancelar</button>
+    </div>
+  </div>
+</dialog>
+
 <script src="/js/menudigital/adminIngredientes.js"></script>
 </body>
 </html>

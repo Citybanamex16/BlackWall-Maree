@@ -3,7 +3,7 @@ const db = require('../util/database.js')
 module.exports = class Ingrediente {
   // Consigue todods los ingredientes activos
   static async fetchAll () {
-    return db.execute('SELECT ID_Insumo, Nombre, Categoría, Precio, Activo, Tipo FROM insumo WHERE Activo = 1')
+    return db.execute('SELECT ID_Insumo, Nombre, Categoría, Precio, Activo, Tipo FROM insumo')
   }
 
   // Busca ingrediente por nombre (para verificar duplicados)
@@ -63,5 +63,12 @@ module.exports = class Ingrediente {
   // Elimina de producto_tiene_insumo y luego de insumo
   static async eliminarIngrediente (idInsumo) {
     return db.execute('CALL EliminarIngrediente(?)', [idInsumo])
+  }
+
+  static async actualizarIngrediente (id, nombre, categoria, precio, activo, tipo, imagen) {
+    return db.execute(
+      'CALL ActualizarIngrediente(?, ?, ?, ?, ?, ?, ?)',
+      [id, nombre, categoria, precio, activo ? 1 : 0, tipo || null, imagen || null]
+    )
   }
 }
