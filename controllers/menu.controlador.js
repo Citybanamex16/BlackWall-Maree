@@ -4,7 +4,7 @@ const categorías = require('../models/MenuDigital/categorías.model.js')
 const Pedido = require('../models/pedidos.model.js')
 const db = require('../util/database.js')
 
-// CU11
+// CU11 Vizualisar Menu
 exports.getMenu = (request, response, next) => {
   const breadcrumbs = nav.getBreadcrumbs('Menu')
   response.render('cliente/menu', { breadcrumbs })
