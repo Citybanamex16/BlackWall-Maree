@@ -527,3 +527,35 @@ html {
     font-size: 32px;
     opacity: 0.5;
 }
+
+
+/* ── Modal de error de menú ── */
+#menuErrorModal {
+    text-align: center;
+    max-width: 360px;
+}
+
+#menuErrorModal .modal-accent-bar {
+    margin: 0 auto 12px;
+    width: 48px;
+}
+
+#menuErrorModal h2 {
+    font-size: 20px;
+    margin-bottom: 8px;
+}
+
+#menuErrorModal p {
+    line-height: 1.6;
+    margin-bottom: 4px;
+}
+
+/* Animación de entrada */
+@keyframes modalEntrada {
+    from { opacity: 0; transform: translateY(-12px) scale(0.97); }
+    to   { opacity: 1; transform: translateY(0)     scale(1);    }
+}
+
+#menuErrorModal[open] {
+    animation: modalEntrada 0.22s ease forwards;
+}
