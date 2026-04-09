@@ -16,7 +16,8 @@ class Cliente {
     `
     return db.execute(query, [idOrden])
   }
-  static async fetchByPhone(numeroTelefonico) {
+
+  static async fetchByPhone (numeroTelefonico) {
     const [rows] = await db.execute(`
       SELECT
         Numero_Telefonico AS numero_telefonico,
@@ -32,7 +33,7 @@ class Cliente {
     return rows[0] || null
   }
 
-  static async updatePersonalData(numeroTelefonico, nombre, correo, genero, fechaNacimiento) {
+  static async updatePersonalData (numeroTelefonico, nombre, correo, genero, fechaNacimiento) {
     const [result] = await db.execute(`
       UPDATE cliente
       SET
