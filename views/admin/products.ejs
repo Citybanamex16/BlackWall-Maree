@@ -1,101 +1,72 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Products - Admin Marée</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@1.0.4/css/bulma.min.css">
-    <link rel="stylesheet" href="/css/productCatalog.css">
-</head>
-<body>
-    <section class="section">
-        <div class="container">
-            <h1 class="title">Catálogo de Productos</h1>
-            <p class="subtitle">Aquí va el catálogo de productos</p>
-        </div>
-    </section>
+<%- include('../partials/header_admin', { pageTitle: 'Catálogo de Productos - Marée' }) %>
+<%- include('../partials/breadcrumbs') %>
 
-     <!-- BOTÓN Registrar nuevo Producto -->
-    <a href="#" id="registrarNuevoProducto" class="button fab is-primary is-rounded button-floating">
-        <span class="icon">
-            <i class="fas fa-plus"></i> 
-        </span>
-        <span>Añadir Producto</span>
-    </a>
+<main class="page-wrap">
+  <header style="margin-bottom: 32px;">
+    <h1 class="page-title">Catálogo de Productos</h1>
+    <p class="page-sub">Aquí va el catálogo de productos</p>
+  </header>
 
+  <div class="card-base" style="min-height: 400px; display:flex; align-items:center; justify-content:center; color: var(--c-text-muted);">
+      <p>Contenido del catálogo de productos...</p>
+  </div>
 
-<!-- Sección de modals-->
+  <a href="#" id="registrarNuevoProducto" class="btn-primary fab" style="border-radius: var(--radius-pill); padding: 14px 24px; display: flex; align-items: center; gap: 8px;">
+    <span class="icon">
+        <i class="fas fa-plus"></i> </span>
+    <span>Añadir Producto</span>
+  </a>
+</main>
 
-<dialog id="TypeFormsCU04" class="mymodal">
-  <button class="modal-close-btn" id="closeRegisterX">✕</button>
-  <h2 id="tituloModal">Título dinámico</h2>
-  <p>Elige una opción:</p>
+<dialog id="TypeFormsCU04" class="card-base" style="padding: 32px; border: none; max-width: 400px;">
+  <button class="delete is-pulled-right" id="closeRegisterX" style="background: var(--c-border);"></button>
+  <h2 id="tituloModal" class="page-title" style="font-size: 24px; margin-bottom: 16px;">Título dinámico</h2>
+  <p style="color: var(--c-text-muted);">Elige una opción:</p>
   <br>
-  <button id="cerrarModal"  style="margin-top: 10px;">Cerrar</button>
+  <button id="cerrarModal" class="btn-ghost" style="margin-top: 10px; width: 100%;">Cerrar</button>
 </dialog>
 
+<dialog id="RegisterFormsCU04" class="card-base" style="padding: 32px; border: none; max-width: 600px; width: 90%;">
+  <button class="delete is-pulled-right" id="closeRegisterX" style="background: var(--c-border);"></button>
+  <h2 id="FormTitleModal" class="page-title" style="font-size: 24px; margin-bottom: 8px;">Título dinámico</h2>
+  <p style="color: var(--c-text-muted);">Llena los datos requeridos</p>
+  <hr style="border:none; border-top:1px solid var(--c-border); margin: 16px 0;">
 
-<dialog id="RegisterFormsCU04" class="mymodal">
-  <button class="modal-close-btn" id="closeRegisterX">✕</button>
-  <h2 id="formsRegistrarTitulo">Título dinámico</h2>
+  <div id="formsContainer"></div>
 
-  <form id="formsRegistrarForm" novalidate>
-    <!-- Campos dinámicos (nombre, precio, etc.) se inyectan aquí -->
-
-    <!-- ═══════════════════════════════════════════
-         SECCIÓN INGREDIENTES
-    ════════════════════════════════════════════ -->
-  </form>
-  <!-- Footer del modal -->
-  <div class="modal-footer">
-    <button id="cerrarFormsRegistrar"  type="button" class="button is-light">Cancelar</button>
-    <button id="submitFormsRegistrar" type="submit" form="formsRegistrarForm" class="button is-primary">Guardar</button>
+  <div style="display: flex; justify-content: flex-end; gap: 12px; margin-top: 24px;">
+    <button id="cerrarFormModal" type="button" class="btn-ghost">Cancelar</button>
+    <button id="submitFormsRegistrar" type="submit" form="formsRegistrarForm" class="btn-primary">Guardar</button>
   </div>
 </dialog>
 
+<dialog id="SummaryCU04" class="card-base" style="padding: 32px; border: none; max-width: 500px; width: 90%;">
+  <button class="delete is-pulled-right" id="closeRegisterX" style="background: var(--c-border);"></button>
+  <h2 id="SummaryTitleModal" class="page-title" style="font-size: 24px; margin-bottom: 8px;">Título dinámico</h2>
+  <p style="color: var(--c-text-muted);">Revisa los datos antes de registrar</p>
+  <hr style="border:none; border-top:1px solid var(--c-border); margin: 16px 0;">
 
+  <div id="summaryContent" style="margin-bottom: 24px;"></div> 
 
-
-<dialog id="SummaryCU04" class="mymodal">
-  <button class="modal-close-btn" id="closeRegisterX">✕</button>
-  <h2 id="SummaryTitleModal">Título dinámico</h2>
-  <p>Revisa los datos antes de registrar</p>
-   <hr style="border:none; border-top:1px solid #ebebeb; margin: 12px 0;">
-
-    <div id="summaryContent"></div> 
-
-
-   <div class="modal-footer">
-    <button id="cerrarSummaryModal" type="button" class="button is-light">Cerrar</button>
-    <button id="RegisterProduct"    type="button" class="button is-primary">Registrar Producto</button>
+  <div style="display: flex; justify-content: flex-end; gap: 12px;">
+    <button id="cerrarSummaryModal" type="button" class="btn-ghost">Cerrar</button>
+    <button id="RegisterProduct" type="button" class="btn-primary">Registrar Producto</button>
   </div>
 </dialog>
 
-
-<!-- Dialogo de ¡EXITO!-->
-<dialog id="ModalExito" class="error-modal mymodal">
-    <h2 id = "TituloExito">Titulo Dinamico</h2>
-    <div class="modal-accent-bar"></div>
-    <p id="exitoContent">Contenido Dinámico</p>
-    <!-- Botón con ID para manipularlo desde JS -->
-    <button id="closeExito" class="modal-close-btn" class="modal-close-btn">Regresar a Catalogo</button>
+<dialog id="ModalExito" class="card-base" style="padding: 32px; border: none; max-width: 400px; text-align: center;">
+  <div style="font-size: 48px; margin-bottom: 16px; color: var(--c-success);">✓</div>
+  <h2 id="TituloExito" class="page-title" style="font-size: 28px; margin-bottom: 12px;">Titulo Dinamico</h2>
+  <p id="exitoContent" style="color: var(--c-text-muted); margin-bottom: 24px;">Contenido Dinámico</p>
+  <button id="closeExito" class="btn-success" style="width: 100%;">Regresar a Catalogo</button>
 </dialog>
 
-
-
-
-<!-- Dialogo de error -->
-<dialog id="ErrorModal" class="error-modal mymodal">
-    <h2 id="ErrorTitle">Titulo Dinámico</h2>
-    <div class="modal-accent-bar"></div>
-    <p id="ErrorMessage">Mensaje Dinámico</p>
-    <!-- Botón con ID para manipularlo desde JS -->
-    <button id="closeInvalidData" class="modal-close-btn" >Cerrar</button>
+<dialog id="ErrorModal" class="card-base" style="padding: 32px; border: none; max-width: 400px; text-align: center;">
+  <div style="font-size: 48px; margin-bottom: 16px; color: var(--c-danger);">⚠️</div>
+  <h2 id="ErrorTitle" class="page-title" style="font-size: 28px; margin-bottom: 12px;">Titulo Dinámico</h2>
+  <p id="errorContent" style="color: var(--c-text-muted); margin-bottom: 24px;">Contenido Dinámico</p>
+  <button id="closeError" class="btn-danger" style="width: 100%;">Regresar a Catalogo</button>
 </dialog>
 
-
-
-
-<script src="/js/menudigital/adminProducts.js"></script>
 </body>
 </html>

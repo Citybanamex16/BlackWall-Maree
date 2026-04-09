@@ -1,87 +1,4 @@
-<style>
-  .bc-nav {
-    padding: 14px 32px 0;
-    display: block; 
-    background: transparent;
-  }
-
-  .bc-list {
-    display: flex;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 0;
-    list-style: none;
-    margin: 0;
-    padding: 0;
-  }
-
-  /* Cada crumb */
-  .bc-item {
-    display: flex;
-    align-items: center;
-    font-family: 'Jost', sans-serif;
-    font-size: 12px;
-    letter-spacing: 1.5px;
-    text-transform: uppercase;
-  }
-
-  .bc-item a {
-    color: #999;
-    text-decoration: none;
-    transition: color 0.2s ease;
-    padding: 2px 0;
-    position: relative;
-  }
-
-  /* Underline animado en hover */
-  .bc-item a::after {
-    content: '';
-    position: absolute;
-    bottom: -1px;
-    left: 0;
-    width: 0;
-    height: 1px;
-    background-color: #b5956a;
-    transition: width 0.25s ease;
-  }
-
-  .bc-item a:hover {
-    color: #b5956a;
-  }
-
-  .bc-item a:hover::after {
-    width: 100%;
-  }
-
-  /* Separador: línea fina diagonal (guión largo elegante) */
-  .bc-item:not(:last-child)::after {
-    content: '—';
-    color: #ddd;
-    font-size: 10px;
-    margin: 0 10px;
-    letter-spacing: 0;
-  }
-
-  /* Último item (página activa) */
-  .bc-item.is-active a {
-    color: #b5956a;
-    font-weight: 600;
-    cursor: default;
-    pointer-events: none;
-  }
-
-  .bc-item.is-active a::after {
-    display: none;
-  }
-
-  /* Línea decorativa debajo del breadcrumb */
-  .bc-divider {
-    margin: 10px 32px 0;
-    border: none;
-    border-top: 1px solid #f0ece6;
-  }
-</style>
-
+<% if (typeof breadcrumbs !== 'undefined' && breadcrumbs && breadcrumbs.length > 0) { %>
 <nav class="bc-nav" aria-label="breadcrumbs">
   <ul class="bc-list">
     <% breadcrumbs.forEach((crumb, index) => { %>
@@ -98,3 +15,4 @@
   </ul>
 </nav>
 <hr class="bc-divider">
+<% } %>

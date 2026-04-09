@@ -1,0 +1,61 @@
+/* ==================================================
+   MÓDULO: CATÁLOGO, INGREDIENTES Y FORMULARIOS
+   ================================================== */
+/* Botón Flotante (FAB) */
+.fab {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    z-index: 99;
+    box-shadow: var(--shadow-sm);
+}
+
+/* Filas de Resumen (Ingredientes/Productos) */
+.resumen-fila {
+    display: flex;
+    gap: 12px;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--c-border);
+    font-size: 14px;
+}
+
+.resumen-fila:last-child {
+    border-bottom: none;
+}
+
+.resumen-label {
+    font-weight: 600;
+    min-width: 110px;
+    color: var(--c-text-muted);
+    font-size: 12px;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+}
+
+/* Constructor de Recetas / Filas animadas */
+.ingredient-row {
+    display: grid;
+    grid-template-columns: 1fr 72px 28px;
+    gap: 8px;
+    align-items: center;
+    animation: fadeRowIn 0.2s ease forwards;
+}
+
+@keyframes fadeRowIn {
+    from { opacity: 0; transform: translateY(-6px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+.btn-remove-ing {
+    width: 28px; height: 28px; border-radius: 50%;
+    border: 1px solid var(--c-danger-bg); 
+    background: var(--c-danger-bg);
+    color: var(--c-danger); 
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; transition: all 0.2s;
+}
+
+.btn-remove-ing:hover {
+    background: var(--c-danger);
+    color: #fff;
+}
