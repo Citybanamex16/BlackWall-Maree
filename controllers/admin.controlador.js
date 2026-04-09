@@ -600,6 +600,22 @@ exports.actualizarIngrediente = async (req, res, next) => {
   }
 }
 
+// Todo lo de las metricas
+exports.getMetricasIngredientes = (req, res, next) => {
+  res.render('admin/metricsIngredientes')
+}
+
+exports.getMetricasIngredientesData = async (req, res, next) => {
+  try {
+    const data = await Ingrediente.getMetricas()
+    res.status(200).json({ ok: true, data })
+  } catch (error) {
+    console.error('Error en getMetricasIngredientesData:', error)
+    res.status(500).json({ ok: false, mensaje: 'Error al obtener métricas' })
+  }
+}
+
+// Fuchi, collaborator things
 exports.getNewCollaborator = (req, res, next) => {
   res.render('admin/newCollaborator', {
     pageTitle: 'Registrar colaborador',
