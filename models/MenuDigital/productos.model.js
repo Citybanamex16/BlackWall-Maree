@@ -159,7 +159,7 @@ module.exports = class Producto {
         mensajesError.push(`Campo vacío: ${key}`)
       } else if (key === 'Precio') {
         const precio = parseFloat(value)
-        if (isNaN(precio) || precio < 0) {
+        if (isNaN(precio) || precio <= 0) {
           mensajesError.push(`Precio inválido: ${value}`)
         }
       }

@@ -77,6 +77,23 @@
     </div>
 </div>
 
+
+<!-- MODAL de error de carga del menú -->
+<dialog id="menuErrorModal">
+    <div class="modal-accent-bar" style="background:#e74c3c;"></div>
+    <h2 style="color:#c0392b;">Error al cargar el menú</h2>
+    <p>No pudimos conectar con el servidor. Por favor recarga la página o inténtalo más tarde.</p>
+    <div style="display:flex; gap:10px; justify-content:flex-end; margin-top:16px;">
+        <button onclick="window.location.reload()" class="button is-primary">
+            Reintentar
+        </button>
+    </div>
+</dialog>
+
+
+
+
+
 <script>
     const urlParams = new URLSearchParams(window.location.search);
     if (urlParams.get('authError') === 'database') {
