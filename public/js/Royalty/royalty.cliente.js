@@ -4,7 +4,6 @@ document.addEventListener('DOMContentLoaded', () => {
   const contenedorEventos = document.getElementById('contenedor-eventos')
   const clienteNivelTexto = document.getElementById('cliente-nivel-badge').innerText.trim()
 
-  // Hacemos la petición al endpoint JSON
   fetch('/royalty/royaltyUser/api/datos', {
     method: 'GET',
     headers: { 'Content-Type': 'application/json' }
@@ -25,26 +24,24 @@ document.addEventListener('DOMContentLoaded', () => {
         let htmlPromos = ''
         data.promociones.forEach(promo => {
           const fecha = new Date(promo.Fecha_final).toLocaleDateString()
-          const borderClass = promo.Nombre_Royalty === clienteNivelTexto ? 'border-primary' : 'border-secondary'
+          const borderClass = promo.Nombre_Royalty === clienteNivelTexto ? 'border border-warning' : ''
 
           htmlPromos += `
-                    <div class="col-md-4 mb-4">
-                        <div class="card h-100 shadow-sm ${borderClass}">
-                            <div class="card-body">
-                                <span class="badge bg-dark mb-2">Beneficio ${promo.Nombre_Royalty}</span>
-                                <h5 class="card-title">${promo.Nombre}</h5>
-                                <p class="card-text">${promo.Descuento}</p>
-                            </div>
-                            <div class="card-footer text-muted">
-                                Válido hasta: ${fecha}
-                            </div>
-                        </div>
-                    </div>
-                `
+            <div class="promo-card d-flex flex-column ${borderClass}">
+                <div class="mb-auto">
+                    <span class="badge bg-dark mb-3">Beneficio ${promo.Nombre_Royalty}</span>
+                    <h5 class="fw-bold mb-1">${promo.Nombre}</h5>
+                    <p class="text-muted small mb-3">${promo.Descuento}</p>
+                </div>
+                <div class="mt-3 pt-3 border-top text-muted small">
+                    <i class="bi bi-clock-history"></i> Válido hasta: ${fecha}
+                </div>
+            </div>
+          `
         })
         contenedorPromociones.innerHTML = htmlPromos
       } else {
-        contenedorPromociones.innerHTML = '<div class="alert alert-info w-100">Aún no hay promociones disponibles.</div>'
+        contenedorPromociones.innerHTML = '<div class="alert alert-light border mx-3 w-100 text-center">Aún no hay promociones disponibles.</div>'
       }
 
       contenedorEventos.innerHTML = ''
@@ -55,28 +52,26 @@ document.addEventListener('DOMContentLoaded', () => {
           const fecha = new Date(evento.Fecha_final).toLocaleDateString()
 
           htmlEventos += `
-                    <div class="col-md-6 mb-4">
-                        <div class="card h-100 shadow-sm">
-                            <div class="card-body">
-                                <span class="badge bg-warning text-dark mb-2">Pase ${evento.Nombre_Royalty}</span>
-                                <h5 class="card-title">${evento.Nombre_Evento}</h5>
-                                <p class="card-text">${evento.Descripcion}</p>
-                            </div>
-                            <div class="card-footer bg-transparent border-top-0">
-                                <strong>Fecha:</strong> ${fecha}
-                            </div>
-                        </div>
-                    </div>
-                `
+            <div class="event-card d-flex flex-column">
+                <div class="mb-auto">
+                    <span class="badge bg-warning text-dark mb-3">Pase ${evento.Nombre_Royalty}</span>
+                    <h5 class="fw-bold mb-1">${evento.Nombre_Evento}</h5>
+                    <p class="text-muted small mb-3">${evento.Descripcion}</p>
+                </div>
+                <div class="mt-3 pt-3 border-top text-muted small">
+                    <i class="bi bi-calendar-event"></i> <strong>Fecha:</strong> ${fecha}
+                </div>
+            </div>
+          `
         })
         contenedorEventos.innerHTML = htmlEventos
       } else {
-        contenedorEventos.innerHTML = '<div class="alert alert-info w-100">Por el momento no hay eventos programados.</div>'
+        contenedorEventos.innerHTML = '<div class="alert alert-light border mx-3 w-100 text-center">Por el momento no hay eventos programados.</div>'
       }
     })
     .catch(error => {
       console.error('Error:', error)
-      contenedorPromociones.innerHTML = '<div class="alert alert-danger w-100">Ocurrió un error al cargar las promociones.</div>'
-      contenedorEventos.innerHTML = '<div class="alert alert-danger w-100">Ocurrió un error al cargar los eventos.</div>'
+      contenedorPromociones.innerHTML = '<div class="alert alert-danger mx-3 w-100">Ocurrió un error al cargar las promociones.</div>'
+      contenedorEventos.innerHTML = '<div class="alert alert-danger mx-3 w-100">Ocurrió un error al cargar los eventos.</div>'
     })
 })
