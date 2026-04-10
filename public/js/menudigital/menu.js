@@ -177,23 +177,41 @@ for (const seccion of seccionesCollapsible) {
 
 /* CU11 Visualizar Menu Digital */
 
+function ShowMenuErrorModal () {
+  console.log('Mostrando Modal de error')
+
+  // 1. Parar el spinner — reemplaza el contenido del contenedor del menú
+  const menuCategorias = document.getElementById('menu-categorias')
+  menuCategorias.innerHTML = `
+        <div class="has-text-centered py-6">
+            <p class="is-size-6 has-text-grey">No se pudo cargar el menú.</p>
+        </div>`
+
+  // 2. Mostrar el modal
+  document.getElementById('menuErrorModal').showModal()
+}
+
 // Funcion para obtener los datos del Menu
 async function obtenerMenu () {
   try {
     const response = await fetch('/menu/menuData')
 
-    if (!response.ok) {
-      console.log('Señal de Error desde Backend: ', response.message)
+    const data = await response.json()
+    console.log('Data: ', data)
+    console.log('response: ', response)
+
+    if (!data.ok) {
+      console.log('Señal de Error desde Backend: ', data.message)
       throw new Error(`Error HTTP: ${response.status}`)
     }
 
-    const data = await response.json()
     console.log('Datos obtenidos de Backend: ', data)
 
     /* === Llamada a Construcción de Menu Dinámico == */
     contruirMenuDinamico(data)
   } catch (error) {
     console.error('Error al obtener el menú:', error)
+    ShowMenuErrorModal()
   }
 }
 
