@@ -167,6 +167,59 @@
     <button id="closeInvalidData" class="modal-close-btn" >Cerrar</button>
 </dialog>
 
+<!-- Modal Selección de accion elim/des -->
+<dialog id="ElimDesactModal" class="mymodal">
+    <button class="modal-close-btn" id="closeElimDesact">✕</button>
+
+    <div class="modal-accent-bar" style="background:#e74c3c;"></div>
+    <h2 style="color:#c0392b;">¿Qué deseas hacer?</h2>
+    <p id="elimDesactNombre" style="font-weight:600; color:#222; margin-bottom:4px;">Nombre del producto</p>
+    <p>Esta acción afectará la disponibilidad del producto en el menú.</p>
+
+    <hr style="border:none; border-top:1px solid #ebebeb; margin: 16px 0;">
+
+    <div class="elim-desact-opciones">
+
+        <button id="btnDesactivar" class="button is-warning is-light is-fullwidth elim-desact-btn">
+            <span>⏸</span>
+            <div class="elim-desact-btn-text">
+                <span class="elim-desact-btn-title">Desactivar</span>
+                <span class="elim-desact-btn-sub">El producto deja de aparecer en el menú pero se conserva</span>
+            </div>
+        </button>
+
+        <button id="btnEliminar" class="button is-danger is-light is-fullwidth elim-desact-btn">
+            <span>🗑</span>
+            <div class="elim-desact-btn-text">
+                <span class="elim-desact-btn-title">Eliminar</span>
+                <span class="elim-desact-btn-sub">Se borra permanentemente de la base de datos</span>
+            </div>
+        </button>
+
+    </div>
+
+    <div class="modal-footer">
+        <button id="btnSalirElimDesact" type="button" class="button is-light">Salir</button>
+    </div>
+</dialog>
+
+<!-- Modal conf de acción-->
+<dialog id="ConfirmActionModal" class="mymodal">
+    <button class="modal-close-btn" id="closeConfirmAction">✕</button>
+
+    <div id="confirmAccentBar" class="modal-accent-bar"></div>
+    <h2 id="confirmActionTitle">Confirmar acción</h2>
+    <p id="confirmActionDesc"></p>
+
+    <hr style="border:none; border-top:1px solid #ebebeb; margin: 16px 0;">
+
+    <div class="modal-footer">
+        <button id="btnCancelarConfirm" type="button" class="button is-light">Cancelar</button>
+        <button id="btnConfirmarAccion" type="button" class="button">Confirmar</button>
+    </div>
+</dialog>
+
+
 
 
 
