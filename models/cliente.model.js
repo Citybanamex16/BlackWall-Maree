@@ -1,6 +1,6 @@
 const db = require('../util/database.js')
 
-module.exports = class Cliente {
+class Cliente {
   static fetchContactDataByOrder (idOrden) {
     const query = `
       SELECT
@@ -16,4 +16,36 @@ module.exports = class Cliente {
     `
     return db.execute(query, [idOrden])
   }
+
+  static async fetchByPhone (numeroTelefonico) {
+    const [rows] = await db.execute(`
+      SELECT
+        Numero_Telefonico AS numero_telefonico,
+        Nombre AS nombre,
+        Correo AS correo,
+        Genero AS genero,
+        Fecha_Nacimiento AS fecha_nacimiento
+      FROM cliente
+      WHERE Numero_Telefonico = ?
+      LIMIT 1
+    `, [numeroTelefonico])
+
+    return rows[0] || null
+  }
+
+  static async updatePersonalData (numeroTelefonico, nombre, correo, genero, fechaNacimiento) {
+    const [result] = await db.execute(`
+      UPDATE cliente
+      SET
+        Nombre = ?,
+        Correo = ?,
+        Genero = ?,
+        Fecha_Nacimiento = ?
+      WHERE Numero_Telefonico = ?
+    `, [nombre, correo, genero, fechaNacimiento, numeroTelefonico])
+
+    return result
+  }
 }
+
+module.exports = Cliente

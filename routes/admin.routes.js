@@ -38,5 +38,8 @@ router.post('/api/ingredientes/validar', adminControlador.validarIngrediente)
 router.post('/api/ingredientes/crear', adminControlador.crearIngrediente)
 router.get('/api/ingredientes/:id/validarEliminable', adminControlador.validarIngredienteEliminable)
 router.delete('/api/ingredientes/:id/eliminar', adminControlador.eliminarIngrediente)
+router.put('/api/ingredientes/:id/actualizar', adminControlador.actualizarIngrediente)
+router.get('/metricas-ingredientes', adminControlador.getMetricasIngredientes)
+router.get('/api/metricas-ingredientes', adminControlador.getMetricasIngredientesData)
 
 module.exports = router

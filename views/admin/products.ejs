@@ -1,5 +1,65 @@
-<%- include('../partials/header_admin', { pageTitle: 'Catálogo de Productos - Marée' }) %>
-<%- include('../partials/breadcrumbs') %>
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Products - Admin Marée</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@1.0.4/css/bulma.min.css">
+    <link rel="stylesheet" href="/css/productCatalog.css">
+</head>
+<body>
+
+    <%- include('../partials/breadcrumbs') %>
+
+    <section class="section">
+        <div class="container">
+
+            <!-- Encabezado de página -->
+            <div class="level mb-4">
+                <div class="level-left">
+                    <div>
+                        <h1 class="title mb-1">Catálogo de Productos</h1>
+                        <p class="subtitle is-6">Gestiona categorías, precios y disponibilidad</p>
+                    </div>
+                </div>
+                <div class="level-right">
+                    <!-- Buscador rápido por nombre -->
+                    <div class="field">
+                        <div class="control has-icons-left">
+                            <input id="filtroBusqueda" class="input" type="text" placeholder="Buscar producto...">
+                            <span class="icon is-left">🔍</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Resumen rápido — JS inyecta los números -->
+            <div class="level stats-bar mb-5">
+                <div class="level-item has-text-centered">
+                    <div>
+                        <p class="heading">Total productos</p>
+                        <p class="title" id="statTotal">—</p>
+                    </div>
+                </div>
+                <div class="level-item has-text-centered">
+                    <div>
+                        <p class="heading">Disponibles</p>
+                        <p class="title" id="statDisponibles">—</p>
+                    </div>
+                </div>
+                <div class="level-item has-text-centered">
+                    <div>
+                        <p class="heading">Categorías</p>
+                        <p class="title" id="statCategorias">—</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Contenedor principal — JS construye una sección por categoría -->
+            <div id="admin-catalogo"></div>
+
+        </div>
+    </section>
 
 <main class="page-wrap">
   <header style="margin-bottom: 32px;">
@@ -11,17 +71,10 @@
       <p>Contenido del catálogo de productos...</p>
   </div>
 
-  <a href="#" id="registrarNuevoProducto" class="btn-primary fab" style="border-radius: var(--radius-pill); padding: 14px 24px; display: flex; align-items: center; gap: 8px;">
-    <span class="icon">
-        <i class="fas fa-plus"></i> </span>
-    <span>Añadir Producto</span>
-  </a>
-</main>
-
-<dialog id="TypeFormsCU04" class="card-base" style="padding: 32px; border: none; max-width: 400px;">
-  <button class="delete is-pulled-right" id="closeRegisterX" style="background: var(--c-border);"></button>
-  <h2 id="tituloModal" class="page-title" style="font-size: 24px; margin-bottom: 16px;">Título dinámico</h2>
-  <p style="color: var(--c-text-muted);">Elige una opción:</p>
+<dialog id="TypeFormsCU04" class="mymodal">
+  <button class="modal-close-btn" id="closeRegisterX">✕</button>
+  <h2 id="tituloModal">Título dinámico</h2>
+  <p>Elige una opción:</p>
   <br>
   <button id="cerrarModal" class="btn-ghost" style="margin-top: 10px; width: 100%;">Cerrar</button>
 </dialog>
@@ -32,11 +85,21 @@
   <p style="color: var(--c-text-muted);">Llena los datos requeridos</p>
   <hr style="border:none; border-top:1px solid var(--c-border); margin: 16px 0;">
 
-  <div id="formsContainer"></div>
+<dialog id="RegisterFormsCU04" class="mymodal">
+  <button class="modal-close-btn" id="closeRegisterX">✕</button>
+  <h2 id="formsRegistrarTitulo">Título dinámico</h2>
+  <h3 id ="idSection"></h3>
+  <form id="formsRegistrarForm" novalidate>
+    <!-- Campos dinámicos (nombre, precio, etc.) se inyectan aquí -->
 
-  <div style="display: flex; justify-content: flex-end; gap: 12px; margin-top: 24px;">
-    <button id="cerrarFormModal" type="button" class="btn-ghost">Cancelar</button>
-    <button id="submitFormsRegistrar" type="submit" form="formsRegistrarForm" class="btn-primary">Guardar</button>
+    <!-- ═══════════════════════════════════════════
+         SECCIÓN INGREDIENTES
+    ════════════════════════════════════════════ -->
+  </form>
+  <!-- Footer del modal -->
+  <div class="modal-footer">
+    <button id="cerrarFormsRegistrar"  type="button" class="button is-light">Cancelar</button>
+    <button id="submitFormsRegistrar" type="submit" form="formsRegistrarForm" class="button is-primary">Guardar</button>
   </div>
 </dialog>
 
@@ -48,17 +111,60 @@
 
   <div id="summaryContent" style="margin-bottom: 24px;"></div> 
 
-  <div style="display: flex; justify-content: flex-end; gap: 12px;">
-    <button id="cerrarSummaryModal" type="button" class="btn-ghost">Cerrar</button>
-    <button id="RegisterProduct" type="button" class="btn-primary">Registrar Producto</button>
+
+<dialog id="SummaryCU04" class="mymodal">
+  <button class="modal-close-btn" id="closeRegisterX">✕</button>
+  <h2 id="SummaryTitleModal">Título dinámico</h2>
+  <p>Revisa los datos antes de registrar</p>
+   <hr style="border:none; border-top:1px solid #ebebeb; margin: 12px 0;">
+    <div id="summaryContent"></div> 
+
+    <div class="modal-footer">
+    <button id="cerrarSummaryModal" type="button" class="button is-light">Cerrar</button>
+    <button id="RegisterProduct"    type="button" class="button is-primary">Registrar Producto</button>
   </div>
+
 </dialog>
 
-<dialog id="ModalExito" class="card-base" style="padding: 32px; border: none; max-width: 400px; text-align: center;">
-  <div style="font-size: 48px; margin-bottom: 16px; color: var(--c-success);">✓</div>
-  <h2 id="TituloExito" class="page-title" style="font-size: 28px; margin-bottom: 12px;">Titulo Dinamico</h2>
-  <p id="exitoContent" style="color: var(--c-text-muted); margin-bottom: 24px;">Contenido Dinámico</p>
-  <button id="closeExito" class="btn-success" style="width: 100%;">Regresar a Catalogo</button>
+
+<dialog id="modifSummaryCU05" class="mymodal">
+  <button class="modal-close-btn" id="closeRegisterX">✕</button>
+
+  <h2 id="SummaryTitleModif">Título dinámico</h2>
+  <p style="font-size:13px; color:#888; margin-top:2px;">
+    Revisa los cambios antes de confirmar la modificación
+  </p>
+
+  <hr style="border:none; border-top:1px solid #ebebeb; margin: 12px 0;">
+
+  <!-- Cabecera de columnas -->
+  <div class="modif-summary-header">
+    <span class="modif-col-label">Campo</span>
+    <span class="modif-col-old">Original</span>
+    <span class="modif-col-new">Nuevo</span>
+  </div>
+
+  <!-- Filas generadas por JS -->
+  <div id="modifSummaryContent" class="modif-summary-body"></div>
+
+  <hr style="border:none; border-top:1px solid #ebebeb; margin: 12px 0;">
+
+  <div class="modal-footer">
+    <button id="cerrarSummaryModif" type="button" class="button is-light">Regresar</button>
+    <button id="RegisterModification" type="button" class="button is-primary">Registrar Modificación</button>
+  </div>
+
+</dialog>
+ 
+
+
+<!-- Dialogo de ¡EXITO!-->
+<dialog id="ModalExito" class="error-modal mymodal">
+    <h2 id = "TituloExito">Titulo Dinamico</h2>
+    <div class="modal-accent-bar"></div>
+    <p id="exitoContent">Contenido Dinámico</p>
+    <!-- Botón con ID para manipularlo desde JS -->
+    <button id="closeExito" type="submit" class="modal-close-btn" class="modal-close-btn">Regresar a Catalogo</button>
 </dialog>
 
 <dialog id="ErrorModal" class="card-base" style="padding: 32px; border: none; max-width: 400px; text-align: center;">
@@ -68,5 +174,10 @@
   <button id="closeError" class="btn-danger" style="width: 100%;">Regresar a Catalogo</button>
 </dialog>
 
+
+
+
+<script src="/js/menudigital/AdminProductsScripts/adminProducts.js"></script>
+<script src="/js/menudigital/AdminProductsScripts/ModifElimProducts.js"></script>
 </body>
 </html>
