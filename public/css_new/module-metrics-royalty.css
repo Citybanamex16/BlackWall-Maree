@@ -1,0 +1,48 @@
+:root {
+    --mr-gold: var(--c-primary, #b5956a);
+    --mr-border: var(--c-border, #ede8e0);
+    --mr-text: var(--c-text-main, #222222);
+    --mr-muted: var(--c-text-muted, #7a7a7a);
+    --mr-soft: var(--c-surface-soft, #f7f1ea);
+    --mr-danger: var(--c-danger, #b94a48);
+    --mr-success: var(--c-success, #2d8a56);
+}
+
+body {
+    background: var(--c-bg-body);
+    color: var(--mr-text);
+}
+
+.card-box {
+    background: var(--c-surface);
+    border: 1px solid var(--mr-border);
+    border-radius: var(--radius-lg, 12px);
+    padding: 24px;
+    box-shadow: var(--shadow-sm, 0 4px 20px rgba(0,0,0,0.05));
+    margin-bottom: 24px;
+}
+
+.section-title {
+    font-family: var(--font-heading);
+    font-size: 24px;
+    color: var(--mr-text);
+    margin-bottom: 8px;
+}
+
+.small-note {
+    font-size: 13px;
+    color: var(--mr-muted);
+}
+
+/* Tablas */
+.table-container {
+    overflow-x: auto;
+}
+
+.table th {
+    color: var(--mr-muted);
+    font-weight: 600;
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}

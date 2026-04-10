@@ -1,8 +1,3 @@
-/* ==================================================
-   2. GLOBAL COMPONENTS (Elementos Reutilizables)
-   Requiere que global-theme.css esté cargado antes.
-   ================================================== */
-
 /* ── 1. NAVEGACIÓN (Navbar y Logo) ── */
 .navbar {
     background-color: var(--c-surface) !important;
@@ -66,7 +61,6 @@
 }
 
 /* ── 4. BOTONES UNIFICADOS ── */
-/* Reemplaza: .event-primary-button, .maree-action-button, .btn-maree, .primary-btn */
 .btn-primary {
     background: linear-gradient(135deg, var(--c-primary) 0%, var(--c-primary-deep) 100%) !important;
     color: #fff !important;
@@ -85,7 +79,6 @@
     transform: translateY(-1px);
 }
 
-/* Reemplaza: .button.event-ghost, .button.maree-ghost */
 .btn-ghost {
     background: transparent;
     color: var(--c-primary-deep);
@@ -102,7 +95,6 @@
     color: var(--c-primary-deep);
 }
 
-/* Reemplaza: .button.event-danger, .button.maree-danger */
 .btn-danger {
     background: var(--c-danger);
     color: #fff;
@@ -119,7 +111,6 @@
 }
 
 /* ── 5. ETIQUETAS Y ESTADOS (Pills) ── */
-/* Reemplaza: .event-status-pill, .status-pill, .promo-chip */
 .status-pill {
     display: inline-flex;
     align-items: center;
@@ -172,7 +163,7 @@
 }
 /* ── 8. BREADCRUMBS UNIFICADOS ── */
 .bc-nav {
-    padding: 24px 28px 0; /* Se alinea con el page-wrap */
+    padding: 24px 28px 0;
     max-width: 1300px;
     margin: 0 auto;
 }
@@ -194,11 +185,10 @@
     align-items: center;
 }
 
-/* El separador entre links ( / ) */
 .bc-item:not(:last-child)::after {
     content: '/';
     margin: 0 12px;
-    color: var(--c-border-focus); /* Un arena suave */
+    color: var(--c-border-focus);
 }
 
 .bc-item a {
@@ -211,11 +201,10 @@
     color: var(--c-primary);
 }
 
-/* El último link (donde estás parado) */
 .bc-item.is-active a {
     color: var(--c-primary-deep);
     font-weight: 500;
-    pointer-events: none; /* No se puede clickear donde ya estás */
+    pointer-events: none;
 }
 
 .bc-divider {
@@ -225,13 +214,12 @@
     max-width: 1300px;
 }
 
-/* Ajuste móvil para los breadcrumbs */
 @media (max-width: 768px) {
     .bc-nav {
         padding: 16px 16px 0;
     }
     .bc-list {
         font-size: 10px;
-        flex-wrap: wrap; /* Por si la ruta es muy larga, baja a otra línea */
+        flex-wrap: wrap;
     }
 }

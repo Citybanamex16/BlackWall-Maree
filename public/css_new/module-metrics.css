@@ -1,6 +1,3 @@
-/* ==================================================
-   MÓDULO: MÉTRICAS Y REPORTES
-   ================================================== */
 .kpi-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
@@ -25,7 +22,7 @@
 }
 
 .kpi-value {
-    font-size: 34px;
+    font-size: 28px;
     font-weight: 600;
     color: var(--c-primary);
 }
