@@ -23,7 +23,7 @@ Pass: CL006901!
 
 // Charly
 
-/* Pool de conexiones
+// Pool de conexiones
 const pool = mysql.createPool({
   host: 'localhost',
   user: 'root',
@@ -33,7 +33,6 @@ const pool = mysql.createPool({
   connectionLimit: 10
 
 })
-*/
 
 // JUAREZ
 
@@ -48,6 +47,7 @@ const pool = mysql.createPool({
 
 })
 */
+/*
 // Santi
 // Pool de conexiones
 const pool = mysql.createPool({
@@ -59,5 +59,6 @@ const pool = mysql.createPool({
   connectionLimit: 10
 
 })
+*/
 
 module.exports = pool.promise() // Habilitamos poder usar .then() & .catch() yuhhhh
