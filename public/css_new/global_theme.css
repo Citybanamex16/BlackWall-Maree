@@ -1,6 +1,3 @@
-/* ==================================================
-   1. GLOBAL THEME - MARÉE (Variables Maestras)
-   ================================================== */
 @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;600&family=Jost:wght@300;400;500;600&display=swap');
 
 :root {
@@ -9,9 +6,9 @@
     --font-body: 'Jost', sans-serif;
 
     /* --- Fondos y Superficies --- */
-    --c-bg-body: #fcfaf7; /* Fondo general unificado */
+    --c-bg-body: #fcfaf7;
     --c-bg-gradient: linear-gradient(180deg, #fffdf9 0%, #f8f1e6 100%);
-    --c-surface: #ffffff; /* Tarjetas y paneles */
+    --c-surface: #ffffff;
     --c-surface-soft: #fcf8f3;
     
     /* --- Textos --- */
@@ -24,17 +21,17 @@
     --c-border-focus: #dcc7b5;
 
     /* --- Colores de Marca (Dorados / Arena) --- */
-    --c-primary: #b5956a;       /* El dorado principal */
-    --c-primary-deep: #a67f4f;  /* Dorado oscuro para hovers */
-    --c-primary-light: #e9dcc8; /* Arena claro */
-    --c-primary-bg: #fdf8f2;    /* Fondo crema sutil */
+    --c-primary: #b5956a;
+    --c-primary-deep: #a67f4f;
+    --c-primary-light: #e9dcc8;
+    --c-primary-bg: #fdf8f2;
 
     /* --- Estados (Éxito, Peligro, Información) --- */
-    --c-danger: #b96f5d;        /* Terracota para alertas/eliminar */
+    --c-danger: #b96f5d;
     --c-danger-deep: #a55f4f;
     --c-danger-bg: #fff5f1;
     
-    --c-success: #58713f;       /* Verde salvia para activo/completado */
+    --c-success: #58713f;
     --c-success-bg: #e7f0df;
 
     /* --- Sombras y Efectos --- */
@@ -43,10 +40,10 @@
     --shadow-lg: 0 24px 50px rgba(78, 54, 28, 0.08);
     
     /* --- Radios de Borde --- */
-    --radius-sm: 8px;     /* Inputs y botones pequeños */
-    --radius-md: 18px;    /* Tarjetas estándar */
-    --radius-lg: 24px;    /* Modales y tarjetas grandes */
-    --radius-pill: 999px; /* Etiquetas y botones redondeados */
+    --radius-sm: 8px;
+    --radius-md: 18px;
+    --radius-lg: 24px;
+    --radius-pill: 999px;
 }
 
 /* Reset básico global */
