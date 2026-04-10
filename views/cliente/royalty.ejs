@@ -1,39 +1,61 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Royalty - Marée</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@1.0.4/css/bulma.min.css">
-    <link rel="stylesheet" href="/css/menustyle.css">
-    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=Jost:wght@300;400;500&display=swap" rel="stylesheet">
-</head>
+<%- include('../partials/header_cliente', { pageTitle: 'Menu - Maree' }) %>
+    <link rel="stylesheet" href="/css_new/royalty-cliente.css">
 <body>
-    <%- include('../partials/breadcrumbs') %>
+<%- include('../partials/breadcrumbs') %>
     
-    <main class="container my-5">
-    <div class="royalty-header text-center mb-5">
-        <h1 class="display-4">¡Hola, <%= cliente.Nombre %>!</h1>
-        <p class="lead">Tu nivel actual es: <strong id="cliente-nivel-badge"><%= cliente.nivel %></strong></p>
-        <p>Visitas acumuladas: <strong><%= cliente.visitas %></strong></p>
+<main class="container-fluid container-md my-3 my-md-5 royalty-dashboard">
+    
+    <div class="row mb-4">
+        <div class="col-12 col-md-8 mx-auto px-2 px-md-3">
+            <div class="premium-card text-center p-4">
+                
+                <h1 class="fs-2 fw-bold mb-1 text-truncate">¡Hola, <%= cliente.Nombre %>!</h1>
+                <p class="text-muted small mb-4">Maree Royalty</p>
+
+                <div class="qr-container mb-4">
+                    <div class="qr-placeholder mx-auto">
+                        <i class="bi bi-qr-code-scan"></i>
+                        <span class="mt-2 small text-muted">Generando...</span>
+                    </div>
+                    <p class="text-muted mt-3 mb-0"><small><i class="bi bi-info-circle"></i> Muestra este código en caja</small></p>
+                </div>
+
+                <div class="royalty-stats row g-0">
+                    <div class="stat-item col-6 border-end">
+                        <span class="stat-label">Nivel</span>
+                        <strong id="cliente-nivel-badge" class="badge-nivel mx-auto mt-1"><%= cliente.nivel %></strong>
+                    </div>
+                    <div class="stat-item col-6">
+                        <span class="stat-label">Visitas</span>
+                        <strong class="stat-value mt-1"><%= cliente.visitas %></strong>
+                    </div>
+                </div>
+                
+            </div>
+        </div>
     </div>
 
-    <hr>
-
-    <section class="mb-5">
-        <h2 class="mb-4">Tus Promociones Desbloqueadas</h2>
-        <div class="row" id="contenedor-promociones">
-            <div class="text-center"><div class="spinner-border text-primary" role="status"></div> Cargando promociones...</div>
+    <section class="mb-4 ps-2 ps-md-0">
+        <h2 class="section-title mb-3 fs-4">Tus Promociones</h2>
+        <div class="scroll-horizontal pb-3" id="contenedor-promociones">
+            <div class="w-100 text-center py-4 loading-state">
+                <div class="spinner-border text-gold spinner-border-sm" role="status"></div> 
+                <span class="ms-2 small">Cargando promociones...</span>
+            </div>
         </div>
     </section>
 
-    <section class="mb-5">
-        <h2 class="mb-4">Tus Eventos Exclusivos</h2>
-        <div class="row" id="contenedor-eventos">
-            <div class="text-center"><div class="spinner-border text-primary" role="status"></div> Cargando eventos...</div>
+    <section class="mb-4 ps-2 ps-md-0">
+        <h2 class="section-title mb-3 fs-4">Tus Eventos</h2>
+        <div class="scroll-horizontal pb-3" id="contenedor-eventos">
+            <div class="w-100 text-center py-4 loading-state">
+                <div class="spinner-border text-gold spinner-border-sm" role="status"></div> 
+                <span class="ms-2 small">Cargando eventos...</span>
+            </div>
         </div>
     </section>
 </main>
-    <script src="/js/Royalty/royalty.cliente.js"></script>
+
+<script src="/js/Royalty/royalty.cliente.js"></script>
 </body>
 </html>

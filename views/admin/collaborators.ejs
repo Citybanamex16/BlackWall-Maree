@@ -1,74 +1,56 @@
-<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Colaboradores - Marée</title>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@1.0.4/css/bulma.min.css">
-  <link rel="stylesheet" href="/css/adminstyle.css">
-</head>
-<body>
+<%- include('../partials/header_admin', { pageTitle: 'Colaboradores - Marée' }) %>
+<%- include('../partials/breadcrumbs') %>
 
-<nav class="navbar" role="navigation">
-  <div class="navbar-brand">
-    <span class="navbar-item logo">MARÉE</span>
-  </div>
-</nav>
+<main class="page-wrap">
+  <header style="margin-bottom: 32px;">
+    <h1 class="page-title">Colaboradores</h1>
+    <p class="page-sub">Gestión de empleados</p>
+  </header>
 
-<section class="section">
-  <div class="container">
-    <h1 class="title">Colaboradores</h1>
-    <p class="subtitle">Gestión de empleados</p>
-
-    <% if (error) { %>
-      <div class="notification is-danger"><%= error %></div>
-    <% } %>
-
-    <div class="mb-4">
-      <a href="/admin/colaboradores/nuevo" class="button is-primary">
-        Registrar nuevo colaborador
-      </a>
+  <% if (typeof error !== 'undefined' && error) { %>
+    <div class="notification status-pill is-danger" style="border-radius: var(--radius-md); padding: 16px; width: 100%;">
+      <%= error %>
     </div>
+  <% } %>
 
-    <div class="box">
-      <table class="table is-fullwidth is-striped is-hoverable">
-        <thead>
+  <div style="margin-bottom: 24px;">
+    <a href="/admin/colaboradores/nuevo" class="btn-primary">
+      + Registrar nuevo colaborador
+    </a>
+  </div>
+
+  <div class="card-base">
+    <table class="table is-fullwidth is-hoverable" style="background: transparent;">
+      <thead>
+        <tr>
+          <th style="color: var(--c-text-muted); font-size: 12px; text-transform: uppercase;">ID</th>
+          <th style="color: var(--c-text-muted); font-size: 12px; text-transform: uppercase;">Nombre</th>
+          <th style="color: var(--c-text-muted); font-size: 12px; text-transform: uppercase;">Rol</th>
+          <th style="color: var(--c-text-muted); font-size: 12px; text-transform: uppercase;">Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% colaboradores.forEach(colaborador => { %>
           <tr>
-            <th>ID</th>
-            <th>Nombre</th>
-            <th>Rol</th>
-            <th>Acciones</th>
+            <td><strong><%= colaborador.id_colaborador %></strong></td>
+            <td style="font-weight: 500;"><%= colaborador.nombre %></td>
+            <td><span class="status-pill is-neutral"><%= colaborador.rol %></span></td>
+            <td>
+              <div style="display: flex; gap: 8px;">
+                <a href="/admin/colaboradores/<%= colaborador.id_colaborador %>" class="btn-ghost" style="padding: 4px 10px; font-size: 12px;">Ver detalle</a>
+                <button class="btn-danger btn-baja" data-id="<%= colaborador.id_colaborador %>" data-nombre="<%= colaborador.nombre %>" style="padding: 4px 10px; font-size: 12px;">Dar de baja</button>
+              </div>
+            </td>
           </tr>
-        </thead>
-        <tbody>
-          <% colaboradores.forEach(colaborador => { %>
-            <tr>
-              <td><%= colaborador.id_colaborador %></td>
-              <td><%= colaborador.nombre %></td>
-              <td><%= colaborador.rol %></td>
-              <td>
-                <a
-                  href="/admin/colaboradores/<%= colaborador.id_colaborador %>"
-                  class="button is-small is-info is-light">
-                  Ver detalle
-                </a>
-
-                <button
-                  class="button is-small is-danger is-light btn-baja"
-                  data-id="<%= colaborador.id_colaborador %>"
-                  data-nombre="<%= colaborador.nombre %>">
-                  Dar de baja
-                </button>
-              </td>
-            </tr>
-          <% }) %>
-        </tbody>
-      </table>
-    </div>
-
-    <a href="/admin" class="button is-light">Volver al dashboard</a>
+        <% }) %>
+      </tbody>
+    </table>
   </div>
-</section>
+
+  <div style="margin-top: 24px;">
+    <a href="/admin" class="btn-ghost" style="border: none;">← Volver al dashboard</a>
+  </div>
+</main>
 
 <script src="/js/admin.js"></script>
 </body>

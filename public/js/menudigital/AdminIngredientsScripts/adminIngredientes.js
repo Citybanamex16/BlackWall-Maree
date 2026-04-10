@@ -65,6 +65,7 @@ async function cargarTablaIngredientes () {
           <th>Precio</th>
           <th>Tipo</th>
           <th>Estado</th>
+          <th></th>
         </tr>
       </thead>
     `
@@ -90,6 +91,11 @@ async function cargarTablaIngredientes () {
 
       tr.querySelector('.btn-eliminar').addEventListener('click', (e) => {
         abrirModalEliminar(e.target.dataset.id, e.target.dataset.nombre)
+      })
+
+      tr.addEventListener('click', (e) => {
+        if (e.target.classList.contains('btn-eliminar')) return
+        abrirModalEditar(ing)
       })
     })
 
@@ -353,5 +359,127 @@ btnConfirmarEliminar.addEventListener('click', async () => {
     mostrarError('Error interno', `${error}`)
   } finally {
     idParaEliminar = null
+  }
+})
+
+// Modal modificar ingredientes
+const modalEditar = document.getElementById('ModalEditar')
+const editarSubtitulo = document.getElementById('editarSubtitulo')
+const editNombre = document.getElementById('editNombre')
+const editCategoria = document.getElementById('editCategoria')
+const editPrecio = document.getElementById('editPrecio')
+const editTipo = document.getElementById('editTipo')
+const editImagen = document.getElementById('editImagen')
+const editActivo = document.getElementById('editActivo')
+const btnGuardarEditar = document.getElementById('btnGuardarEditar')
+const btnCancelarEditar = document.getElementById('btnCancelarEditar')
+
+let idParaEditar = null
+let nombreOriginalEditar = null
+
+async function abrirModalEditar (ing) {
+  idParaEditar = ing.ID_Insumo
+  nombreOriginalEditar = ing.Nombre
+  editarSubtitulo.textContent = `Editando: ${ing.Nombre}`
+
+  // Llena campos con datos actuales
+  editNombre.value = ing.Nombre
+  editPrecio.value = ing.Precio
+  editTipo.value = ing.Tipo ?? ''
+  editImagen.value = ing.Imagen ?? ''
+  editActivo.checked = ing.Activo === 1
+
+  // Carga categorias y selecciona la que ya esta seleccionada
+  const res = await fetch('/admin/api/ingredientes/categorias')
+  const obj = await res.json()
+  editCategoria.innerHTML = ''
+  obj.data.forEach(cat => {
+    const opt = document.createElement('option')
+    opt.value = cat.Nombre
+    opt.textContent = cat.Nombre
+    if (cat.Nombre === ing.Categoría) opt.selected = true
+    editCategoria.appendChild(opt)
+  })
+
+  modalEditar.showModal()
+}
+
+btnCancelarEditar.addEventListener('click', () => {
+  modalEditar.close()
+  idParaEditar = null
+})
+
+btnGuardarEditar.addEventListener('click', async () => {
+  if (!idParaEditar) return
+
+  const nombre = editNombre.value.trim()
+  const precio = parseFloat(editPrecio.value)
+
+  // Valida campos vacios
+  if (!nombre || !editCategoria.value || !editPrecio.value) {
+    mostrarError('Campos incompletos', 'Nombre, Categoría y Precio son obligatorios.')
+    return
+  }
+
+  // Valida que el precio no sea negativo
+  if (isNaN(precio) || precio < 0) {
+    mostrarError('Precio inválido', 'El precio debe ser un número positivo.')
+    return
+  }
+
+  // Verifica duplicado solo si el nombre cambio
+  if (nombre !== nombreOriginalEditar) {
+    try {
+      const resNombre = await fetch(`/admin/api/ingredientes/verificarNombre?nombre=${encodeURIComponent(nombre)}`)
+      const objNombre = await resNombre.json()
+      if (objNombre.existe) {
+        mostrarError('Nombre duplicado', `Ya existe un ingrediente con el nombre "${nombre}".`)
+        return
+      }
+    } catch (error) {
+      mostrarError('Error de verificación', 'No se pudo verificar el nombre.')
+      return
+    }
+  }
+
+  const body = {
+    Nombre: editNombre.value.trim(),
+    Categoría: editCategoria.value,
+    Precio: editPrecio.value,
+    Activo: editActivo.checked,
+    Tipo: editTipo.value.trim(),
+    Imagen: editImagen.value.trim()
+  }
+
+  try {
+    const res = await fetch(`/admin/api/ingredientes/${idParaEditar}/actualizar`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    })
+
+    // Si el servidor responde con error
+    if (!res.ok) {
+      // Intentamos obtener el mensaje que manda el backendsito, si no, usa uno general
+      const errorData = await res.json().catch(() => ({}))
+      throw new Error(errorData.message || 'La base de datos no está disponible.')
+    }
+
+    const obj = await res.json()
+
+    if (obj.success) {
+      modalEditar.close()
+      exitoTitulo.textContent = 'Ingrediente actualizado'
+      exitoMensaje.textContent = 'Los cambios fueron guardados correctamente.'
+      modalExito.showModal()
+      cargarTablaIngredientes()
+    } else {
+      mostrarError('Error al actualizar', obj.message || 'Error desconocido')
+    }
+  } catch (error) {
+    // Si se cae la BD, el "throw new Error" de arriba manda la ejecucion para aca abajo
+    mostrarError('Error al intentar modificar ingrediente', error.message)
+  } finally {
+    idParaEditar = null
   }
 })
