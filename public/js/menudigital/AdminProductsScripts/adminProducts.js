@@ -1,4 +1,4 @@
-/* global ConstruirModifModal, ModifyProduct */
+/* global ConstruirModifModal, ModifyProduct, eliminarDesactivarModal */
 // JS FRONTEND de la vista de Productos del Admin
 
 /* CU Visualizar Catalogo de Productos */
@@ -50,11 +50,20 @@ function construirFichaProductos (datosProducto, datosCategorias) {
 
     // Delegar clicks en todas las fichas de esta categoría
     gridDestino.addEventListener('click', (e) => {
+      // Click en botón Elim/Desact — tiene prioridad, no propaga a la fila
+      const btnElim = e.target.closest('.btn-elim-desact')
+      if (btnElim) {
+        e.stopPropagation()
+        const idProd = btnElim.dataset.idProd
+        const nameProd = btnElim.dataset.nameProd
+        eliminarDesactivarModal(idProd, nameProd)
+        return
+      }
+
+      // Click en la fila — abre modal de edición
       const ficha = e.target.closest('.admin-prod-row')
       if (!ficha) return
-      const id = ficha.dataset.id
-      const prod = catalogoProductosMap.get(id)
-      // TODO: abrir modal de detalle/edición del producto
+      const prod = catalogoProductosMap.get(ficha.dataset.id)
       ConstruirModifModal(prod, datosCategorias)
     })
   })
@@ -76,6 +85,12 @@ function renderProductoAdmin (prod) {
       <span class="prod-precio">$${prod.precio}</span>
       <span class="prod-ingredientes">${ingredientesTexto}</span>
       ${disponibleTag}
+      <button 
+        class="btn-elim-desact" 
+        data-id-prod="${prod.id}"
+        data-name-prod="${prod.nombre}"
+        title="Eliminar o desactivar producto"
+      >Elim/Desact</button>
     </div>`
 }
 
@@ -104,6 +119,7 @@ function construirCategoria (cat, contenedorMenu) {
         <span>Precio</span>
         <span>Ingredientes</span>
         <span>Estado</span>
+        <span>Acción</span>
       </div>
     </div>`
 
