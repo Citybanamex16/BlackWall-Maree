@@ -446,17 +446,18 @@ exports.deleteProducto = async (req, res, next) => {
   }
 
   try {
+    console.log("Eliminando producto con id: ", id)
     const productoEliminado = await productos.eliminarProducto(id)
 
     if (!productoEliminado) {
-      console.log('Error producto no eliminado')
+      console.log('Error producto no encontrado')
       return res.status(404).json({
         ok: false,
         message: 'Producto no encontrado'
       })
     }
 
-    console.log('Producto Eliminado con exito')
+    console.log('Producto Eliminado con exito: ', productoEliminado)
     res.status(200).json({
       ok: true,
       message: 'Producto Eliminado con éxito', // Mensaje preciso
