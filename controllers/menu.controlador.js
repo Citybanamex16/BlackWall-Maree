@@ -432,3 +432,86 @@ exports.getIngredientesFullCatalog = async (req, res, next) => {
     })
   }
 }
+
+/* Eliminar/Desactivar Producto */
+exports.deleteProducto = async (req, res, next) => {
+  const { id } = req.body // Más limpio
+
+  // Validar entrada
+  if (!id) {
+    return res.status(400).json({
+      ok: false,
+      message: 'El ID del producto es obligatorio para la eliminación'
+    })
+  }
+
+  try {
+    console.log("Eliminando producto con id: ", id)
+    const productoEliminado = await productos.eliminarProducto(id)
+
+    if (!productoEliminado) {
+      console.log('Error producto no encontrado')
+      return res.status(404).json({
+        ok: false,
+        message: 'Producto no encontrado'
+      })
+    }
+
+    console.log('Producto Eliminado con exito: ', productoEliminado)
+    res.status(200).json({
+      ok: true,
+      message: 'Producto Eliminado con éxito', // Mensaje preciso
+      data: productoEliminado // Opcional: devolver el objeto
+    })
+  } catch (err) {
+    // 3. Logear el error real para debugging
+    console.error('Error al eliminar producto:', err)
+
+    res.status(500).json({
+      ok: false,
+      message: 'Error interno del servidor', // Mensaje seguro para el cliente
+      error: process.env.NODE_ENV === 'development' ? err.message : {}
+    })
+  }
+}
+
+exports.putDesactivarProducto = async (req, res, next) => {
+  const { id } = req.body // Más limpio
+
+  // Validar entrada
+  if (!id) {
+    return res.status(400).json({
+      ok: false,
+      message: 'El ID del producto es obligatorio'
+    })
+  }
+
+  try {
+    // 2. Asumimos que desactivarProducto devuelve el producto actualizado o null
+    const productoDesactivado = await productos.desactivarProducto(id)
+
+    if (!productoDesactivado) {
+      console.log('Error producto no desactivado')
+      return res.status(404).json({
+        ok: false,
+        message: 'Producto no encontrado'
+      })
+    }
+
+    console.log('Producto desactivado con exito')
+    res.status(200).json({
+      ok: true,
+      message: 'Producto desactivado con éxito', // Mensaje preciso
+      data: productoDesactivado // Opcional: devolver el objeto
+    })
+  } catch (err) {
+    // 3. Logear el error real para debugging
+    console.error('Error al desactivar producto:', err)
+
+    res.status(500).json({
+      ok: false,
+      message: 'Error interno del servidor', // Mensaje seguro para el cliente
+      error: process.env.NODE_ENV === 'development' ? err.message : {}
+    })
+  }
+}
