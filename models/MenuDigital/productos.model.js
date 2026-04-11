@@ -196,7 +196,6 @@ module.exports = class Producto {
   static async eliminarProducto (id) {
     const [result] = await db.execute('CALL eliminarProducto(?)', [id])
     return result
-
   }
 
   static async desactivarProducto (id) {
