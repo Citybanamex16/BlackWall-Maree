@@ -649,5 +649,63 @@ dialog .checkbox {
   font-weight: 400;
 }
 
+/*Eliminar/Desactivar Ingrediente */
+.admin-prod-header,
+.admin-prod-row {
+  grid-template-columns: 2fr 80px 3fr 90px 100px; /* ← añade 100px al final */
+}
+
+
+.btn-elim-desact {
+  font-size: 11px;
+  padding: 4px 8px;
+  border-radius: 6px;
+  border: 1px solid #ffb3b3;
+  background: #fff5f5;
+  color: #cc0000;
+  cursor: pointer;
+  font-weight: 500;
+  transition: background 0.15s, border-color 0.15s;
+  white-space: nowrap;
+}
+
+.btn-elim-desact:hover {
+  background: #ffe0e0;
+  border-color: #e00000;
+}
+
+.elim-desact-opciones {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 4px;
+}
+
+.elim-desact-btn {
+    display: flex !important;
+    align-items: center !important;
+    gap: 12px !important;
+    height: auto !important;
+    padding: 12px 16px !important;
+    text-align: left !important;
+    justify-content: flex-start !important;
+}
+
+.elim-desact-btn-text {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.elim-desact-btn-title {
+    font-weight: 600;
+    font-size: 14px;
+}
+
+.elim-desact-btn-sub {
+    font-size: 11px;
+    opacity: 0.75;
+    font-weight: 400;
+}
 
 

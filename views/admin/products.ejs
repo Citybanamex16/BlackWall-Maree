@@ -61,29 +61,23 @@
         </div>
     </section>
 
-<main class="page-wrap">
-  <header style="margin-bottom: 32px;">
-    <h1 class="page-title">Catálogo de Productos</h1>
-    <p class="page-sub">Aquí va el catálogo de productos</p>
-  </header>
+     <!-- BOTÓN Registrar nuevo Producto -->
+    <a href="#" id="registrarNuevoProducto" class="button fab is-primary is-rounded button-floating">
+        <span class="icon">
+            <i class="fas fa-plus"></i> 
+        </span>
+        <span>Añadir Producto</span>
+    </a>
 
-  <div class="card-base" style="min-height: 400px; display:flex; align-items:center; justify-content:center; color: var(--c-text-muted);">
-      <p>Contenido del catálogo de productos...</p>
-  </div>
 
 <dialog id="TypeFormsCU04" class="mymodal">
   <button class="modal-close-btn" id="closeRegisterX">✕</button>
   <h2 id="tituloModal">Título dinámico</h2>
   <p>Elige una opción:</p>
   <br>
-  <button id="cerrarModal" class="btn-ghost" style="margin-top: 10px; width: 100%;">Cerrar</button>
+  <button id="cerrarModal"  style="margin-top: 10px;">Cerrar</button>
 </dialog>
 
-<dialog id="RegisterFormsCU04" class="card-base" style="padding: 32px; border: none; max-width: 600px; width: 90%;">
-  <button class="delete is-pulled-right" id="closeRegisterX" style="background: var(--c-border);"></button>
-  <h2 id="FormTitleModal" class="page-title" style="font-size: 24px; margin-bottom: 8px;">Título dinámico</h2>
-  <p style="color: var(--c-text-muted);">Llena los datos requeridos</p>
-  <hr style="border:none; border-top:1px solid var(--c-border); margin: 16px 0;">
 
 <dialog id="RegisterFormsCU04" class="mymodal">
   <button class="modal-close-btn" id="closeRegisterX">✕</button>
@@ -103,13 +97,7 @@
   </div>
 </dialog>
 
-<dialog id="SummaryCU04" class="card-base" style="padding: 32px; border: none; max-width: 500px; width: 90%;">
-  <button class="delete is-pulled-right" id="closeRegisterX" style="background: var(--c-border);"></button>
-  <h2 id="SummaryTitleModal" class="page-title" style="font-size: 24px; margin-bottom: 8px;">Título dinámico</h2>
-  <p style="color: var(--c-text-muted);">Revisa los datos antes de registrar</p>
-  <hr style="border:none; border-top:1px solid var(--c-border); margin: 16px 0;">
 
-  <div id="summaryContent" style="margin-bottom: 24px;"></div> 
 
 
 <dialog id="SummaryCU04" class="mymodal">
@@ -167,12 +155,70 @@
     <button id="closeExito" type="submit" class="modal-close-btn" class="modal-close-btn">Regresar a Catalogo</button>
 </dialog>
 
-<dialog id="ErrorModal" class="card-base" style="padding: 32px; border: none; max-width: 400px; text-align: center;">
-  <div style="font-size: 48px; margin-bottom: 16px; color: var(--c-danger);">⚠️</div>
-  <h2 id="ErrorTitle" class="page-title" style="font-size: 28px; margin-bottom: 12px;">Titulo Dinámico</h2>
-  <p id="errorContent" style="color: var(--c-text-muted); margin-bottom: 24px;">Contenido Dinámico</p>
-  <button id="closeError" class="btn-danger" style="width: 100%;">Regresar a Catalogo</button>
+
+
+
+<!-- Dialogo de error -->
+<dialog id="ErrorModal" class="error-modal mymodal">
+    <h2 id="ErrorTitle">Titulo Dinámico</h2>
+    <div class="modal-accent-bar"></div>
+    <p id="ErrorMessage">Mensaje Dinámico</p>
+    <!-- Botón con ID para manipularlo desde JS -->
+    <button id="closeInvalidData" class="modal-close-btn" >Cerrar</button>
 </dialog>
+
+<!-- Modal Selección de accion elim/des -->
+<dialog id="ElimDesactModal" class="mymodal">
+    <button class="modal-close-btn" id="closeElimDesact">✕</button>
+
+    <div class="modal-accent-bar" style="background:#e74c3c;"></div>
+    <h2 style="color:#c0392b;">¿Qué deseas hacer?</h2>
+    <p id="elimDesactNombre" style="font-weight:600; color:#222; margin-bottom:4px;">Nombre del producto</p>
+    <p>Esta acción afectará la disponibilidad del producto en el menú.</p>
+
+    <hr style="border:none; border-top:1px solid #ebebeb; margin: 16px 0;">
+
+    <div class="elim-desact-opciones">
+
+        <button id="btnDesactivar" class="button is-warning is-light is-fullwidth elim-desact-btn">
+            <span>⏸</span>
+            <div class="elim-desact-btn-text">
+                <span class="elim-desact-btn-title">Desactivar</span>
+                <span class="elim-desact-btn-sub">El producto deja de aparecer en el menú pero se conserva</span>
+            </div>
+        </button>
+
+        <button id="btnEliminar" class="button is-danger is-light is-fullwidth elim-desact-btn">
+            <span>🗑</span>
+            <div class="elim-desact-btn-text">
+                <span class="elim-desact-btn-title">Eliminar</span>
+                <span class="elim-desact-btn-sub">Se borra permanentemente de la base de datos</span>
+            </div>
+        </button>
+
+    </div>
+
+    <div class="modal-footer">
+        <button id="btnSalirElimDesact" type="button" class="button is-light">Salir</button>
+    </div>
+</dialog>
+
+<!-- Modal conf de acción-->
+<dialog id="ConfirmActionModal" class="mymodal">
+    <button class="modal-close-btn" id="closeConfirmAction">✕</button>
+
+    <div id="confirmAccentBar" class="modal-accent-bar"></div>
+    <h2 id="confirmActionTitle">Confirmar acción</h2>
+    <p id="confirmActionDesc"></p>
+
+    <hr style="border:none; border-top:1px solid #ebebeb; margin: 16px 0;">
+
+    <div class="modal-footer">
+        <button id="btnCancelarConfirm" type="button" class="button is-light">Cancelar</button>
+        <button id="btnConfirmarAccion" type="button" class="button">Confirmar</button>
+    </div>
+</dialog>
+
 
 
 

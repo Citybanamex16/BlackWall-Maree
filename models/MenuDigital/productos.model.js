@@ -190,4 +190,16 @@ module.exports = class Producto {
   static async fetchOneProductIngredientes (id) {
     return db.execute('SELECT ID_Insumo as id FROM producto_tiene_insumo WHERE ID_Producto = ?', [id])
   }
+
+  /* EliminarDesactivar producto PD30576515 */
+
+  static async eliminarProducto (id) {
+    const [result] = await db.execute('CALL eliminarProducto(?)', [id])
+    return result
+  }
+
+  static async desactivarProducto (id) {
+    const [result] = await db.execute('UPDATE producto SET Disponible = 0 WHERE ID_Producto = ?', [id])
+    return result
+  }
 }

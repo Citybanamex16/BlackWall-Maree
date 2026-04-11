@@ -381,3 +381,149 @@ function verificarCambiosNormalizados (obj1, obj2) {
 console.log(ConstruirModifModal, ModifyProduct) // Esto cuenta como "uso" y limpia el error.
 
 /* Fin de Modificar Platillo existente */
+
+/* CUESP Eliminar/Desactivar ingrediente */
+
+// Referencias
+const ElimDesactModal = document.getElementById('ElimDesactModal')
+const elimDesactNombre = document.getElementById('elimDesactNombre')
+const btnEliminar = document.getElementById('btnEliminar')
+const btnDesactivar = document.getElementById('btnDesactivar')
+const btnSalirElimDesact = document.getElementById('btnSalirElimDesact')
+const closeElimDesact = document.getElementById('closeElimDesact')
+
+function eliminarDesactivarModal (idProd, nombreProd) {
+  console.log('Eliminando el producto: ', nombreProd)
+  elimDesactNombre.textContent = nombreProd
+
+  ConectBtnElimModal(idProd, nombreProd)
+
+  ElimDesactModal.showModal()
+}
+
+console.log(eliminarDesactivarModal)
+
+function ConectBtnElimModal (id, nombre) {
+  // Botones de salir/cancelar
+  btnSalirElimDesact.addEventListener('click', () => ElimDesactModal.close(), { once: true })
+  closeElimDesact.addEventListener('click', () => ElimDesactModal.close(), { once: true })
+
+  // Desactivar
+  btnDesactivar.addEventListener('click', () => {
+    ElimDesactModal.close()
+    showConfirmActionModal('deshabilitar', id, nombre)
+  }, { once: true })
+
+  // Eliminar
+  btnEliminar.addEventListener('click', () => {
+    ElimDesactModal.close()
+    showConfirmActionModal('eliminar', id, nombre)
+  }, { once: true })
+}
+
+/* Modal confirmar acción */
+
+const ConfirmActionModal = document.getElementById('ConfirmActionModal')
+const confirmAccentBar = document.getElementById('confirmAccentBar')
+const confirmActionTitle = document.getElementById('confirmActionTitle')
+const confirmActionDesc = document.getElementById('confirmActionDesc')
+const btnConfirmarAccion = document.getElementById('btnConfirmarAccion')
+const btnCancelarConfirm = document.getElementById('btnCancelarConfirm')
+const closeConfirmAction = document.getElementById('closeConfirmAction')
+
+const accionConfig = {
+  eliminar: {
+    color: '#e74c3c',
+    btnClase: 'is-danger',
+    titulo: 'Confirmar eliminación',
+    descripcion: (nombre) => `¿Estás seguro de que deseas eliminar <strong>${nombre}</strong>? Esta acción es permanente y no se puede deshacer.`
+  },
+  deshabilitar: {
+    color: '#f5a623',
+    btnClase: 'is-warning',
+    titulo: 'Confirmar desactivación',
+    descripcion: (nombre) => `¿Estás seguro de que deseas desactivar <strong>${nombre}</strong>? El producto dejará de aparecer en el menú.`
+  }
+}
+
+function showConfirmActionModal (action, id, nombre) {
+  console.log(`¿Confirma ${action} de ${nombre}?`)
+
+  const config = accionConfig[action]
+
+  // Aplicar estilos según acción
+  confirmAccentBar.style.background = config.color
+  confirmActionTitle.style.color = config.color
+  confirmActionTitle.textContent = config.titulo
+  confirmActionDesc.innerHTML = config.descripcion(nombre)
+
+  // Resetear clases del botón confirmar y aplicar la correcta
+  btnConfirmarAccion.className = `button ${config.btnClase}`
+
+  ConfirmActionModal.showModal()
+
+  // Cerrar sin hacer nada
+  btnCancelarConfirm.addEventListener('click', () => { ConfirmActionModal.close() }, { once: true })
+  closeConfirmAction.addEventListener('click', () => { ConfirmActionModal.close() }, { once: true })
+
+  // Confirmar — delega a la función correcta según acción
+  btnConfirmarAccion.addEventListener('click', () => {
+    ConfirmActionModal.close()
+    if (action === 'eliminar') eliminarProducto(id, nombre)
+    if (action === 'deshabilitar') desactivarProd(id, nombre)
+  }, { once: true })
+}
+
+async function eliminarProducto (idProd, nombreProd) {
+  console.log('Eliminar producto:', nombreProd)
+  try {
+    const response = await fetch('/menu/eliminarProducto', {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ // Datos a enviar
+        id: idProd
+      })
+    })
+
+    const res = await response.json()
+
+    if (!res.ok) {
+      console.log('Error desde backend')
+      throw new Error('Error al eliminar')
+    }
+
+    // Exito en la consulta
+    showSuccessModal('Eliminación realizada con exito', `${nombreProd} fue eliminado con exito`)
+  } catch (error) {
+    ShowErrorModal('Error en eliminación', 'La conexión con la BD a fallado. Favor de intentarlo mas tarde')
+  }
+}
+
+async function desactivarProd (idProd, nombreProd) {
+  console.log('Desactivar producto:', nombreProd)
+  try {
+    const response = await fetch('/menu/desactivarProducto', {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ // Datos a enviar
+        id: idProd
+      })
+    })
+
+    const res = await response.json()
+
+    if (!res.ok) {
+      console.log('Error desde backend')
+      throw new Error('Error al Desactivar')
+    }
+
+    // Exito en la consulta
+    showSuccessModal('Desactivación realizada con exito', `${nombreProd} fue desactivado con exito`)
+  } catch (error) {
+    ShowErrorModal('Error en Desactivación', 'La conexión con la BD a fallado. Favor de intentarlo mas tarde')
+  }
+}
