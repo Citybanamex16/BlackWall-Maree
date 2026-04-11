@@ -446,7 +446,7 @@ exports.deleteProducto = async (req, res, next) => {
   }
 
   try {
-    console.log("Eliminando producto con id: ", id)
+    console.log('Eliminando producto con id: ', id)
     const productoEliminado = await productos.eliminarProducto(id)
 
     if (!productoEliminado) {
