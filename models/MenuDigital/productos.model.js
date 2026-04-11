@@ -191,9 +191,11 @@ module.exports = class Producto {
     return db.execute('SELECT ID_Insumo as id FROM producto_tiene_insumo WHERE ID_Producto = ?', [id])
   }
 
-  /* EliminarDesactivar producto */
+  /* EliminarDesactivar producto PD30576515 */
 
-  static async eliminarProducto () {
+  static async eliminarProducto (id) {
+    const [result] = await db.execute('CALL eliminarProducto(?)', [id])
+    return result
 
   }
 
