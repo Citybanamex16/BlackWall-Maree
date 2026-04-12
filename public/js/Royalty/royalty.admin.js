@@ -5,28 +5,65 @@
 
 let royaltiesData = []
 let nombreOriginal = ''
-function modificarRoyalty (nombre) {
-  const royalty = royaltiesData.find(r => r.Nombre_Royalty === nombre)
+async function modificarRoyalty (nombre) {
   nombreOriginal = nombre
-  // Obtenemos el modal
+  const royalty = royaltiesData.find(r => r.Nombre_Royalty === nombre)
+
+  // Obtenemos los ids del modal para poder llenarlo con los datos
   document.getElementById('modal-nombre').textContent = nombre
-  document.getElementById('modal-modificarRoyalty').classList.add('is-active')
   document.getElementById('input-nombre').value = royalty.Nombre_Royalty
   document.getElementById('input-prioridad').value = royalty.Número_de_prioridad
   document.getElementById('input-descripcion').value = royalty.Descripción
   document.getElementById('input-minVisitas').value = royalty.Min_Visitas
   document.getElementById('input-maxVisitas').value = royalty.Max_Visitas
+
+  // Obtenemos la ruta de promociones
+  const res = await fetch(`/royalty/royaltyAdmin/${nombre}/promociones`)
+  const data = await res.json()
+  // debuggear
+  console.log('Todas:', data.data.todas)
+  console.log('Asignadas:', data.data.idsAsignadas)
+  // Obtenemos el modal para promociones
+  const contenedor = document.getElementById('contenedor-promociones')
+  contenedor.innerHTML = ''
+  // Obtenemos los datos o la info que queremos
+  // Nos enfocamos en la promocion
+  data.data.todas.forEach(promo => {
+    const marcada = data.data.idsAsignadas.includes(promo.ID_promocion)
+
+    const label = document.createElement('label')
+    label.className = 'checkbox'
+    label.style.display = 'block'
+
+    const input = document.createElement('input')
+    input.type = 'checkbox'
+    input.value = promo.ID_promocion
+    input.className = 'checkbox-promo mr-2'
+    input.checked = marcada
+
+    label.appendChild(input)
+    label.appendChild(document.createTextNode(' ' + promo.Nombre))
+    contenedor.appendChild(label)
+  })
+  // abrimos el modal
+  document.getElementById('modal-modificarRoyalty').classList.add('is-active')
 }
 
 async function guardarRoyalty () {
+  const promociones = Array.from(document.querySelectorAll('.checkbox-promo:checked'))
+    .map(cb => cb.value)
+
   const body = {
     nombre: document.getElementById('input-nombre').value,
     prioridad: document.getElementById('input-prioridad').value,
     descripcion: document.getElementById('input-descripcion').value,
     minVisitas: document.getElementById('input-minVisitas').value,
-    maxVisitas: document.getElementById('input-maxVisitas').value
+    maxVisitas: document.getElementById('input-maxVisitas').value,
+    promociones
   }
+
   if (!validarFormulario(body)) return
+
   try {
     const response = await fetch('/royalty/royaltyAdmin/' + nombreOriginal, {
       method: 'PUT',
@@ -36,7 +73,6 @@ async function guardarRoyalty () {
 
     const data = await response.json()
     if (data.success) {
-      // Falta mostrar confirmacion
       document.getElementById('modal-confirmarModificarRoyalty').classList.add('is-active')
     } else {
       alert('Error al guardar Royalty')
@@ -46,6 +82,7 @@ async function guardarRoyalty () {
     alert('Error en conexión')
   }
 }
+
 const abrirModal = () => {
   document.getElementById('modal-modificarRoyalty').classList.add('is-active')
 }
