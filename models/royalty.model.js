@@ -10,10 +10,12 @@ module.exports = class Royalty {
   }
 
   // Admin
+  // Obtnemos los datos de los estados royalty
   static fetchAll () {
     return db.execute('SELECT * FROM estado_royalty ORDER BY Número_de_prioridad ASC')
   }
 
+  // Buscamos a lo que vamos a borrar
   static async deleteRoyaltyBD (nombre) {
     return db.execute('DELETE FROM estado_royalty_da_promociones WHERE Nombre_Royalty = ?', [nombre])
       .then(() => {
@@ -21,6 +23,7 @@ module.exports = class Royalty {
       })
   }
 
+  // Actualizaión de estado royalty
   static async updateEstadoRoyalty (nombreOriginal, nombreNuevo, prioridad, descripcion, minVisitas, maxVisitas) {
   // Desactivar llaves foraneas
     await db.execute('SET FOREIGN_KEY_CHECKS = 0')
@@ -44,6 +47,16 @@ module.exports = class Royalty {
 
     // Reactiva llaves foráneas
     await db.execute('SET FOREIGN_KEY_CHECKS = 1')
+  }
+
+  // Obtenemos las promociones de cada royalty
+  static async fetchPromociones_royalties (nombre) {
+    return db.execute(
+    `SELECT p.Nombre FROM promocion p 
+     INNER JOIN estado_royalty_da_promociones erp ON p.ID_promocion = erp.ID_Promocion 
+     WHERE erp.Nombre_Royalty = ?`,
+    [nombre]
+    )
   }
 
   // Cliente

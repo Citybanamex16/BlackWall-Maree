@@ -5,7 +5,14 @@ const Royalty = require('../models/royalty.model.js')
 // Admin
 exports.getRoyaltyAdmin = async (request, response, next) => {
   try {
+    // Obtenemos los royalties
     const [royalties] = await Royalty.fetchAll()
+    for (const royalty of royalties) {
+      // Obtenemos las promociones
+      const [promociones] = await Royalty.fetchPromociones_royalties(royalty.Nombre_Royalty)
+      royalty.promociones = promociones
+      console.log(`${royalty.Nombre_Royalty}:`, promociones) // Debuggear
+    }
     console.log('Obtenemos los estados Royalty de la base de datos')
     response.render('admin/royalty', { royalties })
   } catch (error) {
@@ -19,7 +26,13 @@ exports.getRoyaltyAdmin = async (request, response, next) => {
 
 exports.getRoyaltyAdminJSON = async (request, response, next) => {
   try {
+    // Obtenemos los royalties
     const [royalties] = await Royalty.fetchAll()
+    for (const royalty of royalties) {
+      // guardamos las promociones
+      const [promociones] = await Royalty.fetchPromociones_royalties(royalty.Nombre_Royalty)
+      royalty.promociones = promociones
+    }
     response.status(200).json({
       succes: true,
       message: 'Éxito al obtener estados royalty',

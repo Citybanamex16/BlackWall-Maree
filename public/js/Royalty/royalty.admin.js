@@ -114,6 +114,12 @@ async function cargarRoyalty () {
     const container = document.getElementById('royaltyContainer')
     royaltiesData = data.data
     data.data.forEach(royalty => {
+      let promocionesHTML
+      if (royalty.promociones && royalty.promociones.length > 0) {
+        promocionesHTML = royalty.promociones.map(promo => `<p>${promo.Nombre}</p>`).join('')
+      } else {
+        promocionesHTML = '<p class="has-text-grey">Sin promociones</p>'
+      }
       container.innerHTML += `
         <div class="column is-half">
           <div class="card">
@@ -124,6 +130,9 @@ async function cargarRoyalty () {
                 <p><strong>Descripción:</strong> ${royalty.Descripción}</p>
                 <p><strong>Visitas mínimas:</strong> ${royalty.Min_Visitas}</p>
                 <p><strong>Visitas máximas:</strong> ${royalty.Max_Visitas}</p>
+                <hr>
+                <strong> Promociones: </strong>
+                ${promocionesHTML}
               </div>
               <footer class="card-footer">
                 <button class="button is-warning card-footer-item" onclick="modificarRoyalty('${royalty.Nombre_Royalty}')">
