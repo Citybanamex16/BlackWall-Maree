@@ -15,6 +15,10 @@ module.exports = class Royalty {
     return db.execute('SELECT * FROM estado_royalty ORDER BY Número_de_prioridad ASC')
   }
 
+  static fetchTodasPromociones () {
+    return db.execute('SELECT ID_promocion, Nombre FROM promocion')
+  }
+
   // Buscamos a lo que vamos a borrar
   static async deleteRoyaltyBD (nombre) {
     return db.execute('DELETE FROM estado_royalty_da_promociones WHERE Nombre_Royalty = ?', [nombre])
@@ -37,7 +41,7 @@ module.exports = class Royalty {
       'UPDATE estado_royalty_da_promociones SET Nombre_Royalty = ? WHERE Nombre_Royalty = ?',
       [nombreNuevo, nombreOriginal]
     )
-    // Actualizar la tabla de estdo royalty
+    // Actualizar la tabla de estado royalty
     await db.execute(
     `UPDATE estado_royalty
      SET Nombre_Royalty = ?, Número_de_prioridad = ?, Descripción = ?, Min_Visitas = ?, Max_Visitas = ?
@@ -49,10 +53,26 @@ module.exports = class Royalty {
     await db.execute('SET FOREIGN_KEY_CHECKS = 1')
   }
 
+  static async updatePromocionesRoyalty (nombreRoyalty, idsPromociones) {
+  // Borramos las relaciones anteriores
+    await db.execute(
+      'DELETE FROM estado_royalty_da_promociones WHERE Nombre_Royalty = ?',
+      [nombreRoyalty]
+    )
+    // Si hay nuevas promociones, las insertamos
+    if (idsPromociones && idsPromociones.length > 0) {
+      const valores = idsPromociones.map(id => [nombreRoyalty, id])
+      await db.query(
+        'INSERT INTO estado_royalty_da_promociones (Nombre_Royalty, ID_Promocion) VALUES ?',
+        [valores]
+      )
+    }
+  }
+
   // Obtenemos las promociones de cada royalty
   static async fetchPromociones_royalties (nombre) {
     return db.execute(
-    `SELECT p.Nombre FROM promocion p 
+    `SELECT p.ID_promocion, p.Nombre FROM promocion p 
      INNER JOIN estado_royalty_da_promociones erp ON p.ID_promocion = erp.ID_Promocion 
      WHERE erp.Nombre_Royalty = ?`,
     [nombre]
