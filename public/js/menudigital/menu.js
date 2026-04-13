@@ -1,9 +1,10 @@
+/* global localStorage, L, window */
+
 /* CU01 */
 const platillobotones = document.getElementsByClassName('platillo-btn')
 const overlay = document.getElementById('modal-overlay')
 const modalContent = document.getElementById('modal-content')
 const modalClose = document.getElementById('modal-close')
-/* global localStorage, L */
 const pedido = []
 
 // ── MODAL ──
@@ -436,4 +437,37 @@ function contruirMenuDinamico (datos) {
   construirFichaProductos(productosInfo, categoríasInfo)
 
   console.log('Menu dinámico construido con exito')
+}
+
+window.agregarAlCarrito = function (btn) {
+  const nombre = btn.dataset.nombre
+  const precio = btn.dataset.precio
+  const desc = btn.closest('.card-content')?.querySelector('.product-desc-text')?.textContent?.trim() || ''
+
+  // Abrir modal con descripción y botón de confirmar
+  abrirModal(`
+    <h2 style="font-family:'Cormorant Garamond',serif;font-size:26px;margin-bottom:4px;">
+      ${nombre}
+    </h2>
+    <p style="color:#b5956a;font-size:15px;font-weight:500;margin-bottom:12px;">
+      $${precio}
+    </p>
+    <p style="color:#777;font-size:13px;margin-bottom:20px;">${desc || 'Sin descripción disponible'}</p>
+
+    <button id="btn-confirmar-agregar"
+      style="width:100%;padding:12px;background:#eac9c1;color:#fff;
+             border:none;border-radius:6px;font-size:14px;cursor:pointer;
+             font-family:'Jost',sans-serif;">
+      + Confirmar y agregar al pedido
+    </button>
+  `)
+
+  document.getElementById('btn-confirmar-agregar').addEventListener('click', () => {
+    const item = { nombre, precio: `$${precio}`, desc }
+    const pedidoActual = JSON.parse(localStorage.getItem('pedido') || '[]')
+    pedidoActual.push(item)
+    localStorage.setItem('pedido', JSON.stringify(pedidoActual))
+    cerrarModal()
+    console.log('Item agregado:', item)
+  })
 }
