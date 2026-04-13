@@ -1,0 +1,81 @@
+<%- include('../partials/header_admin', { pageTitle: 'AdminHub - Admin Marée' }) %>
+
+<nav class="navbar" role="navigation">
+    <div class="navbar-brand">
+        <div class="navbar-item">
+            <div class="logo-area">
+                <span class="logo-text">MARÉE</span>
+                <span class="logo-sub">Love at First Crêpe</span>
+            </div>
+        </div>
+    </div>
+</nav>
+
+<%- include('../partials/breadcrumbs') %>
+
+<main class="page-wrap">
+
+    <header style="margin-bottom: 32px;">
+        <h1 class="page-title">Admin Dashboard</h1>
+        <p class="page-sub">Manage your cafeteria operations</p>
+    </header>
+
+    <div class="dashboard-grid">
+
+        <a href="/admin/ingredientes" class="dashboard-card">
+            <div class="icon-circle bg-blue">📦</div>
+            <p>Ingredients</p>
+        </a>
+
+        <a href="/menu/productos" class="dashboard-card">
+            <div class="icon-circle bg-green">🛍️</div>
+            <p>Products</p>
+        </a>
+        
+        <a href="/admin/metricas-productos" class="dashboard-card">
+            <div class="icon-circle bg-teal">📊</div>
+            <p>Product Metrics</p>
+        </a>
+
+        <a href="/royalty/royaltyAdmin" class="dashboard-card">
+            <div class="icon-circle bg-yellow">🏅</div>
+            <p>Royalty System</p>
+        </a>
+
+        <a href="/admin/colaboradores" class="dashboard-card">
+            <div class="icon-circle bg-purple">👥</div>
+            <p>Collaborators</p>
+        </a>
+
+        <a href="/admin/ordenes" class="dashboard-card">
+            <div class="icon-circle bg-red">📋</div>
+            <p>Active Orders</p>
+        </a>
+
+        <a href="/promos/promociones" class="dashboard-card">
+            <div class="icon-circle bg-pink">🏷️</div>
+            <p>Promotions</p>
+        </a>
+
+        <a href="/promos/eventos" class="dashboard-card">
+            <div class="icon-circle bg-teal">📅</div>
+            <p>Events</p>
+        </a>
+
+         <a href="/menu/feedback" class="box dashboard-card">
+                <div class="icon-circle whatsapp">🗣️</div>
+                <p>FeedBack</p>
+            </a>
+
+        <a href="/admin/mensajes" class="dashboard-card">
+            <div class="icon-circle bg-green">💬</div>
+            <p>WhatsApp</p>
+        </a>
+
+    </div>
+
+</main>
+
+<script src="/js/admin.js"></script>
+</body>
+</html>

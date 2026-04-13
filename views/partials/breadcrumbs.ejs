@@ -1,0 +1,21 @@
+<% if (typeof breadcrumbs !== 'undefined' && breadcrumbs && breadcrumbs.length > 0) { %>
+<nav class="bc-nav" aria-label="breadcrumbs">
+  <ul class="bc-list">
+    <% breadcrumbs.forEach((crumb, index) => { %>
+      <% if (index === breadcrumbs.length - 1) { %>
+        <li class="bc-item is-active">
+          <a href="<%= crumb.url %>" aria-current="page"><%= crumb.name %></a>
+        </li>
+      <% } else { %>
+        <li class="bc-item">
+          <a href="<%= crumb.url %>"><%= crumb.name %></a>
+        </li>
+      <% } %>
+    <% }); %>
+  </ul>
+</nav>
+<hr class="bc-divider">
+<% } %>
+
+<!-- Modo teléfono -->
+ 

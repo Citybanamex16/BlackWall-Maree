@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="light">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Royalty - Admin Marée</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@1.0.4/css/bulma.min.css">
+    <link rel="stylesheet" href="/css_new/global_theme.css">
+    <link rel="stylesheet" href="/css_new/global_components.css">
+    <link rel="stylesheet" href="/css_new/module-auth.css">
+    <link rel="stylesheet" href="/css_new/module-catalog.css">
+    <link rel="stylesheet" href="/css_new/module-dashboard.css">
+    <link rel="stylesheet" href="/css_new/module-metrics.css">
+  
+    <link rel="stylesheet" href="/css/adminstyle.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+</head>
+<body>
+    <section class="section">
+        <div class="container">
+            <h1 class="title">Catálogo de Royalty System</h1>
+            <p class="subtitle">Aquí va el catálogo del sistema de lealtad</p>
+            <!-- onclick = abrirModal()-->
+            <div class = "columns is-multiline" id = "royaltyContainer"></div>
+        </div>
+    </section>
+
+    <section class = " box ">
+        <form action="/royalty/royaltyAdmin/metricsRoyalty" method="GET">
+            <input class="button" type="submit" value="View Metrics" />
+        </form>
+    </section>
+
+   <section class="section">
+        <div class="container">
+            <h1 class="title">Agregar estados Royalty</h1>
+            <p class="subtitle">Aquí se agregan estados royalty</p>
+        </div>
+    </section>
+
+    <!-- Pop- up  Modificar estado royalty -->
+     <div class="modal" id="modal-modificarRoyalty">
+        <div class="modal-background"></div>
+        <div class="modal-content">
+            <div class="box">
+                <h3 class="title is-4">Modificar <span id="modal-nombre"></span></h3>
+                <form id="form-modificarRoyalty">
+                    <div class="field">
+                        <label class="label">Nombre</label>
+                        <div class="control">
+                            <input id="input-nombre" class="input" type="text">
+                        </div>
+                    </div>
+                    <div class="field">
+                        <label class="label">Prioridad</label>
+                        <div class="control">
+                            <input id="input-prioridad" class="input" type="number">
+                        </div>
+                    </div>
+                    <div class="field">
+                        <label class="label">Descripcion</label>
+                        <div class="control">
+                            <input id="input-descripcion" class="input" type="text">
+                        </div>
+                    </div>
+                    <div class="field">
+                        <label class="label">Visitas mínimas</label>
+                        <div class="control">
+                            <input id="input-minVisitas" class="input" type="number">
+                        </div>
+                    </div>
+                    <div class="field">
+                        <label class="label">Visitas máximas</label>
+                        <div class="control">
+                            <input id="input-maxVisitas" class="input" type="number">
+                        </div>
+                    </div>
+                    <div class="buttons">
+                        <button type="button" class="button is-primary" onclick="guardarRoyalty()"> Guardar </button>
+                        <button type="button" class="button" onclick="cerrarModal()">Cancelar</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+     </div>
+    <!-- Pop up Confirmacion de modificar estado royalty-->
+    <div class="modal" id="modal-confirmarModificarRoyalty">
+    <div class="modal-background"></div>
+    <div class="modal-content">
+        <div class="box has-text-centered">
+            <h3 class="title is-4">¿Deseas guardar los cambios?</h3>
+            <div class="buttons">
+                <button type="button" class="button is-primary" onclick="cerrarModalConfirmacion()">Confirmar</button>
+                <button type="button" class="button" onclick="cerrarModalSoloConfirmacion()">Cancelar</button>
+            </div>
+        </div>
+    </div>
+</div>
+    <script src = "/js/Royalty/royalty.admin.js"></script>
+</body>
+</html>

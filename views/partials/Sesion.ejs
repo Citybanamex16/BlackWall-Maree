@@ -1,0 +1,25 @@
+<!-- aqui va el header (asi se hacen comentarios en ejs btw)-->
+<!-- Requisitos de Partial: -->
+
+<!-- 1. Mensaje de Iniciar Sesión: Variables a pasar
+1. Username
+-->
+<!--
+<div class="box">
+  <% if (locals.nombreUsuario) { %>
+    <p>Hola, <%= nombreUsuario %></p>
+  <% } else { %>
+    <p>Invitado</p>
+  <% } %>
+</div>
+-->
+
+<% if (locals.nombreUsuario) { %>
+  <div class="box">
+  <a href = '/cliente/logout'>
+      <button class="button is-danger">LogOut</button>
+    </a>
+  </div>
+<% } %>
+
+

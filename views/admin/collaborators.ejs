@@ -1,0 +1,57 @@
+<%- include('../partials/header_admin', { pageTitle: 'Colaboradores - Marée' }) %>
+<%- include('../partials/breadcrumbs') %>
+
+<main class="page-wrap">
+  <header style="margin-bottom: 32px;">
+    <h1 class="page-title">Colaboradores</h1>
+    <p class="page-sub">Gestión de empleados</p>
+  </header>
+
+  <% if (typeof error !== 'undefined' && error) { %>
+    <div class="notification status-pill is-danger" style="border-radius: var(--radius-md); padding: 16px; width: 100%;">
+      <%= error %>
+    </div>
+  <% } %>
+
+  <div style="margin-bottom: 24px;">
+    <a href="/admin/colaboradores/nuevo" class="btn-primary">
+      + Registrar nuevo colaborador
+    </a>
+  </div>
+
+  <div class="card-base">
+    <table class="table is-fullwidth is-hoverable" style="background: transparent;">
+      <thead>
+        <tr>
+          <th style="color: var(--c-text-muted); font-size: 12px; text-transform: uppercase;">ID</th>
+          <th style="color: var(--c-text-muted); font-size: 12px; text-transform: uppercase;">Nombre</th>
+          <th style="color: var(--c-text-muted); font-size: 12px; text-transform: uppercase;">Rol</th>
+          <th style="color: var(--c-text-muted); font-size: 12px; text-transform: uppercase;">Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% colaboradores.forEach(colaborador => { %>
+          <tr>
+            <td><strong><%= colaborador.id_colaborador %></strong></td>
+            <td style="font-weight: 500;"><%= colaborador.nombre %></td>
+            <td><span class="status-pill is-neutral"><%= colaborador.rol %></span></td>
+            <td>
+              <div style="display: flex; gap: 8px;">
+                <a href="/admin/colaboradores/<%= colaborador.id_colaborador %>" class="btn-ghost" style="padding: 4px 10px; font-size: 12px;">Ver detalle</a>
+                <button class="btn-danger btn-baja" data-id="<%= colaborador.id_colaborador %>" data-nombre="<%= colaborador.nombre %>" style="padding: 4px 10px; font-size: 12px;">Dar de baja</button>
+              </div>
+            </td>
+          </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  </div>
+
+  <div style="margin-top: 24px;">
+    <a href="/admin" class="btn-ghost" style="border: none;">← Volver al dashboard</a>
+  </div>
+</main>
+
+<script src="/js/admin.js"></script>
+</body>
+</html>

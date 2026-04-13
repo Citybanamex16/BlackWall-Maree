@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Products - Admin Marée</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@1.0.4/css/bulma.min.css">
+    <link rel="stylesheet" href="/css/productCatalog.css">
+</head>
+<body>
+
+    <%- include('../partials/breadcrumbs') %>
+
+    <section class="section">
+        <div class="container">
+
+            <!-- Encabezado de página -->
+            <div class="level mb-4">
+                <div class="level-left">
+                    <div>
+                        <h1 class="title mb-1">Catálogo de Productos</h1>
+                        <p class="subtitle is-6">Gestiona categorías, precios y disponibilidad</p>
+                    </div>
+                </div>
+                <div class="level-right">
+                    <!-- Buscador rápido por nombre -->
+                    <div class="field">
+                        <div class="control has-icons-left">
+                            <input id="filtroBusqueda" class="input" type="text" placeholder="Buscar producto...">
+                            <span class="icon is-left">🔍</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Resumen rápido — JS inyecta los números -->
+            <div class="level stats-bar mb-5">
+                <div class="level-item has-text-centered">
+                    <div>
+                        <p class="heading">Total productos</p>
+                        <p class="title" id="statTotal">—</p>
+                    </div>
+                </div>
+                <div class="level-item has-text-centered">
+                    <div>
+                        <p class="heading">Disponibles</p>
+                        <p class="title" id="statDisponibles">—</p>
+                    </div>
+                </div>
+                <div class="level-item has-text-centered">
+                    <div>
+                        <p class="heading">Categorías</p>
+                        <p class="title" id="statCategorias">—</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Contenedor principal — JS construye una sección por categoría -->
+            <div id="admin-catalogo"></div>
+
+        </div>
+    </section>
+
+     <!-- BOTÓN Registrar nuevo Producto -->
+    <a href="#" id="registrarNuevoProducto" class="button fab is-primary is-rounded button-floating">
+        <span class="icon">
+            <i class="fas fa-plus"></i> 
+        </span>
+        <span>Añadir Producto</span>
+    </a>
+
+
+<dialog id="TypeFormsCU04" class="mymodal">
+  <button class="modal-close-btn" id="closeRegisterX">✕</button>
+  <h2 id="tituloModal">Título dinámico</h2>
+  <p>Elige una opción:</p>
+  <br>
+  <button id="cerrarModal"  style="margin-top: 10px;">Cerrar</button>
+</dialog>
+
+
+<dialog id="RegisterFormsCU04" class="mymodal">
+  <button class="modal-close-btn" id="closeRegisterX">✕</button>
+  <h2 id="formsRegistrarTitulo">Título dinámico</h2>
+  <h3 id ="idSection"></h3>
+  <form id="formsRegistrarForm" novalidate>
+    <!-- Campos dinámicos (nombre, precio, etc.) se inyectan aquí -->
+
+    <!-- ═══════════════════════════════════════════
+         SECCIÓN INGREDIENTES
+    ════════════════════════════════════════════ -->
+  </form>
+  <!-- Footer del modal -->
+  <div class="modal-footer">
+    <button id="cerrarFormsRegistrar"  type="button" class="button is-light">Cancelar</button>
+    <button id="submitFormsRegistrar" type="button" class="button is-primary">Guardar Producto</button>
+  </div>
+</dialog>
+
+
+
+
+<dialog id="SummaryCU04" class="mymodal">
+  <button class="modal-close-btn" id="closeRegisterX">✕</button>
+  <h2 id="SummaryTitleModal">Título dinámico</h2>
+  <p>Revisa los datos antes de registrar</p>
+   <hr style="border:none; border-top:1px solid #ebebeb; margin: 12px 0;">
+    <div id="summaryContent"></div> 
+
+    <div class="modal-footer">
+    <button id="cerrarSummaryModal" type="button" class="button is-light">Cerrar</button>
+    <button id="RegisterProduct"    type="button" class="button is-primary">Registrar Producto</button>
+  </div>
+
+</dialog>
+
+
+<dialog id="modifSummaryCU05" class="mymodal">
+  <button class="modal-close-btn" id="closeRegisterX">✕</button>
+
+  <h2 id="SummaryTitleModif">Título dinámico</h2>
+  <p style="font-size:13px; color:#888; margin-top:2px;">
+    Revisa los cambios antes de confirmar la modificación
+  </p>
+
+  <hr style="border:none; border-top:1px solid #ebebeb; margin: 12px 0;">
+
+  <!-- Cabecera de columnas -->
+  <div class="modif-summary-header">
+    <span class="modif-col-label">Campo</span>
+    <span class="modif-col-old">Original</span>
+    <span class="modif-col-new">Nuevo</span>
+  </div>
+
+  <!-- Filas generadas por JS -->
+  <div id="modifSummaryContent" class="modif-summary-body"></div>
+
+  <hr style="border:none; border-top:1px solid #ebebeb; margin: 12px 0;">
+
+  <div class="modal-footer">
+    <button id="cerrarSummaryModif" type="button" class="button is-light">Regresar</button>
+    <button id="RegisterModification" type="button" class="button is-primary">Registrar Modificación</button>
+  </div>
+
+</dialog>
+ 
+
+
+<!-- Dialogo de ¡EXITO!-->
+<dialog id="ModalExito" class="error-modal mymodal">
+    <h2 id = "TituloExito">Titulo Dinamico</h2>
+    <div class="modal-accent-bar"></div>
+    <p id="exitoContent">Contenido Dinámico</p>
+    <!-- Botón con ID para manipularlo desde JS -->
+    <button id="closeExito" type="submit" class="modal-close-btn" class="modal-close-btn">Regresar a Catalogo</button>
+</dialog>
+
+
+
+
+<!-- Dialogo de error -->
+<dialog id="ErrorModal" class="error-modal mymodal">
+    <h2 id="ErrorTitle">Titulo Dinámico</h2>
+    <div class="modal-accent-bar"></div>
+    <p id="ErrorMessage">Mensaje Dinámico</p>
+    <!-- Botón con ID para manipularlo desde JS -->
+    <button id="closeInvalidData" class="modal-close-btn" >Cerrar</button>
+</dialog>
+
+<!-- Modal Selección de accion elim/des -->
+<dialog id="ElimDesactModal" class="mymodal">
+    <button class="modal-close-btn" id="closeElimDesact">✕</button>
+
+    <div class="modal-accent-bar" style="background:#e74c3c;"></div>
+    <h2 style="color:#c0392b;">¿Qué deseas hacer?</h2>
+    <p id="elimDesactNombre" style="font-weight:600; color:#222; margin-bottom:4px;">Nombre del producto</p>
+    <p>Esta acción afectará la disponibilidad del producto en el menú.</p>
+
+    <hr style="border:none; border-top:1px solid #ebebeb; margin: 16px 0;">
+
+    <div class="elim-desact-opciones">
+
+        <button id="btnDesactivar" class="button is-warning is-light is-fullwidth elim-desact-btn">
+            <span>⏸</span>
+            <div class="elim-desact-btn-text">
+                <span class="elim-desact-btn-title">Desactivar</span>
+                <span class="elim-desact-btn-sub">El producto deja de aparecer en el menú pero se conserva</span>
+            </div>
+        </button>
+
+        <button id="btnEliminar" class="button is-danger is-light is-fullwidth elim-desact-btn">
+            <span>🗑</span>
+            <div class="elim-desact-btn-text">
+                <span class="elim-desact-btn-title">Eliminar</span>
+                <span class="elim-desact-btn-sub">Se borra permanentemente de la base de datos</span>
+            </div>
+        </button>
+
+    </div>
+
+    <div class="modal-footer">
+        <button id="btnSalirElimDesact" type="button" class="button is-light">Salir</button>
+    </div>
+</dialog>
+
+<!-- Modal conf de acción-->
+<dialog id="ConfirmActionModal" class="mymodal">
+    <button class="modal-close-btn" id="closeConfirmAction">✕</button>
+
+    <div id="confirmAccentBar" class="modal-accent-bar"></div>
+    <h2 id="confirmActionTitle">Confirmar acción</h2>
+    <p id="confirmActionDesc"></p>
+
+    <hr style="border:none; border-top:1px solid #ebebeb; margin: 16px 0;">
+
+    <div class="modal-footer">
+        <button id="btnCancelarConfirm" type="button" class="button is-light">Cancelar</button>
+        <button id="btnConfirmarAccion" type="button" class="button">Confirmar</button>
+    </div>
+</dialog>
+
+
+
+
+
+<script src="/js/menudigital/AdminProductsScripts/adminProducts.js"></script>
+<script src="/js/menudigital/AdminProductsScripts/ModifElimProducts.js"></script>
+</body>
+</html>
