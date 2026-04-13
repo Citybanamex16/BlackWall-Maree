@@ -150,7 +150,7 @@ function renderizarPromociones (lista) {
               ${escaparHtml(promo.Condiciones || 'Sin condición disponible.')}
             </div>
 
-            <hr class="my-4" style="background-color: #efe4d6; height: 1px;">
+            <hr class="my-4 promo-card-divider">
 
             <div>
               <p class="promo-card-label mb-2">Vigencia</p>
