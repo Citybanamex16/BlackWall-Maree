@@ -119,9 +119,13 @@ exports.validarPedido = async (request, response, next) => {
 
   try {
     const nombres = items.map(i => i.nombre)
-    const resultado = await Pedido.verificarDisponibilidad(nombres)
-    if (resultado.count === 0) {
-      return response.status(200).json({ pedidoValido: false, mensaje: 'Ningún platillo está disponible' })
+    const nombresUnicos = [...new Set(nombres)]
+    const resultado = await Pedido.verificarDisponibilidad(nombresUnicos)
+    if (Number(resultado.count) !== nombresUnicos.length) {
+      return response.status(200).json({
+        pedidoValido: false,
+        mensaje: 'Algunos platillos de tu pedido ya no están disponibles.'
+      })
     }
     response.status(200).json({ pedidoValido: true })
   } catch (err) {
@@ -133,45 +137,34 @@ exports.validarPedido = async (request, response, next) => {
 exports.confirmarPedido = async (request, response, next) => {
   const { items, forma, telefono } = request.body
 
-  // Mapear forma del front al enumerao de la BD
-  const mapaForma = {
-    'Pick-Up': 'Pick-up',
-    'On Site': 'Sucursal',
-    Delivery: 'Delivery'
-  }
-  const tipoOrden = mapaForma[forma]
-  if (!tipoOrden) {
+  const formasValidas = ['Pick-Up', 'On Site', 'Delivery']
+  if (!formasValidas.includes(forma)) {
     return response.status(400).json({ pedidoConfirmado: false, mensaje: 'Forma de entrega inválida' })
   }
 
-  // Validar teléfono
   const telefonoLimpio = String(telefono).replace(/[\s-]/g, '')
   if (!/^\d{7,15}$/.test(telefonoLimpio)) {
     return response.status(400).json({ pedidoConfirmado: false, mensaje: 'Teléfono inválido' })
   }
 
-  // Validar items
   if (!Array.isArray(items) || items.length === 0) {
     return response.status(400).json({ pedidoConfirmado: false, mensaje: 'El pedido está vacío' })
   }
 
-  for (const item of items) {
-    if (typeof item.nombre !== 'string' || item.nombre.trim() === '' || item.nombre.length > 100) {
-      return response.status(400).json({ pedidoConfirmado: false, mensaje: 'Item inválido' })
-    }
-  }
-
   try {
-    const idOrden = await Pedido.guardarOrden(telefono, tipoOrden, 'Cliente')
-    console.log('Orden guardada con ID:', idOrden)
+    // 1 Verifica cliente (o lo crea si no hay)
+    await Pedido.verificarOCrearCliente(telefonoLimpio)
 
+    // 2 Guardar la orden
+    const idOrden = await Pedido.guardarOrden(telefonoLimpio, forma, 'Cliente')
+
+    // 3. Guardar los items
     await Pedido.guardarItems(idOrden, items)
-    console.log('Items guardados para orden:', idOrden)
 
     response.status(200).json({ pedidoConfirmado: true, idOrden })
-  } catch (err) {
-    console.error('Error confirmando pedido:', err)
-    response.status(500).json({ pedidoConfirmado: false, mensaje: 'Error al guardar en BD' })
+  } catch (error) {
+    console.error('Error al confirmar pedido:', error)
+    response.status(500).json({ pedidoConfirmado: false, mensaje: 'Error al guardar el pedido' })
   }
 }
 
