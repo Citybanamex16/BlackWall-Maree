@@ -95,7 +95,7 @@ async function guardarRoyalty () {
     }
   } catch (error) {
     console.log(error)
-    alert('Error en conexión')
+    document.getElementById('ModalError')
   }
 }
 
@@ -158,7 +158,7 @@ const cerrarModalSoloConfirmacion = () => {
   document.getElementById('modal-confirmarModificarRoyalty').classList.remove('is-active')
 }
 
-const cerrorModalError = () => {
+const cerrarModalError = () => {
   document.getElementById('ModalError').classList.remove('is-active')
 }
 
@@ -174,14 +174,23 @@ const cerrarModal = () => {
   limpiarFormulario()
 }
 
+let royaltyABorrar = ''
 function borrarRoyalty (NombreRoyalty) {
-  if (confirm('¿Estas seguro que deseas borrar ' + NombreRoyalty + ' ?')) {
-    fetch('/royalty/borrar/' + NombreRoyalty, { method: 'DELETE' }).then(() => {
+  royaltyABorrar = NombreRoyalty
+  document.getElementById('nombre-a-borrar').textContent = NombreRoyalty
+  document.getElementById('ModalEliminar').classList.add('is-active')
+}
+
+function confirmarBorrado () {
+  fetch('/royalty/borrar/' + royaltyABorrar, { method: 'DELETE' })
+    .then(() => {
+      document.getElementById('ModalEliminar').classList.remove('is-active')
       window.location.reload()
-    }).catch(() => {
+    })
+    .catch(() => {
+      document.getElementById('ModalEliminar').classList.remove('is-active')
       document.getElementById('ModalError').classList.add('is-active')
     })
-  }
 }
 
 async function cargarRoyalty () {
