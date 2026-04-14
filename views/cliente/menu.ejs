@@ -4,7 +4,21 @@
      STICKY SUPERIOR — Cuenta + Royalty
      TODO: poblar con datos de sesión
 ════════════════════════════════════════ -->
-<div id="sticky-top" class="sticky-top">
+<div id="sticky-top" class="sticky-top-app">
+    <div class="user-profile">
+        <div class="user-avatar">
+            <i class="fas fa-user"></i>
+        </div>
+        <div class="user-info">
+            <span class="greeting">Bienvenido</span>
+            <span class="user-name">Iniciar Sesión</span>
+        </div>
+    </div>
+
+    <div class="royalty-badge">
+        <i class="fas fa-crown"></i>
+        <span>Royalty</span>
+    </div>
 </div>
 
 <!-- ═══════════════════════════════════════
@@ -36,7 +50,22 @@
      STICKY INFERIOR — Búsqueda + Promo + Eventos
      TODO: poblar con buscador y accesos rápidos
 ════════════════════════════════════════ -->
-<div id="sticky-bottom" class="sticky-bottom">
+<div id="sticky-bottom" class="sticky-bottom-app">
+    <div class="search-bar-wrapper control has-icons-left">
+        <input class="input is-rounded is-small" type="text" placeholder="Buscar en Marée...">
+        <span class="icon is-small is-left">
+            <i class="fas fa-search"></i>
+        </span>
+    </div>
+
+    <button class="btn btn-icon" type="button">
+        <i class="fas fa-ticket-alt"></i>
+        <span>Promos</span>
+    </button>
+    <button class="btn btn-icon" type="button">
+        <i class="fas fa-calendar-alt"></i>
+        <span>Eventos</span>
+    </button>
 </div>
 
 <!-- ═══════════════════════════════════════
@@ -44,7 +73,9 @@
      Reutiliza href de la antigua .order-btn-card.
      Clase .fab ya definida en styles.css global.
 ════════════════════════════════════════ -->
-<a id="fab-carrito" class="fab" href="/menu/orden" aria-label="Ver carrito">
+<a id="fab-carrito" class="fab-app" href="/menu/orden" aria-label="Ver carrito">
+    <i class="fas fa-shopping-bag"></i>
+    <span class="fab-badge">0</span>
 </a>
 
 <!-- ═══════════════════════════════════════

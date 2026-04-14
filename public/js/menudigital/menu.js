@@ -128,7 +128,7 @@ for (const button of platillobotones) {
   })
 }
 
-// ── MAPA DE UBICACIÓN ──
+/* ── MAPA DE UBICACIÓN ──
 if (navigator.geolocation) {
   navigator.geolocation.getCurrentPosition(
     (position) => {
@@ -161,6 +161,7 @@ if (navigator.geolocation) {
   document.getElementById('mapa-estado').textContent =
     'Tu navegador no soporta geolocalización.'
 }
+*/
 
 // ── DROPDOWNS DE SECCIONES ──
 const seccionesCollapsible = document.querySelectorAll('.menu-section--collapsible')
@@ -255,25 +256,25 @@ function construirFichaProductos (datosProducto, datosCategorias) {
               <div class="media mb-2">
                 <div class="media-content">
                   <p class="title is-5 mb-1">${prod.nombre}</p>
-                  <p class="product-price-tag">$${prod.precio}</p>
+                  <p class="product-price">$${prod.precio}</p>
                 </div>
               </div>
               <div class="content">
                 ${prod.descripcion
-                  ? `<p class="product-desc-text">${prod.descripcion}</p>`
+                  ? `<p class="product-desc">${prod.descripcion}</p>`
                   : ''}
-                <div class="tags ingredient-tags" id="ingredientes-${prod.id}">
+                <div class="tags" id="ingredientes-${prod.id}">
                   ${generarBadgesIngredientes(prod.ingredientes)}
                 </div>
                 <button
-                  class="btn-agregar"
+                  class="btn btn-primary"
                   data-id="${prod.id}"
                   data-nombre="${prod.nombre}"
                   data-precio="${prod.precio}"
                   onclick="agregarAlCarrito(this)"
                 >
-                  <span class="btn-agregar-icon">＋</span>
-                  <span class="btn-agregar-label">Agregar a la orden</span>
+                  <span class="btn btn-primary-icon">＋</span>
+                  <span class="btn btn-primary-label">Agregar a la orden</span>
                 </button>
               </div>
             </div>
@@ -289,7 +290,7 @@ function construirFichaProductos (datosProducto, datosCategorias) {
 function generarBadgesIngredientes (listaIngredientes) {
   if (!listaIngredientes || listaIngredientes.length === 0) return ''
   return listaIngredientes
-    .map(ing => `<span class="tag ing-tag is-rounded">${ing.nombre}</span>`)
+    .map(ing => `<span class="tags">${ing.nombre}</span>`)
     .join('')
 }
 
@@ -302,7 +303,7 @@ function construirCategoria (cat, contenedorMenu) {
   const idContenedor = `grid-${cat.Nombre.replace(/\s+/g, '-').toLowerCase()}`
 
   seccionCat.innerHTML = `
-    <div class="cat-header toggle-menu" role="button" tabindex="0" aria-expanded="true">
+    <div class="cat-header" role="button" tabindex="0" aria-expanded="true">
       <h2 class="cat-title">${cat.Nombre}</h2>
       <span class="cat-chevron" aria-hidden="true">
         <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
@@ -311,7 +312,7 @@ function construirCategoria (cat, contenedorMenu) {
         </svg>
       </span>
     </div>
-    <div id="${idContenedor}" class="columns is-multiline grid-productos mt-2 grid-collapsible">
+    <div id="${idContenedor}" class="columns is-multiline grid grid--collapsible">
     </div>`
 
   const header = seccionCat.querySelector('.cat-header')
@@ -442,7 +443,7 @@ function contruirMenuDinamico (datos) {
 window.agregarAlCarrito = function (btn) {
   const nombre = btn.dataset.nombre
   const precio = btn.dataset.precio
-  const desc = btn.closest('.card-content')?.querySelector('.product-desc-text')?.textContent?.trim() || ''
+  const desc = btn.closest('.card-content')?.querySelector('.product-desc')?.textContent?.trim() || ''
 
   // Abrir modal con descripción y botón de confirmar
   abrirModal(`
