@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mxfile host="app.diagrams.net" modified="2026-04-13T00:00:00.000Z" agent="Codex" version="24.7.17">
+  <diagram id="maree-deployment" name="Diagrama de despliegue Maree">
+    <mxGraphModel dx="1600" dy="900" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1600" pageHeight="900" math="0" shadow="0">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+        <mxCell id="bg" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#0b0f14;strokeColor=none;" vertex="1" parent="1">
+          <mxGeometry x="0" y="0" width="1600" height="900" as="geometry"/>
+        </mxCell>
+        <mxCell id="title" value="Diagrama de despliegue - Sistema Maree" style="text;html=1;strokeColor=none;fillColor=none;fontColor=#f9fafb;fontSize=26;fontStyle=1;align=center;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="520" y="20" width="560" height="40" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="artifact_app" value="&lt;&lt;Artifact&gt;&gt;&lt;br&gt;Repo / paquete blackwall-maree&lt;br&gt;server.js, routes, controllers, models, views, public" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#111827;strokeColor=#f9fafb;fontColor=#f9fafb;align=center;verticalAlign=middle;spacing=8;" vertex="1" parent="1">
+          <mxGeometry x="605" y="75" width="390" height="80" as="geometry"/>
+        </mxCell>
+        <mxCell id="artifact_db" value="&lt;&lt;Artifact&gt;&gt;&lt;br&gt;sql/mareebd.sql&lt;br&gt;script de esquema y datos" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#111827;strokeColor=#f9fafb;fontColor=#f9fafb;align=center;verticalAlign=middle;spacing=8;" vertex="1" parent="1">
+          <mxGeometry x="1160" y="95" width="270" height="70" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="admin_device" value="&lt;&lt;Device&gt;&gt;&lt;br&gt;Computadora de administrador" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#101820;strokeColor=#f9fafb;fontColor=#f9fafb;align=left;verticalAlign=top;spacing=8;" vertex="1" parent="1">
+          <mxGeometry x="60" y="120" width="380" height="260" as="geometry"/>
+        </mxCell>
+        <mxCell id="admin_browser" value="&lt;&lt;Execution Environment&gt;&gt;&lt;br&gt;Navegador web&lt;br&gt;Chrome / Edge / Firefox" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#17212b;strokeColor=#d1d5db;fontColor=#f9fafb;align=left;verticalAlign=top;spacing=8;" vertex="1" parent="1">
+          <mxGeometry x="85" y="170" width="330" height="170" as="geometry"/>
+        </mxCell>
+        <mxCell id="admin_artifact" value="&lt;&lt;Artifact&gt;&gt;&lt;br&gt;Panel administrativo Maree&lt;br&gt;/admin, /admin/ingredientes, /admin/productos&lt;br&gt;/promos/eventos, /royalty/royaltyAdmin" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#1f2937;strokeColor=#d1d5db;fontColor=#f9fafb;align=left;verticalAlign=top;spacing=8;" vertex="1" parent="1">
+          <mxGeometry x="110" y="225" width="280" height="90" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="client_device" value="&lt;&lt;Device&gt;&gt;&lt;br&gt;Computadora del cliente" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#101820;strokeColor=#f9fafb;fontColor=#f9fafb;align=left;verticalAlign=top;spacing=8;" vertex="1" parent="1">
+          <mxGeometry x="60" y="430" width="380" height="230" as="geometry"/>
+        </mxCell>
+        <mxCell id="client_browser" value="&lt;&lt;Execution Environment&gt;&gt;&lt;br&gt;Navegador web&lt;br&gt;Chrome / Edge / Firefox" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#17212b;strokeColor=#d1d5db;fontColor=#f9fafb;align=left;verticalAlign=top;spacing=8;" vertex="1" parent="1">
+          <mxGeometry x="85" y="480" width="330" height="140" as="geometry"/>
+        </mxCell>
+        <mxCell id="client_artifact" value="&lt;&lt;Artifact&gt;&gt;&lt;br&gt;Interfaz cliente Maree&lt;br&gt;/menu/menu, /cliente/login, /cliente/perfil&lt;br&gt;/royalty/royaltyUser, /promos/promociones" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#1f2937;strokeColor=#d1d5db;fontColor=#f9fafb;align=left;verticalAlign=top;spacing=8;" vertex="1" parent="1">
+          <mxGeometry x="110" y="525" width="280" height="80" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="mobile_device" value="&lt;&lt;Device&gt;&gt;&lt;br&gt;Dispositivo movil del cliente" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#101820;strokeColor=#f9fafb;fontColor=#f9fafb;align=left;verticalAlign=top;spacing=8;" vertex="1" parent="1">
+          <mxGeometry x="60" y="700" width="380" height="170" as="geometry"/>
+        </mxCell>
+        <mxCell id="mobile_browser" value="&lt;&lt;Execution Environment&gt;&gt;&lt;br&gt;Navegador movil&lt;br&gt;Android / iOS" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#17212b;strokeColor=#d1d5db;fontColor=#f9fafb;align=left;verticalAlign=top;spacing=8;" vertex="1" parent="1">
+          <mxGeometry x="85" y="750" width="330" height="90" as="geometry"/>
+        </mxCell>
+        <mxCell id="mobile_artifact" value="&lt;&lt;Artifact&gt;&gt;&lt;br&gt;Vista responsive Maree&lt;br&gt;HTML EJS + JS + CSS" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#1f2937;strokeColor=#d1d5db;fontColor=#f9fafb;align=left;verticalAlign=top;spacing=8;" vertex="1" parent="1">
+          <mxGeometry x="110" y="785" width="280" height="45" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="app_device" value="&lt;&lt;Device&gt;&gt;&lt;br&gt;Servidor de aplicacion" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#101820;strokeColor=#f9fafb;fontColor=#f9fafb;align=left;verticalAlign=top;spacing=8;" vertex="1" parent="1">
+          <mxGeometry x="540" y="210" width="510" height="440" as="geometry"/>
+        </mxCell>
+        <mxCell id="os_app" value="&lt;&lt;Execution Environment&gt;&gt;&lt;br&gt;Sistema operativo&lt;br&gt;Windows o Linux" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#17212b;strokeColor=#d1d5db;fontColor=#f9fafb;align=left;verticalAlign=top;spacing=8;" vertex="1" parent="1">
+          <mxGeometry x="565" y="265" width="460" height="330" as="geometry"/>
+        </mxCell>
+        <mxCell id="node_env" value="&lt;&lt;Execution Environment&gt;&gt;&lt;br&gt;Node.js + Express&lt;br&gt;Puerto 3000" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#1b2631;strokeColor=#d1d5db;fontColor=#f9fafb;align=left;verticalAlign=top;spacing=8;" vertex="1" parent="1">
+          <mxGeometry x="590" y="320" width="410" height="230" as="geometry"/>
+        </mxCell>
+        <mxCell id="app_artifact" value="&lt;&lt;Artifact&gt;&gt;&lt;br&gt;Aplicacion blackwall-maree&lt;br&gt;server.js&lt;br&gt;Routers: /menu, /cliente, /admin, /promos, /royalty&lt;br&gt;Controllers + Models&lt;br&gt;Views EJS + Public JS/CSS&lt;br&gt;Middleware: isAuth, isAdmin, express-session" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#1f2937;strokeColor=#d1d5db;fontColor=#f9fafb;align=left;verticalAlign=top;spacing=8;" vertex="1" parent="1">
+          <mxGeometry x="620" y="380" width="350" height="135" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="db_device" value="&lt;&lt;Device&gt;&gt;&lt;br&gt;Servidor de base de datos" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#101820;strokeColor=#f9fafb;fontColor=#f9fafb;align=left;verticalAlign=top;spacing=8;" vertex="1" parent="1">
+          <mxGeometry x="1130" y="245" width="390" height="330" as="geometry"/>
+        </mxCell>
+        <mxCell id="os_db" value="&lt;&lt;Execution Environment&gt;&gt;&lt;br&gt;Sistema operativo&lt;br&gt;Windows o Linux" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#17212b;strokeColor=#d1d5db;fontColor=#f9fafb;align=left;verticalAlign=top;spacing=8;" vertex="1" parent="1">
+          <mxGeometry x="1155" y="300" width="340" height="225" as="geometry"/>
+        </mxCell>
+        <mxCell id="mysql_env" value="&lt;&lt;Execution Environment&gt;&gt;&lt;br&gt;MySQL Server" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#1b2631;strokeColor=#d1d5db;fontColor=#f9fafb;align=left;verticalAlign=top;spacing=8;" vertex="1" parent="1">
+          <mxGeometry x="1180" y="355" width="290" height="140" as="geometry"/>
+        </mxCell>
+        <mxCell id="maree_db" value="&lt;&lt;Database&gt;&gt;&lt;br&gt;mareebd&lt;br&gt;cliente, colaborador, producto, orden&lt;br&gt;promocion, evento, estado_royalty&lt;br&gt;insumo, review, mensaje" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#1f2937;strokeColor=#d1d5db;fontColor=#f9fafb;align=left;verticalAlign=top;spacing=8;" vertex="1" parent="1">
+          <mxGeometry x="1205" y="405" width="240" height="75" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="external_service" value="&lt;&lt;Device&gt;&gt;&lt;br&gt;Servicio externo placehold.co&lt;br&gt;imagenes placeholder" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#101820;strokeColor=#9ca3af;fontColor=#f9fafb;align=center;verticalAlign=middle;spacing=8;dashed=1;" vertex="1" parent="1">
+          <mxGeometry x="1130" y="645" width="390" height="90" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="edge_deploy_app" value="Despliega" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;dashed=1;endArrow=block;endFill=1;strokeColor=#f9fafb;fontColor=#f9fafb;" edge="1" parent="1" source="artifact_app" target="app_device">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge_deploy_db" value="Inicializa / despliega" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;dashed=1;endArrow=block;endFill=1;strokeColor=#f9fafb;fontColor=#f9fafb;" edge="1" parent="1" source="artifact_db" target="db_device">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge_admin_app" value="HTTP/HTTPS&lt;br&gt;GET, POST, fetch&lt;br&gt;puerto 3000" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;strokeColor=#f9fafb;fontColor=#f9fafb;" edge="1" parent="1" source="admin_device" target="app_device">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge_client_app" value="HTTP/HTTPS&lt;br&gt;GET, POST, fetch&lt;br&gt;puerto 3000" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;strokeColor=#f9fafb;fontColor=#f9fafb;" edge="1" parent="1" source="client_device" target="app_device">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge_mobile_app" value="HTTP/HTTPS&lt;br&gt;GET, POST, fetch&lt;br&gt;puerto 3000" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;strokeColor=#f9fafb;fontColor=#f9fafb;" edge="1" parent="1" source="mobile_device" target="app_device">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge_app_db" value="mysql2 pool&lt;br&gt;TCP 3306&lt;br&gt;consultas SQL" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;strokeColor=#f9fafb;fontColor=#f9fafb;" edge="1" parent="1" source="app_device" target="db_device">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge_app_external" value="HTTPS&lt;br&gt;placeholder img" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;dashed=1;endArrow=block;endFill=1;strokeColor=#9ca3af;fontColor=#f9fafb;" edge="1" parent="1" source="app_device" target="external_service">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
