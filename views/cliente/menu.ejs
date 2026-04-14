@@ -1,84 +1,67 @@
 <%- include('../partials/header_cliente', { pageTitle: 'Menu - Maree' }) %>
 
-<nav class="navbar" role="navigation">
-    <div class="navbar-brand">
-        <a class="navbar-item logo-area" href="/">
-            <span class="logo-text">MARÉE</span>
-            <span class="logo-sub">LOVE AT FIRST CRÊPE</span>
-        </a>
+<!-- ═══════════════════════════════════════
+     STICKY SUPERIOR — Cuenta + Royalty
+     TODO: poblar con datos de sesión
+════════════════════════════════════════ -->
+<div id="sticky-top" class="sticky-top">
+</div>
+
+<!-- ═══════════════════════════════════════
+     STICKY INTERMEDIO — Categorías
+     Movido desde .menu-column interior.
+     Scroll horizontal gestionado por menu.js
+════════════════════════════════════════ -->
+<div id="sticky-nav-wrapper" class="sticky-nav-container">
+    <div class="tabs is-centered is-toggle is-toggle-rounded" id="tabs-categorias">
+        <ul id="lista-tabs"></ul>
     </div>
+</div>
 
-    <%- include('../partials/breadcrumbs') %>
-
-
-</nav>
-
-<section class="section">
-    <div class="container-fluid menu-layout">
-
-        <!-- COLUMNA IZQUIERDA: MENÚ -->
-        <div class="menu-column">
-
-            <h1 class="page-title">Menu</h1>
-            <p class="page-subtitle">Browse our selection and add items to your order</p>
-
-            <!-- Sticky de Categorías -->
-
-             <div id="sticky-nav-wrapper" class="sticky-nav-container">
-            <div class="tabs is-centered is-toggle is-toggle-rounded" id="tabs-categorias">
-            <ul id="lista-tabs">
-            </ul>
-            </div>
-            </div>
-
-
-            <!-- Las categorías y productos se inyectan aquí dinámicamente desde JS -->
-            <div id="menu-categorias">
-                <div class="has-text-centered py-6">
-        <p class="is-size-5 has-text-grey">Explorando el menú de Marée...</p>
-        <progress class="progress is-small is-primary mt-4" max="100">15%</progress>
-                </div>
-            </div>
-
+<!-- ═══════════════════════════════════════
+     CONTENIDO PRINCIPAL — Tarjetas
+     El JS inyecta aquí igual que antes.
+     Sin section/container-fluid/menu-layout.
+════════════════════════════════════════ -->
+<main id="menu-root">
+    <div id="menu-categorias">
+        <div class="has-text-centered py-6">
+            <p class="is-size-5 has-text-grey">Explorando el menú de Marée...</p>
+            <progress class="progress is-small is-primary mt-4" max="100">15%</progress>
         </div>
-
-        <!-- COLUMNA DERECHA: ORDER -->
-        <div class="order-column">
-
-            <a href="/menu/orden" class="order-btn-card">
-                <div class="order-btn-icon">🛒</div>
-                <div class="order-btn-text">
-                    <span class="order-btn-title">Ver Resumen de Pedido</span>
-                    <span class="order-btn-sub">Revisa y confirma los artículos de tu orden</span>
-                </div>
-            </a>
-
-            <!-- MAPA -->
-            <div class="order-map-box">
-                <p class="order-map-title">Tu ubicación</p>
-                <div id="mapa" style="height:280px;border-radius:8px;"></div>
-                <p id="mapa-estado" style="font-size:12px;color:#aaa;margin-top:8px;">
-                    Detectando ubicación...
-                </p>
-            </div>
-
-        </div>
-
     </div>
-</section>
+</main>
 
-<!-- MODAL -->
+<!-- ═══════════════════════════════════════
+     STICKY INFERIOR — Búsqueda + Promo + Eventos
+     TODO: poblar con buscador y accesos rápidos
+════════════════════════════════════════ -->
+<div id="sticky-bottom" class="sticky-bottom">
+</div>
+
+<!-- ═══════════════════════════════════════
+     FAB — Carrito
+     Reutiliza href de la antigua .order-btn-card.
+     Clase .fab ya definida en styles.css global.
+════════════════════════════════════════ -->
+<a id="fab-carrito" class="fab" href="/menu/orden" aria-label="Ver carrito">
+</a>
+
+<!-- ═══════════════════════════════════════
+     MODAL — Detalle de producto
+════════════════════════════════════════ -->
 <div id="modal-overlay" class="modal-overlay">
     <div id="modal-box" class="modal-box">
         <button id="modal-close" class="modal-close-btn">✕</button>
         <div id="modal-content">
-            <!-- Aqui se pone el contenido dinamicallyyy -->
+            <!-- Contenido inyectado dinámicamente por menu.js -->
         </div>
     </div>
 </div>
 
-
-<!-- MODAL de error de carga del menú -->
+<!-- ═══════════════════════════════════════
+     MODAL — Error de carga del menú
+════════════════════════════════════════ -->
 <dialog id="menuErrorModal">
     <div class="modal-accent-bar" style="background:#e74c3c;"></div>
     <h2 style="color:#c0392b;">Error al cargar el menú</h2>
@@ -90,10 +73,6 @@
     </div>
 </dialog>
 
-
-
-
-
 <script>
     const urlParams = new URLSearchParams(window.location.search);
     if (urlParams.get('authError') === 'database') {
@@ -101,8 +80,6 @@
         window.history.replaceState({}, document.title, window.location.pathname);
     }
 </script>
-
 <script src="/js/menudigital/menu.js"></script>
-
 </body>
 </html>
