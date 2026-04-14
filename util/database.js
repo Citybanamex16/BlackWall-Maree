@@ -36,7 +36,7 @@ const pool = mysql.createPool({
 */
 // JUAREZ
 
-/* Pool de conexiones
+// Pool de conexiones
 const pool = mysql.createPool({
   host: 'localhost',
   user: 'root',
@@ -46,9 +46,9 @@ const pool = mysql.createPool({
   connectionLimit: 10
 
 })
-*/
 
-// Santi
+/* JUAREZ
+
 // Pool de conexiones
 const pool = mysql.createPool({
   host: 'localhost',
@@ -59,5 +59,6 @@ const pool = mysql.createPool({
   connectionLimit: 10
 
 })
+*/
 
 module.exports = pool.promise() // Habilitamos poder usar .then() & .catch() yuhhhh
