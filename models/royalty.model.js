@@ -73,6 +73,21 @@ module.exports = class Royalty {
     }
   }
 
+  static async updateEventosRoyalty (nombreRoyalty, idsEventos) {
+    await db.execute(
+      'DELETE FROM estado_royalty_da_eventos WHERE Nombre_Royalty = ?',
+      [nombreRoyalty]
+    )
+    // Si hay nuevas promociones, las insertamos
+    if (idsEventos && idsEventos.length > 0) {
+      const valores = idsEventos.map(id => [nombreRoyalty, id])
+      await db.query(
+        'INSERT INTO estado_royalty_da_eventos (Nombre_Royalty, ID_Evento) VALUES ?',
+        [valores]
+      )
+    }
+  }
+
   // Obtenemos las promociones de cada royalty
   static async fetchPromociones_royalties (nombre) {
     return db.execute(

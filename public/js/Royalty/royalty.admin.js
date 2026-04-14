@@ -9,7 +9,6 @@ async function modificarRoyalty (nombre) {
   nombreOriginal = nombre
   const royalty = royaltiesData.find(r => r.Nombre_Royalty === nombre)
 
-  // Obtenemos los ids del modal para poder llenarlo con los datos
   document.getElementById('modal-nombre').textContent = nombre
   document.getElementById('input-nombre').value = royalty.Nombre_Royalty
   document.getElementById('input-prioridad').value = royalty.Número_de_prioridad
@@ -17,41 +16,57 @@ async function modificarRoyalty (nombre) {
   document.getElementById('input-minVisitas').value = royalty.Min_Visitas
   document.getElementById('input-maxVisitas').value = royalty.Max_Visitas
 
-  // Obtenemos la ruta de promociones
-  const res = await fetch(`/royalty/royaltyAdmin/${nombre}/promociones`)
-  const data = await res.json()
-  // debuggear
-  console.log('Todas:', data.data.todas)
-  console.log('Asignadas:', data.data.idsAsignadas)
-  // Obtenemos el modal para promociones
+  // Promociones
+  const resPromos = await fetch(`/royalty/royaltyAdmin/${nombre}/promociones`)
+  const dataPromos = await resPromos.json()
+
+  // Eventos
+  const resEventos = await fetch(`/royalty/royaltyAdmin/${nombre}/eventos`)
+  const dataEventos = await resEventos.json()
+
+  // Promociones
   const contenedor = document.getElementById('contenedor-promociones')
   contenedor.innerHTML = ''
-  // Obtenemos los datos o la info que queremos
-  // Nos enfocamos en la promocion
-  data.data.todas.forEach(promo => {
-    const marcada = data.data.idsAsignadas.includes(promo.ID_promocion)
-
+  dataPromos.data.todas.forEach(promo => {
+    const marcada = dataPromos.data.idsAsignadas.includes(promo.ID_promocion)
     const label = document.createElement('label')
     label.className = 'checkbox'
     label.style.display = 'block'
-
     const input = document.createElement('input')
     input.type = 'checkbox'
     input.value = promo.ID_promocion
     input.className = 'checkbox-promo mr-2'
     input.checked = marcada
-
     label.appendChild(input)
-    label.appendChild(document.createTextNode(' ' + promo.Nombre))
+    label.appendChild(document.createTextNode(' ' + promo.Nombre)) // ← promo.Nombre
     contenedor.appendChild(label)
   })
-  // abrimos el modal
+
+  // Eventos
+  const contenedorEventos = document.getElementById('contenedor-eventos')
+  contenedorEventos.innerHTML = ''
+  dataEventos.data.todas.forEach(evento => {
+    const marcada = dataEventos.data.idsAsignadas.includes(evento.ID_Evento)
+    const label = document.createElement('label')
+    label.className = 'checkbox'
+    label.style.display = 'block'
+    const input = document.createElement('input')
+    input.type = 'checkbox'
+    input.value = evento.ID_Evento
+    input.className = 'checkbox-evento mr-2'
+    input.checked = marcada
+    label.appendChild(input)
+    label.appendChild(document.createTextNode(' ' + evento.Nombre))
+    contenedorEventos.appendChild(label)
+  })
+
   document.getElementById('modal-modificarRoyalty').classList.add('is-active')
 }
 
 async function guardarRoyalty () {
   const promociones = Array.from(document.querySelectorAll('.checkbox-promo:checked'))
     .map(cb => cb.value)
+  const eventos = Array.from(document.querySelectorAll('.checkbox-evento: checked')).map(cb => cb.value)
 
   const body = {
     nombre: document.getElementById('input-nombre').value,
@@ -59,7 +74,8 @@ async function guardarRoyalty () {
     descripcion: document.getElementById('input-descripcion').value,
     minVisitas: document.getElementById('input-minVisitas').value,
     maxVisitas: document.getElementById('input-maxVisitas').value,
-    promociones
+    promociones,
+    eventos
   }
 
   if (!validarFormulario(body)) return

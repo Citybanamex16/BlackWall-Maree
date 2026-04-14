@@ -65,9 +65,10 @@ exports.deleteRoyalty = (request, response, next) => {
 exports.updateRoyalty = async (request, response, next) => {
   try {
     const nombreOriginal = request.params.nombre
-    const { nombre, prioridad, descripcion, minVisitas, maxVisitas, promociones } = request.body
+    const { nombre, prioridad, descripcion, minVisitas, maxVisitas, promociones, eventos } = request.body
     await Royalty.updateEstadoRoyalty(nombreOriginal, nombre, prioridad, descripcion, minVisitas, maxVisitas)
     await Royalty.updatePromocionesRoyalty(nombre, promociones)
+    await Royalty.updateEventosRoyalty(nombre, eventos)
     response.status(200).json({
       success: true,
       message: 'Se han modificado los datos correctamente'
