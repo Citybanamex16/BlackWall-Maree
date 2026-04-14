@@ -38,7 +38,7 @@ async function modificarRoyalty (nombre) {
     input.className = 'checkbox-promo mr-2'
     input.checked = marcada
     label.appendChild(input)
-    label.appendChild(document.createTextNode(' ' + promo.Nombre)) // ← promo.Nombre
+    label.appendChild(document.createTextNode(' ' + promo.Nombre))
     contenedor.appendChild(label)
   })
 
@@ -66,7 +66,7 @@ async function modificarRoyalty (nombre) {
 async function guardarRoyalty () {
   const promociones = Array.from(document.querySelectorAll('.checkbox-promo:checked'))
     .map(cb => cb.value)
-  const eventos = Array.from(document.querySelectorAll('.checkbox-evento: checked')).map(cb => cb.value)
+  const eventos = Array.from(document.querySelectorAll('.checkbox-evento:checked')).map(cb => cb.value)
 
   const body = {
     nombre: document.getElementById('input-nombre').value,
@@ -113,6 +113,28 @@ function validarFormulario (datos) {
   if (!datos.descripcion.trim()) { marcarError('input-descripcion', 'Requerido'); esValido = false }
   if (!datos.minVisitas) { marcarError('input-minVisitas', 'Requerido'); esValido = false }
   if (!datos.maxVisitas) { marcarError('input-maxVisitas', 'Requerido'); esValido = false }
+  // Validamos que sea menor y mayor al numero de visitas
+  if (Number(datos.minVisitas) > Number(datos.maxVisitas)) {
+    marcarError('input-minVisitas', 'Debe ser menor que max Visitas')
+    esValido = false
+  }
+  if (Number(datos.maxVisitas) < Number(datos.minVisitas)) {
+    marcarError('input-maxVisitas', 'Debe ser mayor que min Visitas')
+    esValido = false
+  }
+  // Validamos que sea entero
+  if (Number(datos.prioridad) < 0) {
+    marcarError('input-prioridad', 'Debe ser mayor que cero')
+    esValido = false
+  }
+  if (Number(datos.minVisitas) < 0) {
+    marcarError('input-minVisitas', 'Debe ser mayor que cero')
+    esValido = false
+  }
+  if (Number(datos.maxVisitas) < 0) {
+    marcarError('input-maxVisitas', 'Debe ser mayor que cero')
+    esValido = false
+  }
 
   return esValido
 }
