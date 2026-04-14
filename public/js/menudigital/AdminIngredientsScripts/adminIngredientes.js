@@ -9,7 +9,6 @@ const btnConfirmarRegistro = document.getElementById('btnConfirmarRegistro')
 const inputNombre = document.getElementById('inputNombre')
 const selectCategoria = document.getElementById('selectCategoria')
 const inputPrecio = document.getElementById('inputPrecio')
-const inputTipo = document.getElementById('inputTipo')
 const inputImagen = document.getElementById('inputImagen')
 const checkActivo = document.getElementById('checkActivo')
 
@@ -63,7 +62,6 @@ async function cargarTablaIngredientes () {
           <th>Nombre</th>
           <th>Categoría</th>
           <th>Precio</th>
-          <th>Tipo</th>
           <th>Estado</th>
           <th></th>
         </tr>
@@ -83,7 +81,6 @@ async function cargarTablaIngredientes () {
         <td style="font-weight:500;">${ing.Nombre}</td>
         <td><span class="badge badge-cat">${ing.Categoría}</span></td>
         <td style="color:#b5956a;font-weight:500;">$${parseFloat(ing.Precio).toFixed(2)}</td>
-        <td class="muted">${ing.Tipo ?? '—'}</td>
         <td>${badgeEstado}</td>
         <td><button class="btn-eliminar" data-id="${ing.ID_Insumo}" data-nombre="${ing.Nombre}">Eliminar</button></td>
       `
@@ -196,7 +193,6 @@ function mostrarResumen (datos) {
     { label: 'Nombre', value: datos.Nombre },
     { label: 'Categoría', value: datos.Categoría },
     { label: 'Precio', value: `$${parseFloat(datos.Precio).toFixed(2)}` },
-    { label: 'Tipo', value: datos.Tipo || '—' },
     { label: 'Imagen', value: datos.Imagen || '—' },
     { label: 'Disponible', value: datos.Activo ? 'Sí' : 'No' }
   ]
@@ -274,7 +270,6 @@ function obtenerDatosFormulario () {
     Nombre: inputNombre.value.trim(),
     Categoría: selectCategoria.value,
     Precio: inputPrecio.value,
-    Tipo: inputTipo.value.trim(),
     Imagen: inputImagen.value.trim(),
     Activo: checkActivo.checked
   }
@@ -284,7 +279,6 @@ function limpiarFormulario () {
   inputNombre.value = ''
   selectCategoria.value = ''
   inputPrecio.value = ''
-  inputTipo.value = ''
   inputImagen.value = ''
   checkActivo.checked = true
 }
@@ -368,7 +362,6 @@ const editarSubtitulo = document.getElementById('editarSubtitulo')
 const editNombre = document.getElementById('editNombre')
 const editCategoria = document.getElementById('editCategoria')
 const editPrecio = document.getElementById('editPrecio')
-const editTipo = document.getElementById('editTipo')
 const editImagen = document.getElementById('editImagen')
 const editActivo = document.getElementById('editActivo')
 const btnGuardarEditar = document.getElementById('btnGuardarEditar')
@@ -385,7 +378,6 @@ async function abrirModalEditar (ing) {
   // Llena campos con datos actuales
   editNombre.value = ing.Nombre
   editPrecio.value = ing.Precio
-  editTipo.value = ing.Tipo ?? ''
   editImagen.value = ing.Imagen ?? ''
   editActivo.checked = ing.Activo === 1
 
@@ -447,7 +439,6 @@ btnGuardarEditar.addEventListener('click', async () => {
     Categoría: editCategoria.value,
     Precio: editPrecio.value,
     Activo: editActivo.checked,
-    Tipo: editTipo.value.trim(),
     Imagen: editImagen.value.trim()
   }
 
