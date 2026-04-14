@@ -356,15 +356,22 @@ dialog.maree-modal::backdrop {
   background: #fde0da;
   color: #a03020;
 }
+/* --- RESPONSIVE INGREDIENTES --- */
+@media (max-width: 768px) {
+  .ing-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+    padding-bottom: 16px;
+    margin-bottom: 24px;
+  }
 
-.ing-table tbody tr {
-  cursor: pointer;
-}
+  .ing-header .page-title {
+    font-size: 34px !important;
+  }
 
-.ing-table tbody tr:hover td {
-  background: #fdf8f2;
-}
-
-.ing-table thead th:last-child {
-  width: 100px;
+  .btn-maree {
+    width: 100%;
+    justify-content: center;
+  }
 }

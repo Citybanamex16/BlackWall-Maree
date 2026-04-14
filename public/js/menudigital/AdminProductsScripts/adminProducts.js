@@ -1,4 +1,4 @@
-/* global ConstruirModifModal, ModifyProduct */
+/* global ConstruirModifModal, ModifyProduct, eliminarDesactivarModal */
 // JS FRONTEND de la vista de Productos del Admin
 
 /* CU Visualizar Catalogo de Productos */
@@ -50,11 +50,20 @@ function construirFichaProductos (datosProducto, datosCategorias) {
 
     // Delegar clicks en todas las fichas de esta categoría
     gridDestino.addEventListener('click', (e) => {
+      // Click en botón Elim/Desact — tiene prioridad, no propaga a la fila
+      const btnElim = e.target.closest('.btn-elim-desact')
+      if (btnElim) {
+        e.stopPropagation()
+        const idProd = btnElim.dataset.idProd
+        const nameProd = btnElim.dataset.nameProd
+        eliminarDesactivarModal(idProd, nameProd)
+        return
+      }
+
+      // Click en la fila — abre modal de edición
       const ficha = e.target.closest('.admin-prod-row')
       if (!ficha) return
-      const id = ficha.dataset.id
-      const prod = catalogoProductosMap.get(id)
-      // TODO: abrir modal de detalle/edición del producto
+      const prod = catalogoProductosMap.get(ficha.dataset.id)
       ConstruirModifModal(prod, datosCategorias)
     })
   })
@@ -76,6 +85,12 @@ function renderProductoAdmin (prod) {
       <span class="prod-precio">$${prod.precio}</span>
       <span class="prod-ingredientes">${ingredientesTexto}</span>
       ${disponibleTag}
+      <button 
+        class="btn-elim-desact" 
+        data-id-prod="${prod.id}"
+        data-name-prod="${prod.nombre}"
+        title="Eliminar o desactivar producto"
+      >Elim/Desact</button>
     </div>`
 }
 
@@ -104,6 +119,7 @@ function construirCategoria (cat, contenedorMenu) {
         <span>Precio</span>
         <span>Ingredientes</span>
         <span>Estado</span>
+        <span>Acción</span>
       </div>
     </div>`
 
@@ -196,7 +212,7 @@ function registerButtonOnClick (event) {
   fetch('/menu/formsTipoPlatillo')
     .then(response => {
       if (!response.ok) {
-        ShowErrorModal('Error Consulta', 'Error en Consulta Tipos de Productos')
+        ShowErrorModal('Error Interno Backedn', 'Error en Fetch de Categorías')
         throw new Error('Error en Register Button Click')
       }
       return response.json()
@@ -243,12 +259,12 @@ function registerButtonOnClick (event) {
       typeFormsCloseBtn.addEventListener('click', (event) => {
         event.preventDefault()
         typeFormsModal.close()
-      })
+      }, { once: true })
 
       typeFormsModal.showModal()
     })
     .catch(error => {
-      ShowErrorModal('Error Interno', 'Error en Consulta Tipos de Productos')
+      ShowErrorModal('Error Conexión a Base de Datos', 'Error en Consultar Tipos de Productos')
       console.error('Erro en datos Type product CU04: ', error)
     })
 }
@@ -262,7 +278,7 @@ async function seleccionarTipoProducto (id) {
     const respuesta = await fetch(`/menu/formsRegistraPlatillo?id=${id}`)
 
     if (!respuesta.ok) {
-      ShowErrorModal('Error', 'Error Interno en Consulta campos de Producto e Ingredientes')
+      ShowErrorModal('Error Interno', 'Error Interno en Consulta campos de Producto e Ingredientes')
     }
 
     const object = await respuesta.json()
@@ -273,7 +289,7 @@ async function seleccionarTipoProducto (id) {
     createProductRegisterForms(ProductFields, AllIngredientes, id)
   } catch (error) {
     console.error('Hubo un fallo en la operación:', error)
-    ShowErrorModal('Error', `Error en Consulta campos de Producto: ${error}`)
+    ShowErrorModal('Error de Conexión con BD', 'Hubo un inconveniente con la conexión a la BD. Intentelo mas tarde')
   }
 }
 
@@ -353,6 +369,7 @@ const RegisterFormModal = document.getElementById('RegisterFormsCU04')
 const RegisterFormTitle = document.getElementById('formsRegistrarTitulo')
 const RegisterFormClose = document.getElementById('cerrarFormsRegistrar')
 const registerForm = document.getElementById('formsRegistrarForm')
+const submitFormsRegistrar = document.getElementById('submitFormsRegistrar')
 
 /* ══════════════════════════════════════════════════════
    ESTADO DE INGREDIENTES
@@ -538,37 +555,32 @@ function createProductRegisterForms (Fields, Ingredientes, type) {
 }
 
 // Setting de Botones
-// 1. Definimos una variable global para el control de eventos
-let formController = new AbortController()
+// Referencias globales de los handlers activos
+let handlerSubmit = null
+let handlerClose = null
 
 function SetRegisterButtons (tipoAccion, datos1, datos2) {
-  // 2. "Limpiamos" cualquier listener previo cancelando el controlador anterior
-  formController.abort()
+  if (handlerSubmit) submitFormsRegistrar.removeEventListener('click', handlerSubmit)
+  if (handlerClose) RegisterFormClose.removeEventListener('click', handlerClose)
 
-  // 3. Creamos uno nuevo para esta nueva configuración
-  formController = new AbortController()
-
-  // 4. Añadimos el listener usando la señal (signal)
-  registerForm.addEventListener('submit', (event) => {
+  handlerSubmit = (event) => {
     event.preventDefault()
-
     if (tipoAccion === 'POST') {
       PostNewProduct(datos1, datos2)
     } else if (tipoAccion === 'MODIFY') {
       ModifyProduct(datos1, datos2)
     }
-  }, {
-    once: true,
-    signal: formController.signal // <-- Esto permite que abort() lo borre
-  })
+  }
 
-  // Listener de cerrar (también con signal para que no se acumulen)
-  RegisterFormClose.addEventListener('click', () => {
+  handlerClose = () => {
     RegisterFormModal.close()
     if (tipoAccion === 'POST') {
       typeFormsModal.showModal()
     }
-  }, { once: true, signal: formController.signal })
+  }
+
+  submitFormsRegistrar.addEventListener('click', handlerSubmit)
+  RegisterFormClose.addEventListener('click', handlerClose)
 
   RegisterFormModal.showModal()
 }
@@ -642,14 +654,14 @@ const ErrorModal = document.getElementById('ErrorModal')
 const ErrorTitle = document.getElementById('ErrorTitle')
 const ErrorContent = document.getElementById('ErrorMessage')
 const ErrorCloseBtn = document.getElementById('closeInvalidData')
-ErrorCloseBtn.addEventListener('click',
-  (event) => {
-    ErrorModal.close()
-  }, { once: true })
 
 function ShowErrorModal (title, content) {
   ErrorTitle.innerText = title
   ErrorContent.innerText = content
+  ErrorCloseBtn.addEventListener('click',
+    (event) => {
+      ErrorModal.close()
+    }, { once: true })
   ErrorModal.showModal()
 }
 
@@ -713,13 +725,13 @@ function ShowProductSummary (SummaryData, type, Registerdata) {
     // FA: Cancelar confirmacion
     RegisterFormModal.showModal() // Volvemos a abrir el Formulario de registro
     SummaryModal.close()
-  })
+  }, { once: true })
 
   SummaryRegisterbtn.addEventListener('click', async (event) => {
     // Send de los Datos del Summary
     event.preventDefault()
     registerNewProduct(Registerdata, type)
-  })
+  }, { once: true })
   console.log('Mostrando Modal de Summary')
   SummaryModal.showModal()
 }
@@ -742,12 +754,10 @@ async function registerNewProduct (NewProductData, ProductType) {
       showSuccessModal(nombre, ProductType)
     } else {
       ShowErrorModal(`Error al Registrar ${ProductType}`, response.message || 'Error Desconocido')
-
-      console.log('!Fracaso!')
+      throw new Error('Error Registrar nuevo Producto')
     }
   } catch (error) {
-    ShowErrorModal(`Error Interno al Registrar ${ProductType}`, `Fallo Interno: ${error}`)
-    console.error('Error en el Registro de nuevo Producto: ', error)
+    ShowErrorModal(`Error al intentar Registrar ${ProductType}`, 'Hubo in fallo en la conexión con la BD. Favor de intentarlo mas tarde')
   }
 }
 
@@ -784,7 +794,7 @@ function validarDatosRegistro (Formsdata, catalogoIngredientes) {
 
     if (field[0] === 'Precio') {
       const precio = parseFloat(field[1])
-      if (isNaN(precio) || precio < 0) {
+      if (isNaN(precio) || precio <= 0) {
         console.warn(`Precio inválido: ${field[1]}`)
         return false
       }

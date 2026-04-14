@@ -271,7 +271,7 @@ const renderPedido = () => {
 
   // Total
   const total = pedido.reduce((sum, item) => {
-    const num = parseInt(item.precio.replace(/[^0-9]/g, ''))
+    const num = parseFloat(item.precio.replace(/[^0-9.,]/g, '').replace(',', '.'))
     return sum + (isNaN(num) ? 0 : num)
   }, 0)
 
