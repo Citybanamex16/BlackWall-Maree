@@ -19,6 +19,10 @@ module.exports = class Royalty {
     return db.execute('SELECT ID_promocion, Nombre FROM promocion')
   }
 
+  static fetchTodosEventos () {
+    return db.execute('SELECT ID_Evento, Nombre FROM evento')
+  }
+
   // Buscamos a lo que vamos a borrar
   static async deleteRoyaltyBD (nombre) {
     return db.execute('DELETE FROM estado_royalty_da_promociones WHERE Nombre_Royalty = ?', [nombre])
@@ -76,6 +80,14 @@ module.exports = class Royalty {
      INNER JOIN estado_royalty_da_promociones erp ON p.ID_promocion = erp.ID_Promocion 
      WHERE erp.Nombre_Royalty = ?`,
     [nombre]
+    )
+  }
+
+  static async fetchEventos_royalty (nombre) {
+    return db.execute(
+      `SELECT e.ID_Evento, e.Nombre FROM evento e
+      INNER JOIN estado_royalty_da_eventos erde ON erde.ID_Evento = e.ID_Evento
+      WHERE erde.Nombre_Royalty = ?`, [nombre]
     )
   }
 

@@ -151,11 +151,17 @@ async function cargarRoyalty () {
     const container = document.getElementById('royaltyContainer')
     royaltiesData = data.data
     data.data.forEach(royalty => {
+      let eventosHTML
       let promocionesHTML
       if (royalty.promociones && royalty.promociones.length > 0) {
         promocionesHTML = royalty.promociones.map(promo => `<p>${promo.Nombre}</p>`).join('')
       } else {
         promocionesHTML = '<p class="has-text-grey">Sin promociones</p>'
+      }
+      if (royalty.eventos && royalty.eventos.length > 0) {
+        eventosHTML = royalty.eventos.map(evento => `<p>${evento.Nombre}</p>`).join('')
+      } else {
+        eventosHTML = '<p class="has-text-grey">Sin eventos</p>'
       }
       container.innerHTML += `
         <div class="column is-half">
@@ -171,6 +177,9 @@ async function cargarRoyalty () {
                 <strong> Promociones: </strong>
                 ${promocionesHTML}
               </div>
+                <strong> Eventos: </strong>
+                ${eventosHTML}
+                <br>
               <footer class="card-footer">
                 <button class="button is-warning card-footer-item" onclick="modificarRoyalty('${royalty.Nombre_Royalty}')">
                   <span class="icon"><i class="fas fa-pen"></i></span>

@@ -12,6 +12,9 @@ exports.getRoyaltyAdmin = async (request, response, next) => {
       const [promociones] = await Royalty.fetchPromociones_royalties(royalty.Nombre_Royalty)
       royalty.promociones = promociones
       console.log(`${royalty.Nombre_Royalty}:`, promociones) // Debuggear
+      const [eventos] = await Royalty.fetchEventos_royalty(royalty.Nombre_Royalty)
+      royalty.eventos = eventos
+      console.log(`${royalty.Nombre_Royalty}:`, eventos)
     }
     console.log('Obtenemos los estados Royalty de la base de datos')
     response.render('admin/royalty', { royalties })
@@ -32,6 +35,8 @@ exports.getRoyaltyAdminJSON = async (request, response, next) => {
       // guardamos las promociones
       const [promociones] = await Royalty.fetchPromociones_royalties(royalty.Nombre_Royalty)
       royalty.promociones = promociones
+      const [eventos] = await Royalty.fetchEventos_royalty(royalty.Nombre_Royalty)
+      royalty.eventos = eventos
     }
     response.status(200).json({
       succes: true,
@@ -94,6 +99,25 @@ exports.getPromocionesParaModal = async (request, response, next) => {
   } catch (error) {
     console.log(error)
     response.status(500).json({ success: false })
+  }
+}
+
+exports.getEventosParaModal = async (request, response, next) => {
+  try {
+    const nombre = request.params.nombre
+    const [todas] = await Royalty.fetchTodosEventos()
+    const [asignadas] = await Royalty.fetchEventos_royalty(nombre)
+    console.log('asignadas raw: ', asignadas)
+
+    const idsAsignadas = asignadas.map(p => p.ID_Evento)
+
+    response.status(200).json({
+      success: true,
+      data: { todas, idsAsignadas }
+    })
+  } catch (error) {
+    console.log(error)
+    response.status(500).json({ success: true })
   }
 }
 
