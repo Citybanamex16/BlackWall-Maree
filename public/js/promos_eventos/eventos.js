@@ -155,7 +155,7 @@ function renderizarEventos (lista) {
               <span class="event-chip secondary">${totalProductos} ${totalProductos === 1 ? 'producto' : 'productos'}</span>
             </div>
 
-            <hr class="my-4" style="background-color: #efe1d4; height: 1px;">
+            <hr class="my-4 event-card-divider">
 
             <div>
               <p class="event-card-label mb-2">Vigencia</p>

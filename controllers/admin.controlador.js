@@ -4,6 +4,7 @@ const Colaborador = require('../models/colaborador.model.js')
 const Ingrediente = require('../models/ingrediente.model.js')
 const MetricasClientes = require('../models/metricasclientes.model.js')
 const MetricasProductos = require('../models/metricasproductos.model.js')
+// const bcrypt = require('bcryptjs')
 
 // const path = require('path')
 
