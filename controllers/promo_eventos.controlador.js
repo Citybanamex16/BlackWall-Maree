@@ -78,6 +78,22 @@ const validarDatosPromocion = ({ nombre, descuento, condicion, fechaInicio, fech
   return null
 }
 
+const validarPromocionesActivasEvento = async (idsPromociones) => {
+  if (idsPromociones.length === 0) {
+    return null
+  }
+
+  const [promocionesActivas] = await Eventos.fetchPromocionesActivasPorIds(idsPromociones)
+  const idsActivos = new Set(promocionesActivas.map(promocion => String(promocion.id)))
+  const promocionesNoElegibles = idsPromociones.filter(idPromocion => !idsActivos.has(String(idPromocion)))
+
+  if (promocionesNoElegibles.length > 0) {
+    return 'Todas las promociones vinculadas al evento deben estar activas.'
+  }
+
+  return null
+}
+
 const construirRespuestaEvento = (idEvento) => {
   return Eventos.fetchById(idEvento)
 }
@@ -182,6 +198,15 @@ exports.postRegistrarEvento = async (req, res, next) => {
       })
     }
 
+    const errorPromociones = await validarPromocionesActivasEvento(idsPromociones)
+
+    if (errorPromociones) {
+      return res.status(400).json({
+        success: false,
+        message: errorPromociones
+      })
+    }
+
     const nuevoEvento = new Eventos({
       nombre: nombre.trim(),
       descripcion: descripcion.trim(),
@@ -244,6 +269,15 @@ exports.putUpdateEvent = async (req, res, next) => {
       return res.status(400).json({
         success: false,
         message: errorValidacion
+      })
+    }
+
+    const errorPromociones = await validarPromocionesActivasEvento(idsPromociones)
+
+    if (errorPromociones) {
+      return res.status(400).json({
+        success: false,
+        message: errorPromociones
       })
     }
 

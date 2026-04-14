@@ -1,8 +1,8 @@
-document.addEventListener("DOMContentLoaded", () => {
-  const botones = document.querySelectorAll(".btn-baja")
+document.addEventListener('DOMContentLoaded', () => {
+  const botones = document.querySelectorAll('.btn-baja')
 
   botones.forEach((boton) => {
-    boton.addEventListener("click", async () => {
+    boton.addEventListener('click', async () => {
       const id = boton.dataset.id
       const nombre = boton.dataset.nombre
 
@@ -14,9 +14,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
       try {
         const response = await fetch(`/admin/colaboradores/${id}/baja`, {
-          method: "POST",
+          method: 'POST',
           headers: {
-            "Content-Type": "application/json"
+            'Content-Type': 'application/json'
           }
         })
 
@@ -24,10 +24,10 @@ document.addEventListener("DOMContentLoaded", () => {
         alert(data.mensaje)
 
         if (data.ok) {
-          window.location.href = "/admin/colaboradores"
+          window.location.href = '/admin/colaboradores'
         }
       } catch (error) {
-        alert("Error de red o del servidor al intentar eliminar al colaborador.")
+        alert('Error de red o del servidor al intentar eliminar al colaborador.')
       }
     })
   })
