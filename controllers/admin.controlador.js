@@ -4,7 +4,7 @@ const Colaborador = require('../models/colaborador.model.js')
 const Ingrediente = require('../models/ingrediente.model.js')
 const MetricasClientes = require('../models/metricasclientes.model.js')
 const MetricasProductos = require('../models/metricasproductos.model.js')
-const bcrypt = require('bcryptjs')
+// const bcrypt = require('bcryptjs')
 
 // const path = require('path')
 
@@ -673,7 +673,7 @@ exports.postNewCollaborator = async (req, res, next) => {
       })
     }
 
-    //const contrasenaHasheada = await bcrypt.hash(contrasena, 12)
+    // const contrasenaHasheada = await bcrypt.hash(contrasena, 12)
 
     await Colaborador.create(
       idColaborador,
