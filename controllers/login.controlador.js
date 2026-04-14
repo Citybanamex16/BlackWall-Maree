@@ -40,9 +40,17 @@ exports.postLogin = async (request, response, next) => {
       if (password) {
         if (password === colaborador.password) {
           request.session.isLoggedIn = true
-          request.session.user = colaborador.nombre
+          request.session.user = {
+            id: colaborador.id_colaborador,
+            nombre: colaborador.nombre
+          }
           request.session.rol = colaborador.id_rol
-          return response.status(200).json({ success: true, redirectUrl: '/menu/menu' })
+
+          const redirectUrl = colaborador.id_rol === 'Administrador'
+            ? '/admin'
+            : '/menu/menu'
+
+          return response.status(200).json({ success: true, redirectUrl })
         }
         return response.status(401).json({ error: 'Contraseña incorrecta.' })
       }
