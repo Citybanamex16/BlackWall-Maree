@@ -416,8 +416,11 @@ async function prepararModificacion (idEvento) {
     document.getElementById('fechaFin').value = normalizarFechaInput(evento.Fecha_Final)
     document.getElementById('activo').checked = estaActivo(evento.Activo)
 
+    const idsPromocionesActivas = new Set(estadoEventos.promocionesCatalogo.map(promocion => String(promocion.id)))
     estadoEventos.promocionesSeleccionadas = new Map(
-      (Array.isArray(evento.promociones) ? evento.promociones : []).map(promocion => [String(promocion.id), promocion.nombre])
+      (Array.isArray(evento.promociones) ? evento.promociones : [])
+        .filter(promocion => idsPromocionesActivas.has(String(promocion.id)))
+        .map(promocion => [String(promocion.id), promocion.nombre])
     )
     estadoEventos.productosSeleccionados = new Map(
       (Array.isArray(evento.productos) ? evento.productos : []).map(producto => [String(producto.id), producto.nombre])
