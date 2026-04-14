@@ -158,6 +158,10 @@ const cerrarModalSoloConfirmacion = () => {
   document.getElementById('modal-confirmarModificarRoyalty').classList.remove('is-active')
 }
 
+const cerrorModalError = () => {
+  document.getElementById('ModalError').classList.remove('is-active')
+}
+
 const cerrarModalConfirmacion = () => {
   document.getElementById('modal-confirmarModificarRoyalty').classList.remove('is-active')
   document.getElementById('modal-modificarRoyalty').classList.remove('is-active')
@@ -175,7 +179,7 @@ function borrarRoyalty (NombreRoyalty) {
     fetch('/royalty/borrar/' + NombreRoyalty, { method: 'DELETE' }).then(() => {
       window.location.reload()
     }).catch(() => {
-      alert('Error en conexión')
+      document.getElementById('ModalError').classList.add('is-active')
     })
   }
 }
