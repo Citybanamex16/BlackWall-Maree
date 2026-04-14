@@ -69,6 +69,21 @@ module.exports = class Pedido {
     return idOrden
   }
 
+  static async verificarOCrearCliente (telefono) {
+    const [rows] = await db.execute(
+      'SELECT Numero_Telefonico FROM cliente WHERE Numero_Telefonico = ?',
+      [telefono]
+    )
+
+    if (rows.length === 0) {
+      await db.execute(
+      `INSERT INTO cliente (Numero_Telefonico, Nombre, ID_Rol, Visitas_Actuales)
+       VALUES (?, 'Cliente', 'Usuario', 0)`,
+      [telefono]
+      )
+    }
+  }
+
   static async guardarItems (idOrden, items) {
     for (const item of items) {
       const [rows] = await db.execute(

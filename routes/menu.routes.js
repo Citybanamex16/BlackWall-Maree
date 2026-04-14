@@ -19,6 +19,9 @@ router.get('/formsTipoPlatillo', menuControlador.getTypes)
 router.get('/formsRegistraPlatillo', menuControlador.getProductfieldsAndIngredientes)
 router.post('/registerNewProduct', menuControlador.postNewProduct)
 router.put('/modifProduct/:id', menuControlador.postModifProduct) // ¡ Ese es PUT !
+// Eliminar Producto
+router.delete('/eliminarProducto', menuControlador.deleteProducto)
+router.put('/desactivarProducto', menuControlador.putDesactivarProducto)
 
 // rutas feedback
 router.get('/feedback', feedBackControlador.getFeedback)
