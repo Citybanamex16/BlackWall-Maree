@@ -5,7 +5,17 @@ const Royalty = require('../models/royalty.model.js')
 // Admin
 exports.getRoyaltyAdmin = async (request, response, next) => {
   try {
+    // Obtenemos los royalties
     const [royalties] = await Royalty.fetchAll()
+    for (const royalty of royalties) {
+      // Obtenemos las promociones
+      const [promociones] = await Royalty.fetchPromociones_royalties(royalty.Nombre_Royalty)
+      royalty.promociones = promociones
+      console.log(`${royalty.Nombre_Royalty}:`, promociones) // Debuggear
+      const [eventos] = await Royalty.fetchEventos_royalty(royalty.Nombre_Royalty)
+      royalty.eventos = eventos
+      console.log(`${royalty.Nombre_Royalty}:`, eventos)
+    }
     console.log('Obtenemos los estados Royalty de la base de datos')
     response.render('admin/royalty', { royalties })
   } catch (error) {
@@ -19,7 +29,15 @@ exports.getRoyaltyAdmin = async (request, response, next) => {
 
 exports.getRoyaltyAdminJSON = async (request, response, next) => {
   try {
+    // Obtenemos los royalties
     const [royalties] = await Royalty.fetchAll()
+    for (const royalty of royalties) {
+      // guardamos las promociones
+      const [promociones] = await Royalty.fetchPromociones_royalties(royalty.Nombre_Royalty)
+      royalty.promociones = promociones
+      const [eventos] = await Royalty.fetchEventos_royalty(royalty.Nombre_Royalty)
+      royalty.eventos = eventos
+    }
     response.status(200).json({
       succes: true,
       message: 'Éxito al obtener estados royalty',
@@ -47,8 +65,10 @@ exports.deleteRoyalty = (request, response, next) => {
 exports.updateRoyalty = async (request, response, next) => {
   try {
     const nombreOriginal = request.params.nombre
-    const { nombre, prioridad, descripcion, minVisitas, maxVisitas } = request.body
+    const { nombre, prioridad, descripcion, minVisitas, maxVisitas, promociones, eventos } = request.body
     await Royalty.updateEstadoRoyalty(nombreOriginal, nombre, prioridad, descripcion, minVisitas, maxVisitas)
+    await Royalty.updatePromocionesRoyalty(nombre, promociones)
+    await Royalty.updateEventosRoyalty(nombre, eventos)
     response.status(200).json({
       success: true,
       message: 'Se han modificado los datos correctamente'
@@ -61,6 +81,49 @@ exports.updateRoyalty = async (request, response, next) => {
       message: 'No se pudo cambiar el estado royalty'
     })
   }
+}
+
+exports.getPromocionesParaModal = async (request, response, next) => {
+  try {
+    const nombre = request.params.nombre
+    const [todas] = await Royalty.fetchTodasPromociones()
+    const [asignadas] = await Royalty.fetchPromociones_royalties(nombre)
+    console.log('asignadas raw:', asignadas)
+
+    // IDs de las que ya tiene este royalty
+    const idsAsignadas = asignadas.map(p => p.ID_promocion)
+
+    response.status(200).json({
+      success: true,
+      data: { todas, idsAsignadas }
+    })
+  } catch (error) {
+    console.log(error)
+    response.status(500).json({ success: false })
+  }
+}
+
+exports.getEventosParaModal = async (request, response, next) => {
+  try {
+    const nombre = request.params.nombre
+    const [todas] = await Royalty.fetchTodosEventos()
+    const [asignadas] = await Royalty.fetchEventos_royalty(nombre)
+    console.log('asignadas raw: ', asignadas)
+
+    const idsAsignadas = asignadas.map(p => p.ID_Evento)
+
+    response.status(200).json({
+      success: true,
+      data: { todas, idsAsignadas }
+    })
+  } catch (error) {
+    console.log(error)
+    response.status(500).json({ success: true })
+  }
+}
+
+exports.getRoyaltyMetrics = (req, res, next) => {
+  res.render('/royalty/royaltyAdmin')
 }
 
 // Cliente
