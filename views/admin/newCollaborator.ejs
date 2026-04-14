@@ -29,14 +29,15 @@
         </div>
       </div>
 
-      <div class="field mb-4">
-        <label class="label" style="color: var(--c-text-muted); text-transform: uppercase; font-size: 11px; letter-spacing: 1px;">Rol</label>
-        <div class="control">
-          <div class="select select-base is-fullwidth">
-            <select name="rol" required>
-              <option value="Colaborador" <%= oldInput && oldInput.rol === 'Colaborador' ? 'selected' : '' %>>Colaborador</option>
-              <option value="Admin" <%= oldInput && oldInput.rol === 'Admin' ? 'selected' : '' %>>Administrador</option>
-            </select>
+        <div class="field">
+          <label class="label">Rol</label>
+          <div class="control">
+            <div class="select is-fullwidth">
+              <select name="rol" required>
+                <option value="Colaborador" <%= oldInput.rol === 'Colaborador' ? 'selected' : '' %>>Colaborador</option>
+                <option value="Administrador" <%= oldInput.rol === 'Administrador' ? 'selected' : '' %>>Administrador</option>
+              </select>
+            </div>
           </div>
         </div>
       </div>
