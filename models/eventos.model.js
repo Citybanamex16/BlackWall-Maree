@@ -113,8 +113,27 @@ module.exports = class Evento {
         ID_Promocion AS id,
         Nombre AS nombre
       FROM promocion
+      WHERE Activo = 1
       ORDER BY Nombre ASC
     `)
+  }
+
+  static fetchPromocionesActivasPorIds (idsPromociones = []) {
+    const ids = normalizarIds(idsPromociones)
+
+    if (ids.length === 0) {
+      return Promise.resolve([[]])
+    }
+
+    const placeholders = ids.map(() => '?').join(', ')
+
+    return db.execute(`
+      SELECT
+        ID_Promocion AS id
+      FROM promocion
+      WHERE Activo = 1
+        AND ID_Promocion IN (${placeholders})
+    `, ids)
   }
 
   static fetchAllProductos () {
