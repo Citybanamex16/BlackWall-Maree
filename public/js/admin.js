@@ -1,12 +1,12 @@
-document.addEventListener('DOMContentLoaded', () => {
-  const botones = document.querySelectorAll('.btn-baja')
+document.addEventListener("DOMContentLoaded", () => {
+  const botones = document.querySelectorAll(".btn-baja")
 
   botones.forEach((boton) => {
-    boton.addEventListener('click', async () => {
+    boton.addEventListener("click", async () => {
       const id = boton.dataset.id
       const nombre = boton.dataset.nombre
 
-      const confirmado = window.confirm(`¿Seguro que deseas dar de baja a ${nombre}?`)
+      const confirmado = confirm(`¿Seguro que deseas eliminar a ${nombre}? Esta acción no se puede deshacer.`)
 
       if (!confirmado) {
         return
@@ -14,21 +14,20 @@ document.addEventListener('DOMContentLoaded', () => {
 
       try {
         const response = await fetch(`/admin/colaboradores/${id}/baja`, {
-          method: 'POST',
+          method: "POST",
           headers: {
-            'Content-Type': 'application/json'
+            "Content-Type": "application/json"
           }
         })
 
         const data = await response.json()
-
-        console.log(data.mensaje)
+        alert(data.mensaje)
 
         if (data.ok) {
-          window.location.href = '/admin/colaboradores'
+          window.location.href = "/admin/colaboradores"
         }
       } catch (error) {
-        console.log('Error de red o del servidor al intentar dar de baja.')
+        alert("Error de red o del servidor al intentar eliminar al colaborador.")
       }
     })
   })
