@@ -207,8 +207,7 @@ obtenerMenu()
 
 /* ==Construcción de Menu Dinámico == */
 
-
-//Actor A: Constructor de fichas individuales
+// Actor A: Constructor de fichas individuales
 function construirFichaProductos (datosProducto, datosCategorias) {
   console.log('Repartiendo productos en sus categorías...')
   datosCategorias.forEach(cat => {
@@ -347,7 +346,6 @@ function construirCategoria (cat, contenedorMenu) {
   return { id: seccionID, nombre: cat.Nombre }
 }
 
-
 /* Actor D: Sticky tabs */
 function generarStickyTabs (categorias) {
   const listaTabs = document.getElementById('lista-tabs')
@@ -369,7 +367,7 @@ function generarStickyTabs (categorias) {
 
       // Si estaba cerrado, ábrir antes de hacer scroll
       if (!target.classList.contains('is-open')) {
-         const grid = target.querySelector('.grid')
+        const grid = target.querySelector('.grid')
         grid.style.maxHeight = grid.scrollHeight + 'px'
         grid.style.opacity = '1'
         target.classList.add('is-open')
@@ -409,7 +407,6 @@ function contruirMenuDinamico (datos) {
   // 1. Referencia al contenedor principal
   const contenedorMenu = document.getElementById('menu-categorias')
   contenedorMenu.innerHTML = ''
-
 
   const categoríasInfo = []
 
