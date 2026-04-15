@@ -163,20 +163,6 @@ if (navigator.geolocation) {
 }
 */
 
-// ── DROPDOWNS DE SECCIONES ──
-const seccionesCollapsible = document.querySelectorAll('.menu-section--collapsible')
-
-for (const seccion of seccionesCollapsible) {
-  const header = seccion.querySelector('.section-header')
-  const contenido = seccion.querySelector('.section-content')
-
-  header.addEventListener('click', () => {
-    const abierto = seccion.dataset.open === 'true'
-    seccion.dataset.open = abierto ? 'false' : 'true'
-    contenido.style.display = abierto ? 'none' : 'block'
-  })
-}
-
 /* CU11 Visualizar Menu Digital */
 
 function ShowMenuErrorModal () {
@@ -221,11 +207,13 @@ obtenerMenu()
 
 /* ==Construcción de Menu Dinámico == */
 
+
+//Actor A: Constructor de fichas individuales
 function construirFichaProductos (datosProducto, datosCategorias) {
   console.log('Repartiendo productos en sus categorías...')
   datosCategorias.forEach(cat => {
     const sectionPrincipal = document.getElementById(cat.id)
-    const gridDestino = sectionPrincipal.querySelector('.grid-productos')
+    const gridDestino = sectionPrincipal.querySelector('.grid')
     const productosFiltrados = datosProducto.filter(prod => prod.categoria === cat.nombre)
 
     if (productosFiltrados.length === 0) {
@@ -273,8 +261,8 @@ function construirFichaProductos (datosProducto, datosCategorias) {
                   data-precio="${prod.precio}"
                   onclick="agregarAlCarrito(this)"
                 >
-                  <span class="btn btn-primary-icon">＋</span>
-                  <span class="btn btn-primary-label">Agregar a la orden</span>
+                  <span>＋</span>
+                  <span>Agregar a la orden</span>
                 </button>
               </div>
             </div>
@@ -286,15 +274,15 @@ function construirFichaProductos (datosProducto, datosCategorias) {
   })
 }
 
-// Función auxiliar para la Capa 3: Los Ingredientes
+// Actor B: Función auxiliar para la Capa 3: Los Ingredientes
 function generarBadgesIngredientes (listaIngredientes) {
   if (!listaIngredientes || listaIngredientes.length === 0) return ''
   return listaIngredientes
-    .map(ing => `<span class="tags">${ing.nombre}</span>`)
+    .map(ing => `<span class="tag">${ing.nombre}</span>`)
     .join('')
 }
 
-/* Sección de categoría */
+/* Actor C: Sección de categoría */
 function construirCategoria (cat, contenedorMenu) {
   const seccionCat = document.createElement('section')
   seccionCat.className = 'categoria-section mb-4 is-dynamic is-open'
@@ -316,7 +304,7 @@ function construirCategoria (cat, contenedorMenu) {
     </div>`
 
   const header = seccionCat.querySelector('.cat-header')
-  const grid = seccionCat.querySelector('.grid-productos')
+  const grid = seccionCat.querySelector('.grid')
 
   /* Toggle con animación real de altura */
 
@@ -359,7 +347,8 @@ function construirCategoria (cat, contenedorMenu) {
   return { id: seccionID, nombre: cat.Nombre }
 }
 
-/* Sticky tabs */
+
+/* Actor D: Sticky tabs */
 function generarStickyTabs (categorias) {
   const listaTabs = document.getElementById('lista-tabs')
   listaTabs.innerHTML = ''
@@ -380,7 +369,7 @@ function generarStickyTabs (categorias) {
 
       // Si estaba cerrado, ábrir antes de hacer scroll
       if (!target.classList.contains('is-open')) {
-        const grid = target.querySelector('.grid-productos')
+         const grid = target.querySelector('.grid')
         grid.style.maxHeight = grid.scrollHeight + 'px'
         grid.style.opacity = '1'
         target.classList.add('is-open')
@@ -420,6 +409,7 @@ function contruirMenuDinamico (datos) {
   // 1. Referencia al contenedor principal
   const contenedorMenu = document.getElementById('menu-categorias')
   contenedorMenu.innerHTML = ''
+
 
   const categoríasInfo = []
 

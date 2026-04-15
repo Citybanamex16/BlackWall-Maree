@@ -5,7 +5,8 @@
      TODO: poblar con datos de sesión
 ════════════════════════════════════════ -->
 <div id="sticky-top" class="sticky-top-app">
-    <div class="user-profile">
+    <!-- Botón de Iniciar Sesión -->
+    <button type="button" class="user-profile" onclick="location.href='#login';" aria-label="Iniciar Sesión">
         <div class="user-avatar">
             <i class="fas fa-user"></i>
         </div>
@@ -13,13 +14,15 @@
             <span class="greeting">Bienvenido</span>
             <span class="user-name">Iniciar Sesión</span>
         </div>
-    </div>
+    </button>
 
-    <div class="royalty-badge">
+    <!-- Botón de Royalty -->
+    <button type="button" class="royalty-badge" onclick="location.href='#royalty';" aria-label="Ver Royalty">
         <i class="fas fa-crown"></i>
         <span>Royalty</span>
-    </div>
+    </button>
 </div>
+
 
 <!-- ═══════════════════════════════════════
      STICKY INTERMEDIO — Categorías
@@ -27,8 +30,9 @@
      Scroll horizontal gestionado por menu.js
 ════════════════════════════════════════ -->
 <div id="sticky-nav-wrapper" class="sticky-nav-container">
-    <div class="tabs is-centered is-toggle is-toggle-rounded" id="tabs-categorias">
-        <ul id="lista-tabs"></ul>
+    <div class="tabs is-toggle is-toggle-rounded " id="tabs-categorias">
+        <ul id="lista-tabs">
+            </ul>
     </div>
 </div>
 
@@ -51,22 +55,25 @@
      TODO: poblar con buscador y accesos rápidos
 ════════════════════════════════════════ -->
 <div id="sticky-bottom" class="sticky-bottom-app">
-    <div class="search-bar-wrapper control has-icons-left">
-        <input class="input is-rounded is-small" type="text" placeholder="Buscar en Marée...">
-        <span class="icon is-small is-left">
+    <button class="btn btn-icon" type="button">
+        <i class="fas fa-ticket-alt is-size-4"></i> <!-- Icono más grande -->
+        <span class="is-size-7">Promos</span> <!-- Texto pequeño pero legible -->
+    </button>
+
+    <div class="search-bar-wrapper control has-icons-left is-expanded">
+        <!-- Cambiamos is-small por normal o is-medium -->
+        <input class="input is-rounded" type="text" placeholder="Buscar...">
+        <span class="icon is-left">
             <i class="fas fa-search"></i>
         </span>
     </div>
 
     <button class="btn btn-icon" type="button">
-        <i class="fas fa-ticket-alt"></i>
-        <span>Promos</span>
-    </button>
-    <button class="btn btn-icon" type="button">
-        <i class="fas fa-calendar-alt"></i>
-        <span>Eventos</span>
+        <i class="fas fa-calendar-alt is-size-4"></i>
+        <span class="is-size-7">Eventos</span>
     </button>
 </div>
+
 
 <!-- ═══════════════════════════════════════
      FAB — Carrito
