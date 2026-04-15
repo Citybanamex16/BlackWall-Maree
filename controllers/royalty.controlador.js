@@ -84,7 +84,7 @@ exports.getRoyaltyCli = async (request, response, next) => {
       return response.status(404).render('errores/404', { error: 'Información no encontrada.' })
     }
 
-    let qrCodeDataUrl = '';
+    let qrCodeDataUrl = ''
     try {
       qrCodeDataUrl = await QRCode.toDataURL(telefono, {
         color: {
@@ -93,9 +93,9 @@ exports.getRoyaltyCli = async (request, response, next) => {
         },
         width: 200,
         margin: 2
-      });
+      })
     } catch (qrError) {
-      console.error('Error generando QR:', qrError);
+      console.error('Error generando QR:', qrError)
     }
 
     return response.render('cliente/royalty', {
@@ -103,8 +103,7 @@ exports.getRoyaltyCli = async (request, response, next) => {
       breadcrumbs: nav.getBreadcrumbs('Royalty'),
       cliente: clienteInfo,
       qrCode: qrCodeDataUrl
-    });
-
+    })
   } catch (error) {
     console.error('Error al cargar vista Royalty:', error)
     return response.redirect('/menu/menu?authError=database')

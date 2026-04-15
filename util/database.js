@@ -2,7 +2,7 @@ const mysql = require('mysql2')
 
 // Pool de conexiones
 const pool = mysql.createPool({
-  //host: 'localhost',
+  // host: 'localhost',
   host: '172.20.96.1', // NO LO BORREN SOLO COMENTENLO
   port: '3307',
   // port: '3000',
@@ -13,7 +13,6 @@ const pool = mysql.createPool({
   connectionLimit: 10
 
 })
-
 
 /* ==Contraseñas y usuario ==
 Usuario: CL85565990
