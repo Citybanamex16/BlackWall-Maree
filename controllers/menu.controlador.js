@@ -50,12 +50,14 @@ exports.getOrden = (request, response, next) => {
 }
 
 exports.getPlatillo = async (request, response, next) => {
-  const nombre = request.query.nombre
-  console.log('EN CONTROLLER — buscando:', nombre)
+  const id = request.query.id
+  console.log("Query: ", request.query)
+  console.log('EN CONTROLLER — buscando:', id)
 
-  if (!nombre || typeof nombre !== 'string' || nombre.length > 100) {
+  /* if (!nombre || typeof nombre !== 'string' || nombre.length > 100) {
     return response.status(400).json({ disponible: false, mensaje: 'Nombre inválido' })
   }
+  */
 
   try {
     const [rows] = await db.execute(
@@ -65,9 +67,9 @@ exports.getPlatillo = async (request, response, next) => {
        FROM producto p
        LEFT JOIN producto_tiene_insumo pti ON p.ID_Producto = pti.ID_Producto
        LEFT JOIN insumo i ON pti.ID_Insumo = i.ID_Insumo
-       WHERE p.Nombre = ?
+       WHERE p.ID_Producto = ?
        GROUP BY p.ID_Producto`,
-      [nombre]
+      [id]
     )
 
     console.log('Resultado BD:', rows) // ve qué regresa
