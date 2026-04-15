@@ -6,20 +6,17 @@
 ════════════════════════════════════════ -->
 <div id="sticky-top" class="sticky-top-app">
     <!-- Botón de Iniciar Sesión -->
-    <button type="button" class="user-profile" onclick="location.href='#login';" aria-label="Iniciar Sesión">
-        <div class="user-avatar">
-            <i class="fas fa-user"></i>
-        </div>
-        <div class="user-info">
-            <span class="greeting">Bienvenido</span>
-            <span class="user-name">Iniciar Sesión</span>
+    <button type="button" class="user-profile" onclick="location.href='/';" aria-label="Iniciar Sesión">
+        <div class="logo-area">
+            <span class="logo-text">MARÉE</span>
+            <span class="logo-sub">LOVE AT FIRST CRÊPE</span>
         </div>
     </button>
 
     <!-- Botón de Royalty -->
-    <button type="button" class="royalty-badge" onclick="location.href='#royalty';" aria-label="Ver Royalty">
+    <button type="button" class="royalty-badge" onclick="location.href='/cliente/login';" aria-label="Ver Royalty">
         <i class="fas fa-crown"></i>
-        <span>Royalty</span>
+        <span>Iniciar Sesión</span>
     </button>
 </div>
 
@@ -55,24 +52,26 @@
      TODO: poblar con buscador y accesos rápidos
 ════════════════════════════════════════ -->
 <div id="sticky-bottom" class="sticky-bottom-app">
-    <button class="btn btn-icon" type="button">
-        <i class="fas fa-ticket-alt is-size-4"></i> <!-- Icono más grande -->
-        <span class="is-size-7">Promos</span> <!-- Texto pequeño pero legible -->
-    </button>
+    <!-- Botón Promos -->
+    <a href="/cliente/promosCliente" class="btn btn-icon">
+        <i class="fas fa-ticket-alt is-size-4"></i>
+        <span class="is-size-7">Promos</span>
+    </a>
 
     <div class="search-bar-wrapper control has-icons-left is-expanded">
-        <!-- Cambiamos is-small por normal o is-medium -->
         <input class="input is-rounded" type="text" placeholder="Buscar...">
         <span class="icon is-left">
             <i class="fas fa-search"></i>
         </span>
     </div>
 
-    <button class="btn btn-icon" type="button">
+    <!-- Botón Eventos -->
+    <a href="/cliente/eventosCliente" class="btn btn-icon">
         <i class="fas fa-calendar-alt is-size-4"></i>
         <span class="is-size-7">Eventos</span>
-    </button>
+    </a>
 </div>
+
 
 
 <!-- ═══════════════════════════════════════
@@ -82,7 +81,7 @@
 ════════════════════════════════════════ -->
 <a id="fab-carrito" class="fab-app" href="/menu/orden" aria-label="Ver carrito">
     <i class="fas fa-shopping-bag"></i>
-    <span class="fab-badge">0</span>
+    <span class="fab-badge">Carrito</span>
 </a>
 
 <!-- ═══════════════════════════════════════
