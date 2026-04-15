@@ -2,6 +2,7 @@ const nav = require('../models/breadcrumbs.model.js')
 const productos = require('../models/MenuDigital/productos.model.js')
 const categorías = require('../models/MenuDigital/categorías.model.js')
 const tipos = require('../models/MenuDigital/tipos.model.js')
+const promos = require ('../models/promociones.model.js')
 const Pedido = require('../models/pedidos.model.js')
 const db = require('../util/database.js')
 
@@ -42,6 +43,37 @@ exports.getMenuData = async (request, response, next) => {
   }
 }
 
+
+exports.getMenuPromos = async (req, res, nex) => {
+  console.log("Obteniendo PU & PE")
+  try{
+    const [PUs, PEs] = await Promise.all([
+      promos.getPromotionsBySource('PU'),
+      promos.getPromotionsBySource('PE')
+    ])
+
+    console.log("All promises hechas con exito")
+    res.status(200).json({
+      ok: true,
+      message: 'PE & PU obtenidos',
+      allPUs: PUs,
+      allPEs: PEs
+    })
+
+
+  }
+  catch (err){
+    console.log("Error en consulta de PEs & PUs: ", err)
+     res.status(500).json({
+      ok: true,
+      message: 'PE & PU no obtenidos, error',
+      error: err
+    })
+
+
+  }
+}
+
 // Fin CU11
 
 exports.getOrden = (request, response, next) => {
@@ -51,7 +83,7 @@ exports.getOrden = (request, response, next) => {
 
 exports.getPlatillo = async (request, response, next) => {
   const id = request.query.id
-  console.log("Query: ", request.query)
+  console.log('Query: ', request.query)
   console.log('EN CONTROLLER — buscando:', id)
 
   /* if (!nombre || typeof nombre !== 'string' || nombre.length > 100) {
