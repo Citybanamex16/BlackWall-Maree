@@ -174,4 +174,12 @@ module.exports = class Promocion {
   static deletePromocion (idPromocion) {
     return db.execute('DELETE FROM promocion WHERE ID_Promocion = ?', [idPromocion])
   }
+
+
+  /* funciones que utiliza modulo menu [lo agregue to charly :)] */
+  static async getPromotionsBySource(source){
+    const [result] = await db.execute('CALL obtener_promociones_por_tipo(?)',[source])
+    return result
+  }
+
 }

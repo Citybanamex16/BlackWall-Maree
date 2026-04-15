@@ -24,7 +24,7 @@ overlay.addEventListener('click', (e) => {
 modalClose.addEventListener('click', cerrarModal)
 
 // ── ACTUALIZAR BOTÓN RESUMEN ──
-function actualizarBotonResumen(){
+function actualizarBotonResumen () {
   const btnTitle = document.querySelector('.order-btn-title')
   const btnSub = document.querySelector('.order-btn-sub')
   if (pedido.length === 0) {
@@ -39,23 +39,23 @@ function actualizarBotonResumen(){
 // ── Conexion BOTONES DE PLATILLOS DEL MENU ──
 
 // Su único trabajo es leer el HTML y devolver un objeto limpio con la información del platillo.
-function obtenerDatosPlatillo(boton) {
-    // Buscamos la tarjeta completa que definimos en el Actor A
-    const tarjeta = boton.closest('.product-card-app');
-    return {
-        id: boton.getAttribute('data-id'), // Usamos el ID que pusimos en el botón
-        nombre: tarjeta.querySelector('.product-name-app').textContent.trim(),
-        precio: tarjeta.querySelector('.product-price-app').textContent.trim(),
-        // La descripción la podemos sacar de un data-attribute o del objeto original
-    };
+function obtenerDatosPlatillo (boton) {
+  // Buscamos la tarjeta completa que definimos en el Actor A
+  const tarjeta = boton.closest('.product-card-app')
+  return {
+    id: boton.getAttribute('data-id'), // Usamos el ID que pusimos en el botón
+    nombre: tarjeta.querySelector('.product-name-app').textContent.trim(),
+    precio: tarjeta.querySelector('.product-price-app').textContent.trim()
+    // La descripción la podemos sacar de un data-attribute o del objeto original
+  }
 }
 
 // Esta función solo se encarga de "dibujar". Recibe los datos y devuelve el texto (string) que verás en la pantalla.
-function generarHTMLModal(platillo, dataExtra) {
-    const listaIngredientes = dataExtra.ingredientes
-        .map(ing => `<li>${ing}</li>`).join('');
+function generarHTMLModal (platillo, dataExtra) {
+  const listaIngredientes = dataExtra.ingredientes
+    .map(ing => `<li>${ing}</li>`).join('')
 
-    return `
+  return `
         <div class="modal-detalle-header">
             <h2 class="title is-4 font-cormorant">${platillo.nombre}</h2>
             <p class="subtitle is-5 has-text-primary">${platillo.precio}</p>
@@ -71,83 +71,71 @@ function generarHTMLModal(platillo, dataExtra) {
                 + Confirmar y agregar
             </button>
         </div>
-    `;
+    `
 }
 
 // Este se encarga de la lógica pesada: hablar con el servidor y guardar en el localStorage.
-async function agregarAlCarrito(platillo) {
-    // Guardar localmente
-    pedido.push(platillo);
-    localStorage.setItem('pedido', JSON.stringify(pedido));
+async function agregarAlCarrito (platillo) {
+  // Guardar localmente
+  pedido.push(platillo)
+  localStorage.setItem('pedido', JSON.stringify(pedido))
 
-    try {
-        const response = await fetch('/menu/agregaritem', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(platillo)
-        });
-        console.log('Sincronizado con servidor');
-        cerrarModal();
-        actualizarBotonResumen();
-    } catch (err) {
-        console.error("Error al guardar:", err);
-    }
+  try {
+    const response = await fetch('/menu/agregaritem', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(platillo)
+    })
+    console.log('Sincronizado con servidor')
+    cerrarModal()
+    actualizarBotonResumen()
+  } catch (err) {
+    console.error('Error al guardar:', err)
+  }
 }
 
+async function verDetalleProducto (id) {
+  try {
+    // 1. Buscamos la info del producto (puedes sacarla de tu array global 'todosLosProductos')
+    const producto = globalProducts.find(p => p.id == id)
 
-async function verDetalleProducto(id) {
-    try {
-        // 1. Buscamos la info del producto (puedes sacarla de tu array global 'todosLosProductos')
-        const producto = globalProducts.find(p => p.id == id);
-        
-        // 2. Lógica del amigo: Consultar disponibilidad real
-        console.log("Buscando producto: ", id)
-        const res = await fetch(`/menu/consultaplatillo?id=${id}`);
-        const data = await res.json();
+    // 2. Lógica del amigo: Consultar disponibilidad real
+    console.log('Buscando producto: ', id)
+    const res = await fetch(`/menu/consultaplatillo?id=${id}`)
+    const data = await res.json()
 
-        if (!data.disponible) {
-            alert("Lo sentimos, este producto se acaba de agotar.");
-            return;
-        } else {
-          console.log("Este producto si esta disponible")
-        }
-
-
-        // 3. Poblar TU modal con los datos recibidos
-        const contenedorContenido = document.getElementById('modal-content');
-        
-        // Usamos la función del amigo adaptada para inyectar en tu div
-        contenedorContenido.innerHTML = generarHTMLModal(producto, data);
-
-        // 4. Mostrar el modal 
-        const detailModal = document.getElementById('modal-overlay')
-        detailModal.showModal()
-        console.log("Mostrando Modal")
-
-        // 5. Asignar el evento al nuevo botón de confirmar que se acaba de crear
-        document.getElementById('btn-confirmar-agregar').onclick = function() {
-            agregarAlCarrito(producto);
-        };
-
-    } catch (err) {
-        console.error("Error al abrir detalle:", err);
+    if (!data.disponible) {
+      alert('Lo sentimos, este producto se acaba de agotar.')
+      return
+    } else {
+      console.log('Este producto si esta disponible')
     }
+
+    // 3. Poblar TU modal con los datos recibidos
+    const contenedorContenido = document.getElementById('modal-content')
+
+    // Usamos la función del amigo adaptada para inyectar en tu div
+    contenedorContenido.innerHTML = generarHTMLModal(producto, data)
+
+    // 4. Mostrar el modal
+    const detailModal = document.getElementById('modal-overlay')
+    detailModal.showModal()
+    console.log('Mostrando Modal')
+
+    // 5. Asignar el evento al nuevo botón de confirmar que se acaba de crear
+    document.getElementById('btn-confirmar-agregar').onclick = function () {
+      agregarAlCarrito(producto)
+    }
+  } catch (err) {
+    console.error('Error al abrir detalle:', err)
+  }
 }
 
 // Función para cerrar (conéctala a tu botón modal-close)
-document.getElementById('modal-close').onclick = function() {
-    const detailModal = document.getElementById('modal-overlay')
-    detailModal.close()
-};
-
-
-
-
-
-
-
-
-
+document.getElementById('modal-close').onclick = function () {
+  const detailModal = document.getElementById('modal-overlay')
+  detailModal.close()
+}
 
 /* ── MAPA DE UBICACIÓN ──
 if (navigator.geolocation) {
@@ -185,7 +173,7 @@ if (navigator.geolocation) {
 */
 
 /* CU11 Visualizar Menu Digital */
-let globalProducts = [] //Variable global de productos 
+let globalProducts = [] // Variable global de productos
 
 function ShowMenuErrorModal () {
   console.log('Mostrando Modal de error')
@@ -210,13 +198,18 @@ async function obtenerMenu () {
     console.log('Data: ', data)
     console.log('response: ', response)
 
-
     if (!data.ok) {
       console.log('Señal de Error desde Backend: ', data.message)
       throw new Error(`Error HTTP: ${response.status}`)
     }
 
     console.log('Datos obtenidos de Backend: ', data)
+
+    //==Llamado a promociones ==//
+
+    const PromosData = await PromosMaster()
+
+    console.log("Promos obtenidos del Backend: ", PromosData)
 
     /* === Llamada a Construcción de Menu Dinámico == */
     globalProducts = data.arrayProductsInfo
@@ -225,13 +218,9 @@ async function obtenerMenu () {
     console.error('Error al obtener el menú:', error)
     ShowMenuErrorModal()
   }
-
 }
 
 obtenerMenu()
-
-
-
 
 /* ==Construcción de Menu Dinámico == */
 
@@ -241,7 +230,7 @@ function construirFichaProductos (productosFiltrados, gridDestino) {
   gridDestino.innerHTML = ''
 
   productosFiltrados.forEach((prod, i) => {
-    //console.log("prod info: ", prod)
+    // console.log("prod info: ", prod)
     const cardHTML = `
       <div class="column is-6-mobile is-4-tablet is-3-desktop"> 
         <div class="product-card-app" onclick="verDetalleProducto('${prod.id}')">
@@ -406,8 +395,42 @@ function toggleTipo (header) {
 }
 console.log(toggleTipo)
 
-// Actor E
 
+
+// Actor Promos (Agente P)
+
+async function PromosMaster(){
+  //Esta funcion obtiene todas las PU & PE 
+  let Promos
+  console.log("Obteniendo PUs y PEs")
+  try{
+    const response = await fetch("/menu/consultarPromosMenu")
+    const data = await response.json()
+
+    if(!data.ok){
+      console.log("Error Interno")
+      return
+    }
+
+    console.log("Data recibida: ", data)
+    Promos = data
+
+  }
+  catch (error){
+    console.log("Error: ", error)
+
+  }
+  console.log("Finalizado")
+  return Promos
+
+}
+
+
+
+
+
+
+// Actor E
 function renderizarVistaCategoria (categoriaObj, productos, allTypes) {
   const contenedorMenu = document.getElementById('menu-categorias')
   contenedorMenu.innerHTML = ''
@@ -447,6 +470,8 @@ function renderizarVistaCategoria (categoriaObj, productos, allTypes) {
     construirFichaProductos(productosRestantes, gridOtros)
   }
 }
+
+
 
 /*
 window.agregarAlCarrito = function (btn) {
