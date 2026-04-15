@@ -5,6 +5,8 @@ body {
     font-family: 'Jost', sans-serif;
     background-color: #ffffff;
     color: #222;
+    padding-top: 130px;    /* Espacio para los dos de arriba */
+    padding-bottom: 80px;  /* Espacio para el de abajo */
 }
 
 html {
@@ -13,38 +15,132 @@ html {
 
 /* ───────────── LAYOUT ───────────── */
 
-/* Sticky categorías */
-.sticky-nav-container {
-    position: sticky;
-    top: 0;
-    z-index: 30;
-    background-color: white;
-    padding: 10px 0;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-    margin-bottom: 20px;
+#tabs-categorias {
+    /* Permitir que el div hijo ignore el centrado si hay muchos items */
+    display: block !important; 
+    overflow-x: auto !important;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch; /* Scroll suave en iOS */
+    scrollbar-width: none; /* Ocultar barra en Firefox */
 }
 
-/* Sticky top */
+/* ── SCROLL HORIZONTAL (Pestañas de Bulma) ── */
+#tabs-categorias {
+    /* Permitir que el div hijo ignore el centrado si hay muchos items */
+    display: block !important; 
+    overflow-x: auto !important;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch; /* Scroll suave en iOS */
+    scrollbar-width: none; /* Ocultar barra en Firefox */
+}
+
+#tabs-categorias::-webkit-scrollbar {
+    display: none; /* Ocultar barra en Chrome/Safari */
+}
+
+#tabs-categorias ul {
+    display: flex !important;
+    flex-wrap: nowrap !important;
+    
+    /* 1. Intenta centrar, pero si desborda, usa el inicio (safe) */
+    justify-content: safe center !important; 
+    
+    /* 2. Respaldo para navegadores que no soportan 'safe' */
+    margin: 0 auto; 
+    
+    padding: 0 16px;
+    border-bottom: none !important;
+}
+
+/* 3. El truco definitivo: márgenes automáticos en los extremos */
+#tabs-categorias ul::before,
+#tabs-categorias ul::after {
+    content: "";
+    flex: 1;
+}
+
+#tabs-categorias li {
+    flex-shrink: 0; /* Evita que los botones se compriman */
+}
+
+#tabs-categorias li a {
+    white-space: nowrap; /* Evita que el texto salte de línea */
+}
+
+
+/* Seccion Stickys */
+
+/* 1. STICKY TOP: Solo arriba */
 .sticky-top-app {
-    position: sticky;
+    position: fixed !important;
     top: 0;
-    z-index: 40;
+    left: 0;
+    width: 100%;
+    height: 60px; /* Define un alto fijo para poder calzar el siguiente */
+    z-index: 100; /* El más alto para que nada lo tape */
     background-color: rgba(255,255,255,0.95);
     padding: 12px 20px;
     display: flex;
     justify-content: space-between;
+    align-items: center;
+
+
+
+    /* codigo para evitar async scroll en moviles */
+
+    transform: translate3d(0, 0, 0);
+    -webkit-transform: translate3d(0, 0, 0);
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+    will-change: transform, top, bottom;
+
+
 }
 
-/* Sticky bottom */
-.sticky-bottom-app {
-    position: fixed;
-    bottom: 0;
+/* 2. STICKY NAV: Justo debajo del Top */
+.sticky-nav-container {
+    position: fixed !important;
+    top: 59px; 
+    left: 0;
     width: 100%;
+    z-index: 90;
+    background: #faf7f3;
+    padding: 10px 0;
+    border-bottom: 1px solid #f0f0f0;
+    /* codigo para evitar async scroll en moviles */
+   box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+
+
+    transform: translate3d(0, 0, 0);
+    -webkit-transform: translate3d(0, 0, 0);
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+    will-change: transform, top, bottom;
+}
+
+/* 3. STICKY BOTTOM: Solo abajo */
+.sticky-bottom-app {
+    position: fixed !important;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 70px;
+    z-index: 100;
     background: #fff;
     padding: 12px 20px;
     display: flex;
     justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 -4px 12px rgba(0,0,0,0.15);
+     /* codigo para evitar async scroll en moviles */
+
+    transform: translate3d(0, 0, 0);
+    -webkit-transform: translate3d(0, 0, 0);
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+    will-change: transform, top, bottom;
 }
+
 
 /* ───────────── HEADER USUARIO ───────────── */
 
@@ -131,6 +227,14 @@ html {
     transition: max-height 0.38s, opacity 0.28s;
 }
 
+
+/* Search Bar */
+
+.search-bar-wrapper {
+    flex: 2; /* El buscador ocupa más espacio que los botones */
+    margin: 0 10px;
+}
+
 /* ───────────── PRODUCTOS ───────────── */
 
 .product-card {
@@ -205,6 +309,7 @@ html {
     font-size: 10px;
     gap: 4px;
     color: #888;
+    flex: 1; /* Distribuye espacio equitativo */
 }
 
 /* ───────────── EMPTY ───────────── */
@@ -281,6 +386,8 @@ html {
     height: 22px;
     border-radius: 50%;
 }
+
+
 
 /* ───────────── ANIMACIONES ───────────── */
 
