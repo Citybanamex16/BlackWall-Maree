@@ -208,68 +208,39 @@ obtenerMenu()
 /* ==Construcción de Menu Dinámico == */
 
 // Actor A: Constructor de fichas individuales
-function construirFichaProductos (datosProducto, datosCategorias) {
-  console.log('Repartiendo productos en sus categorías...')
-  datosCategorias.forEach(cat => {
-    const sectionPrincipal = document.getElementById(cat.id)
-    const gridDestino = sectionPrincipal.querySelector('.grid')
-    const productosFiltrados = datosProducto.filter(prod => prod.categoria === cat.nombre)
+function construirFichaProductos (productosFiltrados, gridDestino) {
+  // Limpiamos el grid antes de poblar
+  gridDestino.innerHTML = ''
 
-    if (productosFiltrados.length === 0) {
-      gridDestino.innerHTML = `
-        <div class="empty-state">
-          <span class="empty-icon">🥐</span>
-          <p>Sin productos en esta categoría por el momento.</p>
-        </div>`
-      return
-    }
-
-    productosFiltrados.forEach((prod, i) => {
-      const cardHTML = `
-        <div class="column is-12-mobile is-6-tablet is-4-desktop">
-          <div class="card product-card h-100" style="animation-delay: ${i * 60}ms">
-            <div class="card-image">
-              <figure class="image is-4by3">
-                <img
-                  src="${prod.imagen}"
-                  alt="${prod.nombre}"
-                  class="product-thumb"
-                  loading="lazy"
-                  onerror="this.src='/img/placeholder.webp'"
-                >
-              </figure>
-            </div>
-            <div class="card-content">
-              <div class="media mb-2">
-                <div class="media-content">
-                  <p class="title is-5 mb-1">${prod.nombre}</p>
-                  <p class="product-price">$${prod.precio}</p>
-                </div>
-              </div>
-              <div class="content">
-                ${prod.descripcion
-                  ? `<p class="product-desc">${prod.descripcion}</p>`
-                  : ''}
-                <div class="tags" id="ingredientes-${prod.id}">
-                  ${generarBadgesIngredientes(prod.ingredientes)}
-                </div>
-                <button
-                  class="btn btn-primary"
-                  data-id="${prod.id}"
-                  data-nombre="${prod.nombre}"
-                  data-precio="${prod.precio}"
-                  onclick="agregarAlCarrito(this)"
-                >
-                  <span>＋</span>
-                  <span>Agregar a la orden</span>
-                </button>
-              </div>
-            </div>
+  productosFiltrados.forEach((prod, i) => {
+    const cardHTML = `
+      <div class="column is-4-mobile is-4-tablet"> 
+        <div class="product-card-app" onclick="abrirDetalleProducto('${prod.id}')">
+          
+          <div class="product-img-wrapper">
+            <img src="${prod.imagen}" alt="${prod.nombre}" loading="lazy" onerror="this.src='/img/placeholder.webp'">
           </div>
-        </div>`
 
-      gridDestino.insertAdjacentHTML('beforeend', cardHTML)
-    })
+          <div class="product-info-wrapper">
+            <h3 class="product-name-app">${prod.nombre}</h3>
+            <p class="product-price-app">$${prod.precio}</p>
+          </div>
+
+          <div class="product-action-wrapper">
+            <button class="add-btn-app" 
+                    data-id="${prod.id}" 
+                    data-nombre="${prod.nombre}"
+                    data-precio="${prod.precio}"
+                    onclick="event.stopPropagation(); agregarAlCarrito(this)">
+              <span class="btn-agregar-icon">＋</span>
+              <span class="btn-agregar-label">Agregar</span>
+            </button>
+          </div>
+
+        </div>
+      </div>`
+
+    gridDestino.insertAdjacentHTML('beforeend', cardHTML)
   })
 }
 
@@ -284,70 +255,20 @@ function generarBadgesIngredientes (listaIngredientes) {
 /* Actor C: Sección de categoría */
 function construirCategoria (cat, contenedorMenu) {
   const seccionCat = document.createElement('section')
-  seccionCat.className = 'categoria-section mb-4 is-dynamic is-open'
-  seccionCat.id = `cat-${cat.Nombre.toLowerCase().replace(/\s+/g, '-')}`
-  const seccionID = seccionCat.id
-  const idContenedor = `grid-${cat.Nombre.replace(/\s+/g, '-').toLowerCase()}`
+  seccionCat.className = 'categoria-render mb-5 animate-fade-in' // Clase para animación suave
 
+  // Estructura limpia: Título elegante y Grid preparado para 3 columnas
   seccionCat.innerHTML = `
-    <div class="cat-header" role="button" tabindex="0" aria-expanded="true">
-      <h2 class="cat-title">${cat.Nombre}</h2>
-      <span class="cat-chevron" aria-hidden="true">
-        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-          <path d="M3 6l5 5 5-5" stroke="currentColor" stroke-width="1.8"
-                stroke-linecap="round" stroke-linejoin="round"/>
-        </svg>
-      </span>
-    </div>
-    <div id="${idContenedor}" class="columns is-multiline grid grid--collapsible">
-    </div>`
-
-  const header = seccionCat.querySelector('.cat-header')
-  const grid = seccionCat.querySelector('.grid')
-
-  /* Toggle con animación real de altura */
-
-  function toggleGrid () {
-    const open = seccionCat.classList.contains('is-open')
-
-    if (open) {
-      // Cerrar: fija la altura actual, luego anima a 0
-      grid.style.maxHeight = grid.scrollHeight + 'px'
-      grid.style.opacity = '1'
-      /* global requestAnimationFrame */
-      requestAnimationFrame(() => {
-        grid.style.maxHeight = '0'
-        grid.style.opacity = '0'
-      })
-      seccionCat.classList.remove('is-open')
-      header.setAttribute('aria-expanded', 'false')
-    } else {
-      // Abrir: anima desde 0 hasta el alto real
-      grid.style.maxHeight = grid.scrollHeight + 'px'
-      grid.style.opacity = '1'
-      seccionCat.classList.add('is-open')
-      header.setAttribute('aria-expanded', 'true')
-      // Una vez terminada la transición, suelta max-height para que
-      // el contenido pueda crecer si se añaden más items
-      grid.addEventListener('transitionend', () => {
-        if (seccionCat.classList.contains('is-open')) {
-          grid.style.maxHeight = 'none'
-        }
-      }, { once: true })
-    }
-  }
-
-  header.addEventListener('click', toggleGrid)
-  header.addEventListener('keydown', e => {
-    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleGrid() }
-  })
+    <h2 class="category-display-title">${cat.Nombre}</h2>
+    <div id="grid-principal" class="columns is-mobile is-multiline product-grid-app">
+        </div>`
 
   contenedorMenu.appendChild(seccionCat)
-  return { id: seccionID, nombre: cat.Nombre }
+  return { id: 'grid-principal', nombre: cat.Nombre }
 }
 
 /* Actor D: Sticky tabs */
-function generarStickyTabs (categorias) {
+function generarStickyTabs (categorias, todosLosProductos) {
   const listaTabs = document.getElementById('lista-tabs')
   listaTabs.innerHTML = ''
 
@@ -360,27 +281,16 @@ function generarStickyTabs (categorias) {
 
     li.querySelector('a').addEventListener('click', e => {
       e.preventDefault()
+
+      // Feedback visual de tab activo
       document.querySelectorAll('#lista-tabs li').forEach(el => el.classList.remove('is-active'))
       li.classList.add('is-active')
 
-      const target = document.getElementById(idSeccion)
+      // LLAMADA CLAVE: Re-renderizamos la sección con la categoría clickeada
+      renderizarVistaCategoria(cat, todosLosProductos)
 
-      // Si estaba cerrado, ábrir antes de hacer scroll
-      if (!target.classList.contains('is-open')) {
-        const grid = target.querySelector('.grid')
-        grid.style.maxHeight = grid.scrollHeight + 'px'
-        grid.style.opacity = '1'
-        target.classList.add('is-open')
-        target.querySelector('.cat-header').setAttribute('aria-expanded', 'true')
-        grid.addEventListener('transitionend', () => {
-          grid.style.maxHeight = 'none'
-        }, { once: true })
-      }
-
-      // Offset por la sticky nav
-      const stickyH = document.getElementById('sticky-nav-wrapper')?.offsetHeight ?? 0
-      const top = target.getBoundingClientRect().top + window.scrollY - stickyH - 12
-      window.scrollTo({ top, behavior: 'smooth' })
+      // Scroll opcional al inicio del menú por si el usuario estaba muy abajo
+      window.scrollTo({ top: 0, behavior: 'smooth' })
     })
 
     listaTabs.appendChild(li)
@@ -403,28 +313,44 @@ function generarStickyTabs (categorias) {
   document.querySelectorAll('.categoria-section').forEach(s => observer.observe(s))
 }
 
+// Actor Principal
 function contruirMenuDinamico (datos) {
-  // 1. Referencia al contenedor principal
+  // 1. Guardamos los datos globalmente o en un scope accesible para los filtros
+  const categorias = datos.arrayCategorías[0]
+  const todosLosProductos = datos.arrayProductsInfo
+
+  // 2. Generamos los Sticky Tabs una sola vez
+  // Pasamos la referencia a los productos para que los tabs puedan disparar el filtro
+  generarStickyTabs(categorias, todosLosProductos)
+
+  // 3. Renderizado inicial: Mostramos la primera categoría por defecto
+  if (categorias.length > 0) {
+    const primeraCat = categorias[0]
+    renderizarVistaCategoria(primeraCat, todosLosProductos)
+  }
+
+  console.log('Estructura base del menú lista y primera categoría renderizada.')
+}
+
+// Actor E
+
+function renderizarVistaCategoria (categoriaObj, productos) {
   const contenedorMenu = document.getElementById('menu-categorias')
+  console.log('RENDERIZANDO LOS PRODUCTOS DE LA CATEGORÍA: ', categoriaObj)
+
+  // 1. Limpiamos el contenedor (Efecto Single Page)
   contenedorMenu.innerHTML = ''
 
-  const categoríasInfo = []
+  // 2. Llamamos al Actor C para crear el armazón (Título + Grid vacío)
+  // Nota: Ahora construirCategoria solo crea UNA, no itera.
+  const infoGrid = construirCategoria(categoriaObj, contenedorMenu)
 
-  const categorías = datos.arrayCategorías[0]
-  // 2. Iteramos por cada categoría para crear su sección
-  categorías.forEach(cat => {
-    console.log(`Creando sección para catalogo ${cat.Nombre}`)
-    categoríasInfo.push(construirCategoria(cat, contenedorMenu))
-  })
+  // 3. Filtramos los productos que pertenecen a esta categoría
+  const filtrados = productos.filter(p => p.categoria === categoriaObj.Nombre)
 
-  generarStickyTabs(categorías)
-
-  console.log('ID de categorias en View: ', categoríasInfo)
-
-  const productosInfo = datos.arrayProductsInfo
-  construirFichaProductos(productosInfo, categoríasInfo)
-
-  console.log('Menu dinámico construido con exito')
+  // 4. Llamamos al Actor A para poblar el grid recién creado
+  const gridDestino = document.getElementById(infoGrid.id)
+  construirFichaProductos(filtrados, gridDestino)
 }
 
 window.agregarAlCarrito = function (btn) {
