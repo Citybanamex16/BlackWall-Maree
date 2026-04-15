@@ -162,15 +162,30 @@ html {
     flex-direction: column;
 }
 
-.user-info .greeting {
-    font-size: 11px;
-    color: #888;
+
+/* Logo CSS */
+
+.logo-text {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 22px;
+    font-weight: 600;
+    letter-spacing: 4px;
+    color: #222;
 }
 
-.user-info .user-name {
-    font-size: 14px;
-    font-weight: 600;
+.logo-area {
+    display: flex;
+    flex-direction: column;
+    line-height: 1.2;
 }
+
+.logo-sub {
+    font-size: 9px;
+    letter-spacing: 2px;
+    color: #999;
+    text-transform: uppercase;
+}
+/* end logo CSS */
 
 .royalty-badge {
     background: #b5956a;
