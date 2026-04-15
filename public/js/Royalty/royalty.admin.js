@@ -95,7 +95,7 @@ async function guardarRoyalty () {
     }
   } catch (error) {
     console.log(error)
-    document.getElementById('ModalError')
+    document.getElementById('ModalError').classList.add('is-active')
   }
 }
 
@@ -195,25 +195,32 @@ function confirmarBorrado () {
 
 async function cargarRoyalty () {
   try {
+    // Obtenemos la ruta del royalty
     const response = await fetch('/royalty/royaltyAdmin/api')
     const data = await response.json()
 
-    console.log('Mostrando los royalties en HTML')
+    console.log('Mostrando los royalties en HTML') // Debug
     const container = document.getElementById('royaltyContainer')
-    royaltiesData = data.data
+    royaltiesData = data.data // Obtenemos los datos en total de todos los royalties
+    // Obtenemos cada dato de cada royalty
     data.data.forEach(royalty => {
+      // Variables para eventos y promociones
       let eventosHTML
       let promocionesHTML
+      // Si obtenemos las promociones y eventos se deben de mostrar en la vista
       if (royalty.promociones && royalty.promociones.length > 0) {
+        // Obtenemos solo el nombre de las promociones del arreglo
         promocionesHTML = royalty.promociones.map(promo => `<p>${promo.Nombre}</p>`).join('')
       } else {
         promocionesHTML = '<p class="has-text-grey">Sin promociones</p>'
       }
       if (royalty.eventos && royalty.eventos.length > 0) {
+        // Obtenemos solo los nombres de los eventos del arreglo
         eventosHTML = royalty.eventos.map(evento => `<p>${evento.Nombre}</p>`).join('')
       } else {
         eventosHTML = '<p class="has-text-grey">Sin eventos</p>'
       }
+      // Añadimos en la vista
       container.innerHTML += `
         <div class="column is-half">
           <div class="card">
@@ -246,8 +253,10 @@ async function cargarRoyalty () {
         </div>
       `
     })
+    // Si no se logra añadir a la vista
   } catch (error) {
     console.log(error)
+    document.getElementById('ModalError').classList.add('is-active')
   }
 }
 cargarRoyalty()

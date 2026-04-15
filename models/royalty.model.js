@@ -15,10 +15,12 @@ module.exports = class Royalty {
     return db.execute('SELECT * FROM estado_royalty ORDER BY Número_de_prioridad ASC')
   }
 
+  // Obtenemos las promociones
   static fetchTodasPromociones () {
     return db.execute('SELECT ID_promocion, Nombre FROM promocion')
   }
 
+  // Obtenemos los eventos
   static fetchTodosEventos () {
     return db.execute('SELECT ID_Evento, Nombre FROM evento')
   }
