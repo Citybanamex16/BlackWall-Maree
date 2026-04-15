@@ -537,10 +537,111 @@ html {
 /* Título de Categoría */
 .category-display-title {
     font-family: 'Cormorant Garamond', serif;
-    font-size: 24px;
+    font-size: 28px;
     text-align: center;
     margin: 15px 0;
+    margin-bottom: 5px !important;
     color: #222;
+}
+
+
+/* ==== Seccion Tipos ==== */
+
+/* Subtítulos de Tipo (Actor F) */
+.type-subtitle {
+    font-family: 'Jost', sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: #888;
+    margin: 10px 0 10px 5px;
+    padding-left: 10px;
+    border-left: 2px solid #b5956a; /* Una línea sutil para guiar el ojo */
+}
+
+/*Nuevos Tipos
+
+/* ── Estilos del Acordeón de Tipos ── */
+.type-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 10px;
+    background: #fdfdfd;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.type-header:active {
+    background: #f5f5f5;
+}
+
+.type-subtitle {
+    font-family: 'Jost', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: #444;
+    margin: 0 !important;
+}
+
+.type-arrow {
+    color: #b5956a;
+    transition: transform 0.3s ease;
+    font-size: 12px;
+}
+
+/* Lógica de ocultar/mostrar */
+.type-content {
+    max-height: 2000px; /* Un valor alto para permitir el despliegue */
+    overflow: hidden;
+    transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s;
+    opacity: 1;
+    padding-top: 10px;
+}
+
+/* Estado Cerrado */
+.type-accordion:not(.is-open) .type-content {
+    max-height: 0;
+    opacity: 0;
+    padding-top: 0;
+    pointer-events: none;
+}
+
+.type-accordion:not(.is-open) .type-arrow {
+    transform: rotate(-90deg); /* La flecha apunta a la derecha cuando está cerrado */
+}
+
+/* Separador entre acordeones */
+.type-accordion {
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.type-accordion:last-child {
+    border-bottom: none;
+}
+
+/* Variación para la sección "Otros" */
+.type-accordion .type-subtitle:contains("Otros") {
+    color: #999;
+}
+
+
+
+*/
+
+/* Ajuste del contenedor del grupo para que no se peguen */
+.type-group-container {
+    padding: 0 5px;
+    border-bottom: 1px dashed #eee; /* Separación suave entre tipos */
+    padding-bottom: 15px;
+}
+
+.type-group-container:last-child {
+    border-bottom: none;
 }
 
 /* ───────────── FIN Fichas de Productos :/ ───────────── */

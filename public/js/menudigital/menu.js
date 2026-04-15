@@ -268,7 +268,7 @@ function construirCategoria (cat, contenedorMenu) {
 }
 
 /* Actor D: Sticky tabs */
-function generarStickyTabs (categorias, todosLosProductos) {
+function generarStickyTabs (categorias, todosLosProductos, todosLosTipos) {
   const listaTabs = document.getElementById('lista-tabs')
   listaTabs.innerHTML = ''
 
@@ -287,7 +287,7 @@ function generarStickyTabs (categorias, todosLosProductos) {
       li.classList.add('is-active')
 
       // LLAMADA CLAVE: Re-renderizamos la sección con la categoría clickeada
-      renderizarVistaCategoria(cat, todosLosProductos)
+      renderizarVistaCategoria(cat, todosLosProductos, todosLosTipos)
 
       // Scroll opcional al inicio del menú por si el usuario estaba muy abajo
       window.scrollTo({ top: 0, behavior: 'smooth' })
@@ -313,44 +313,110 @@ function generarStickyTabs (categorias, todosLosProductos) {
   document.querySelectorAll('.categoria-section').forEach(s => observer.observe(s))
 }
 
+// Mini función para ordenar los Tipos ([{}])-> Array de objetos
+function ordenarTipos (array) {
+  console.log('Recibiendo tipos desordenados: ', array)
+
+  return [...array].sort((a, b) => {
+    // 1. Regla especial: "Otros" siempre al final
+    if (a.nombre === 'Otros') return 1
+    if (b.nombre === 'Otros') return -1
+
+    // 2. Si no es "Otros", orden alfabético normal
+    return a.nombre.localeCompare(b.nombre)
+  })
+}
+
 // Actor Principal
 function contruirMenuDinamico (datos) {
   // 1. Guardamos los datos globalmente o en un scope accesible para los filtros
   const categorias = datos.arrayCategorías[0]
   const todosLosProductos = datos.arrayProductsInfo
+  const TiposDesordenados = datos.arrayTipos
+  const todosLosTipos = ordenarTipos(TiposDesordenados) // Todos los tipos que hay
+  console.log('Tipos ordenados: ', todosLosTipos)
 
   // 2. Generamos los Sticky Tabs una sola vez
   // Pasamos la referencia a los productos para que los tabs puedan disparar el filtro
-  generarStickyTabs(categorias, todosLosProductos)
+  generarStickyTabs(categorias, todosLosProductos, todosLosTipos)
 
   // 3. Renderizado inicial: Mostramos la primera categoría por defecto
   if (categorias.length > 0) {
     const primeraCat = categorias[0]
-    renderizarVistaCategoria(primeraCat, todosLosProductos)
+    renderizarVistaCategoria(primeraCat, todosLosProductos, todosLosTipos)
   }
 
   console.log('Estructura base del menú lista y primera categoría renderizada.')
 }
 
+function construirSeccionTipo (tipoNombre, contenedorPadre) {
+  const wrapperTipo = document.createElement('div')
+  wrapperTipo.className = 'type-accordion mb-2 is-open' // Por defecto abierto
+
+  const idGridTipo = `grid-tipo-${tipoNombre.toLowerCase().replace(/\s+/g, '-')}`
+
+  wrapperTipo.innerHTML = `
+    <div class="type-header" onclick="toggleTipo(this)">
+      <h3 class="type-subtitle">${tipoNombre}</h3>
+      <span class="type-arrow">
+        <i class="fas fa-chevron-down"></i>
+      </span>
+    </div>
+    <div id="${idGridTipo}" class="type-content columns is-mobile is-multiline product-grid-app">
+      </div>
+  `
+
+  contenedorPadre.appendChild(wrapperTipo)
+  return idGridTipo
+}
+
+// Pequeña función  auxiliar de F para el toggle visual
+function toggleTipo (header) {
+  const wrapper = header.parentElement
+  wrapper.classList.toggle('is-open')
+}
+console.log(toggleTipo)
+
 // Actor E
 
-function renderizarVistaCategoria (categoriaObj, productos) {
+function renderizarVistaCategoria (categoriaObj, productos, allTypes) {
   const contenedorMenu = document.getElementById('menu-categorias')
-  console.log('RENDERIZANDO LOS PRODUCTOS DE LA CATEGORÍA: ', categoriaObj)
-
-  // 1. Limpiamos el contenedor (Efecto Single Page)
   contenedorMenu.innerHTML = ''
 
-  // 2. Llamamos al Actor C para crear el armazón (Título + Grid vacío)
-  // Nota: Ahora construirCategoria solo crea UNA, no itera.
-  const infoGrid = construirCategoria(categoriaObj, contenedorMenu)
+  // 1. Título de la Categoría (Actor C)
+  const infoCategoria = construirCategoria(categoriaObj, contenedorMenu)
+  const mainWrapper = document.getElementById(infoCategoria.id)
+  mainWrapper.innerHTML = ''
 
-  // 3. Filtramos los productos que pertenecen a esta categoría
-  const filtrados = productos.filter(p => p.categoria === categoriaObj.Nombre)
+  // 2. Filtro inicial: Productos de esta categoría
+  const productosDeCategoria = productos.filter(p => p.categoria === categoriaObj.Nombre)
 
-  // 4. Llamamos al Actor A para poblar el grid recién creado
-  const gridDestino = document.getElementById(infoGrid.id)
-  construirFichaProductos(filtrados, gridDestino)
+  // 3. Clasificación: Separar conocidos de "Otros"
+  let productosRestantes = [...productosDeCategoria]
+
+  // Renderizar Tipos Conocidos
+  allTypes.forEach(tipo => {
+    const productosDeEsteTipo = productosRestantes.filter(p => p.tipo === tipo.nombre)
+
+    if (productosDeEsteTipo.length > 0) {
+      const idGrid = construirSeccionTipo(tipo.nombre, mainWrapper)
+      construirFichaProductos(productosDeEsteTipo, document.getElementById(idGrid))
+
+      // Quitamos estos productos de la lista de "restantes"
+      productosRestantes = productosRestantes.filter(p => p.tipo !== tipo.nombre)
+    }
+  })
+
+  // 4. Lógica de "Otros": Si quedan productos sin tipo o con tipos no identificados
+  if (productosRestantes.length > 0) {
+    const idGridOtros = construirSeccionTipo('Otros', mainWrapper)
+    const gridOtros = document.getElementById(idGridOtros)
+
+    // Forzamos que la sección de Otros empiece colapsada para no estorbar (Opcional)
+    gridOtros.parentElement.classList.remove('is-open')
+
+    construirFichaProductos(productosRestantes, gridOtros)
+  }
 }
 
 window.agregarAlCarrito = function (btn) {

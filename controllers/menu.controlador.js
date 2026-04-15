@@ -1,6 +1,7 @@
 const nav = require('../models/breadcrumbs.model.js')
 const productos = require('../models/MenuDigital/productos.model.js')
 const categorías = require('../models/MenuDigital/categorías.model.js')
+const tipos = require('../models/MenuDigital/tipos.model.js')
 const Pedido = require('../models/pedidos.model.js')
 const db = require('../util/database.js')
 
@@ -14,9 +15,10 @@ exports.getMenuData = async (request, response, next) => {
   console.log('GetMenu ejecutandose...')
   try {
     // 1. Llamado en paralelo de consultas con Promise.all()
-    const [Allcategories, productsData] = await Promise.all([
+    const [Allcategories, productsData, AllTypes] = await Promise.all([
       categorías.fecthAll(), // Async BD call 1.
-      productos.getValidProductData() // async BD call
+      productos.getValidProductData(), // async BD call 2.
+      tipos.fetchAll() // async BD call 3.
     ])
 
     console.log('All Promises realizada con exito')
@@ -27,7 +29,8 @@ exports.getMenuData = async (request, response, next) => {
       ok: true,
       message: 'Consultas realizadas con exito',
       arrayCategorías: Allcategories,
-      arrayProductsInfo: productsData
+      arrayProductsInfo: productsData,
+      arrayTipos: AllTypes
     })
     console.log('Proceso finalizado con exito')
   } catch (err) {
