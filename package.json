@@ -196,6 +196,7 @@
     "prelude-ls": "^1.2.1",
     "prop-types": "^15.8.1",
     "punycode": "^2.3.1",
+    "qrcode": "^1.5.4",
     "queue-microtask": "^1.2.3",
     "react-is": "^16.13.1",
     "reflect.getprototypeof": "^1.0.10",
@@ -256,7 +257,7 @@
     "launch": "node --watch server.js",
     "prepare": "husky",
     "santi": "SET USER=maree2& SET HOST=mysql-maree2.alwaysdata.net& SET DB=maree2_2& SET PASSWORD=maree123& node --watch server.js",
-    "test":"jest"
+    "test": "jest"
   },
   "lint-staged": {
     "*.js": "standard --fix"
