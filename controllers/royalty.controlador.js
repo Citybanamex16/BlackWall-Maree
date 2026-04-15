@@ -1,6 +1,7 @@
 // const { request } = require('express')
 const nav = require('../models/breadcrumbs.model.js')
 const Royalty = require('../models/royalty.model.js')
+const QRCode = require('qrcode')
 
 // Admin
 exports.getRoyaltyAdmin = async (request, response, next) => {
@@ -82,11 +83,28 @@ exports.getRoyaltyCli = async (request, response, next) => {
     if (!clienteInfo) {
       return response.status(404).render('errores/404', { error: 'Información no encontrada.' })
     }
+
+    let qrCodeDataUrl = '';
+    try {
+      qrCodeDataUrl = await QRCode.toDataURL(telefono, {
+        color: {
+          dark: '#000000',
+          light: '#0000'
+        },
+        width: 200,
+        margin: 2
+      });
+    } catch (qrError) {
+      console.error('Error generando QR:', qrError);
+    }
+
     return response.render('cliente/royalty', {
       pageTitle: 'Mi Estado Royalty',
       breadcrumbs: nav.getBreadcrumbs('Royalty'),
-      cliente: clienteInfo
-    })
+      cliente: clienteInfo,
+      qrCode: qrCodeDataUrl
+    });
+
   } catch (error) {
     console.error('Error al cargar vista Royalty:', error)
     return response.redirect('/menu/menu?authError=database')
