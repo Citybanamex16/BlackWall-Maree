@@ -380,27 +380,48 @@ html {
     position: fixed;
     bottom: 85px;
     right: 20px;
-    width: 56px;
-    height: 56px;
-    background: #222;
-    color: #fff;
+    width: 60px; /* Un poquito más grande para que luzca */
+    height: 60px;
+    background: #a8bc94; /* Tu verde crema */
+    color: #1d2b11;      /* Texto/Icono oscuro para contraste */
     border-radius: 50%;
     display: flex;
     justify-content: center;
     align-items: center;
+    text-decoration: none;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15); /* Sombra para que flote */
+    z-index: 1000;
+    transition: transform 0.2s ease;
 }
 
+/* Icono dentro del FAB */
+.fab-icon {
+    font-size: 24px;
+}
+
+/* La burbuja del contador */
 .fab-badge {
     position: absolute;
-    top: -2px;
-    right: -4px;
-    background: #e74c3c;
+    top: 0px;
+    right: 0px;
+    background: #1d2b11; /* Color oscuro para que resalte sobre el crema */
     color: #fff;
-    font-size: 11px;
-    width: 22px;
-    height: 22px;
+    font-size: 10px;
+    font-weight: bold;
+    width: 20px;
+    height: 20px;
     border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border: 2px solid #a8bc94; /* Borde del mismo color del botón para que se vea integrado */
 }
+
+/* Efecto al tocar/pasar el mouse */
+.fab-app:active {
+    transform: scale(0.9); /* Efecto de rebote al clickear */
+}
+
 
 
 
