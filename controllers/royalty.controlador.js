@@ -77,32 +77,37 @@ exports.getRoyaltyCli = async (request, response, next) => {
   const telefono = request.session.cliente.telefono
 
   try {
-    const [statusData] = await Royalty.fetchClientStatus(telefono)
-    const clienteInfo = statusData[0]
+    const [
+      [statusData],
+      [topBebidasData],
+      [topPlatillosData],
+      [favBebidasData],
+      [favPlatillosData]
+    ] = await Promise.all([
+      Royalty.fetchClientStatus(telefono),
+      Royalty.fetchTopPlatillos('Bebidas'),
+      Royalty.fetchTopPlatillos('Platillo'),
+      Royalty.fetchFavoritosCliente(telefono, 'Bebidas'),
+      Royalty.fetchFavoritosCliente(telefono, 'Platillo')
+    ])
 
-    if (!clienteInfo) {
-      return response.status(404).render('errores/404', { error: 'Información no encontrada.' })
-    }
+    const clienteInfo = statusData[0]
+    if (!clienteInfo) return response.redirect('/menu/menu')
 
     let qrCodeDataUrl = ''
     try {
-      qrCodeDataUrl = await QRCode.toDataURL(telefono, {
-        color: {
-          dark: '#000000',
-          light: '#0000'
-        },
-        width: 200,
-        margin: 2
-      })
-    } catch (qrError) {
-      console.error('Error generando QR:', qrError)
-    }
+      qrCodeDataUrl = await QRCode.toDataURL(String(telefono))
+    } catch (err) { console.error(err) }
 
     return response.render('cliente/royalty', {
       pageTitle: 'Mi Estado Royalty',
       breadcrumbs: nav.getBreadcrumbs('Royalty'),
       cliente: clienteInfo,
-      qrCode: qrCodeDataUrl
+      qrCode: qrCodeDataUrl,
+      metrics: {
+        topGlobal: { bebidas: topBebidasData[0], platillos: topPlatillosData[0] },
+        favoritos: { bebidas: favBebidasData[0], platillos: favPlatillosData[0] }
+      }
     })
   } catch (error) {
     console.error('Error al cargar vista Royalty:', error)
