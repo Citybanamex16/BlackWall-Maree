@@ -384,7 +384,7 @@ function construirFichaProductos (productosFiltrados, PromosData, gridDestino) {
 
   productosFiltrados.forEach((prod, i) => {
     const cardHTML = `
-            <div class="column is-4-mobile is-4-tablet"> 
+            <div class="column is-half-mobile is-half-tablet"> 
                 <div class="product-card-app" onclick="verDetalleProducto('${prod.id}')">
                     
                     <div class="product-img-wrapper">
