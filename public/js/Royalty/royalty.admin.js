@@ -248,6 +248,7 @@ async function cargarRoyalty () {
     })
   } catch (error) {
     console.log(error)
+    document.getElementById('ModalError').classList.add('is-active')
   }
 }
 cargarRoyalty()
