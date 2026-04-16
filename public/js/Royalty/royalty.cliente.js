@@ -68,6 +68,57 @@ document.addEventListener('DOMContentLoaded', () => {
       } else {
         contenedorEventos.innerHTML = '<div class="alert alert-light border mx-3 w-100 text-center">Por el momento no hay eventos programados.</div>'
       }
+      const contenedorMetricas = document.getElementById('contenedor-metricas')
+      if (data.metrics) {
+        const { global, personal } = data.metrics
+
+        contenedorMetricas.innerHTML = `
+          <div class="metrics-grid">
+              <div class="metrics-card">
+                  <h2 class="section-title mb-4 fs-5 text-start">Tus Favoritos</h2>
+                  <div class="row g-3">
+                      <div class="col-6">
+                          <div class="fav-highlight">
+                              <i class="bi bi-cup-hot text-gold"></i>
+                              <span class="stat-label d-block mb-1">Bebida</span>
+                              <strong class="small text-truncate d-block">${personal.bebidas[0]?.Nombre || '¡Prueba una!'}</strong>
+                          </div>
+                      </div>
+                      <div class="col-6">
+                          <div class="fav-highlight">
+                              <i class="bi bi-egg-fried text-gold"></i>
+                              <span class="stat-label d-block mb-1">Platillo</span>
+                              <strong class="small text-truncate d-block">${personal.platillos[0]?.Nombre || '¡Pide tu crepe!'}</strong>
+                          </div>
+                      </div>
+                  </div>
+              </div>
+
+              <div class="metrics-card">
+                  <h2 class="section-title mb-4 fs-5 text-start">Lo más pedido</h2>
+                  <div class="row g-3">
+                      <div class="col-6">
+                          <p class="stat-label mb-2 text-center">Bebidas</p>
+                          ${global.bebidas.slice(0, 3).map((item, i) => `
+                              <div class="ranking-item">
+                                  <span class="rank-number">${i + 1}</span>
+                                  <span class="small fw-bold text-truncate">${item.Nombre}</span>
+                              </div>
+                          `).join('')}
+                      </div>
+                      <div class="col-6">
+                          <p class="stat-label mb-2 text-center">Platillos</p>
+                          ${global.platillos.slice(0, 3).map((item, i) => `
+                              <div class="ranking-item">
+                                  <span class="rank-number">${i + 1}</span>
+                                  <span class="small fw-bold text-truncate">${item.Nombre}</span>
+                              </div>
+                          `).join('')}
+                      </div>
+                  </div>
+              </div>
+          </div>`
+      }
     })
     .catch(error => {
       console.error('Error:', error)

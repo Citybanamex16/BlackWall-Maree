@@ -77,37 +77,27 @@ exports.getRoyaltyCli = async (request, response, next) => {
   const telefono = request.session.cliente.telefono
 
   try {
-    const [
-      [statusData],
-      [topBebidasData],
-      [topPlatillosData],
-      [favBebidasData],
-      [favPlatillosData]
-    ] = await Promise.all([
-      Royalty.fetchClientStatus(telefono),
-      Royalty.fetchTopPlatillos('Bebidas'),
-      Royalty.fetchTopPlatillos('Platillo'),
-      Royalty.fetchFavoritosCliente(telefono, 'Bebidas'),
-      Royalty.fetchFavoritosCliente(telefono, 'Platillo')
-    ])
-
+    const [statusData] = await Royalty.fetchClientStatus(telefono)
     const clienteInfo = statusData[0]
+
     if (!clienteInfo) return response.redirect('/menu/menu')
 
     let qrCodeDataUrl = ''
     try {
-      qrCodeDataUrl = await QRCode.toDataURL(String(telefono))
-    } catch (err) { console.error(err) }
+      qrCodeDataUrl = await QRCode.toDataURL(String(telefono), {
+        color: { dark: '#000000', light: '#0000' },
+        width: 200,
+        margin: 2
+      })
+    } catch (err) {
+      console.error('Error generando QR:', err)
+    }
 
     return response.render('cliente/royalty', {
       pageTitle: 'Mi Estado Royalty',
       breadcrumbs: nav.getBreadcrumbs('Royalty'),
       cliente: clienteInfo,
-      qrCode: qrCodeDataUrl,
-      metrics: {
-        topGlobal: { bebidas: topBebidasData[0], platillos: topPlatillosData[0] },
-        favoritos: { bebidas: favBebidasData[0], platillos: favPlatillosData[0] }
-      }
+      qrCode: qrCodeDataUrl
     })
   } catch (error) {
     console.error('Error al cargar vista Royalty:', error)
@@ -120,10 +110,6 @@ exports.getRoyaltyDataAPI = async (request, response, next) => {
     return response.status(401).json({ redirectUrl: '/cliente/login' })
   }
 
-  if (request.session.rol !== 'Usuario') {
-    return response.status(403).json({ redirectUrl: '/royalty/royaltyAdmin' })
-  }
-
   const telefono = request.session.cliente.telefono
 
   try {
@@ -131,18 +117,39 @@ exports.getRoyaltyDataAPI = async (request, response, next) => {
     const clienteInfo = statusData[0]
     const nivelId = clienteInfo.nivel
 
-    const [[promotionsData], [eventsData]] = await Promise.all([
+    const [
+      [promotionsData],
+      [eventsData],
+      [topBebidasResult],
+      [topPlatillosResult],
+      [favBebidasResult],
+      [favPlatillosResult]
+    ] = await Promise.all([
       Royalty.fetchPromotions(nivelId),
-      Royalty.fetchEvents(nivelId)
+      Royalty.fetchEvents(nivelId),
+      Royalty.fetchTopPlatillos('Bebidas'),
+      Royalty.fetchTopPlatillos('Platillo'),
+      Royalty.fetchFavoritosCliente(telefono, 'Bebidas'),
+      Royalty.fetchFavoritosCliente(telefono, 'Platillo')
     ])
 
     return response.status(200).json({
       clienteNivel: nivelId,
       promociones: promotionsData,
-      eventos: eventsData
+      eventos: eventsData,
+      metrics: {
+        global: {
+          bebidas: topBebidasResult[0] || [],
+          platillos: topPlatillosResult[0] || []
+        },
+        personal: {
+          bebidas: favBebidasResult[0] || [],
+          platillos: favPlatillosResult[0] || []
+        }
+      }
     })
   } catch (error) {
-    console.error(error)
+    console.error('Error en API de Royalty:', error)
     return response.status(500).json({
       redirectUrl: '/menu/menu?authError=database'
     })
