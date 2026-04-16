@@ -68,6 +68,13 @@ exports.getMenuPromos = async (req, res, nex) => {
   }
 }
 
+
+exports.getMapaSucursales = (req, res, nex) => {
+  const breadcrumbs = nav.getBreadcrumbs('Menu')
+  res.render('cliente/mapaSucursal', { breadcrumbs })
+
+}
+
 // Fin CU11
 
 exports.getOrden = (request, response, next) => {
