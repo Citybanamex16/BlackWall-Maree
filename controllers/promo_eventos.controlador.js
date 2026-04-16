@@ -1,5 +1,12 @@
+const fs = require('fs')
+const path = require('path')
+
 const Eventos = require('../models/eventos.model')
 const Promociones = require('../models/promociones.model')
+
+const directorioPublico = path.join(__dirname, '..', 'public')
+const directorioImagenesEventos = path.join(directorioPublico, 'uploads', 'eventos')
+const prefijoImagenesEventos = '/uploads/eventos/'
 
 const obtenerDescuentoDecimal = (descuento) => {
   if (descuento === '' || descuento === null || typeof descuento === 'undefined') {
@@ -77,6 +84,42 @@ const obtenerRutaImagenEvento = (archivo) => {
   }
 
   return `/uploads/eventos/${archivo.filename}`
+}
+
+const resolverRutaImagenEvento = (rutaImagen) => {
+  if (!rutaImagen || !String(rutaImagen).startsWith(prefijoImagenesEventos)) {
+    return null
+  }
+
+  const rutaRelativa = String(rutaImagen).replace(/^\//, '')
+  const rutaAbsoluta = path.resolve(directorioPublico, rutaRelativa)
+  const directorioPermitido = path.resolve(directorioImagenesEventos)
+
+  if (!rutaAbsoluta.startsWith(`${directorioPermitido}${path.sep}`)) {
+    return null
+  }
+
+  return rutaAbsoluta
+}
+
+const eliminarImagenEvento = async (rutaImagen) => {
+  const rutaAbsoluta = resolverRutaImagenEvento(rutaImagen)
+
+  if (!rutaAbsoluta) {
+    return
+  }
+
+  try {
+    await fs.promises.unlink(rutaAbsoluta)
+  } catch (error) {
+    if (error.code !== 'ENOENT') {
+      console.warn('No se pudo eliminar la imagen anterior del evento:', error)
+    }
+  }
+}
+
+const eliminarImagenSubida = async (archivo) => {
+  await eliminarImagenEvento(obtenerRutaImagenEvento(archivo))
 }
 
 const validarDatosEvento = ({
@@ -234,6 +277,7 @@ exports.postRegistrarEvento = async (req, res, next) => {
     })
 
     if (errorValidacion) {
+      await eliminarImagenSubida(req.file)
       return res.status(400).json({
         success: false,
         message: errorValidacion
@@ -243,6 +287,7 @@ exports.postRegistrarEvento = async (req, res, next) => {
     const errorPromociones = await validarPromocionesActivasEvento(idsPromociones)
 
     if (errorPromociones) {
+      await eliminarImagenSubida(req.file)
       return res.status(400).json({
         success: false,
         message: errorPromociones
@@ -267,6 +312,7 @@ exports.postRegistrarEvento = async (req, res, next) => {
       message: 'Evento registrado correctamente.'
     })
   } catch (error) {
+    await eliminarImagenSubida(req.file)
     console.log('Error al registrar evento:', error)
     res.status(500).json({
       success: false,
@@ -309,6 +355,7 @@ exports.putUpdateEvent = async (req, res, next) => {
     })
 
     if (errorValidacion) {
+      await eliminarImagenSubida(req.file)
       return res.status(400).json({
         success: false,
         message: errorValidacion
@@ -318,13 +365,15 @@ exports.putUpdateEvent = async (req, res, next) => {
     const errorPromociones = await validarPromocionesActivasEvento(idsPromociones)
 
     if (errorPromociones) {
+      await eliminarImagenSubida(req.file)
       return res.status(400).json({
         success: false,
         message: errorPromociones
       })
     }
 
-    const imagenEvento = obtenerRutaImagenEvento(req.file) || eventoActual.Imagen || null
+    const nuevaImagenEvento = obtenerRutaImagenEvento(req.file)
+    const imagenEvento = nuevaImagenEvento || eventoActual.Imagen || null
 
     await Eventos.updateEvento(idEvento, {
       nombre: nombre.trim(),
@@ -337,6 +386,10 @@ exports.putUpdateEvent = async (req, res, next) => {
       productos: idsProductos
     })
 
+    if (nuevaImagenEvento && eventoActual.Imagen && eventoActual.Imagen !== nuevaImagenEvento) {
+      await eliminarImagenEvento(eventoActual.Imagen)
+    }
+
     const eventoActualizado = await construirRespuestaEvento(idEvento)
 
     res.status(200).json({
@@ -345,6 +398,7 @@ exports.putUpdateEvent = async (req, res, next) => {
       data: eventoActualizado
     })
   } catch (error) {
+    await eliminarImagenSubida(req.file)
     console.log('Error al actualizar evento:', error)
     res.status(500).json({
       success: false,
