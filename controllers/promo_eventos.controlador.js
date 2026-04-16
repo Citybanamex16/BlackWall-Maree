@@ -324,11 +324,14 @@ exports.putUpdateEvent = async (req, res, next) => {
       })
     }
 
+    const imagenEvento = obtenerRutaImagenEvento(req.file) || eventoActual.Imagen || null
+
     await Eventos.updateEvento(idEvento, {
       nombre: nombre.trim(),
       descripcion: descripcion.trim(),
       fechaInicio,
       fechaFinal: fechaFin,
+      imagen: imagenEvento,
       activo: normalizarBoolean(activo),
       promociones: idsPromociones,
       productos: idsProductos

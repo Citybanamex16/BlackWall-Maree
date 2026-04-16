@@ -388,13 +388,15 @@ function establecerModoFormulario (modo) {
   const kicker = document.getElementById('kicker-modal-evento')
   const botonGuardar = document.getElementById('boton-guardar-evento')
   const campoImagen = document.getElementById('campo-imagen-evento')
+  const ayudaImagen = document.getElementById('ayuda-imagen-evento')
 
   if (modo === 'editar') {
     if (titulo) titulo.textContent = 'Modificar Evento'
-    if (descripcion) descripcion.textContent = 'Actualiza nombre, vigencia, estado y relaciones del evento.'
+    if (descripcion) descripcion.textContent = 'Actualiza nombre, vigencia, estado, imagen y relaciones del evento.'
     if (kicker) kicker.textContent = 'Edicion administrativa'
     if (botonGuardar) botonGuardar.textContent = 'Guardar cambios'
-    if (campoImagen) campoImagen.classList.add('is-hidden')
+    if (campoImagen) campoImagen.classList.remove('is-hidden')
+    if (ayudaImagen) ayudaImagen.textContent = 'Selecciona una nueva imagen solo si quieres reemplazar la actual.'
     return
   }
 
@@ -403,6 +405,7 @@ function establecerModoFormulario (modo) {
   if (kicker) kicker.textContent = 'Registro administrativo'
   if (botonGuardar) botonGuardar.textContent = 'Guardar evento'
   if (campoImagen) campoImagen.classList.remove('is-hidden')
+  if (ayudaImagen) ayudaImagen.textContent = 'Usa una imagen JPG, PNG, WEBP o GIF de hasta 5 MB para la tarjeta del catalogo.'
 }
 
 async function prepararModificacion (idEvento) {
@@ -428,6 +431,7 @@ async function prepararModificacion (idEvento) {
     document.getElementById('fechaInicio').value = normalizarFechaInput(evento.Fecha_Inicio)
     document.getElementById('fechaFin').value = normalizarFechaInput(evento.Fecha_Final)
     document.getElementById('activo').checked = estaActivo(evento.Activo)
+    mostrarImagenActualEvento(evento.Imagen)
 
     const idsPromocionesActivas = new Set(estadoEventos.promocionesCatalogo.map(promocion => String(promocion.id)))
     estadoEventos.promocionesSeleccionadas = new Map(
@@ -529,7 +533,7 @@ async function guardarEvento (event) {
   }
 
   try {
-    const response = await fetch(url, construirOpcionesGuardado(method, datos, esEdicion))
+    const response = await fetch(url, construirOpcionesGuardado(method, datos))
     const result = await leerRespuestaJson(response)
 
     if (!response.ok || !result.success) {
@@ -555,17 +559,7 @@ async function guardarEvento (event) {
   }
 }
 
-function construirOpcionesGuardado (method, datos, esEdicion) {
-  if (esEdicion) {
-    return {
-      method,
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(datos)
-    }
-  }
-
+function construirOpcionesGuardado (method, datos) {
   const formData = new FormData()
   formData.append('nombre', datos.nombre)
   formData.append('descripcion', datos.descripcion)
@@ -594,6 +588,24 @@ function manejarCambioImagenEvento (event) {
   }
 
   limpiarErrorContenedor('campo-imagen-evento')
+}
+
+function mostrarImagenActualEvento (rutaImagen) {
+  const contenedor = document.getElementById('imagen-actual-evento')
+  const imagen = document.getElementById('preview-imagen-evento')
+
+  if (!contenedor || !imagen) {
+    return
+  }
+
+  if (!rutaImagen) {
+    imagen.removeAttribute('src')
+    contenedor.classList.add('is-hidden')
+    return
+  }
+
+  imagen.src = rutaImagen
+  contenedor.classList.remove('is-hidden')
 }
 
 function solicitarCambioEstado (idEvento) {
@@ -801,6 +813,7 @@ function limpiarFormulario () {
   document.getElementById('id_evento').value = ''
   document.getElementById('activo').checked = true
   document.getElementById('nombre-imagen-evento').textContent = 'Selecciona una imagen'
+  mostrarImagenActualEvento(null)
 
   renderizarCatalogo('lista-promociones', estadoEventos.promocionesCatalogo, estadoEventos.promocionesSeleccionadas, 'promocion')
   renderizarCatalogo('lista-productos', estadoEventos.productosCatalogo, estadoEventos.productosSeleccionados, 'producto')

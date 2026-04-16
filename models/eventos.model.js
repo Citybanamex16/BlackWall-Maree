@@ -234,7 +234,7 @@ module.exports = class Evento {
 
       await connection.execute(
         `UPDATE evento
-         SET Nombre = ?, Descripcion = ?, Activo = ?, Fecha_Inicio = ?, Fecha_Final = ?
+         SET Nombre = ?, Descripcion = ?, Activo = ?, Fecha_Inicio = ?, Fecha_Final = ?, Imagen = ?
          WHERE ID_Evento = ?`,
         [
           datosEvento.nombre,
@@ -242,6 +242,7 @@ module.exports = class Evento {
           datosEvento.activo ? 1 : 0,
           datosEvento.fechaInicio,
           datosEvento.fechaFinal,
+          datosEvento.imagen || null,
           idEvento
         ]
       )

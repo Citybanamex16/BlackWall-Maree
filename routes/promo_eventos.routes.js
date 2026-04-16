@@ -62,7 +62,7 @@ router.get('/eventos/:idEvento', evenPromoControlador.getEventDetail)
 
 router.post('/eventos/registrar', subirImagenEvento, evenPromoControlador.postRegistrarEvento)
 
-router.put('/eventos/:idEvento', evenPromoControlador.putUpdateEvent)
+router.put('/eventos/:idEvento', subirImagenEvento, evenPromoControlador.putUpdateEvent)
 
 router.patch('/eventos/:idEvento/desactivar', evenPromoControlador.patchDeactivateEvent)
 

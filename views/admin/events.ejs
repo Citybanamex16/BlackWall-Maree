@@ -104,6 +104,10 @@
 
                         <div class="field is-full" id="campo-imagen-evento">
                             <label class="label" for="imagenEvento">Imagen del evento</label>
+                            <div class="event-current-image is-hidden" id="imagen-actual-evento">
+                                <p class="event-card-label">Imagen actual</p>
+                                <img id="preview-imagen-evento" src="" alt="Imagen actual del evento">
+                            </div>
                             <div class="file has-name is-fullwidth">
                                 <label class="file-label">
                                     <input id="imagenEvento" class="file-input" type="file" name="imagenEvento" accept="image/png,image/jpeg,image/webp,image/gif">
@@ -113,7 +117,7 @@
                                     <span class="file-name" id="nombre-imagen-evento">Selecciona una imagen</span>
                                 </label>
                             </div>
-                            <p class="helper-note">
+                            <p class="helper-note" id="ayuda-imagen-evento">
                                 Usa una imagen JPG, PNG, WEBP o GIF de hasta 5 MB para la tarjeta del catalogo.
                             </p>
                         </div>
