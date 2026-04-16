@@ -504,27 +504,36 @@ html {
 .product-card-app {
     background: #fff;
     border-radius: 12px;
-    overflow: hidden;
-    height: 180px; /* Altura fija para mantener consistencia de 3 por pantalla */
+    height: 180px; 
     display: flex;
     flex-direction: column;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    /* Sombras más definidas para que parezcan tarjetas físicas */
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08); 
     position: relative;
     border: 1px solid #f0f0f0;
+    margin-top: 25px !important; 
+    transition: all 0.3s ease;
 }
 
 /* 45% Imagen */
 .product-img-wrapper {
     height: 45%;
     overflow: hidden;
+    border-radius: 12px 12px 0 0; /* Redondea solo las esquinas de arriba */
 }
+
 .product-img-wrapper img {
     width: 100%;
     height: 100%;
     object-fit: cover;
 }
 
-/* 35% Info */
+
+.has-active-promo .product-img-wrapper {
+    border-radius: 0 8px 0 0 !important; /* Quita el redondeo izquierdo donde va la pestaña */
+}
+
+
 /* 35% Info - Ajustado verticalmente sin huecos */
 .product-info-wrapper {
     height: 35%;
@@ -607,6 +616,56 @@ html {
     margin-bottom: 5px !important;
     color: #222;
 }
+
+
+/* OFERTAS EN TARJETAS */
+
+/* ── Estilo Pestaña de Folder ── */
+.product-card-app {
+    position: relative;
+    margin-top: 25px !important; /* Espacio para que la pestaña no choque con lo de arriba */
+    transition: border 0.3s ease;
+}
+
+.promo-folder-tab {
+    position: absolute;
+    top: -22px; /* La subimos para que sobresalga */
+    left: 0;
+    padding: 2px 12px;
+    font-family: 'Jost', sans-serif;
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: white;
+    border-radius: 8px 8px 0 0; /* Forma de pestaña de folder */
+    letter-spacing: 0.5px;
+    z-index: 10;
+    box-shadow: 2px -2px 5px rgba(0,0,0,0.05);
+}
+
+/* Variaciones de color */
+.tab-pu { background-color: #e67e22; } /* Naranja */
+.tab-pe { background-color: #b5956a; } /* Dorado */
+.tab-pr { background-color: #8e44ad; } /* Morado */
+
+/* Estado de la tarjeta cuando tiene promo */
+.has-active-promo {
+    border-radius: 0 8px 8px 8px !important; /* Ajustamos la esquina donde está la pestaña */
+}
+
+/* Cuando la tarjeta tiene promo, quitamos el fondo dorado del precio */
+.has-active-promo .product-price-app {
+    background-color: #f8f5f2 !important; /* El color neutro "Hueso" */
+    border: 1px solid rgba(0,0,0,0.05);   /* Un borde casi invisible para dar forma */
+    color: inherit; /* Permitimos que el JS controle el color del texto */
+    padding: 2px 10px;
+    border-radius: 6px;
+    display: inline-block;
+}
+
+
+
+/* FIN SECCION DE TARJETAS DE PRODUCTS */
 
 
 /* ==== Seccion Tipos ==== */

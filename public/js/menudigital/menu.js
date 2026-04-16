@@ -207,7 +207,7 @@ async function obtenerMenu () {
 
     //= =Llamado a promociones ==//
 
-    const PromosData = await PromosMaster()
+    const PromosData = await getAllPromos()
 
     console.log('Promos obtenidos del Backend: ', PromosData)
 
@@ -224,41 +224,195 @@ obtenerMenu()
 
 /* ==Construcción de Menu Dinámico == */
 
+/* ==== SISTEMA DE PROMOCIONES ==== */
+
+function getPromosFromProduct (nombre, promosData) {
+  const promosArray = []
+
+  // Extracción segura (por si alguno viene vacío)
+  const PEs = promosData.allPEs[0] || []
+  const PUs = promosData.allPUs[0] || []
+
+  // Filtramos las promociones que coincidan exactamente con el nombre del producto
+  const promosEvento = PEs.filter(promo => promo.Producto === nombre)
+  const promosUnicas = PUs.filter(promo => promo.Producto === nombre)
+
+  // Unimos los resultados en un solo array
+  promosArray.push(...promosEvento, ...promosUnicas)
+
+  return promosArray
+}
+
+function sistemaConflictosPromos (promosArray) {
+  // Si no hay conflictos, regresamos la única promo que existe
+  if (promosArray.length <= 1) return promosArray
+
+  console.log('Resolviendo conflicto entre múltiples promos...')
+
+  // 1. Clasificamos y enriquecemos las promos con la lógica de tu compañero
+  const promosProcesadas = promosArray.map(promo => {
+    const desc = parseFloat(promo.Descuento) || 0
+    let tipo = 'PORCENTAJE'
+    let valorFiltro = desc // Guardamos el valor para compararlo luego
+
+    if (desc >= 1.0) {
+      tipo = 'BOGO'
+      // "redondeado hacia arriba al entero más cercano"
+      let cantidadX = Math.ceil(desc)
+
+      // Ajuste de seguridad por el ejemplo (1 -> 2x1)
+      if (cantidadX === 1) cantidadX = 2
+
+      valorFiltro = cantidadX
+    }
+
+    return {
+      ...promo,
+      tipoCalculado: tipo,
+      valorReal: valorFiltro
+    }
+  })
+
+  // 2. CONFLICTO DESIGUAL: Separamos las promos BOGO (2x1, 3x1)
+  const promosBOGO = promosProcesadas.filter(p => p.tipoCalculado === 'BOGO')
+
+  if (promosBOGO.length > 0) {
+    // Regla: BOGO mata a Porcentaje siempre.
+    // 3. CONFLICTO IGUAL (BOGO vs BOGO): Gana la que regale más productos (mayor X)
+    promosBOGO.sort((a, b) => b.valorReal - a.valorReal)
+    console.log(`Ganador BOGO: ${promosBOGO[0].valorReal}x1`)
+    return [promosBOGO[0]]
+  }
+
+  // 4. CONFLICTO IGUAL (% vs %): Si solo hay porcentajes, gana el mayor descuento
+  promosProcesadas.sort((a, b) => b.valorReal - a.valorReal)
+  console.log(`Ganador %: ${(promosProcesadas[0].valorReal * 100)}% de descuento`)
+
+  return [promosProcesadas[0]]
+}
+
+function menuPromosAgent (cardHTML, finalPromos) {
+  if (!finalPromos || finalPromos.length === 0) return cardHTML
+
+  const promo = finalPromos[0]
+  const tempDiv = document.createElement('div')
+  tempDiv.innerHTML = cardHTML.trim()
+
+  const card = tempDiv.querySelector('.product-card-app')
+  const priceElement = tempDiv.querySelector('.product-price-app')
+  const buttonElement = tempDiv.querySelector('.add-btn-app')
+
+  // 1. Definir Colores y Etiquetas según Origen
+  // PU (Única) -> Naranja | PE (Evento) -> Dorado
+  const isEvento = promo.Origen === 'Evento'
+  const colorPromo = isEvento ? '#b5956a' : '#e67e22'
+  const labelOrigen = isEvento ? 'Evento' : 'Oferta'
+  const claseTab = isEvento ? 'tab-pe' : 'tab-pu'
+
+  // 2. Preparar el Texto de la Pestaña (Minimalista)
+  const valorDesc = parseFloat(promo.Descuento)
+  let textoPestaña = ''
+
+  if (valorDesc >= 1.0) {
+    const cantX = Math.ceil(valorDesc) === 1 ? 2 : Math.ceil(valorDesc)
+    textoPestaña = `${labelOrigen}: ${cantX}x1`
+  } else {
+    textoPestaña = `${labelOrigen}: ${(valorDesc * 100).toFixed(0)}%`
+  }
+
+  // 3. Crear la Pestaña de Folder e inyectarla al inicio de la tarjeta
+  const folderTabHTML = `<div class="promo-folder-tab ${claseTab}">${textoPestaña}</div>`
+  card.insertAdjacentHTML('afterbegin', folderTabHTML)
+
+  // 4. Cambios Visuales en la Tarjeta
+  card.classList.add('has-active-promo')
+  card.style.borderColor = colorPromo
+
+  // 5. Ajuste de Precios (Anterior vs Nuevo)
+  const precioOriginal = parseFloat(priceElement.textContent.replace('$', ''))
+  let precioFinal = precioOriginal
+
+  if (valorDesc < 1.0) {
+    precioFinal = (precioOriginal * (1 - valorDesc)).toFixed(2)
+    priceElement.innerHTML = `
+            <span style="text-decoration: line-through; color: #aaa; font-size: 0.8em; margin-right: 5px;">$${precioOriginal}</span>
+            <span style="color: ${colorPromo}; font-weight: 700;">$${precioFinal}</span>
+        `
+  } else {
+    // En BOGO el precio unitario no cambia visualmente en la tarjeta, pero avisamos
+    priceElement.style.color = colorPromo
+    priceElement.style.fontWeight = '700'
+  }
+
+  // 6. "Embeber" información para el resumen (Backend del Front)
+  // Guardamos el nombre largo (Plantilla_Promo) para usarlo en el carrito después
+  buttonElement.setAttribute('data-precio', precioFinal)
+  buttonElement.setAttribute('data-promo-display', textoPestaña)
+  buttonElement.setAttribute('data-promo-nombre-real', promo.Plantilla_Promo)
+
+  return tempDiv.innerHTML
+}
+
+// Sistema de Promos
+function promosMaster (cardHTML, promosData, productName) {
+  // 1. Extraer promos
+  const arrayPromosProducto = getPromosFromProduct(productName, promosData)
+
+  // Si el producto no tiene promos, cortamos la ejecución para ahorrar recursos
+  if (arrayPromosProducto.length === 0) return cardHTML
+
+  // 2. Resolver conflictos si tenemos mas de 1
+
+  let arrayPromosFinales
+
+  if (arrayPromosProducto.length > 1) {
+    arrayPromosFinales = sistemaConflictosPromos(arrayPromosProducto)
+  } else {
+    arrayPromosFinales = arrayPromosProducto
+  }
+
+  // 3. Aplicar cambios en estetica e info en la carta:
+  const finalCard = menuPromosAgent(cardHTML, arrayPromosFinales)
+
+  // 4. Final: Regresamos la carta inyectada
+  return finalCard
+}
+
 // Actor A: Constructor de fichas individuales
-function construirFichaProductos (productosFiltrados, gridDestino) {
-  // Limpiamos el grid antes de poblar
+function construirFichaProductos (productosFiltrados, PromosData, gridDestino) {
   gridDestino.innerHTML = ''
 
   productosFiltrados.forEach((prod, i) => {
-    // console.log("prod info: ", prod)
     const cardHTML = `
-      <div class="column is-6-mobile is-4-tablet is-3-desktop"> 
-        <div class="product-card-app" onclick="verDetalleProducto('${prod.id}')">
-          
-          <div class="product-img-wrapper">
-            <img src="${prod.imagen}" alt="${prod.nombre}" loading="lazy" onerror="this.src='/img/placeholder.webp'">
-          </div>
+            <div class="column is-4-mobile is-4-tablet"> 
+                <div class="product-card-app" onclick="verDetalleProducto('${prod.id}')">
+                    
+                    <div class="product-img-wrapper">
+                        <img src="${prod.imagen}" alt="${prod.nombre}" loading="lazy" onerror="this.src='/img/placeholder.webp'">
+                    </div>
 
-          <div class="product-info-wrapper">
-            <h3 class="product-name-app">${prod.nombre}</h3>
-            <p class="product-price-app">$${prod.precio}</p>
-          </div>
+                    <div class="product-info-wrapper">
+                        <h3 class="product-name-app">${prod.nombre}</h3>
+                        <p class="product-price-app">$${prod.precio}</p>
+                    </div>
 
-          <div class="product-action-wrapper">
-            <button class="add-btn-app" 
-                    data-id="${prod.id}" 
-                    data-nombre="${prod.nombre}"
-                    data-precio="${prod.precio}"
-                    onclick="event.stopPropagation(); agregarAlCarrito(this)">
-              <span class="btn-agregar-icon">＋</span>
-              <span class="btn-agregar-label">Agregar</span>
-            </button>
-          </div>
+                   <div class="product-action-wrapper">
+    <button class="add-btn-app" 
+            data-id="${prod.id}" 
+            data-nombre="${prod.nombre}"
+            data-precio="${prod.precio}"
+            onclick="event.stopPropagation(); agregarAlCarrito(this)">
+        <span style="font-size: 14px; font-weight: bold;">＋</span>
+        <span>Agregar</span>
+    </button>
+</div>
 
-        </div>
-      </div>`
+                </div>
+            </div>`
 
-    gridDestino.insertAdjacentHTML('beforeend', cardHTML)
+    // El Promos Master recibe el string, lo pinta y lo devuelve listo para insertarse
+    const completedCardHTML = promosMaster(cardHTML, PromosData, prod.nombre)
+    gridDestino.insertAdjacentHTML('beforeend', completedCardHTML)
   })
 }
 
@@ -286,7 +440,7 @@ function construirCategoria (cat, contenedorMenu) {
 }
 
 /* Actor D: Sticky tabs */
-function generarStickyTabs (categorias, todosLosProductos, todosLosTipos) {
+function generarStickyTabs (categorias, todosLosProductos, todosLosTipos, promosDatos) {
   const listaTabs = document.getElementById('lista-tabs')
   listaTabs.innerHTML = ''
 
@@ -305,7 +459,7 @@ function generarStickyTabs (categorias, todosLosProductos, todosLosTipos) {
       li.classList.add('is-active')
 
       // LLAMADA CLAVE: Re-renderizamos la sección con la categoría clickeada
-      renderizarVistaCategoria(cat, todosLosProductos, todosLosTipos)
+      renderizarVistaCategoria(cat, todosLosProductos, todosLosTipos, promosDatos)
 
       // Scroll opcional al inicio del menú por si el usuario estaba muy abajo
       window.scrollTo({ top: 0, behavior: 'smooth' })
@@ -356,7 +510,7 @@ function contruirMenuDinamico (datos, promosDatos) {
 
   // 2. Generamos los Sticky Tabs una sola vez
   // Pasamos la referencia a los productos para que los tabs puedan disparar el filtro
-  generarStickyTabs(categorias, todosLosProductos, todosLosTipos)
+  generarStickyTabs(categorias, todosLosProductos, todosLosTipos, promosDatos)
 
   // 3. Renderizado inicial: Mostramos la primera categoría por defecto
   if (categorias.length > 0) {
@@ -397,7 +551,7 @@ console.log(toggleTipo)
 
 // Actor Promos (Agente P)
 
-async function PromosMaster () {
+async function getAllPromos () {
   // Esta funcion obtiene todas las PU & PE
   let Promos
   console.log('Obteniendo PUs y PEs')
@@ -441,7 +595,8 @@ function renderizarVistaCategoria (categoriaObj, productos, allTypes, allPromos)
 
     if (productosDeEsteTipo.length > 0) {
       const idGrid = construirSeccionTipo(tipo.nombre, mainWrapper)
-      construirFichaProductos(productosDeEsteTipo, document.getElementById(idGrid))
+      // Actor A
+      construirFichaProductos(productosDeEsteTipo, allPromos, document.getElementById(idGrid))
 
       // Quitamos estos productos de la lista de "restantes"
       productosRestantes = productosRestantes.filter(p => p.tipo !== tipo.nombre)
