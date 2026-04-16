@@ -205,15 +205,15 @@ async function obtenerMenu () {
 
     console.log('Datos obtenidos de Backend: ', data)
 
-    //==Llamado a promociones ==//
+    //= =Llamado a promociones ==//
 
     const PromosData = await PromosMaster()
 
-    console.log("Promos obtenidos del Backend: ", PromosData)
+    console.log('Promos obtenidos del Backend: ', PromosData)
 
     /* === Llamada a Construcción de Menu Dinámico == */
     globalProducts = data.arrayProductsInfo
-    contruirMenuDinamico(data)
+    contruirMenuDinamico(data, PromosData)
   } catch (error) {
     console.error('Error al obtener el menú:', error)
     ShowMenuErrorModal()
@@ -346,7 +346,7 @@ function ordenarTipos (array) {
 }
 
 // Actor Principal
-function contruirMenuDinamico (datos) {
+function contruirMenuDinamico (datos, promosDatos) {
   // 1. Guardamos los datos globalmente o en un scope accesible para los filtros
   const categorias = datos.arrayCategorías[0]
   const todosLosProductos = datos.arrayProductsInfo
@@ -361,7 +361,7 @@ function contruirMenuDinamico (datos) {
   // 3. Renderizado inicial: Mostramos la primera categoría por defecto
   if (categorias.length > 0) {
     const primeraCat = categorias[0]
-    renderizarVistaCategoria(primeraCat, todosLosProductos, todosLosTipos)
+    renderizarVistaCategoria(primeraCat, todosLosProductos, todosLosTipos, promosDatos)
   }
 
   console.log('Estructura base del menú lista y primera categoría renderizada.')
@@ -395,43 +395,32 @@ function toggleTipo (header) {
 }
 console.log(toggleTipo)
 
-
-
 // Actor Promos (Agente P)
 
-async function PromosMaster(){
-  //Esta funcion obtiene todas las PU & PE 
+async function PromosMaster () {
+  // Esta funcion obtiene todas las PU & PE
   let Promos
-  console.log("Obteniendo PUs y PEs")
-  try{
-    const response = await fetch("/menu/consultarPromosMenu")
+  console.log('Obteniendo PUs y PEs')
+  try {
+    const response = await fetch('/menu/consultarPromosMenu')
     const data = await response.json()
 
-    if(!data.ok){
-      console.log("Error Interno")
+    if (!data.ok) {
+      console.log('Error Interno')
       return
     }
 
-    console.log("Data recibida: ", data)
+    console.log('Data recibida: ', data)
     Promos = data
-
+  } catch (error) {
+    console.log('Error: ', error)
   }
-  catch (error){
-    console.log("Error: ", error)
-
-  }
-  console.log("Finalizado")
+  console.log('Finalizado')
   return Promos
-
 }
 
-
-
-
-
-
 // Actor E
-function renderizarVistaCategoria (categoriaObj, productos, allTypes) {
+function renderizarVistaCategoria (categoriaObj, productos, allTypes, allPromos) {
   const contenedorMenu = document.getElementById('menu-categorias')
   contenedorMenu.innerHTML = ''
 
@@ -470,8 +459,6 @@ function renderizarVistaCategoria (categoriaObj, productos, allTypes) {
     construirFichaProductos(productosRestantes, gridOtros)
   }
 }
-
-
 
 /*
 window.agregarAlCarrito = function (btn) {

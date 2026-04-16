@@ -13,7 +13,6 @@ router.post('/agregaritem', menuControlador.agregarItem)
 router.post('/pedidos/validar', menuControlador.validarPedido)
 router.post('/pedidos/confirmar', menuControlador.confirmarPedido)
 
-
 // Rutas Admin
 router.get('/productos', menuControlador.getProducts)
 router.get('/productosCatalog', menuControlador.getProductsCatalog)
