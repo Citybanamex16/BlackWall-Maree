@@ -1,23 +1,27 @@
-/* ===== Panel de Órdenes - Marée ===== */
+/* moduloAdmincss.css
+   Unifica los estilos de module-metrics-products.css,
+   module-metrics-royalty.css y orders-panel.css
+*/
 
 :root {
-  --maree-bg: #f7f4ef;
-  --maree-surface: #fffdf9;
-  --maree-surface-2: #f2ebe3;
-  --maree-gold: #b08b57;
-  --maree-gold-soft: #d8bf98;
-  --maree-text: #2f2a25;
-  --maree-text-soft: #6d6258;
-  --maree-danger: #b85c5c;
-  --maree-success: #5c8a67;
-  --maree-border: #e6ddd2;
-  --maree-shadow: 0 10px 30px rgba(64, 45, 26, 0.08);
-  --maree-radius: 18px;
+  --admin-bg-body: linear-gradient(180deg, #fcfaf7 0%, #f4eee7 100%);
+  --admin-surface: #fffdf9;
+  --admin-surface-2: #f2ebe3;
+  --admin-gold: #b08b57;
+  --admin-gold-soft: #d8bf98;
+  --admin-text: #2f2a25;
+  --admin-text-soft: #6d6258;
+  --admin-muted: #6d6258;
+  --admin-danger: #b94a48;
+  --admin-success: #5c8a67;
+  --admin-border: #e6ddd2;
+  --admin-shadow: 0 10px 30px rgba(64, 45, 26, 0.08);
+  --admin-radius: 18px;
 }
 
 body {
-  background: linear-gradient(180deg, #fcfaf7 0%, #f4eee7 100%);
-  color: var(--maree-text);
+  background: var(--admin-bg-body);
+  color: var(--admin-text);
   font-family: 'Jost', sans-serif;
   min-height: 100vh;
 }
@@ -31,42 +35,52 @@ body {
   max-width: 1200px;
 }
 
-.title {
+.title,
+.section-title {
   font-family: 'Cormorant Garamond', serif;
   font-size: 2.7rem;
   font-weight: 600;
-  color: var(--maree-text);
+  color: var(--admin-text);
   margin-bottom: 0.35rem;
   letter-spacing: 0.4px;
 }
 
 .subtitle {
-  color: var(--maree-text-soft);
+  color: var(--admin-text-soft);
   font-size: 1rem;
   margin-bottom: 1.75rem;
 }
 
-#alert-container {
-  margin-bottom: 1rem;
+.card-box {
+  background: var(--admin-surface);
+  border: 1px solid var(--admin-border);
+  border-radius: var(--admin-radius);
+  padding: 24px;
+  box-shadow: var(--admin-shadow);
+  margin-bottom: 24px;
 }
 
-#alert-container .message {
-  border-radius: 14px;
-  box-shadow: var(--maree-shadow);
-  border: 1px solid var(--maree-border);
-  overflow: hidden;
+.small-note {
+  font-size: 13px;
+  color: var(--admin-muted);
 }
 
-#alert-container .message-body {
-  font-size: 0.97rem;
-  line-height: 1.5;
+.pill,
+.tag.is-light {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  background: var(--admin-surface-2);
+  color: var(--admin-gold);
 }
 
 .table-container {
-  background: var(--maree-surface);
-  border: 1px solid var(--maree-border);
-  border-radius: var(--maree-radius);
-  box-shadow: var(--maree-shadow);
+  background: var(--admin-surface);
+  border: 1px solid var(--admin-border);
+  border-radius: var(--admin-radius);
+  box-shadow: var(--admin-shadow);
   padding: 1rem;
   overflow-x: auto;
 }
@@ -78,13 +92,16 @@ body {
   min-width: 900px;
 }
 
+.table th,
 .table thead th {
   background: #f6efe7;
-  color: var(--maree-text);
+  color: var(--admin-muted);
   font-weight: 600;
-  border-bottom: 1px solid var(--maree-border);
   font-size: 0.95rem;
   padding: 1rem 0.9rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border-bottom: 1px solid var(--admin-border);
 }
 
 .table thead th:first-child {
@@ -99,7 +116,7 @@ body {
   vertical-align: middle;
   padding: 1rem 0.9rem;
   border-bottom: 1px solid #f0e7dc;
-  color: var(--maree-text-soft);
+  color: var(--admin-text-soft);
   font-size: 0.95rem;
 }
 
@@ -118,7 +135,7 @@ body {
 
 .table tbody td:first-child {
   font-weight: 600;
-  color: var(--maree-text);
+  color: var(--admin-text);
 }
 
 .order-status {
@@ -134,7 +151,7 @@ body {
   border-radius: 50%;
   margin-right: 0.55rem;
   vertical-align: middle;
-  background: var(--maree-success);
+  background: var(--admin-success);
 }
 
 .order-actions {
@@ -156,14 +173,6 @@ body {
   box-shadow: 0 10px 22px rgba(184, 92, 92, 0.15);
 }
 
-.tag.is-light {
-  background: #f3ede6;
-  color: var(--maree-text-soft);
-  border-radius: 999px;
-  padding: 0.45rem 0.8rem;
-  font-weight: 500;
-}
-
 .modal-card {
   width: min(92vw, 520px);
   border-radius: 22px;
@@ -173,19 +182,19 @@ body {
 
 .modal-card-head {
   background: linear-gradient(180deg, #fffaf4 0%, #f3e9dd 100%);
-  border-bottom: 1px solid var(--maree-border);
+  border-bottom: 1px solid var(--admin-border);
   padding: 1.2rem 1.4rem;
 }
 
 .modal-card-title {
   font-family: 'Cormorant Garamond', serif;
   font-size: 1.8rem;
-  color: var(--maree-text);
+  color: var(--admin-text);
 }
 
 .modal-card-body {
-  background: var(--maree-surface);
-  color: var(--maree-text-soft);
+  background: var(--admin-surface);
+  color: var(--admin-text-soft);
   font-size: 1rem;
   line-height: 1.6;
   padding: 1.4rem;
@@ -193,7 +202,7 @@ body {
 
 .modal-card-foot {
   background: #fffaf5;
-  border-top: 1px solid var(--maree-border);
+  border-top: 1px solid var(--admin-border);
   justify-content: flex-end;
   gap: 0.75rem;
   padding: 1rem 1.4rem;
@@ -207,8 +216,8 @@ body {
 }
 
 .modal-card .button.is-danger {
-  background: var(--maree-danger);
-  border-color: var(--maree-danger);
+  background: var(--admin-danger);
+  border-color: var(--admin-danger);
 }
 
 .modal-card .button.is-danger:hover {
@@ -219,7 +228,7 @@ body {
 .modal-card .button:not(.is-danger) {
   background: #f3ede6;
   border-color: #e3d8ca;
-  color: var(--maree-text);
+  color: var(--admin-text);
 }
 
 .modal-background {
@@ -242,7 +251,8 @@ body {
     padding-bottom: 2rem;
   }
 
-  .title {
+  .title,
+  .modal-card-title {
     font-size: 2.1rem;
   }
 
@@ -259,7 +269,18 @@ body {
     min-width: 760px;
   }
 
-  .modal-card-title {
-    font-size: 1.5rem;
+  .modal-card-foot {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .modal-card-foot .button {
+    width: 100%;
+    margin-bottom: 10px;
+    margin-left: 0 !important;
+  }
+
+  .modal-card-foot .button:last-child {
+    margin-bottom: 0;
   }
 }

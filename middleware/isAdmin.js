@@ -3,7 +3,7 @@ module.exports = (req, res, next) => {
     return res.redirect('/menu/menu')
   }
 
-  if (req.session.user.rol !== 'admin') {
+  if (req.session.rol !== 'Administrador') {
     return res.status(403).send('Acceso denegado')
   }
 

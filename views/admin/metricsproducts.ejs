@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="light"></html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title><%= pageTitle %> - Admin Marée</title>
+
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@1.0.4/css/bulma.min.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;600&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link rel="stylesheet" href="/css/CSSglobales/global_theme.css">
+  <link rel="stylesheet" href="/css/CSSglobales/global_components.css">
+  <link rel="stylesheet" href="/css/CSSglobales/module-metrics.css">
+  <link rel="stylesheet" href="/css/moduloAdminCSS/moduloAdmincss.css">
+
+</head>
+<body>
+  <nav class="navbar">
+    <div class="navbar-brand">
+      <div class="navbar-item" style="display:flex; flex-direction:column; align-items:flex-start;">
+        <div class="logo-text">MARÉE</div>
+        <div class="logo-sub">Admin</div>
+      </div>
+    </div>
+    <div class="navbar-end" style="display:flex;">
+      <a href="/admin" class="navbar-item">Dashboard</a>
+      <a href="/admin/metricas-productos" class="navbar-item" style="color: var(--gold);">
+        Métricas productos
+      </a>
+    </div>
+  </nav>
+
+  <section class="page-wrap">
+    <h1 class="page-title">Métricas de productos e ingredientes</h1>
+    <p class="page-subtitle">
+      Visualiza productos más vendidos, ingresos por categoría, ingredientes más usados,
+      disponibilidad de insumos y productos afectados por ingredientes inactivos.
+    </p>
+
+    <div id="statusBox" class="status-box"></div>
+
+    <div class="card-box">
+      <h2 class="section-title">Filtros</h2>
+
+      <form id="filtersForm" class="filters-grid">
+        <div>
+          <label class="label">Fecha inicio</label>
+          <input class="input" type="date" name="fechaInicio">
+        </div>
+
+        <div>
+          <label class="label">Fecha fin</label>
+          <input class="input" type="date" name="fechaFin">
+        </div>
+
+        <div>
+          <label class="label">Categoría</label>
+          <div class="select is-fullwidth">
+            <select name="categoria">
+              <option value="">Todas</option>
+              <option value="Platillo">Platillo</option>
+              <option value="Bebidas">Bebidas</option>
+            </select>
+          </div>
+        </div>
+
+        <div>
+          <label class="label">Tipo</label>
+          <input class="input" type="text" name="tipo" placeholder="Ej. Especiales, Saladas, Frappes">
+        </div>
+
+        <div class="actions-row">
+          <button type="button" id="btnLimpiar" class="button is-light">Limpiar</button>
+          <button type="submit" class="button" style="background:#b5956a; color:white;">
+            Consultar métricas
+          </button>
+          <button type="button" id="btnExportar" class="button is-dark">
+            Exportar CSV
+          </button>
+        </div>
+      </form>
+    </div>
+
+    <div id="dashboardContent">
+      <div class="kpi-grid">
+        <div class="kpi-card">
+          <div class="kpi-label">Productos vendidos</div>
+          <div id="kpiProductosVendidos" class="kpi-value">0</div>
+        </div>
+
+        <div class="kpi-card">
+          <div class="kpi-label">Unidades vendidas</div>
+          <div id="kpiUnidadesVendidas" class="kpi-value">0</div>
+        </div>
+
+        <div class="kpi-card">
+          <div class="kpi-label">Ingresos totales</div>
+          <div id="kpiIngresos" class="kpi-value">$0</div>
+        </div>
+
+        <div class="kpi-card">
+          <div class="kpi-label">Ingredientes utilizados</div>
+          <div id="kpiIngredientes" class="kpi-value">0</div>
+        </div>
+
+        <div class="kpi-card">
+          <div class="kpi-label">Productos afectados</div>
+          <div id="kpiAfectados" class="kpi-value">0</div>
+        </div>
+      </div>
+
+      <div class="two-grid" style="margin-top:20px;">
+        <div class="card-box">
+          <h2 class="section-title">Top productos por cantidad</h2>
+          <div class="chart-wrap">
+            <canvas id="chartTopCantidad"></canvas>
+          </div>
+        </div>
+
+        <div class="card-box">
+          <h2 class="section-title">Ingresos por categoría</h2>
+          <div class="chart-wrap">
+            <canvas id="chartCategoriaIngresos"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <div class="two-grid">
+        <div class="card-box">
+          <h2 class="section-title">Ingredientes más populares</h2>
+          <div class="chart-wrap">
+            <canvas id="chartIngredientes"></canvas>
+          </div>
+        </div>
+
+        <div class="card-box">
+          <h2 class="section-title">Tendencia de consumo</h2>
+          <div class="chart-wrap">
+            <canvas id="chartTendencia"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <div class="two-grid">
+        <div class="card-box">
+          <h2 class="section-title">Top productos por ingresos</h2>
+          <p class="small-note">Ranking económico por rango seleccionado</p>
+
+          <div class="table-container" style="margin-top:14px;">
+            <table class="table is-fullwidth is-hoverable">
+              <thead>
+                <tr>
+                  <th>Producto</th>
+                  <th>Categoría</th>
+                  <th>Vendidas</th>
+                  <th>Ingresos</th>
+                </tr>
+              </thead>
+              <tbody id="topIngresosBody">
+                <tr><td colspan="4">Sin datos aún</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="card-box">
+          <h2 class="section-title">Disponibilidad de ingredientes</h2>
+          <p class="small-note">Comparación global de insumos activos vs inactivos</p>
+
+          <div style="margin-top:18px;">
+            <p><span class="pill">Activos</span> <strong id="ingredientesActivos">0</strong></p>
+            <p style="margin-top:12px;"><span class="pill">Inactivos</span> <strong id="ingredientesInactivos">0</strong></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="card-box">
+        <h2 class="section-title">Productos afectados por ingredientes inactivos</h2>
+        <p class="small-note">Ayuda para identificar recetas potencialmente comprometidas</p>
+
+        <div class="table-container" style="margin-top:14px;">
+          <table class="table is-fullwidth is-hoverable">
+            <thead>
+              <tr>
+                <th>Producto</th>
+                <th>Categoría</th>
+                <th># insumos inactivos</th>
+                <th>Detalle</th>
+              </tr>
+            </thead>
+            <tbody id="productosAfectadosBody">
+              <tr><td colspan="4">Sin datos aún</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <script src="/js/adminmetricsproductos.js"></script>
+</body>
+</html>

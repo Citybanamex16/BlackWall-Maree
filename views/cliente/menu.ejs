@@ -1,16 +1,4 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Menú - Marée</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@1.0.4/css/bulma.min.css">
-    <link rel="stylesheet" href="/css/menustyle.css">
-    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=Jost:wght@300;400;500&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-</head>
-<body>
+<%- include('../partials/header_cliente', { pageTitle: 'Menu - Maree' }) %>
 
 <nav class="navbar" role="navigation">
     <div class="navbar-brand">
@@ -21,7 +9,7 @@
     </div>
 
     <%- include('../partials/breadcrumbs') %>
-    <%- include('../partials/Sesion') %>
+
 
 </nav>
 
@@ -88,6 +76,31 @@
         </div>
     </div>
 </div>
+
+
+<!-- MODAL de error de carga del menú -->
+<dialog id="menuErrorModal">
+    <div class="modal-accent-bar" style="background:#e74c3c;"></div>
+    <h2 style="color:#c0392b;">Error al cargar el menú</h2>
+    <p>No pudimos conectar con el servidor. Por favor recarga la página o inténtalo más tarde.</p>
+    <div style="display:flex; gap:10px; justify-content:flex-end; margin-top:16px;">
+        <button onclick="window.location.reload()" class="button is-primary">
+            Reintentar
+        </button>
+    </div>
+</dialog>
+
+
+
+
+
+<script>
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('authError') === 'database') {
+        alert("Lo sentimos, la base de datos no pudo guardar tus datos de registro. Por favor, inténtalo más tarde.");
+        window.history.replaceState({}, document.title, window.location.pathname);
+    }
+</script>
 
 <script src="/js/menudigital/menu.js"></script>
 

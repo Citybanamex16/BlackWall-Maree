@@ -1,544 +1,196 @@
 <!DOCTYPE html>
-<html>
+<html lang="es" data-theme="light">
 <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Royalty Métricas - Admin Marée</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@1.0.4/css/bulma.min.css">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;600&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="/css/adminstyle.css">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title><%= pageTitle %> - Admin Marée</title>
 
-    <style>
-        /* ── Variables ─────────────────────────────────── */
-        :root {
-            --gold:      #b5956a;
-            --gold-lt:   #d4b896;
-            --gold-dim:  #f5ede3;
-            --fan:       #e8c97a;       /* Fan — ámbar cálido */
-            --fanatico:  #b5956a;       /* Fanático — dorado */
-            --super:     #7a5c3a;       /* Superfanático — bronce oscuro */
-            --bg:        #fdfaf7;
-            --border:    #ede8e0;
-            --text:      #222;
-            --muted:     #999;
-        }
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@1.0.4/css/bulma.min.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;600&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link rel="stylesheet" href="/css/CSSglobales/global_theme.css">
+  <link rel="stylesheet" href="/css/CSSglobales/global_components.css">
+  <link rel="stylesheet" href="/css/CSSglobales/module-metrics.css">
+  <link rel="stylesheet" href="/css/moduloAdminCSS/moduloAdmincss.css">
 
-        body {
-            font-family: 'Jost', sans-serif;
-            background-color: var(--bg);
-            color: var(--text);
-        }
-
-        /* ── Navbar ────────────────────────────────────── */
-        .navbar {
-            background: #fff !important;
-            border-bottom: 1px solid var(--border);
-            padding: 8px 32px;
-        }
-        .logo-text {
-            font-family: 'Cormorant Garamond', serif;
-            font-size: 22px;
-            font-weight: 600;
-            letter-spacing: 4px;
-            color: var(--text);
-        }
-        .logo-sub {
-            font-size: 9px;
-            letter-spacing: 2px;
-            color: var(--muted);
-            text-transform: uppercase;
-        }
-        .navbar-item { color: #555 !important; font-size: 14px; }
-        .navbar-item:hover { color: var(--gold) !important; background: transparent !important; }
-
-        /* ── Breadcrumb ────────────────────────────────── */
-        .bc-nav { padding: 14px 32px 0; }
-        .bc-list { display: flex; align-items: center; list-style: none; margin: 0; padding: 0; }
-        .bc-item { font-size: 11px; letter-spacing: 1.5px; text-transform: uppercase; }
-        .bc-item a { color: var(--muted); text-decoration: none; }
-        .bc-item:not(:last-child)::after { content: '—'; color: #ddd; margin: 0 10px; }
-        .bc-item.is-active a { color: var(--gold); font-weight: 600; pointer-events: none; }
-        .bc-divider { margin: 10px 32px 0; border: none; border-top: 1px solid var(--border); }
-
-        /* ── Page Header ───────────────────────────────── */
-        .page-header {
-            padding: 40px 32px 0;
-            max-width: 1200px;
-            margin: 0 auto;
-        }
-        .page-title {
-            font-family: 'Cormorant Garamond', serif;
-            font-size: 44px;
-            font-weight: 400;
-            color: var(--text);
-            margin-bottom: 4px;
-        }
-        .page-subtitle { font-size: 14px; color: var(--muted); margin-bottom: 0; }
-
-        /* ── Main Layout ───────────────────────────────── */
-        .metrics-layout {
-            max-width: 1200px;
-            margin: 36px auto;
-            padding: 0 32px 64px;
-            display: grid;
-            grid-template-columns: 1fr 1fr 1fr;
-            grid-template-rows: auto auto auto;
-            gap: 20px;
-        }
-
-        /* ── KPI Cards ─────────────────────────────────── */
-        .kpi-card {
-            background: #fff;
-            border: 1px solid var(--border);
-            border-radius: 12px;
-            padding: 28px 28px 24px;
-            position: relative;
-            overflow: hidden;
-            opacity: 0;
-            transform: translateY(16px);
-            animation: fadeUp 0.5s ease forwards;
-        }
-        .kpi-card::before {
-            content: '';
-            position: absolute;
-            top: 0; left: 0; right: 0;
-            height: 3px;
-        }
-        .kpi-card.fan::before    { background: var(--fan); }
-        .kpi-card.fan-at::before    { background: var(--fan); }
-        .kpi-card.fanatico::before  { background: var(--fanatico); }
-        .kpi-card.super::before     { background: var(--super); }
-
-        .kpi-badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            font-size: 10px;
-            letter-spacing: 1.8px;
-            text-transform: uppercase;
-            font-weight: 600;
-            padding: 4px 10px;
-            border-radius: 20px;
-            margin-bottom: 16px;
-        }
-        .kpi-badge.fan-at    { background: #fdf5e0; color: #9a7d2e; }
-        .kpi-badge.fanatico  { background: var(--gold-dim); color: var(--gold); }
-        .kpi-badge.super     { background: #efe8df; color: var(--super); }
-
-        .kpi-number {
-            font-family: 'Cormorant Garamond', serif;
-            font-size: 64px;
-            font-weight: 300;
-            line-height: 1;
-            color: var(--text);
-            margin-bottom: 6px;
-        }
-        .kpi-label {
-            font-size: 12px;
-            color: var(--muted);
-            letter-spacing: 0.5px;
-        }
-        .kpi-delta {
-            margin-top: 16px;
-            font-size: 12px;
-            display: flex;
-            align-items: center;
-            gap: 5px;
-        }
-        .kpi-delta.up   { color: #27ae60; }
-        .kpi-delta.down { color: #e74c3c; }
-
-        /* ── Tier Bar Chart ────────────────────────────── */
-        .chart-card {
-            grid-column: 1 / -1;
-            background: #fff;
-            border: 1px solid var(--border);
-            border-radius: 12px;
-            padding: 32px 36px;
-            opacity: 0;
-            animation: fadeUp 0.5s ease 0.2s forwards;
-        }
-        .chart-title {
-            font-family: 'Cormorant Garamond', serif;
-            font-size: 22px;
-            font-weight: 400;
-            color: var(--text);
-            margin-bottom: 6px;
-        }
-        .chart-subtitle { font-size: 13px; color: var(--muted); margin-bottom: 32px; }
-
-        .bar-group { margin-bottom: 22px; }
-        .bar-meta {
-            display: flex;
-            justify-content: space-between;
-            align-items: baseline;
-            margin-bottom: 8px;
-        }
-        .bar-name {
-            font-size: 13px;
-            font-weight: 500;
-            letter-spacing: 0.5px;
-            color: #444;
-        }
-        .bar-count { font-size: 13px; color: var(--muted); }
-
-        .bar-track {
-            height: 10px;
-            background: #f5f0eb;
-            border-radius: 10px;
-            overflow: hidden;
-        }
-        .bar-fill {
-            height: 100%;
-            border-radius: 10px;
-            width: 0;
-            transition: width 1s cubic-bezier(0.16, 1, 0.3, 1);
-        }
-        .bar-fill.fan-c    { background: linear-gradient(90deg, var(--fan), #f0d48a); }
-        .bar-fill.fan-at-c { background: linear-gradient(90deg, var(--fanatico), var(--gold-lt)); }
-        .bar-fill.super-c  { background: linear-gradient(90deg, var(--super), #a07848); }
-
-        /* ── Donut / Proportion Ring ───────────────────── */
-        .donut-card {
-            grid-column: 1 / 2;
-            background: #fff;
-            border: 1px solid var(--border);
-            border-radius: 12px;
-            padding: 32px 36px;
-            opacity: 0;
-            animation: fadeUp 0.5s ease 0.35s forwards;
-            display: flex;
-            flex-direction: column;
-        }
-        .donut-wrapper {
-            display: flex;
-            align-items: center;
-            gap: 32px;
-            margin-top: 20px;
-            flex: 1;
-        }
-        .donut-svg { flex-shrink: 0; }
-        .donut-legend { display: flex; flex-direction: column; gap: 14px; }
-        .legend-item { display: flex; align-items: center; gap: 10px; }
-        .legend-dot {
-            width: 10px; height: 10px;
-            border-radius: 50%;
-            flex-shrink: 0;
-        }
-        .legend-text { font-size: 13px; color: #555; }
-        .legend-pct  { font-size: 12px; color: var(--muted); margin-left: 2px; }
-
-        /* ── Top Users ─────────────────────────────────── */
-        .top-card {
-            grid-column: 2 / -1;
-            background: #fff;
-            border: 1px solid var(--border);
-            border-radius: 12px;
-            padding: 32px 36px;
-            opacity: 0;
-            animation: fadeUp 0.5s ease 0.45s forwards;
-        }
-        .top-table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-        .top-table th {
-            font-size: 10px;
-            letter-spacing: 1.5px;
-            text-transform: uppercase;
-            color: var(--muted);
-            font-weight: 500;
-            padding: 0 0 12px;
-            text-align: left;
-            border-bottom: 1px solid var(--border);
-        }
-        .top-table td {
-            padding: 13px 0;
-            font-size: 13px;
-            border-bottom: 1px solid #f5f0eb;
-            color: #444;
-        }
-        .top-table tr:last-child td { border-bottom: none; }
-        .tier-pill {
-            display: inline-block;
-            padding: 3px 10px;
-            border-radius: 20px;
-            font-size: 11px;
-            font-weight: 500;
-        }
-        .tier-pill.fan-at   { background: #fdf5e0; color: #9a7d2e; }
-        .tier-pill.fanatico { background: var(--gold-dim); color: var(--gold); }
-        .tier-pill.super    { background: #efe8df; color: var(--super); }
-
-        .pts-bar-wrap { display: flex; align-items: center; gap: 10px; }
-        .pts-mini-track {
-            width: 80px; height: 4px;
-            background: #f5f0eb;
-            border-radius: 4px;
-            overflow: hidden;
-        }
-        .pts-mini-fill {
-            height: 100%;
-            border-radius: 4px;
-            background: var(--gold);
-        }
-
-        /* ── Animation ─────────────────────────────────── */
-        @keyframes fadeUp {
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        .kpi-card:nth-child(1) { animation-delay: 0s; }
-        .kpi-card:nth-child(2) { animation-delay: 0.08s; }
-        .kpi-card:nth-child(3) { animation-delay: 0.16s; }
-    </style>
 </head>
 <body>
-
-<!-- Navbar -->
-<nav class="navbar" role="navigation">
+  <nav class="navbar">
     <div class="navbar-brand">
-        <div class="navbar-item" style="flex-direction:column; align-items:flex-start; gap:0;">
-            <div class="logo-text">MARÉE</div>
-            <div class="logo-sub">Admin</div>
-        </div>
+      <div class="navbar-item" style="display:flex; flex-direction:column; align-items:flex-start;">
+        <div class="logo-text">MARÉE</div>
+        <div class="logo-sub">Admin</div>
+      </div>
     </div>
     <div class="navbar-end" style="display:flex;">
-        <a href="/admin" class="navbar-item">Dashboard</a>
-        <a href="/admin/royalty" class="navbar-item" style="color: var(--gold) !important;">Royalty</a>
+      <a href="/admin" class="navbar-item">Dashboard</a>
+      <a href="/admin/royaltyMetrics" class="navbar-item" style="color: var(--gold);">Métricas clientes</a>
     </div>
-</nav>
+  </nav>
 
-<!-- Breadcrumb -->
-<nav class="bc-nav" aria-label="breadcrumbs">
-    <ul class="bc-list">
-        <li class="bc-item"><a href="/admin">Admin</a></li>
-        <li class="bc-item is-active"><a href="#" aria-current="page">Royalty Métricas</a></li>
-    </ul>
-</nav>
-<hr class="bc-divider">
+  <section class="page-wrap">
+    <h1 class="page-title">Métricas de clientes</h1>
+    <p class="page-subtitle">
+      Consulta clientes activos, clientes nuevos aproximados por primera compra,
+      frecuencia de visita, historial de consumo y promociones usadas.
+    </p>
 
-<!-- Page Header -->
-<div class="page-header">
-    <h1 class="page-title">Royalty Métricas</h1>
-    <p class="page-subtitle">Distribución y actividad del programa de lealtad</p>
-</div>
+    <div id="statusBox" class="status-box"></div>
 
-<!-- Dashboard -->
-<div class="metrics-layout">
+    <div class="card-box">
+      <h2 class="section-title">Filtros</h2>
 
-    <!-- KPI 1 — Fan -->
-    <div class="kpi-card">
-        <div class="kpi-badge fan-at">⭐ Fan</div>
-        <div class="kpi-number" data-count="142">0</div>
-        <div class="kpi-label">usuarios activos</div>
-        <div class="kpi-delta up">↑ 12 este mes</div>
-    </div>
-
-    <!-- KPI 2 — Fanático -->
-    <div class="kpi-card">
-        <div class="kpi-badge fanatico">🌟 Fanático</div>
-        <div class="kpi-number" data-count="67">0</div>
-        <div class="kpi-label">usuarios activos</div>
-        <div class="kpi-delta up">↑ 5 este mes</div>
-    </div>
-
-    <!-- KPI 3 — Superfanático -->
-    <div class="kpi-card">
-        <div class="kpi-badge super">💎 Superfanático</div>
-        <div class="kpi-number" data-count="23">0</div>
-        <div class="kpi-label">usuarios activos</div>
-        <div class="kpi-delta down">↓ 1 este mes</div>
-    </div>
-
-    <!-- Bar Chart — full width -->
-    <div class="chart-card">
-        <div class="chart-title">Distribución por Tier</div>
-        <div class="chart-subtitle">Total de usuarios por nivel de lealtad</div>
-
-        <div class="bar-group">
-            <div class="bar-meta">
-                <span class="bar-name">⭐ Fan</span>
-                <span class="bar-count">142 usuarios · 61%</span>
-            </div>
-            <div class="bar-track">
-                <div class="bar-fill fan-c" data-width="61"></div>
-            </div>
+      <form id="filtersForm" class="filters-grid">
+        <div>
+          <label class="label">Fecha inicio</label>
+          <input class="input" type="date" name="fechaInicio">
         </div>
 
-        <div class="bar-group">
-            <div class="bar-meta">
-                <span class="bar-name">🌟 Fanático</span>
-                <span class="bar-count">67 usuarios · 29%</span>
-            </div>
-            <div class="bar-track">
-                <div class="bar-fill fan-at-c" data-width="29"></div>
-            </div>
+        <div>
+          <label class="label">Fecha fin</label>
+          <input class="input" type="date" name="fechaFin">
         </div>
 
-        <div class="bar-group" style="margin-bottom:0">
-            <div class="bar-meta">
-                <span class="bar-name">💎 Superfanático</span>
-                <span class="bar-count">23 usuarios · 10%</span>
-            </div>
-            <div class="bar-track">
-                <div class="bar-fill super-c" data-width="10"></div>
-            </div>
+        <div>
+          <label class="label">Género</label>
+          <div class="select is-fullwidth">
+            <select name="genero">
+              <option value="">Todos</option>
+              <option value="f">Femenino</option>
+              <option value="m">Masculino</option>
+            </select>
+          </div>
         </div>
+
+        <div>
+          <label class="label">Nivel royalty</label>
+          <div class="select is-fullwidth">
+            <select name="royalty">
+              <option value="">Todos</option>
+              <option value="Fan">Fan</option>
+              <option value="Super Fan">Super Fan</option>
+              <option value="Mega Fan">Mega Fan</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="actions-row" style="grid-column: 1 / -1;">
+          <button type="button" id="btnLimpiar" class="button is-light">Limpiar</button>
+          <button type="submit" id="btnConsultar" class="button" style="background:#b5956a; color:white;">
+            Consultar métricas
+          </button>
+          <button type="button" id="btnExportar" class="button is-dark">
+            Exportar CSV
+          </button>
+        </div>
+      </form>
     </div>
 
-    <!-- Donut Chart (SVG) -->
-    <div class="donut-card">
-        <div class="chart-title">Proporción</div>
-        <div class="chart-subtitle" style="margin-bottom:0">Composición del programa</div>
-        <div class="donut-wrapper">
-            <svg class="donut-svg" width="130" height="130" viewBox="0 0 130 130">
-                <!-- Tracks -->
-                <circle cx="65" cy="65" r="52" fill="none" stroke="#f5f0eb" stroke-width="14"/>
-                <!-- Superfanático: 10% = 32.67 de 326.73 -->
-                <circle id="ring-super" cx="65" cy="65" r="52" fill="none"
-                    stroke="#7a5c3a" stroke-width="14"
-                    stroke-dasharray="0 326.73"
-                    stroke-dashoffset="81.68"
-                    stroke-linecap="round"
-                    transform="rotate(-90 65 65)"/>
-                <!-- Fanático: 29% = 94.75 -->
-                <circle id="ring-fan" cx="65" cy="65" r="52" fill="none"
-                    stroke="#b5956a" stroke-width="14"
-                    stroke-dasharray="0 326.73"
-                    stroke-dashoffset="-245.05"
-                    stroke-linecap="round"
-                    transform="rotate(-90 65 65)"/>
-                <!-- Fan: 61% = 199.21 -->
-                <circle id="ring-base" cx="65" cy="65" r="52" fill="none"
-                    stroke="#e8c97a" stroke-width="14"
-                    stroke-dasharray="0 326.73"
-                    stroke-dashoffset="0"
-                    stroke-linecap="round"
-                    transform="rotate(-90 65 65)"/>
-                <text x="65" y="60" text-anchor="middle"
-                    font-family="Cormorant Garamond, serif"
-                    font-size="22" fill="#222" font-weight="400">232</text>
-                <text x="65" y="76" text-anchor="middle"
-                    font-family="Jost, sans-serif"
-                    font-size="9" fill="#999" letter-spacing="1">TOTAL</text>
-            </svg>
-            <div class="donut-legend">
-                <div class="legend-item">
-                    <div class="legend-dot" style="background:#e8c97a"></div>
-                    <div>
-                        <div class="legend-text">Fan <span class="legend-pct">61%</span></div>
-                    </div>
-                </div>
-                <div class="legend-item">
-                    <div class="legend-dot" style="background:#b5956a"></div>
-                    <div>
-                        <div class="legend-text">Fanático <span class="legend-pct">29%</span></div>
-                    </div>
-                </div>
-                <div class="legend-item">
-                    <div class="legend-dot" style="background:#7a5c3a"></div>
-                    <div>
-                        <div class="legend-text">Superfanático <span class="legend-pct">10%</span></div>
-                    </div>
-                </div>
-            </div>
+    <div id="dashboardContent">
+      <div class="kpi-grid">
+        <div class="kpi-card">
+          <div class="kpi-label">Clientes activos</div>
+          <div id="kpiActivos" class="kpi-value">0</div>
         </div>
-    </div>
 
-    <!-- Top usuarios -->
-    <div class="top-card">
-        <div class="chart-title">Top Usuarios</div>
-        <div class="chart-subtitle" style="margin-bottom:0">Mayor acumulación de puntos</div>
-        <table class="top-table">
+        <div class="kpi-card">
+          <div class="kpi-label">Clientes nuevos aprox.</div>
+          <div id="kpiNuevos" class="kpi-value">0</div>
+        </div>
+
+        <div class="kpi-card">
+          <div class="kpi-label">Frecuencia promedio</div>
+          <div id="kpiFrecuencia" class="kpi-value">0</div>
+        </div>
+
+        <div class="kpi-card">
+          <div class="kpi-label">Ticket promedio</div>
+          <div id="kpiTicket" class="kpi-value">$0</div>
+        </div>
+
+        <div class="kpi-card">
+          <div class="kpi-label">Clientes con promoción</div>
+          <div id="kpiPromos" class="kpi-value">0</div>
+        </div>
+      </div>
+
+      <div class="tables-grid" style="margin-top:20px;">
+        <div class="card-box">
+          <h2 class="section-title">Top clientes por consumo</h2>
+          <p class="small-note">Historial consolidado por rango seleccionado</p>
+
+          <div class="table-container" style="margin-top:14px;">
+            <table class="table is-fullwidth is-hoverable">
+              <thead>
+                <tr>
+                  <th>Cliente</th>
+                  <th>Royalty</th>
+                  <th>Órdenes</th>
+                  <th>Gastado</th>
+                  <th>Última compra</th>
+                </tr>
+              </thead>
+              <tbody id="topClientesBody">
+                <tr>
+                  <td colspan="5">Sin datos aún</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="card-box">
+          <h2 class="section-title">Promociones usadas</h2>
+          <p class="small-note">Promociones ligadas al comportamiento del cliente</p>
+
+          <div class="table-container" style="margin-top:14px;">
+            <table class="table is-fullwidth is-hoverable">
+              <thead>
+                <tr>
+                  <th>Promoción</th>
+                  <th>Usos</th>
+                  <th>Clientes</th>
+                </tr>
+              </thead>
+              <tbody id="promocionesBody">
+                <tr>
+                  <td colspan="3">Sin datos aún</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <div class="card-box">
+        <h2 class="section-title">Distribución por género</h2>
+        <p class="small-note">Clientes y órdenes asociadas</p>
+
+        <div class="table-container" style="margin-top:14px;">
+          <table class="table is-fullwidth is-hoverable">
             <thead>
-                <tr>
-                    <th>#</th>
-                    <th>Usuario</th>
-                    <th>Tier</th>
-                    <th>Puntos</th>
-                    <th></th>
-                </tr>
+              <tr>
+                <th>Género</th>
+                <th>Clientes</th>
+                <th>Órdenes</th>
+              </tr>
             </thead>
-            <tbody>
-                <tr>
-                    <td style="color:#ccc; font-size:12px;">01</td>
-                    <td>Andrea M.</td>
-                    <td><span class="tier-pill super">💎 Superfanático</span></td>
-                    <td>2,840</td>
-                    <td><div class="pts-bar-wrap"><div class="pts-mini-track"><div class="pts-mini-fill" style="width:100%"></div></div></div></td>
-                </tr>
-                <tr>
-                    <td style="color:#ccc; font-size:12px;">02</td>
-                    <td>Carlos R.</td>
-                    <td><span class="tier-pill super">💎 Superfanático</span></td>
-                    <td>2,410</td>
-                    <td><div class="pts-bar-wrap"><div class="pts-mini-track"><div class="pts-mini-fill" style="width:85%"></div></div></div></td>
-                </tr>
-                <tr>
-                    <td style="color:#ccc; font-size:12px;">03</td>
-                    <td>Lucía V.</td>
-                    <td><span class="tier-pill fanatico">🌟 Fanático</span></td>
-                    <td>1,980</td>
-                    <td><div class="pts-bar-wrap"><div class="pts-mini-track"><div class="pts-mini-fill" style="width:70%"></div></div></div></td>
-                </tr>
-                <tr>
-                    <td style="color:#ccc; font-size:12px;">04</td>
-                    <td>Diego S.</td>
-                    <td><span class="tier-pill fanatico">🌟 Fanático</span></td>
-                    <td>1,755</td>
-                    <td><div class="pts-bar-wrap"><div class="pts-mini-track"><div class="pts-mini-fill" style="width:62%"></div></div></div></td>
-                </tr>
-                <tr>
-                    <td style="color:#ccc; font-size:12px;">05</td>
-                    <td>Mariana P.</td>
-                    <td><span class="tier-pill fan-at">⭐ Fan</span></td>
-                    <td>980</td>
-                    <td><div class="pts-bar-wrap"><div class="pts-mini-track"><div class="pts-mini-fill" style="width:35%"></div></div></div></td>
-                </tr>
+            <tbody id="generoBody">
+              <tr>
+                <td colspan="3">Sin datos aún</td>
+              </tr>
             </tbody>
-        </table>
+          </table>
+        </div>
+
+        <p class="small-note" style="margin-top:10px;">
+          Nota: “clientes nuevos” se calcula aquí como primera compra en el rango, porque tu esquema actual no guarda fecha de registro real del cliente.
+        </p>
+      </div>
     </div>
+  </section>
 
-</div><!-- /metrics-layout -->
-
-<script>
-    // ── Counter animation ──────────────────────────────
-    document.querySelectorAll('.kpi-number[data-count]').forEach(el => {
-        const target = parseInt(el.dataset.count);
-        const duration = 1200;
-        const start = performance.now();
-        const tick = (now) => {
-            const t = Math.min((now - start) / duration, 1);
-            const ease = 1 - Math.pow(1 - t, 3);
-            el.textContent = Math.round(ease * target);
-            if (t < 1) requestAnimationFrame(tick);
-        };
-        requestAnimationFrame(tick);
-    });
-
-    // ── Bar fill animation ─────────────────────────────
-    window.addEventListener('load', () => {
-        setTimeout(() => {
-            document.querySelectorAll('.bar-fill[data-width]').forEach(el => {
-                el.style.width = el.dataset.width + '%';
-            });
-        }, 300);
-
-        // Donut rings animate in
-        const circumference = 326.73;
-        const data = [
-            { id: 'ring-base',  pct: 0.61, offset: 0 },
-            { id: 'ring-fan',   pct: 0.29, offset: -(0.61 * circumference) },
-            { id: 'ring-super', pct: 0.10, offset: (0.10 * circumference) },
-        ];
-        setTimeout(() => {
-            data.forEach(({ id, pct, offset }) => {
-                const el = document.getElementById(id);
-                const filled = pct * circumference;
-                el.style.transition = 'stroke-dasharray 1s cubic-bezier(0.16, 1, 0.3, 1)';
-                el.setAttribute('stroke-dasharray', `${filled} ${circumference - filled}`);
-            });
-        }, 400);
-    });
-</script>
+  <script src="/js/adminmetricsclientes.js"></script>
 </body>
 </html>

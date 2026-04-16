@@ -1,48 +1,52 @@
-<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="utf-8">
+<%- include('../partials/header_admin', { pageTitle: 'Detalle del Colaborador - Marée' }) %>
+<%- include('../partials/breadcrumbs') %>
+<meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Detalle del Colaborador - Marée</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@1.0.4/css/bulma.min.css">
-  <link rel="stylesheet" href="/css/adminstyle.css">
-</head>
-<body>
+  <link rel="preconnect" href="https://fonts.googleapis.com"> 
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;600&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/CSSglobales/global_theme.css">
+  <link rel="stylesheet" href="/css/CSSglobales/global_components.css">
+  <link rel="stylesheet" href="/css/CSSglobales/adminstyle.css"> 
+<main class="page-wrap">
+  <header style="margin-bottom: 32px;">
+    <h1 class="page-title">Detalle del Colaborador</h1>
+  </header>
 
-<nav class="navbar" role="navigation">
-  <div class="navbar-brand">
-    <span class="navbar-item logo">MARÉE</span>
-  </div>
-</nav>
+  <% if (typeof error !== 'undefined' && error) { %>
+    <div class="notification status-pill is-danger" style="border-radius: var(--radius-md); padding: 16px; width: 100%;">
+      <%= error %>
+    </div>
+  <% } %>
 
-<section class="section">
-  <div class="container">
-    <h1 class="title">Detalle del colaborador</h1>
-
-    <% if (error) { %>
-      <div class="notification is-danger"><%= error %></div>
-    <% } %>
-
-    <% if (colaborador) { %>
-      <div class="box">
-        <p><strong>ID:</strong> <%= colaborador.id_colaborador %></p>
-        <p><strong>Nombre:</strong> <%= colaborador.nombre %></p>
-        <p><strong>Rol:</strong> <%= colaborador.rol %></p>
-
-        <div class="mt-4">
-          <button
-            class="button is-danger btn-baja"
-            data-id="<%= colaborador.id_colaborador %>"
-            data-nombre="<%= colaborador.nombre %>">
-            Dar de baja
-          </button>
-
-          <a href="/admin/colaboradores" class="button is-light">Volver</a>
+  <% if (typeof colaborador !== 'undefined' && colaborador) { %>
+    <div class="card-base" style="max-width: 600px;">
+      
+      <div style="display: flex; flex-direction: column; gap: 16px; margin-bottom: 28px;">
+        <div>
+            <p style="color: var(--c-text-muted); text-transform: uppercase; font-size: 11px; letter-spacing: 1px;">ID Colaborador</p>
+            <p style="font-size: 18px; font-family: var(--font-body);"><%= colaborador.id_colaborador %></p>
+        </div>
+        <div>
+            <p style="color: var(--c-text-muted); text-transform: uppercase; font-size: 11px; letter-spacing: 1px;">Nombre Completo</p>
+            <p style="font-size: 22px; font-weight: 500; color: var(--c-primary-deep);"><%= colaborador.nombre %></p>
+        </div>
+        <div>
+            <p style="color: var(--c-text-muted); text-transform: uppercase; font-size: 11px; letter-spacing: 1px;">Rol Asignado</p>
+            <span class="status-pill is-active" style="margin-top: 4px;"><%= colaborador.rol %></span>
         </div>
       </div>
-    <% } %>
-  </div>
-</section>
+
+      <div style="display: flex; gap: 12px; border-top: 1px solid var(--c-border); padding-top: 24px;">
+        <button class="btn-danger btn-baja" data-id="<%= colaborador.id_colaborador %>" data-nombre="<%= colaborador.nombre %>">
+          Dar de baja al colaborador
+        </button>
+        <a href="/admin/colaboradores" class="btn-ghost">Volver a la lista</a>
+      </div>
+
+    </div>
+  <% } %>
+</main>
 
 <script src="/js/admin.js"></script>
 </body>

@@ -2,7 +2,9 @@
 const nav = require('../models/breadcrumbs.model.js')
 const Colaborador = require('../models/colaborador.model.js')
 const Ingrediente = require('../models/ingrediente.model.js')
-const bcrypt = require('bcryptjs')
+const MetricasClientes = require('../models/metricasclientes.model.js')
+const MetricasProductos = require('../models/metricasproductos.model.js')
+// const bcrypt = require('bcryptjs')
 
 // const path = require('path')
 
@@ -19,12 +21,204 @@ exports.getHub = (req, res, next) => {
   res.render('admin/admindashboard', { breadcrumbs })
 }
 
-exports.getRoyalty = (req, res, next) => {
-  res.render('admin/royalty')
+exports.getRoyaltyMetrics = (req, res, next) => {
+  res.render('admin/metricsRoyalty', {
+    pageTitle: 'Métricas de clientes'
+  })
+}
+exports.getRoyaltyMetricsData = async (req, res, next) => {
+  try {
+    const filtros = {
+      fechaInicio: req.query.fechaInicio || '',
+      fechaFin: req.query.fechaFin || '',
+      genero: req.query.genero || '',
+      royalty: req.query.royalty || ''
+    }
+
+    const data = await MetricasClientes.getDashboardData(filtros)
+
+    const hayDatos =
+      Number(data.resumen.clientes_activos) > 0 ||
+      data.topClientes.length > 0 ||
+      data.promociones.length > 0
+
+    if (!hayDatos) {
+      return res.status(200).json({
+        ok: true,
+        sinDatos: true,
+        mensaje: 'No hay información disponible para los filtros seleccionados.',
+        data
+      })
+    }
+
+    return res.status(200).json({
+      ok: true,
+      sinDatos: false,
+      data
+    })
+  } catch (error) {
+    console.error('Error al consultar métricas de clientes:', error)
+    return res.status(500).json({
+      ok: false,
+      mensaje: 'Ocurrió un error al consultar las métricas de clientes.'
+    })
+  }
 }
 
-exports.getRoyaltyMetrics = (req, res, next) => {
-  res.render('admin/metricsRoyalty')
+exports.exportRoyaltyMetricsCsv = async (req, res, next) => {
+  try {
+    const filtros = {
+      fechaInicio: req.query.fechaInicio || '',
+      fechaFin: req.query.fechaFin || '',
+      genero: req.query.genero || '',
+      royalty: req.query.royalty || ''
+    }
+
+    const rows = await MetricasClientes.getCsvData(filtros)
+
+    const encabezados = [
+      'Nombre',
+      'Teléfono',
+      'Género',
+      'Royalty',
+      'Órdenes',
+      'Productos comprados',
+      'Total gastado',
+      'Última compra'
+    ]
+
+    const escapeCsv = (valor) => {
+      if (valor === null || valor === undefined) return '""'
+      return `"${String(valor).replace(/"/g, '""')}"`
+    }
+
+    const lineas = rows.map((row) => {
+      return [
+        row.nombre,
+        row.telefono,
+        row.genero,
+        row.royalty,
+        row.total_ordenes,
+        row.productos_comprados,
+        row.total_gastado,
+        row.ultima_compra
+      ].map(escapeCsv).join(',')
+    })
+
+    const csv = [encabezados.join(','), ...lineas].join('\n')
+
+    res.setHeader('Content-Type', 'text/csv; charset=utf-8')
+    res.setHeader(
+      'Content-Disposition',
+      'attachment; filename="reporte_metricas_clientes.csv"'
+    )
+
+    return res.status(200).send(csv)
+  } catch (error) {
+    console.error('Error al exportar CSV de métricas de clientes:', error)
+    return res.status(500).json({
+      ok: false,
+      mensaje: 'No fue posible generar el reporte.'
+    })
+  }
+}
+
+exports.getProductIngredientMetrics = (req, res, next) => {
+  res.render('admin/metricsproducts', {
+    pageTitle: 'Métricas de productos e ingredientes'
+  })
+}
+
+exports.getProductIngredientMetricsData = async (req, res, next) => {
+  try {
+    const filtros = {
+      fechaInicio: req.query.fechaInicio || '',
+      fechaFin: req.query.fechaFin || '',
+      categoria: req.query.categoria || '',
+      tipo: req.query.tipo || ''
+    }
+
+    const data = await MetricasProductos.getDashboardData(filtros)
+
+    const hayDatos =
+      Number(data.resumen.productos_vendidos) > 0 ||
+      data.topProductosCantidad.length > 0 ||
+      data.topProductosIngresos.length > 0 ||
+      data.ingredientesPopulares.length > 0
+
+    if (!hayDatos) {
+      return res.status(200).json({
+        ok: true,
+        sinDatos: true,
+        mensaje: 'No hay información disponible para los filtros seleccionados.',
+        data
+      })
+    }
+
+    return res.status(200).json({
+      ok: true,
+      sinDatos: false,
+      data
+    })
+  } catch (error) {
+    console.error('Error al consultar métricas de productos e ingredientes:', error)
+    return res.status(500).json({
+      ok: false,
+      mensaje: 'Ocurrió un error al consultar las métricas de productos e ingredientes.'
+    })
+  }
+}
+
+exports.exportProductIngredientMetricsCsv = async (req, res, next) => {
+  try {
+    const filtros = {
+      fechaInicio: req.query.fechaInicio || '',
+      fechaFin: req.query.fechaFin || '',
+      categoria: req.query.categoria || '',
+      tipo: req.query.tipo || ''
+    }
+
+    const rows = await MetricasProductos.getCsvData(filtros)
+
+    const encabezados = [
+      'Producto',
+      'Categoría',
+      'Tipo',
+      'Cantidad vendida',
+      'Ingresos'
+    ]
+
+    const escapeCsv = (valor) => {
+      if (valor === null || valor === undefined) return '""'
+      return `"${String(valor).replace(/"/g, '""')}"`
+    }
+
+    const lineas = rows.map((row) => {
+      return [
+        row.producto,
+        row.categoria,
+        row.tipo,
+        row.total_vendido,
+        row.ingresos
+      ].map(escapeCsv).join(',')
+    })
+
+    const csv = [encabezados.join(','), ...lineas].join('\n')
+
+    res.setHeader('Content-Type', 'text/csv; charset=utf-8')
+    res.setHeader(
+      'Content-Disposition',
+      'attachment; filename="reporte_metricas_productos_ingredientes.csv"'
+    )
+
+    return res.status(200).send(csv)
+  } catch (error) {
+    console.error('Error al exportar CSV de métricas de productos:', error)
+    return res.status(500).json({
+      ok: false,
+      mensaje: 'No fue posible generar el reporte.'
+    })
+  }
 }
 
 exports.getIngredients = (req, res, next) => {
@@ -87,8 +281,8 @@ exports.getCollaboratorsDetails = async (req, res, next) => {
 
 exports.postDarDeBajaColaborador = async (req, res, next) => {
   try {
-    const idColaborador = req.params.id
-    const idAdminSesion = String(req.session.user.id)
+    const idColaborador = String(req.params.id).trim()
+    const idAdminSesion = String(req.session.user.id).trim()
 
     if (idColaborador === idAdminSesion) {
       return res.status(400).json({
@@ -354,6 +548,74 @@ exports.crearIngrediente = async (req, res, next) => {
   }
 }
 
+exports.validarIngredienteEliminable = async (req, res, next) => {
+  try {
+    const { id } = req.params
+    if (!id) return res.status(400).json({ success: false, message: 'ID requerido' })
+
+    const [productos] = await Ingrediente.getProductosVinculados(id)
+    res.status(200).json({
+      success: true,
+      vinculado: productos.length > 0,
+      productos: productos.map(p => p.Nombre)
+    })
+  } catch (error) {
+    console.error('Error en validarIngredienteEliminable:', error)
+    res.status(500).json({ success: false, message: 'Error al validar ingrediente' })
+  }
+}
+
+exports.eliminarIngrediente = async (req, res, next) => {
+  try {
+    const { id } = req.params
+    if (!id) return res.status(400).json({ success: false, message: 'ID requerido' })
+
+    await Ingrediente.eliminarIngrediente(id)
+    res.status(200).json({ success: true, message: 'Ingrediente eliminado correctamente' })
+  } catch (error) {
+    console.error('Error en eliminarIngrediente:', error)
+    res.status(500).json({ success: false, message: 'Error al eliminar ingrediente' })
+  }
+}
+
+exports.actualizarIngrediente = async (req, res, next) => {
+  try {
+    const { id } = req.params
+    const { Nombre, Precio, Activo, Tipo, Imagen } = req.body
+    const Categoria = req.body['Categoría']
+
+    if (!id || !Nombre || !Categoria || !Precio) {
+      return res.status(400).json({ success: false, message: 'Campos obligatorios faltantes' })
+    }
+
+    await Ingrediente.actualizarIngrediente(
+      id, Nombre.trim(), Categoria,
+      parseFloat(Precio), Activo, Tipo || null, Imagen || null
+    )
+
+    res.status(200).json({ success: true, message: 'Ingrediente actualizado correctamente' })
+  } catch (error) {
+    console.error('Error en actualizarIngrediente:', error)
+    res.status(500).json({ success: false, message: error.message })
+  }
+}
+
+// Todo lo de las metricas
+exports.getMetricasIngredientes = (req, res, next) => {
+  res.render('admin/metricsIngredientes')
+}
+
+exports.getMetricasIngredientesData = async (req, res, next) => {
+  try {
+    const data = await Ingrediente.getMetricas()
+    res.status(200).json({ ok: true, data })
+  } catch (error) {
+    console.error('Error en getMetricasIngredientesData:', error)
+    res.status(500).json({ ok: false, mensaje: 'Error al obtener métricas' })
+  }
+}
+
+// Fuchi, collaborator things
 exports.getNewCollaborator = (req, res, next) => {
   res.render('admin/newCollaborator', {
     pageTitle: 'Registrar colaborador',
@@ -411,13 +673,13 @@ exports.postNewCollaborator = async (req, res, next) => {
       })
     }
 
-    const contrasenaHasheada = await bcrypt.hash(contrasena, 12)
+    // const contrasenaHasheada = await bcrypt.hash(contrasena, 12)
 
     await Colaborador.create(
       idColaborador,
       rol,
       nombre,
-      contrasenaHasheada
+      contrasena
     )
 
     return res.redirect('/admin/colaboradores')

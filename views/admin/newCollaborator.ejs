@@ -1,54 +1,33 @@
-<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Registrar colaborador - Marée</title>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@1.0.4/css/bulma.min.css">
-  <link rel="stylesheet" href="/css/adminstyle.css">
-</head>
-<body>
+<%- include('../partials/header_admin', { pageTitle: 'Registrar colaborador - Marée' }) %>
+<%- include('../partials/breadcrumbs') %>
 
-<nav class="navbar" role="navigation">
-  <div class="navbar-brand">
-    <span class="navbar-item logo">MARÉE</span>
-  </div>
-</nav>
+<main class="page-wrap">
+  <header style="margin-bottom: 32px;">
+    <h1 class="page-title">Registrar nuevo colaborador</h1>
+    <p class="page-sub">Captura la información del nuevo empleado</p>
+  </header>
 
-<section class="section">
-  <div class="container">
-    <h1 class="title">Registrar nuevo colaborador</h1>
-    <p class="subtitle">Captura la información del nuevo empleado</p>
+  <% if (typeof error !== 'undefined' && error) { %>
+    <div class="notification status-pill is-danger" style="border-radius: var(--radius-md); padding: 16px; width: 100%; margin-bottom: 24px;">
+      <%= error %>
+    </div>
+  <% } %>
 
-    <% if (error) { %>
-      <div class="notification is-danger"><%= error %></div>
-    <% } %>
-
-    <div class="box">
-      <form action="/admin/colaboradores/nuevo" method="POST">
-        <div class="field">
-          <label class="label">ID del colaborador</label>
-          <div class="control">
-            <input
-              class="input"
-              type="text"
-              name="id_colaborador"
-              value="<%= oldInput.id_colaborador %>"
-              required>
-          </div>
+  <div class="card-base" style="max-width: 600px;">
+    <form action="/admin/colaboradores/nuevo" method="POST">
+      <div class="field mb-4">
+        <label class="label" style="color: var(--c-text-muted); text-transform: uppercase; font-size: 11px; letter-spacing: 1px;">ID del colaborador</label>
+        <div class="control">
+          <input class="input input-base" type="text" name="id_colaborador" value="<%= oldInput ? oldInput.id_colaborador : '' %>" required>
         </div>
+      </div>
 
-        <div class="field">
-          <label class="label">Nombre</label>
-          <div class="control">
-            <input
-              class="input"
-              type="text"
-              name="nombre"
-              value="<%= oldInput.nombre %>"
-              required>
-          </div>
+      <div class="field mb-4">
+        <label class="label" style="color: var(--c-text-muted); text-transform: uppercase; font-size: 11px; letter-spacing: 1px;">Nombre</label>
+        <div class="control">
+          <input class="input input-base" type="text" name="nombre" value="<%= oldInput ? oldInput.nombre : '' %>" required>
         </div>
+      </div>
 
         <div class="field">
           <label class="label">Rol</label>
@@ -56,35 +35,32 @@
             <div class="select is-fullwidth">
               <select name="rol" required>
                 <option value="Colaborador" <%= oldInput.rol === 'Colaborador' ? 'selected' : '' %>>Colaborador</option>
-                <option value="Admin" <%= oldInput.rol === 'Admin' ? 'selected' : '' %>>Administrador</option>
+                <option value="Administrador" <%= oldInput.rol === 'Administrador' ? 'selected' : '' %>>Administrador</option>
               </select>
             </div>
           </div>
         </div>
+      </div>
 
-        <div class="field">
-          <label class="label">Contraseña</label>
-          <div class="control">
-            <input
-              class="input"
-              type="password"
-              name="contrasena"
-              required>
-          </div>
+      <div class="field mb-5">
+        <label class="label" style="color: var(--c-text-muted); text-transform: uppercase; font-size: 11px; letter-spacing: 1px;">Contraseña</label>
+        <div class="control">
+          <input class="input input-base" type="password" name="contrasena" required>
         </div>
+      </div>
 
-        <div class="field is-grouped mt-5">
-          <div class="control">
-            <button class="button is-primary" type="submit">Registrar colaborador</button>
-          </div>
-          <div class="control">
-            <a href="/admin/colaboradores" class="button is-light">Cancelar</a>
-          </div>
+      <div class="field is-grouped" style="border-top: 1px solid var(--c-border); padding-top: 24px; margin-top: 16px;">
+        <div class="control">
+          <button class="btn-primary" type="submit">Registrar colaborador</button>
         </div>
-      </form>
-    </div>
+        <div class="control">
+          <a href="/admin/colaboradores" class="btn-ghost">Cancelar</a>
+        </div>
+      </div>
+    </form>
   </div>
-</section>
+</main>
 
+<script src="/js/admin.js"></script>
 </body>
 </html>

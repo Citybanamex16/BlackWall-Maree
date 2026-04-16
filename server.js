@@ -52,12 +52,14 @@ const clienteRutes = require('./routes/cliente.routes.js')
 const adminRutes = require('./routes/admin.routes.js')
 const menuRutes = require('./routes/menu.routes.js')
 const rutasEventosPromos = require('./routes/promo_eventos.routes.js')
+const rutasRoyalty = require('./routes/royalty.routes.js')
 
 // Prefijos De Routes
 appServer.use('/cliente', clienteRutes) // Modulos a Quitar
 appServer.use('/admin', adminRutes) // Modulos a quitar
 appServer.use('/menu', menuRutes) // Modulo de Menu Digital
 appServer.use('/promos', rutasEventosPromos)
+appServer.use('/royalty', rutasRoyalty)
 // Promociones -> /admin
 
 // ¡No debemos renderizar en Server!
@@ -79,6 +81,6 @@ appServer.use((err, req, res, next) => {
   res.status(500)
 })
 
-appServer.listen(3000, () => {
-  console.log('Servidor activo en http://localhost:3000')
+appServer.listen(3005, () => {
+  console.log('Servidor activo en http://localhost:3005')
 })

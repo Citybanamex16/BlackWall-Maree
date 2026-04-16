@@ -6,5 +6,3 @@ Charly:
 Sebas:
 Andy: 
 Juárez: 
-# aaaaaa
-# Otro-repo-

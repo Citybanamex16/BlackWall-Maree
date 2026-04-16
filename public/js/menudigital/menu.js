@@ -1,9 +1,10 @@
+/* global localStorage, L, window */
+
 /* CU01 */
 const platillobotones = document.getElementsByClassName('platillo-btn')
 const overlay = document.getElementById('modal-overlay')
 const modalContent = document.getElementById('modal-content')
 const modalClose = document.getElementById('modal-close')
-/* global localStorage, L */
 const pedido = []
 
 // ── MODAL ──
@@ -177,23 +178,41 @@ for (const seccion of seccionesCollapsible) {
 
 /* CU11 Visualizar Menu Digital */
 
+function ShowMenuErrorModal () {
+  console.log('Mostrando Modal de error')
+
+  // 1. Parar el spinner — reemplaza el contenido del contenedor del menú
+  const menuCategorias = document.getElementById('menu-categorias')
+  menuCategorias.innerHTML = `
+        <div class="has-text-centered py-6">
+            <p class="is-size-6 has-text-grey">No se pudo cargar el menú.</p>
+        </div>`
+
+  // 2. Mostrar el modal
+  document.getElementById('menuErrorModal').showModal()
+}
+
 // Funcion para obtener los datos del Menu
 async function obtenerMenu () {
   try {
     const response = await fetch('/menu/menuData')
 
-    if (!response.ok) {
-      console.log('Señal de Error desde Backend: ', response.message)
+    const data = await response.json()
+    console.log('Data: ', data)
+    console.log('response: ', response)
+
+    if (!data.ok) {
+      console.log('Señal de Error desde Backend: ', data.message)
       throw new Error(`Error HTTP: ${response.status}`)
     }
 
-    const data = await response.json()
     console.log('Datos obtenidos de Backend: ', data)
 
     /* === Llamada a Construcción de Menu Dinámico == */
     contruirMenuDinamico(data)
   } catch (error) {
     console.error('Error al obtener el menú:', error)
+    ShowMenuErrorModal()
   }
 }
 
@@ -418,4 +437,37 @@ function contruirMenuDinamico (datos) {
   construirFichaProductos(productosInfo, categoríasInfo)
 
   console.log('Menu dinámico construido con exito')
+}
+
+window.agregarAlCarrito = function (btn) {
+  const nombre = btn.dataset.nombre
+  const precio = btn.dataset.precio
+  const desc = btn.closest('.card-content')?.querySelector('.product-desc-text')?.textContent?.trim() || ''
+
+  // Abrir modal con descripción y botón de confirmar
+  abrirModal(`
+    <h2 style="font-family:'Cormorant Garamond',serif;font-size:26px;margin-bottom:4px;">
+      ${nombre}
+    </h2>
+    <p style="color:#b5956a;font-size:15px;font-weight:500;margin-bottom:12px;">
+      $${precio}
+    </p>
+    <p style="color:#777;font-size:13px;margin-bottom:20px;">${desc || 'Sin descripción disponible'}</p>
+
+    <button id="btn-confirmar-agregar"
+      style="width:100%;padding:12px;background:#eac9c1;color:#fff;
+             border:none;border-radius:6px;font-size:14px;cursor:pointer;
+             font-family:'Jost',sans-serif;">
+      + Confirmar y agregar al pedido
+    </button>
+  `)
+
+  document.getElementById('btn-confirmar-agregar').addEventListener('click', () => {
+    const item = { nombre, precio: `$${precio}`, desc }
+    const pedidoActual = JSON.parse(localStorage.getItem('pedido') || '[]')
+    pedidoActual.push(item)
+    localStorage.setItem('pedido', JSON.stringify(pedidoActual))
+    cerrarModal()
+    console.log('Item agregado:', item)
+  })
 }
