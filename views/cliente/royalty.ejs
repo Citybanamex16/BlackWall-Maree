@@ -58,6 +58,61 @@
             </div>
         </div>
     </section>
+    <section class="container-fluid px-2 px-md-3 mb-5">
+        <div class="row g-3">
+            <div class="col-12 col-md-6">
+                <div class="card h-100 shadow-sm border-0 p-3" style="border-radius: 15px;">
+                    <h3 class="fs-5 fw-bold mb-3"><i class="bi bi-heart-fill text-danger me-2"></i>Tus Favoritos</h3>
+                    <div class="row">
+                        <div class="col-6 border-end">
+                            <p class="small fw-bold text-muted mb-2 text-uppercase" style="letter-spacing: 1px;">Bebidas</p>
+                            <ul class="list-unstyled mb-0">
+                                <% metrics.favoritos.bebidas.forEach(item => { %>
+                                    <li class="small mb-2 text-truncate"><i class="bi bi-cup-hot me-1 text-gold"></i> <%= item.Nombre %></li>
+                                <% }) %>
+                            </ul>
+                        </div>
+                        <div class="col-6">
+                            <p class="small fw-bold text-muted mb-2 text-uppercase" style="letter-spacing: 1px;">Platillos</p>
+                            <ul class="list-unstyled mb-0">
+                                <% metrics.favoritos.platillos.forEach(item => { %>
+                                    <li class="small mb-2 text-truncate"><i class="bi bi-egg-fried me-1 text-gold"></i> <%= item.Nombre %></li>
+                                <% }) %>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-12 col-md-6">
+                <div class="card h-100 shadow-sm border-0 p-3" style="border-radius: 15px; background-color: #fdfaf5;">
+                    <h3 class="fs-5 fw-bold mb-3"><i class="bi bi-trophy-fill text-warning me-2"></i>Lo más pedido</h3>
+                    <div class="row">
+                        <div class="col-6">
+                            <p class="small fw-bold text-muted mb-2 text-uppercase">Top Bebidas</p>
+                            <div class="list-group list-group-flush bg-transparent">
+                                <% metrics.topGlobal.bebidas.forEach((item, index) => { %>
+                                    <div class="list-group-item bg-transparent border-0 p-1 small">
+                                        <span class="badge bg-gold text-dark rounded-circle me-1"><%= index + 1 %></span> <%= item.Nombre %>
+                                    </div>
+                                <% }) %>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <p class="small fw-bold text-muted mb-2 text-uppercase">Top Platillos</p>
+                            <div class="list-group list-group-flush bg-transparent">
+                                <% metrics.topGlobal.platillos.forEach((item, index) => { %>
+                                    <div class="list-group-item bg-transparent border-0 p-1 small">
+                                        <span class="badge bg-gold text-dark rounded-circle me-1"><%= index + 1 %></span> <%= item.Nombre %>
+                                    </div>
+                                <% }) %>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
 </main>
 
 <script src="/js/Royalty/royalty.cliente.js"></script>

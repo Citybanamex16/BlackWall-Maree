@@ -70,4 +70,13 @@ module.exports = class Royalty {
         return [rows[0]]
       })
   }
+
+  // Métricas para el cliente
+  static async fetchTopPlatillos (categoria) {
+    return db.execute('CALL sp_fetchTopGlobal(?)', [categoria])
+  }
+
+  static async fetchFavoritosCliente (telefono, categoria) {
+    return db.execute('CALL sp_fetchFavCliente(?, ?)', [telefono, categoria])
+  }
 }
