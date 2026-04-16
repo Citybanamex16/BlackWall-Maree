@@ -155,7 +155,7 @@ function renderizarEventos (lista) {
               <span class="event-chip secondary">${totalProductos} ${totalProductos === 1 ? 'producto' : 'productos'}</span>
             </div>
 
-            <hr class="my-4" style="background-color: #efe1d4; height: 1px;">
+            <hr class="my-4 event-card-divider">
 
             <div>
               <p class="event-card-label mb-2">Vigencia</p>
@@ -416,8 +416,11 @@ async function prepararModificacion (idEvento) {
     document.getElementById('fechaFin').value = normalizarFechaInput(evento.Fecha_Final)
     document.getElementById('activo').checked = estaActivo(evento.Activo)
 
+    const idsPromocionesActivas = new Set(estadoEventos.promocionesCatalogo.map(promocion => String(promocion.id)))
     estadoEventos.promocionesSeleccionadas = new Map(
-      (Array.isArray(evento.promociones) ? evento.promociones : []).map(promocion => [String(promocion.id), promocion.nombre])
+      (Array.isArray(evento.promociones) ? evento.promociones : [])
+        .filter(promocion => idsPromocionesActivas.has(String(promocion.id)))
+        .map(promocion => [String(promocion.id), promocion.nombre])
     )
     estadoEventos.productosSeleccionados = new Map(
       (Array.isArray(evento.productos) ? evento.productos : []).map(producto => [String(producto.id), producto.nombre])

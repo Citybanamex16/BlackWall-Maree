@@ -4,7 +4,7 @@ const Colaborador = require('../models/colaborador.model.js')
 const Ingrediente = require('../models/ingrediente.model.js')
 const MetricasClientes = require('../models/metricasclientes.model.js')
 const MetricasProductos = require('../models/metricasproductos.model.js')
-const bcrypt = require('bcryptjs')
+// const bcrypt = require('bcryptjs')
 
 // const path = require('path')
 
@@ -281,8 +281,8 @@ exports.getCollaboratorsDetails = async (req, res, next) => {
 
 exports.postDarDeBajaColaborador = async (req, res, next) => {
   try {
-    const idColaborador = req.params.id
-    const idAdminSesion = String(req.session.user.id)
+    const idColaborador = String(req.params.id).trim()
+    const idAdminSesion = String(req.session.user.id).trim()
 
     if (idColaborador === idAdminSesion) {
       return res.status(400).json({
@@ -672,13 +672,13 @@ exports.postNewCollaborator = async (req, res, next) => {
       })
     }
 
-    const contrasenaHasheada = await bcrypt.hash(contrasena, 12)
+    // const contrasenaHasheada = await bcrypt.hash(contrasena, 12)
 
     await Colaborador.create(
       idColaborador,
       rol,
       nombre,
-      contrasenaHasheada
+      contrasena
     )
 
     return res.redirect('/admin/colaboradores')
