@@ -17,7 +17,7 @@ BEGIN
   COMMIT;
 END$$
 
--- subir esto tambien pt2
+-- subir esto tambien pt2 cambiar delimitador de ; a $$
 
 DROP PROCEDURE IF EXISTS ActualizarIngrediente;
 
