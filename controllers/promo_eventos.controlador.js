@@ -1,5 +1,12 @@
+const fs = require('fs')
+const path = require('path')
+
 const Eventos = require('../models/eventos.model')
 const Promociones = require('../models/promociones.model')
+
+const directorioPublico = path.join(__dirname, '..', 'public')
+const directorioImagenesEventos = path.join(directorioPublico, 'uploads', 'eventos')
+const prefijoImagenesEventos = '/uploads/eventos/'
 
 const obtenerDescuentoDecimal = (descuento) => {
   if (descuento === '' || descuento === null || typeof descuento === 'undefined') {
@@ -16,6 +23,20 @@ const obtenerDescuentoDecimal = (descuento) => {
 }
 
 const normalizarIdsRelacionados = (relaciones = []) => {
+  if (typeof relaciones === 'string') {
+    const relacionesTexto = relaciones.trim()
+
+    if (!relacionesTexto) {
+      return []
+    }
+
+    try {
+      return normalizarIdsRelacionados(JSON.parse(relacionesTexto))
+    } catch (error) {
+      return [relacionesTexto]
+    }
+  }
+
   if (!Array.isArray(relaciones)) {
     return []
   }
@@ -35,6 +56,70 @@ const normalizarIdsRelacionados = (relaciones = []) => {
       })
       .filter(Boolean)
   )]
+}
+
+const normalizarBoolean = (valor, valorDefault = false) => {
+  if (typeof valor === 'undefined') {
+    return valorDefault
+  }
+
+  if (typeof valor === 'boolean') {
+    return valor
+  }
+
+  if (typeof valor === 'number') {
+    return valor === 1
+  }
+
+  if (typeof valor === 'string') {
+    return ['true', '1', 'on', 'si'].includes(valor.trim().toLowerCase())
+  }
+
+  return Boolean(valor)
+}
+
+const obtenerRutaImagenEvento = (archivo) => {
+  if (!archivo) {
+    return null
+  }
+
+  return `/uploads/eventos/${archivo.filename}`
+}
+
+const resolverRutaImagenEvento = (rutaImagen) => {
+  if (!rutaImagen || !String(rutaImagen).startsWith(prefijoImagenesEventos)) {
+    return null
+  }
+
+  const rutaRelativa = String(rutaImagen).replace(/^\//, '')
+  const rutaAbsoluta = path.resolve(directorioPublico, rutaRelativa)
+  const directorioPermitido = path.resolve(directorioImagenesEventos)
+
+  if (!rutaAbsoluta.startsWith(`${directorioPermitido}${path.sep}`)) {
+    return null
+  }
+
+  return rutaAbsoluta
+}
+
+const eliminarImagenEvento = async (rutaImagen) => {
+  const rutaAbsoluta = resolverRutaImagenEvento(rutaImagen)
+
+  if (!rutaAbsoluta) {
+    return
+  }
+
+  try {
+    await fs.promises.unlink(rutaAbsoluta)
+  } catch (error) {
+    if (error.code !== 'ENOENT') {
+      console.warn('No se pudo eliminar la imagen anterior del evento:', error)
+    }
+  }
+}
+
+const eliminarImagenSubida = async (archivo) => {
+  await eliminarImagenEvento(obtenerRutaImagenEvento(archivo))
 }
 
 const validarDatosEvento = ({
@@ -192,6 +277,7 @@ exports.postRegistrarEvento = async (req, res, next) => {
     })
 
     if (errorValidacion) {
+      await eliminarImagenSubida(req.file)
       return res.status(400).json({
         success: false,
         message: errorValidacion
@@ -201,6 +287,7 @@ exports.postRegistrarEvento = async (req, res, next) => {
     const errorPromociones = await validarPromocionesActivasEvento(idsPromociones)
 
     if (errorPromociones) {
+      await eliminarImagenSubida(req.file)
       return res.status(400).json({
         success: false,
         message: errorPromociones
@@ -212,7 +299,8 @@ exports.postRegistrarEvento = async (req, res, next) => {
       descripcion: descripcion.trim(),
       fechaInicio,
       fechaFinal: fechaFin,
-      activo: typeof activo === 'undefined' ? true : Boolean(activo),
+      imagen: obtenerRutaImagenEvento(req.file),
+      activo: normalizarBoolean(activo, true),
       promociones: idsPromociones,
       productos: idsProductos
     })
@@ -224,6 +312,7 @@ exports.postRegistrarEvento = async (req, res, next) => {
       message: 'Evento registrado correctamente.'
     })
   } catch (error) {
+    await eliminarImagenSubida(req.file)
     console.log('Error al registrar evento:', error)
     res.status(500).json({
       success: false,
@@ -266,6 +355,7 @@ exports.putUpdateEvent = async (req, res, next) => {
     })
 
     if (errorValidacion) {
+      await eliminarImagenSubida(req.file)
       return res.status(400).json({
         success: false,
         message: errorValidacion
@@ -275,21 +365,30 @@ exports.putUpdateEvent = async (req, res, next) => {
     const errorPromociones = await validarPromocionesActivasEvento(idsPromociones)
 
     if (errorPromociones) {
+      await eliminarImagenSubida(req.file)
       return res.status(400).json({
         success: false,
         message: errorPromociones
       })
     }
 
+    const nuevaImagenEvento = obtenerRutaImagenEvento(req.file)
+    const imagenEvento = nuevaImagenEvento || eventoActual.Imagen || null
+
     await Eventos.updateEvento(idEvento, {
       nombre: nombre.trim(),
       descripcion: descripcion.trim(),
       fechaInicio,
       fechaFinal: fechaFin,
-      activo: Boolean(activo),
+      imagen: imagenEvento,
+      activo: normalizarBoolean(activo),
       promociones: idsPromociones,
       productos: idsProductos
     })
+
+    if (nuevaImagenEvento && eventoActual.Imagen && eventoActual.Imagen !== nuevaImagenEvento) {
+      await eliminarImagenEvento(eventoActual.Imagen)
+    }
 
     const eventoActualizado = await construirRespuestaEvento(idEvento)
 
@@ -299,6 +398,7 @@ exports.putUpdateEvent = async (req, res, next) => {
       data: eventoActualizado
     })
   } catch (error) {
+    await eliminarImagenSubida(req.file)
     console.log('Error al actualizar evento:', error)
     res.status(500).json({
       success: false,
