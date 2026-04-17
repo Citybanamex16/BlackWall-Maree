@@ -23,12 +23,34 @@ module.exports = class Royalty {
     return db.execute('SELECT ID_Evento, Nombre FROM evento')
   }
 
+  save () {
+    return db.execute(
+      'INSERT INTO estado_royalty (Nombre_Royalty, Número_de_prioridad, Descripción, Min_Visitas, Max_Visitas) VALUES (?,?,?,?,?)',
+      [this.Nombre_Royalty, this.Número_de_prioridad, this.Descripción, this.Min_Visitas, this.Max_Visitas]
+    )
+  }
+
+  static guardarEstadoRoyaltyPromociones (NombreRoyalty, idsPromocion) {
+    const valores = idsPromocion.map(idPromocion => [NombreRoyalty, idPromocion])
+    return db.query(
+      'INSERT INTO estado_royalty_da_promociones (Nombre_Royalty, ID_Promocion) VALUES ?',
+      [valores]
+    )
+  }
+
+  static guardarEstadoRoyaltyEventos (NombreRoyalty, idsEventos) {
+    const valores = idsEventos.map(idEvento => [NombreRoyalty, idEvento])
+    return db.query(
+      'INSERT INTO estado_royalty_da_eventos (Nombre_Royalty, ID_Evento) VALUES ?',
+      [valores]
+    )
+  }
+
   // Buscamos a lo que vamos a borrar
   static async deleteRoyaltyBD (nombre) {
-    return db.execute('DELETE FROM estado_royalty_da_promociones WHERE Nombre_Royalty = ?', [nombre])
-      .then(() => {
-        return db.execute('DELETE FROM estado_royalty WHERE Nombre_Royalty = ?', [nombre])
-      })
+    await db.execute('DELETE FROM estado_royalty_da_promociones WHERE Nombre_Royalty = ?', [nombre])
+    await db.execute('DELETE FROM estado_royalty_da_eventos WHERE Nombre_Royalty = ?', [nombre])
+    return db.execute('DELETE FROM estado_royalty WHERE Nombre_Royalty = ?', [nombre])
   }
 
   // Actualizaión de estado royalty
