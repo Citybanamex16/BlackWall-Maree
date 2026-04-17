@@ -1,0 +1,16 @@
+/* CSS para la vista del Mapa */
+
+ /* Estilos sugeridos para el contenedor */
+        #contenedor-mapa {
+            width: 100%;
+            max-width: 800px;
+            margin: 20px auto;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+        #contenedor-mapa img {
+            display: block;
+            width: 100%;
+            height: auto;
+        }

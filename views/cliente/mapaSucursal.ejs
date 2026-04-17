@@ -6,15 +6,25 @@
     <title>Mapa - Marée</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@1.0.4/css/bulma.min.css">
     <link rel="stylesheet" href="/css/moduloMenuCSS/menustyle.css">
+     <link rel="stylesheet" href="/css/moduloMenuCSS/mapStyle.css">
     <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=Jost:wght@300;400;500&display=swap" rel="stylesheet">
 </head>
 <body>
+    <%- include('../partials/breadcrumbs') %>
     <section class="section">
         <div class="container">
             <h1 class="page-title">Mapa Interactivo</h1>
-                <%- include('../partials/breadcrumbs') %>
+
             <p class="page-subtitle">Aquí el Mapa Interactivo</p>
+
+            <!-- Contenedor para el mapa estático -->
+            <div id="contenedor-mapa">
+                <!-- Se puede cargar desde JS o directamente aquí -->
+                <img id="google-static-map" src="" alt="Mapa de ubicación">
+            </div>
         </div>
     </section>
+    
+    <script src="/js/menudigital/mapaScript.js"></script>
 </body>
 </html>
