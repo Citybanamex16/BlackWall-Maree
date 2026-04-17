@@ -280,7 +280,8 @@ body        { background-color: #ffffff; color: #222; }
   background: var(--white);
   border: 1px solid var(--border);
   border-radius: 10px;
-  overflow: hidden;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 .ing-table {
