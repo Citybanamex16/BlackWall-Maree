@@ -6,25 +6,49 @@
     <title>Mapa - Marée</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@1.0.4/css/bulma.min.css">
     <link rel="stylesheet" href="/css/moduloMenuCSS/menustyle.css">
-     <link rel="stylesheet" href="/css/moduloMenuCSS/mapStyle.css">
+    <link rel="stylesheet" href="/css/moduloMenuCSS/mapStyle.css">
     <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=Jost:wght@300;400;500&display=swap" rel="stylesheet">
 </head>
 <body>
     <%- include('../partials/breadcrumbs') %>
+
     <section class="section">
         <div class="container">
+
             <h1 class="page-title">Mapa Interactivo</h1>
+            <p class="page-subtitle">Encuéntranos aquí</p>
 
-            <p class="page-subtitle">Aquí el Mapa Interactivo</p>
+            <div class="mapa-layout">
 
-            <!-- Contenedor para el mapa estático -->
-            <div id="contenedor-mapa">
-                <!-- Se puede cargar desde JS o directamente aquí -->
-                <img id="google-static-map" src="" alt="Mapa de ubicación">
+                <!-- COLUMNA IZQUIERDA: Mapa -->
+                <div class="mapa-columna">
+                    <div id="contenedor-mapa">
+                        <img id="google-static-map" src="" alt="Mapa de ubicación">
+                    </div>
+                </div>
+
+                <!-- COLUMNA DERECHA: Dirección (salvavidas) -->
+                <aside class="direccion-columna">
+
+                    <!-- JS inyecta una tarjeta por sucursal aquí -->
+                    <div id="contenedor-sucursales">
+
+                        <!-- Skeleton visible mientras JS carga -->
+                        <div class="direccion-skeleton">
+                            <div class="skeleton-linea skeleton-titulo"></div>
+                            <div class="skeleton-linea"></div>
+                            <div class="skeleton-linea skeleton-corta"></div>
+                        </div>
+
+                    </div>
+
+                </aside>
+
             </div>
+
         </div>
     </section>
-    
+
     <script src="/js/menudigital/mapaScript.js"></script>
 </body>
 </html>

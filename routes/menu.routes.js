@@ -14,6 +14,9 @@ router.post('/agregaritem', menuControlador.agregarItem)
 router.post('/pedidos/validar', menuControlador.validarPedido)
 router.post('/pedidos/confirmar', menuControlador.confirmarPedido)
 
+// Sección de Mapa
+router.get('/Sucursales/getAll', menuControlador.getAllSucursales)
+
 // Rutas Admin
 router.get('/productos', menuControlador.getProducts)
 router.get('/productosCatalog', menuControlador.getProductsCatalog)

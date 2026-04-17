@@ -1,4 +1,4 @@
-/* global localStorage, L, window */
+/* global localStorage, window */
 
 /* CU01 */
 const platillobotones = document.getElementsByClassName('platillo-btn')

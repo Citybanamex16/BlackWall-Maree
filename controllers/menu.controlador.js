@@ -4,6 +4,7 @@ const categorías = require('../models/MenuDigital/categorías.model.js')
 const tipos = require('../models/MenuDigital/tipos.model.js')
 const promos = require('../models/promociones.model.js')
 const Pedido = require('../models/pedidos.model.js')
+const sucursal = require('../models/MenuDigital/sucursales.model.js')
 const db = require('../util/database.js')
 
 // CU11 Vizualisar Menu
@@ -68,11 +69,29 @@ exports.getMenuPromos = async (req, res, nex) => {
   }
 }
 
-
 exports.getMapaSucursales = (req, res, nex) => {
   const breadcrumbs = nav.getBreadcrumbs('Menu')
   res.render('cliente/mapaSucursal', { breadcrumbs })
+}
 
+exports.getAllSucursales = async (req, res, nex) => {
+  console.log('obteniendo Sucursales ')
+  try {
+    const sucursalesData = await sucursal.fetchAll()
+
+    console.log('Sucursales recuperadas')
+    res.status(200).json({
+      ok: true,
+      message: 'Sucursales obtenidas de manera correcta',
+      allSucursales: sucursalesData
+    })
+  } catch (err) {
+    console.log('Error: ', err)
+    res.status(500).json({
+      ok: false,
+      message: 'Sucursales no obtenidas'
+    })
+  }
 }
 
 // Fin CU11
