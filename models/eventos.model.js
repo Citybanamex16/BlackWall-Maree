@@ -59,6 +59,7 @@ module.exports = class Evento {
     descripcion,
     fechaInicio,
     fechaFinal,
+    imagen = null,
     activo = true,
     promociones = [],
     productos = []
@@ -68,6 +69,7 @@ module.exports = class Evento {
     this.descripcion = descripcion
     this.fechaInicio = fechaInicio
     this.fechaFinal = fechaFinal
+    this.imagen = imagen
     this.activo = activo
     this.promociones = normalizarIds(promociones)
     this.productos = normalizarIds(productos)
@@ -82,15 +84,16 @@ module.exports = class Evento {
       const idEvento = this.id || await generarIdEvento(connection)
 
       await connection.execute(
-        `INSERT INTO evento (ID_Evento, Nombre, Descripcion, Activo, Fecha_Inicio, Fecha_Final)
-         VALUES (?, ?, ?, ?, ?, ?)`,
+        `INSERT INTO evento (ID_Evento, Nombre, Descripcion, Activo, Fecha_Inicio, Fecha_Final, Imagen)
+         VALUES (?, ?, ?, ?, ?, ?, ?)`,
         [
           idEvento,
           this.nombre,
           this.descripcion,
           this.activo ? 1 : 0,
           this.fechaInicio,
-          this.fechaFinal
+          this.fechaFinal,
+          this.imagen
         ]
       )
 
@@ -155,6 +158,7 @@ module.exports = class Evento {
         e.Activo,
         DATE_FORMAT(e.Fecha_Inicio, '%Y-%m-%d') AS Fecha_Inicio,
         DATE_FORMAT(e.Fecha_Final, '%Y-%m-%d') AS Fecha_Final,
+        e.Imagen,
         COUNT(DISTINCT ecp.ID_Promocion) AS TotalPromociones,
         COUNT(DISTINCT ppe.ID_Producto) AS TotalProductos
       FROM evento e
@@ -168,7 +172,8 @@ module.exports = class Evento {
         e.Descripcion,
         e.Activo,
         e.Fecha_Inicio,
-        e.Fecha_Final
+        e.Fecha_Final,
+        e.Imagen
       ORDER BY e.Activo DESC, e.Fecha_Inicio DESC, e.Nombre ASC
     `)
   }
@@ -182,7 +187,8 @@ module.exports = class Evento {
           e.Descripcion,
           e.Activo,
           DATE_FORMAT(e.Fecha_Inicio, '%Y-%m-%d') AS Fecha_Inicio,
-          DATE_FORMAT(e.Fecha_Final, '%Y-%m-%d') AS Fecha_Final
+          DATE_FORMAT(e.Fecha_Final, '%Y-%m-%d') AS Fecha_Final,
+          e.Imagen
         FROM evento e
         WHERE e.ID_Evento = ?
         LIMIT 1
@@ -228,7 +234,7 @@ module.exports = class Evento {
 
       await connection.execute(
         `UPDATE evento
-         SET Nombre = ?, Descripcion = ?, Activo = ?, Fecha_Inicio = ?, Fecha_Final = ?
+         SET Nombre = ?, Descripcion = ?, Activo = ?, Fecha_Inicio = ?, Fecha_Final = ?, Imagen = ?
          WHERE ID_Evento = ?`,
         [
           datosEvento.nombre,
@@ -236,6 +242,7 @@ module.exports = class Evento {
           datosEvento.activo ? 1 : 0,
           datosEvento.fechaInicio,
           datosEvento.fechaFinal,
+          datosEvento.imagen || null,
           idEvento
         ]
       )
