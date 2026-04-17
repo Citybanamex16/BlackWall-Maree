@@ -65,11 +65,11 @@ async function modificarRoyalty (nombre) {
 
 const RegistroGuardarRoyalty = () => {
   const datos = {
-    nombre: document.getElementById('nombre').value.trim(),
-    prioridad: document.getElementById('prioridad').value.trim(),
-    descripcion: document.getElementById('descripcion').value.trim(),
-    minVisitas: document.getElementById('minVisitas').value.trim(),
-    maxVisitas: document.getElementById('maxVisitas').value.trim(),
+    nombre: document.getElementById('add-input-nombre').value.trim(),
+    prioridad: document.getElementById('add-input-prioridad').value.trim(),
+    descripcion: document.getElementById('add-input-descripcion').value.trim(),
+    minVisitas: document.getElementById('add-input-minVisitas').value.trim(),
+    maxVisitas: document.getElementById('add-input-maxVisitas').value.trim(),
     promociones: Array.from(document.querySelectorAll('.checkbox-promociones:checked')).map(cb => ({
       id: cb.value,
       nombre: cb.dataset.nombre
@@ -80,7 +80,7 @@ const RegistroGuardarRoyalty = () => {
     }))
   }
 
-  if (!validarFormulario(datos)) return
+  if (!agregarValidarFormulario(datos)) return
 
   const btnGuardar = document.querySelector('#modalAgregarRoyalty .button.is-primary')
   btnGuardar.classList.add('is-loading')
@@ -148,11 +148,11 @@ const abrirModal = () => {
 // Después:
 const abrirModalNuevoEstadoRoyalty = async () => {
   // Limpiamos el formulario primero
-  document.getElementById('nombre').value = ''
-  document.getElementById('prioridad').value = ''
-  document.getElementById('descripcion').value = ''
-  document.getElementById('minVisitas').value = ''
-  document.getElementById('maxVisitas').value = ''
+  document.getElementById('add-input-nombre').value = ''
+  document.getElementById('add-input-prioridad').value = ''
+  document.getElementById('add-input-descripcion').value = ''
+  document.getElementById('add-input-minVisitas').value = ''
+  document.getElementById('add-input-maxVisitas').value = ''
 
   // Cargamos todas las promociones disponibles
   const resPromos = await fetch('/royalty/royaltyAdmin/todas/promociones-disponibles')
@@ -250,6 +250,51 @@ const actualizarProductos = async () => {
   }
 }
 
+// Validar formulario para agregar royalties
+function agregarValidarFormulario (datos) {
+  document.querySelectorAll('.input, .select').forEach(el => el.classList.remove('is-danger'))
+  document.querySelectorAll('.help.is-danger').forEach(el => el.remove())
+
+  let esValido = true
+  if (!datos.nombre.trim()) { marcarError('add-input-nombre', 'Obligatorio'); esValido = false }
+  if (!datos.prioridad.trim()) { marcarError('add-input-prioridad', 'Obligatorio'); esValido = false }
+  if (!datos.descripcion.trim()) { marcarError('add-input-descripcion', 'Requerido'); esValido = false }
+  if (!datos.minVisitas) { marcarError('add-input-minVisitas', 'Requerido'); esValido = false }
+  if (!datos.maxVisitas) { marcarError('add-input-maxVisitas', 'Requerido'); esValido = false }
+  // Validamos que sea menor y mayor al numero de visitas
+  if (Number(datos.minVisitas) > Number(datos.maxVisitas)) {
+    marcarError('add-input-minVisitas', 'Debe ser menor que max Visitas')
+    esValido = false
+  }
+  if (Number(datos.maxVisitas) < Number(datos.minVisitas)) {
+    marcarError('add-input-maxVisitas', 'Debe ser mayor que min Visitas')
+    esValido = false
+  }
+  // Validamos que sea entero
+  if (Number(datos.prioridad) < 0) {
+    marcarError('add-input-prioridad', 'Debe ser mayor que cero')
+    esValido = false
+  }
+  if (Number(datos.minVisitas) < 0) {
+    marcarError('add-input-minVisitas', 'Debe ser mayor que cero')
+    esValido = false
+  }
+  if (Number(datos.maxVisitas) < 0) {
+    marcarError('add-input-maxVisitas', 'Debe ser mayor que cero')
+    esValido = false
+  }
+  if (datos.promociones.length === 0) {
+    marcarError('contenedor-promociones-nuevo', 'Debes de registrar una promocion')
+    esValido = false
+  }
+  if (datos.eventos.length === 0) {
+    marcarError('contenedor-eventos-nuevo', 'Debes de registrar un evento')
+    esValido = false
+  }
+
+  return esValido
+}
+
 function validarFormulario (datos) {
   document.querySelectorAll('.input, .select').forEach(el => el.classList.remove('is-danger'))
   document.querySelectorAll('.help.is-danger').forEach(el => el.remove())
@@ -294,7 +339,12 @@ function marcarError (id, mensaje) {
   const help = document.createElement('p')
   help.className = 'help is-danger'
   help.textContent = mensaje
-  elemento.closest('.control').appendChild(help)
+  const control = elemento.closest('.control')
+  if (control) {
+    control.appendChild(help)
+  } else {
+    elemento.insertAdjacentElement('afterend', help)
+  }
 }
 
 const limpiarFormulario = () => {
