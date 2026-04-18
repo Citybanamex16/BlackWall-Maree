@@ -4,6 +4,8 @@ const Colaborador = require('../models/colaborador.model.js')
 const Ingrediente = require('../models/ingrediente.model.js')
 const MetricasClientes = require('../models/metricasclientes.model.js')
 const MetricasProductos = require('../models/metricasproductos.model.js')
+const Categoria = require('../models/categoria.model.js')
+
 // const bcrypt = require('bcryptjs')
 
 // const path = require('path')
@@ -694,5 +696,57 @@ exports.postNewCollaborator = async (req, res, next) => {
         rol: req.body.rol || 'Colaborador'
       }
     })
+  }
+}
+
+// Sección Categorias
+
+// GET categorias-tipos
+exports.getCategoriasTipos = (req, res, next) => {
+  res.render('admin/categoriasTipos')
+}
+
+// GET categorias
+exports.getCategoriasLista = async (req, res, next) => {
+  try {
+    const [categorias] = await Categoria.fetchAll()
+    res.status(200).json({ success: true, data: categorias })
+  } catch (error) {
+    console.error('Error en getCategoriasLista:', error)
+    res.status(500).json({ success: false, message: 'Error al obtener categorías' })
+  }
+}
+
+// Verifica nombre de la categoria
+exports.verificarNombreCategoria = async (req, res, next) => {
+  try {
+    const { nombre } = req.query
+    if (!nombre || String(nombre).trim() === '') {
+      return res.status(400).json({ success: false, message: 'Nombre requerido' })
+    }
+    const [rows] = await Categoria.buscarPorNombre(nombre.trim())
+    res.status(200).json({ success: true, existe: rows.length > 0 })
+  } catch (error) {
+    console.error('Error en verificarNombreCategoria:', error)
+    res.status(500).json({ success: false, message: 'Error al verificar nombre' })
+  }
+}
+
+// Inserta nueva categoria
+exports.crearCategoria = async (req, res, next) => {
+  try {
+    const { Nombre } = req.body
+    if (!Nombre || String(Nombre).trim() === '') {
+      return res.status(400).json({ success: false, message: 'El nombre es obligatorio' })
+    }
+    const [existente] = await Categoria.buscarPorNombre(Nombre.trim())
+    if (existente.length > 0) {
+      return res.status(409).json({ success: false, message: 'Ya existe una categoría con ese nombre' })
+    }
+    await Categoria.insertNuevaCategoria(Nombre.trim())
+    res.status(200).json({ success: true, message: 'Categoría registrada exitosamente' })
+  } catch (error) {
+    console.error('Error en crearCategoria:', error)
+    res.status(500).json({ success: false, message: 'Error al guardar la categoría' })
   }
 }

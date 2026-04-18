@@ -43,6 +43,11 @@ router.put('/api/ingredientes/:id/actualizar', adminControlador.actualizarIngred
 router.get('/metricas-ingredientes', adminControlador.getMetricasIngredientes)
 router.get('/api/metricas-ingredientes', adminControlador.getMetricasIngredientesData)
 
+router.get('/categorias-tipos', isAuth, isAdmin, adminControlador.getCategoriasTipos)
+router.get('/api/categorias', isAuth, isAdmin, adminControlador.getCategoriasLista)
+router.get('/api/categorias/verificarNombre', isAuth, isAdmin, adminControlador.verificarNombreCategoria)
+router.post('/api/categorias/crear', isAuth, isAdmin, adminControlador.crearCategoria)
+
 router.get('/feedback', isAuth, isAdmin, feedBackControlador.getFeedback)
 router.get('/api/comentarios', isAuth, isAdmin, feedBackControlador.getFeedbackCatalog)
 router.get('/api/comentarios/:id', isAuth, isAdmin, feedBackControlador.getComentarioDetail)

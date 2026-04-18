@@ -1,4 +1,5 @@
 /* global localStorage, window */
+/* eslint-disable no-unused-vars */
 
 /* CU01 */
 const platillobotones = document.getElementsByClassName('platillo-btn')
@@ -81,7 +82,7 @@ async function agregarAlCarrito (platillo) {
   localStorage.setItem('pedido', JSON.stringify(pedido))
 
   try {
-    const response = await fetch('/menu/agregaritem', {
+    await fetch('/menu/agregaritem', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(platillo)
@@ -97,7 +98,7 @@ async function agregarAlCarrito (platillo) {
 async function verDetalleProducto (id) {
   try {
     // 1. Buscamos la info del producto (puedes sacarla de tu array global 'todosLosProductos')
-    const producto = globalProducts.find(p => p.id == id)
+    const producto = globalProducts.find(p => p.id === id)
 
     // 2. Lógica del amigo: Consultar disponibilidad real
     console.log('Buscando producto: ', id)

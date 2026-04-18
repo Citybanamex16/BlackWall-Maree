@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="light">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Categorías y Tipos - Marée</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@1.0.4/css/bulma.min.css">
+  <link rel="stylesheet" href="/css/CSSglobales/global_theme.css">
+  <link rel="stylesheet" href="/css/CSSglobales/global_components.css">
+  <link rel="stylesheet" href="/css/moduloMenuCSS/ingredientes.css">
+</head>
+
+<body>
+
+<nav class="navbar" role="navigation">
+  <div class="navbar-brand">
+    <div class="navbar-item">
+      <div class="logo-area">
+        <span class="logo-text">MARÉE</span>
+        <span class="logo-sub">Love at First Crêpe</span>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<section class="section">
+  <div class="container">
+
+    <a href="/admin" class="back-link">← Admin Dashboard</a>
+
+    <!-- SECCIÓN CATEGORÍAS -->
+    <div class="ing-header">
+      <div>
+        <h1 class="page-title">Categorías</h1>
+        <p class="page-sub">Catálogo de categorías del restaurante</p>
+      </div>
+      <button id="btnNuevaCategoria" class="btn-maree">+ Nueva Categoría</button>
+    </div>
+
+    <div class="ing-table-wrap" style="margin-bottom: 60px;">
+      <div id="tablaCategoriasContainer">
+        <div class="ing-empty">Cargando categorías...</div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- MODAL Registro Categoría -->
+<dialog id="ModalRegistroCategoria" class="maree-modal">
+  <div class="modal-inner">
+    <p class="modal-title">Nueva Categoría</p>
+    <p class="modal-sub">Ingresa el nombre de la nueva categoría</p>
+
+    <div class="maree-field">
+      <label class="maree-label" for="inputNombreCategoria">Nombre</label>
+      <input class="maree-input" type="text" id="inputNombreCategoria" placeholder="Ej. Lácteos" maxlength="50">
+    </div>
+
+    <div class="modal-actions">
+      <button id="btnConfirmarRegistroCategoria" class="btn-primary">Continuar</button>
+      <button id="btnCerrarRegistroCategoria" class="btn-secondary">Cancelar</button>
+    </div>
+  </div>
+</dialog>
+
+<!-- MODAL Resumen Categoría -->
+<dialog id="ModalResumenCategoria" class="maree-modal">
+  <div class="modal-inner">
+    <p class="modal-title">Confirmar Registro</p>
+    <p class="modal-sub">Verifica los datos antes de guardar</p>
+    <div id="resumenContenidoCategoria"></div>
+    <div class="modal-actions">
+      <button id="btnConfirmarCreacionCategoria" class="btn-success">Registrar Categoría</button>
+      <button id="btnVolverFormularioCategoria" class="btn-secondary">Regresar</button>
+    </div>
+  </div>
+</dialog>
+
+<!-- MODAL de error -->
+<dialog id="ModalErrorCat" class="maree-modal">
+  <div class="modal-inner" style="text-align:center;">
+    <span class="modal-icon">⚠️</span>
+    <p class="modal-title modal-title-danger" id="errorTituloCat">Error</p>
+    <p id="errorMensajeCat" style="font-size:14px;color:#555;margin-bottom:24px;"></p>
+    <button id="btnCerrarErrorCat" class="btn-danger">Cerrar</button>
+  </div>
+</dialog>
+
+<!-- MODAL Éxito -->
+<dialog id="ModalExitoCat" class="maree-modal">
+  <div class="modal-inner" style="text-align:center;">
+    <span class="modal-icon">✓</span>
+    <p class="modal-title modal-title-success" id="exitoTituloCat">¡Registrado!</p>
+    <p id="exitoMensajeCat" style="font-size:14px;color:#555;margin-bottom:24px;"></p>
+    <button id="btnCerrarExitoCat" class="btn-success">Aceptar</button>
+  </div>
+</dialog>
+
+<script src="/js/menudigital/AdminCatTipoScripts/adminCategorias.js"></script>
+</body>
+</html>
