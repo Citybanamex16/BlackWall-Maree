@@ -1,0 +1,25 @@
+-- Copiar y pegar
+
+DELIMITER $$
+DROP PROCEDURE IF EXISTS `ActualizarCategoria`$$
+CREATE DEFINER=`root`@`localhost` PROCEDURE `ActualizarCategoria`(
+    IN oldNombre VARCHAR(50) CHARSET utf8mb4 COLLATE utf8mb4_spanish2_ci,
+    IN newNombre VARCHAR(50) CHARSET utf8mb4 COLLATE utf8mb4_spanish2_ci
+)
+BEGIN
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+        SET FOREIGN_KEY_CHECKS = 1;
+        ROLLBACK;
+        RESIGNAL;
+    END;
+
+    START TRANSACTION;
+        SET FOREIGN_KEY_CHECKS = 0;
+        UPDATE `categoría` SET Nombre = newNombre WHERE Nombre = oldNombre;
+        UPDATE `insumo` SET `Categoría` = newNombre WHERE `Categoría` = oldNombre;
+        UPDATE `producto` SET `Categoría` = newNombre WHERE `Categoría` = oldNombre;
+        SET FOREIGN_KEY_CHECKS = 1;
+    COMMIT;
+END$$
+DELIMITER ;

@@ -101,6 +101,27 @@
   </div>
 </dialog>
 
+<!-- MODAL Editar Categoría -->
+<dialog id="ModalEditarCategoria" class="maree-modal">
+  <div class="modal-inner">
+    <p class="modal-title">Editar Categoría</p>
+    <p class="modal-sub" id="editarSubtituloCategoria"></p>
+
+    <div class="maree-field">
+      <label class="maree-label" for="editNombreCategoria">Nombre</label>
+      <input class="maree-input" type="text" id="editNombreCategoria" maxlength="50">
+    </div>
+
+    <div id="editarCategoriaEnUso" style="display:none; background:#fdf8f2; border:1px solid #e0c9a8; border-radius:8px; padding:12px; margin-bottom:4px; font-size:13px; color:#b5956a;">
+    </div>
+
+    <div class="modal-actions">
+      <button id="btnGuardarEditarCategoria" class="btn-primary">Guardar cambios</button>
+      <button id="btnCancelarEditarCategoria" class="btn-secondary">Cancelar</button>
+    </div>
+  </div>
+</dialog>
+
 <script src="/js/menudigital/AdminCatTipoScripts/adminCategorias.js"></script>
 </body>
 </html>
