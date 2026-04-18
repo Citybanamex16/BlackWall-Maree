@@ -47,6 +47,8 @@ router.get('/categorias-tipos', isAuth, isAdmin, adminControlador.getCategoriasT
 router.get('/api/categorias', isAuth, isAdmin, adminControlador.getCategoriasLista)
 router.get('/api/categorias/verificarNombre', isAuth, isAdmin, adminControlador.verificarNombreCategoria)
 router.post('/api/categorias/crear', isAuth, isAdmin, adminControlador.crearCategoria)
+router.get('/api/categorias/:nombre/verificarEnUso', isAuth, isAdmin, adminControlador.verificarCategoriaEnUso)
+router.put('/api/categorias/:nombre/actualizar', isAuth, isAdmin, adminControlador.actualizarCategoria)
 
 router.get('/feedback', isAuth, isAdmin, feedBackControlador.getFeedback)
 router.get('/api/comentarios', isAuth, isAdmin, feedBackControlador.getFeedbackCatalog)
