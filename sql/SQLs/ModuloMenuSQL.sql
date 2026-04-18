@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Servidor: localhost
--- Tiempo de generación: 18-04-2026 a las 22:22:29
+-- Tiempo de generación: 18-04-2026 a las 22:32:41
 -- Versión del servidor: 10.4.28-MariaDB
 -- Versión de PHP: 8.2.4
 
@@ -154,6 +154,24 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `obtener_promociones_por_tipo` (IN `
         -- Mensaje de error si el parámetro no es válido
         SELECT 'Error: El parámetro debe ser PU, PE o PR' AS Mensaje;
     END IF;
+END$$
+
+DROP PROCEDURE IF EXISTS `⁠ ActualizarCategoria ⁠`$$
+CREATE DEFINER=`⁠ root ⁠`@`⁠ localhost ⁠` PROCEDURE `⁠ ActualizarCategoria ⁠` (IN `oldNombre` VARCHAR(50) CHARSET utf8mb4 COLLATE utf8mb4_spanish2_ci, IN `newNombre` VARCHAR(50) CHARSET utf8mb4 COLLATE utf8mb4_spanish2_ci)   BEGIN
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+        SET FOREIGN_KEY_CHECKS = 1;
+        ROLLBACK;
+        RESIGNAL;
+    END;
+
+    START TRANSACTION;
+        SET FOREIGN_KEY_CHECKS = 0;
+        UPDATE ⁠ categoría ⁠ SET Nombre = newNombre WHERE Nombre = oldNombre;
+        UPDATE ⁠ insumo ⁠ SET ⁠ Categoría ⁠ = newNombre WHERE ⁠ Categoría ⁠ = oldNombre;
+        UPDATE ⁠ producto ⁠ SET ⁠ Categoría ⁠ = newNombre WHERE ⁠ Categoría ⁠ = oldNombre;
+        SET FOREIGN_KEY_CHECKS = 1;
+    COMMIT;
 END$$
 
 DELIMITER ;
@@ -752,7 +770,6 @@ INSERT INTO `insumo` (`ID_Insumo`, `Nombre`, `Categoría`, `Precio`, `Activo`, `
 ('IN93347807', 'Caramelo', 'Platillo', 24.00, 1, '15'),
 ('IN93539227', 'M&M\'s', 'Platillo', 13.00, 1, '15'),
 ('IN97359153', 'Cebolla', 'Platillo', 13.00, 1, '15'),
-('IN98019116', 'Mocha', 'Platillo', 23.00, 1, '15'),
 ('IN98136923', 'Mermelada de zarzamora', 'Platillo', 23.00, 0, '15'),
 ('IN99852788', 'Vainilla', 'Platillo', 12.00, 1, '15');
 
@@ -1363,7 +1380,6 @@ INSERT INTO `producto_tiene_insumo` (`ID_Producto`, `ID_Insumo`) VALUES
 ('PD87820692', 'IN03374506'),
 ('PD87820692', 'IN20877882'),
 ('PD87820692', 'IN93539227'),
-('PD87820692', 'IN98019116'),
 ('PD87820692', 'IN98136923'),
 ('PD88828639', 'IN36405225'),
 ('PD88871658', 'IN29165394'),
