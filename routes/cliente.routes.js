@@ -22,4 +22,8 @@ router.post('/login/verify', loginControlador.postVerifyOtp)
 router.get('/perfil', isAuth, clienteControlador.getProfile)
 router.post('/perfil', isAuth, clienteControlador.postUpdateProfile)
 
+/* Nuevos agregados por charly */
+router.get('/promosCliente', clienteControlador.getPromos)
+router.get('/eventosCliente', clienteControlador.getEventos)
+
 module.exports = router

@@ -6,10 +6,15 @@ const menuControlador = require('../controllers/menu.controlador.js')
 router.get('/menu', menuControlador.getMenu)
 router.get('/menuData', menuControlador.getMenuData)
 router.get('/orden', menuControlador.getOrden)
+router.get('/sucursales', menuControlador.getMapaSucursales)
 router.get('/consultaplatillo', menuControlador.getPlatillo)
+router.get('/consultarPromosMenu', menuControlador.getMenuPromos)
 router.post('/agregaritem', menuControlador.agregarItem)
 router.post('/pedidos/validar', menuControlador.validarPedido)
 router.post('/pedidos/confirmar', menuControlador.confirmarPedido)
+
+// Sección de Mapa
+router.get('/Sucursales/getAll', menuControlador.getAllSucursales)
 
 // Rutas Admin
 router.get('/productos', menuControlador.getProducts)
