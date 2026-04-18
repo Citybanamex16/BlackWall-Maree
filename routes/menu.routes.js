@@ -1,7 +1,6 @@
 const express = require('express')
 const router = express.Router()
 const menuControlador = require('../controllers/menu.controlador.js')
-const feedBackControlador = require('../controllers/feedback.controlador.js')
 
 // Rutas Menu cliente
 router.get('/menu', menuControlador.getMenu)
@@ -22,10 +21,6 @@ router.put('/modifProduct/:id', menuControlador.postModifProduct) // ¡ Ese es P
 // Eliminar Producto
 router.delete('/eliminarProducto', menuControlador.deleteProducto)
 router.put('/desactivarProducto', menuControlador.putDesactivarProducto)
-
-// rutas feedback
-router.get('/feedback', feedBackControlador.getFeedback)
-router.get('/feedbackCatalog', feedBackControlador.getFeedbackCatalog)
 
 // Rutas Global: Rutas utilizadas por cualquier CU, devuelven información general
 router.get('/globalAdminIngredientes', menuControlador.getIngredientesFullCatalog)
