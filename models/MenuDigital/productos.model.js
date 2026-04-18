@@ -59,6 +59,7 @@ module.exports = class Producto {
     P.nombre AS productoNombre, 
     P.precio AS productoPrecio, 
     P.categoría AS productoCategoria, 
+    P.Tipo  AS productoTipo,
     P.imagen AS productoImagen, 
     I.ID_Insumo AS insumoID,
     I.nombre AS insumoNombre
@@ -80,6 +81,7 @@ module.exports = class Producto {
           nombre: fila.productoNombre,
           precio: fila.productoPrecio,
           categoria: fila.productoCategoria,
+          tipo: fila.productoTipo,
           imagen: fila.productoImagen,
           ingredientes: [] // Inicializamos el array de ingredientes
         }
