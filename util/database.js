@@ -47,6 +47,7 @@ const pool = mysql.createPool({
 
 })
 
+/*
  JUAREZ
 
 // Pool de conexiones
@@ -59,5 +60,6 @@ const pool = mysql.createPool({
   connectionLimit: 10
 
 })
+*/
 
 module.exports = pool.promise() // Habilitamos poder usar .then() & .catch() yuhhhh
