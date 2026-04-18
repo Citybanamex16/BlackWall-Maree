@@ -1055,6 +1055,14 @@ dialog .checkbox {
     margin-bottom: 24px;
   }
 
+  .charts-row {
+    grid-template-columns: 1fr;
+  }
+
+  .kpi-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
   .page-title { font-size: 34px !important; }
 
   .btn-maree { width: 100%; justify-content: center; }
