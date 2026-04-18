@@ -2,84 +2,70 @@
 const btnFiltrar = document.getElementById('btn-filtrar')
 
 async function getFeedbackData () {
-  console.log('Obteniendo Datos de Feedback')
   try {
-    const res = await fetch('/menu/feedbackCatalog')
+    const res = await fetch('/admin/api/comentarios')
 
     if (!res.ok) {
-      // error desde Controlador
-      console.log('Erro desde controlador: ', res.error)
-      throw new Error('Error desde controlador feedback')
+      throw new Error('Error al obtener comentarios')
     }
 
     const response = await res.json()
     const feedbackData = response.data
-    // Listener de boton de filtrar
+
+    buildSectionRecentSummary(feedbackData)
+
+    // la chart
+    buildSectionKPIs(feedbackData)
+
+    applyFilter(feedbackData)
+
+    // Filter button listener
     btnFiltrar.addEventListener('click', (event) => {
       event.preventDefault()
       applyFilter(feedbackData)
     })
-
-    const summaryReciente = buildSectionRecentSummary(feedbackData)
-    console.log('Summary Reciente: ', summaryReciente)
-    buildSectionKPIs(feedbackData)
   } catch (err) {
-    console.log('Error detectado en buildFeedbackCatalog: ', err)
+    console.error('Error en getFeedbackData:', err)
+    document.getElementById('seccion-comentarios').innerHTML = `
+      <div class="reviews-empty">
+        <span class="reviews-empty-icon">⚠️</span>
+        <p>No se pudieron cargar los comentarios.</p>
+      </div>`
   }
 }
 
 getFeedbackData()
 
-// Construcción de Sección 0: Resumen Actual
+// Construcción de Sección 0: KPI cards
 function buildSectionRecentSummary (AllData) {
-  if (!AllData || AllData.length === 0) return null
+  if (!AllData || AllData.length === 0) return
 
-  // 1. Ordenar por fecha (Descendente: la más nueva primero)
-  // Convertimos a objeto Fecha para asegurar una comparación precisa
+  // Sort (descendiente por fecha)
   const sortedData = [...AllData].sort((a, b) => new Date(b.Fecha) - new Date(a.Fecha))
 
-  // 2. Definir ventana de tiempo para el "Promedio Reciente" (ej. últimos 30 días)
   const latestFecha = new Date(sortedData[0].Fecha)
   const thirtyDaysAgo = new Date(latestFecha)
   thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30)
-
   const recentReviews = sortedData.filter(r => new Date(r.Fecha) >= thirtyDaysAgo)
 
-  // 3. Cálculos de métricas
   const totalReviews = AllData.length
-
   const totalPositive = AllData.filter(r => r.Puntaje >= 4).length
-
-  const averagePuntaje = (recentReviews.reduce((acc, curr) => acc + curr.Puntaje, 0) / recentReviews.length).toFixed(1)
-
-  // 4. Extraer la más reciente (ya ordenada en el paso 1)
+  const averagePuntaje = recentReviews.length
+    ? (recentReviews.reduce((acc, curr) => acc + curr.Puntaje, 0) / recentReviews.length).toFixed(1)
+    : '—'
   const mostRecent = sortedData[0]
+  const recentLabel = new Date(mostRecent.Fecha).toLocaleDateString('es-MX', { day: '2-digit', month: 'short', year: 'numeric' })
 
-  // Retornamos el objeto de INFORMACIÓN listo para el HTML
-  return {
-    metrics: {
-      generalAverage: parseFloat(averagePuntaje),
-      totalReviews,
-      totalPositive,
-      positivePercentage: ((totalPositive / totalReviews) * 100).toFixed(0) + '%'
-    },
-    recentSnapshot: {
-      id: mostRecent.id,
-      customerComment: mostRecent.comment,
-      stars: mostRecent.Puntaje,
-      FechaLabel: new Date(mostRecent.Fecha).toLocaleDateString('es-ES')
-    },
-    config: {
-      averagePeriodDays: 30 // Metadato para que la vista sepa qué está mostrando
-    }
-  }
+  document.getElementById('kpi-promedio').textContent = averagePuntaje
+  document.getElementById('kpi-total').textContent = totalReviews
+  document.getElementById('kpi-positivas').textContent = totalPositive
+  document.getElementById('kpi-reciente').textContent = recentLabel
 }
 
 // Auxiliares de Sección 1:
 const filtroDate = document.getElementById('filtro-date')
 const filtroPuntaje = document.getElementById('filtro-puntaje')
 const filtroId = document.getElementById('filtro-id')
-const filtroResult = document.getElementById('filtro-conteo')
 
 const APP_TODAY = new Date()
 console.log('Fecha de hoy: ', APP_TODAY)
@@ -125,42 +111,32 @@ function getDateLimit (dropDownValue) {
 
 function applyFilter (AllData) {
   // A. Limpiar lo antiguo
-  const processedData = cleanOldReviews(AllData, 90)
-  console.log('Datos limpiados (Últimos 90 días): ', processedData)
+  const selectedDays = parseInt(filtroDate.value)
+  const allTime = selectedDays === 0
+
+  // A. Si no es "todo el historial", recortar por días seleccionados
+  const processedData = allTime ? AllData : cleanOldReviews(AllData, selectedDays)
 
   // B. Capturar valores de la interfaz
-  const dateFilterValue = getDateLimit(filtroDate.value)
-  console.log('Fecha de filtro límite: ', dateFilterValue)
+  const dateFilterValue = allTime ? '' : getDateLimit(filtroDate.value)
   const puntajeFilterValue = filtroPuntaje.value
   const idFilterValue = filtroId.value.trim().toLowerCase()
-
-  console.log('Puntaje filtro: ', puntajeFilterValue)
 
   // C. Pipeline de filtrado
   const filteredData = processedData.filter(review => {
     const matchId = idFilterValue === '' ||
-                        review.ID_Review.toLowerCase().includes(idFilterValue)
+      review.ID_Review.toLowerCase().includes(idFilterValue)
 
-    // Filtro Fecha: reviewDateString >= dateFilterValue
     const reviewDateString = review.Fecha.split('T')[0]
     const matchDate = dateFilterValue === '' ||
-                         reviewDateString >= dateFilterValue
+      reviewDateString >= dateFilterValue
 
     const matchPuntaje = puntajeFilterValue === 'todos' ||
-                            review.Puntaje === parseInt(puntajeFilterValue)
+      review.Puntaje === parseInt(puntajeFilterValue)
 
     return matchId && matchDate && matchPuntaje
   })
 
-  // 4. Mostrar en UI
-  const totalAmount = filteredData.length
-  filtroResult.textContent = `Resultados encontrados: ${totalAmount}`
-
-  // 5. Salida final
-  console.log('--- Datos Listos para Secciones 1 y 2 ---')
-  console.log(filteredData)
-
-  // 6. constuir vistas:
   buildSectionComments(filteredData)
 }
 
@@ -188,14 +164,13 @@ function buildSectionComments (reviewData) {
     contenedor.insertAdjacentHTML('beforeend', crearTarjetaReview(review))
   })
 
-  // Delegación de clicks — placeholder para abrir orden
+  // Click en tarjeta → abrir modal de detalle
   contenedor.addEventListener('click', (e) => {
     const tarjeta = e.target.closest('.review-card')
     if (!tarjeta) return
-    const idOrden = tarjeta.dataset.idOrden
-    // TODO: abrir modal o navegar a la orden
-    console.log('Orden seleccionada:', idOrden)
-  }, { once: true })
+    const idReview = tarjeta.dataset.idReview
+    abrirDetalleReview(idReview)
+  })
 }
 
 function crearTarjetaReview (review) {
@@ -350,4 +325,31 @@ function buildSectionKPIs (data) {
       }
     }
   })
+}
+
+// ── Modal de detalle ──────────────────────────────────────
+
+const modalDetalle = document.getElementById('ModalDetalleReview')
+document.getElementById('btnCerrarDetalle').addEventListener('click', () => modalDetalle.close())
+
+async function abrirDetalleReview (idReview) {
+  try {
+    const res = await fetch(`/admin/api/comentarios/${idReview}`)
+    if (!res.ok) throw new Error('No se pudo obtener el detalle')
+
+    const { data } = await res.json()
+
+    document.getElementById('detalle-subtitulo').textContent = `Orden ${data.ID_Orden}`
+    document.getElementById('detalle-id').textContent = data.ID_Review
+    document.getElementById('detalle-orden').textContent = data.ID_Orden
+    document.getElementById('detalle-estrellas').innerHTML =
+      renderEstrellas(data.Puntaje) + ` <span style="margin-left:6px;">${data.Puntaje}/5</span>`
+    document.getElementById('detalle-fecha').textContent = formatearFecha(data.Fecha)
+    document.getElementById('detalle-comentario').textContent =
+      data.Comentario ? data.Comentario.replace(/^"|"$/g, '') : 'Sin comentario'
+
+    modalDetalle.showModal()
+  } catch (err) {
+    console.error('Error al abrir detalle:', err)
+  }
 }

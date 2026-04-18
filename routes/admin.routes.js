@@ -3,6 +3,7 @@ const router = express.Router()
 
 // Llamada a controlador de Admin
 const adminControlador = require('../controllers/admin.controlador.js')
+const feedBackControlador = require('../controllers/feedback.controlador.js')
 const isAuth = require('../middleware/isAuth.js')
 const isAdmin = require('../middleware/isAdmin.js')
 // Dashboard principal
@@ -41,5 +42,9 @@ router.delete('/api/ingredientes/:id/eliminar', adminControlador.eliminarIngredi
 router.put('/api/ingredientes/:id/actualizar', adminControlador.actualizarIngrediente)
 router.get('/metricas-ingredientes', adminControlador.getMetricasIngredientes)
 router.get('/api/metricas-ingredientes', adminControlador.getMetricasIngredientesData)
+
+router.get('/feedback', isAuth, isAdmin, feedBackControlador.getFeedback)
+router.get('/api/comentarios', isAuth, isAdmin, feedBackControlador.getFeedbackCatalog)
+router.get('/api/comentarios/:id', isAuth, isAdmin, feedBackControlador.getComentarioDetail)
 
 module.exports = router
