@@ -60,6 +60,8 @@ async function cargarTablaCategorias () {
       tr.innerHTML = `
         <td style="font-weight:500;">${cat.Nombre}</td>
       `
+      tr.style.cursor = 'pointer'
+      tr.addEventListener('click', () => abrirModalEditarCategoria(cat.Nombre))
       tbody.appendChild(tr)
     })
 
@@ -184,3 +186,100 @@ function mostrarErrorCat (titulo, mensaje) {
   errorMensajeCat.textContent = mensaje
   modalErrorCat.showModal()
 }
+
+// Modal Editar Categoría
+const modalEditarCategoria = document.getElementById('ModalEditarCategoria')
+const editarSubtituloCategoria = document.getElementById('editarSubtituloCategoria')
+const editNombreCategoria = document.getElementById('editNombreCategoria')
+const editarCategoriaEnUso = document.getElementById('editarCategoriaEnUso')
+const btnGuardarEditarCategoria = document.getElementById('btnGuardarEditarCategoria')
+const btnCancelarEditarCategoria = document.getElementById('btnCancelarEditarCategoria')
+
+let nombreOriginalCategoria = null
+
+async function abrirModalEditarCategoria (nombre) {
+  nombreOriginalCategoria = nombre
+  editarSubtituloCategoria.textContent = `Editando: ${nombre}`
+  editNombreCategoria.value = nombre
+  editarCategoriaEnUso.style.display = 'none'
+  editarCategoriaEnUso.innerHTML = ''
+
+  // Verificar si está en uso
+  try {
+    const res = await fetch(`/admin/api/categorias/${encodeURIComponent(nombre)}/verificarEnUso`)
+    const obj = await res.json()
+    if (obj.enUso) {
+      editarCategoriaEnUso.style.display = 'block'
+      editarCategoriaEnUso.innerHTML = `
+        ⚠️ Esta categoría está siendo usada por
+        <strong>${obj.totalInsumos}</strong> insumo(s) y
+        <strong>${obj.totalProductos}</strong> producto(s).
+        Al renombrarla se actualizarán todos.
+      `
+    }
+  } catch (error) {
+    console.error('Error verificando uso:', error)
+  }
+
+  modalEditarCategoria.showModal()
+}
+
+btnCancelarEditarCategoria.addEventListener('click', () => {
+  modalEditarCategoria.close()
+  nombreOriginalCategoria = null
+})
+
+btnGuardarEditarCategoria.addEventListener('click', async () => {
+  if (!nombreOriginalCategoria) return
+
+  const nuevoNombre = editNombreCategoria.value.trim()
+
+  if (!nuevoNombre) {
+    mostrarErrorCat('Campo incompleto', 'El nombre es obligatorio.')
+    return
+  }
+
+  // Verificar duplicado solo si se cambio el nombre
+  if (nuevoNombre !== nombreOriginalCategoria) {
+    try {
+      const resVerif = await fetch(`/admin/api/categorias/verificarNombre?nombre=${encodeURIComponent(nuevoNombre)}`)
+      const objVerif = await resVerif.json()
+      if (objVerif.existe) {
+        mostrarErrorCat('Nombre duplicado', `Ya existe una categoría con el nombre "${nuevoNombre}".`)
+        return
+      }
+    } catch (error) {
+      mostrarErrorCat('Error de verificación', 'No se pudo verificar el nombre.')
+      return
+    }
+  }
+
+  try {
+    const res = await fetch(`/admin/api/categorias/${encodeURIComponent(nombreOriginalCategoria)}/actualizar`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ Nombre: nuevoNombre })
+    })
+
+    if (!res.ok) {
+      const errorData = await res.json().catch(() => ({}))
+      throw new Error(errorData.message || 'Error del servidor')
+    }
+
+    const obj = await res.json()
+
+    if (obj.success) {
+      modalEditarCategoria.close()
+      exitoTituloCat.textContent = 'Categoría actualizada'
+      exitoMensajeCat.textContent = 'Los cambios fueron guardados correctamente.'
+      modalExitoCat.showModal()
+      cargarTablaCategorias()
+    } else {
+      mostrarErrorCat('Error al actualizar', obj.message || 'Error desconocido')
+    }
+  } catch (error) {
+    mostrarErrorCat('Error al modificar', error.message)
+  } finally {
+    nombreOriginalCategoria = null
+  }
+})

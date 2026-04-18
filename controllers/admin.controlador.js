@@ -750,3 +750,47 @@ exports.crearCategoria = async (req, res, next) => {
     res.status(500).json({ success: false, message: 'Error al guardar la categoría' })
   }
 }
+
+// GET verificarEnUso
+exports.verificarCategoriaEnUso = async (req, res, next) => {
+  try {
+    const nombre = decodeURIComponent(req.params.nombre)
+    const uso = await Categoria.buscarEnUso(nombre)
+    res.status(200).json({
+      success: true,
+      enUso: uso.totalInsumos > 0 || uso.totalProductos > 0,
+      totalInsumos: uso.totalInsumos,
+      totalProductos: uso.totalProductos
+    })
+  } catch (error) {
+    console.error('Error en verificarCategoriaEnUso:', error)
+    res.status(500).json({ success: false, message: 'Error al verificar uso' })
+  }
+}
+
+// Actualiza categoria
+exports.actualizarCategoria = async (req, res, next) => {
+  try {
+    const oldNombre = decodeURIComponent(req.params.nombre)
+    const { Nombre: newNombre } = req.body
+
+    if (!newNombre || String(newNombre).trim() === '') {
+      return res.status(400).json({ success: false, message: 'El nombre es obligatorio' })
+    }
+
+    if (oldNombre === newNombre.trim()) {
+      return res.status(200).json({ success: true, message: 'Sin cambios' })
+    }
+
+    const [existente] = await Categoria.buscarPorNombre(newNombre.trim())
+    if (existente.length > 0) {
+      return res.status(409).json({ success: false, message: 'Ya existe una categoría con ese nombre' })
+    }
+
+    await Categoria.actualizarCategoria(oldNombre, newNombre.trim())
+    res.status(200).json({ success: true, message: 'Categoría actualizada correctamente' })
+  } catch (error) {
+    console.error('Error en actualizarCategoria:', error)
+    res.status(500).json({ success: false, message: error.message })
+  }
+}
