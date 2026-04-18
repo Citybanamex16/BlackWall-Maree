@@ -1,4 +1,4 @@
-/* global localStorage, L, window */
+/* global localStorage, window */
 
 /* CU01 */
 const platillobotones = document.getElementsByClassName('platillo-btn')
@@ -24,7 +24,7 @@ overlay.addEventListener('click', (e) => {
 modalClose.addEventListener('click', cerrarModal)
 
 // ── ACTUALIZAR BOTÓN RESUMEN ──
-const actualizarBotonResumen = () => {
+function actualizarBotonResumen () {
   const btnTitle = document.querySelector('.order-btn-title')
   const btnSub = document.querySelector('.order-btn-sub')
   if (pedido.length === 0) {
@@ -36,99 +36,108 @@ const actualizarBotonResumen = () => {
   }
 }
 
-// ── BOTONES DE PLATILLO ──
-for (const button of platillobotones) {
-  button.addEventListener('click', () => {
-    const tarjeta = button.closest('.product-info')
-    const nombre = tarjeta.querySelector('.product-name').textContent.trim()
-    const precio = tarjeta.querySelector('.product-price').textContent.trim()
-    const desc = tarjeta.querySelector('.product-desc').textContent.trim()
+// ── Conexion BOTONES DE PLATILLOS DEL MENU ──
 
-    fetch(`/menu/consultaplatillo?nombre=${encodeURIComponent(nombre)}`)
-      .then(r => r.json())
-      .then(data => {
-        if (!data.disponible) {
-          abrirModal(`
-            <h2 style="font-family:'Cormorant Garamond',serif;font-size:22px;margin-bottom:12px;">
-              ${nombre}
-            </h2>
-            <p style="color:#e74c3c;font-size:14px;">
-              Este platillo no está disponible por el momento.
-            </p>
-          `)
-          return
-        }
-
-        const listaIngredientes = data.ingredientes
-          .map(ing => `<li style="font-size:13px;color:#555;margin-bottom:4px;">• ${ing}</li>`)
-          .join('')
-
-        const checkboxIngredientes = data.ingredientes
-          .map(ing => `
-            <label style="display:flex;align-items:center;gap:8px;font-size:13px;
-                          color:#555;margin-bottom:6px;cursor:pointer;">
-              <input type="checkbox" checked disabled> ${ing}
-            </label>
-          `).join('')
-
-        abrirModal(`
-          <h2 style="font-family:'Cormorant Garamond',serif;font-size:26px;margin-bottom:4px;">
-            ${nombre}
-          </h2>
-          <p style="color:#b5956a;font-size:15px;font-weight:500;margin-bottom:12px;">
-            ${precio}
-          </p>
-          <p style="color:#777;font-size:13px;margin-bottom:8px;">${desc}</p>
-          <p style="font-size:13px;font-weight:600;color:#444;margin-bottom:6px;">Ingredientes:</p>
-          <ul style="margin-bottom:16px;padding-left:4px;">${listaIngredientes}</ul>
-          <p style="font-size:12px;color:#aaa;margin-bottom:20px;">Base: ${data.base}</p>
-
-          <button id="btn-confirmar-agregar"
-            style="width:100%;padding:12px;background:#eac9c1;color:#fff;
-                   border:none;border-radius:6px;font-size:14px;cursor:pointer;
-                   font-family:'Jost',sans-serif;margin-bottom:12px;">
-            + Confirmar y agregar al pedido
-          </button>
-
-          <details>
-            <summary style="font-size:13px;color:#b5956a;cursor:pointer;list-style:none;">
-              ✎ Editar ingredientes
-            </summary>
-            <div style="margin-top:10px;padding:12px;background:#faf8f5;border-radius:8px;">
-              <p style="font-size:12px;color:#aaa;margin-bottom:8px;">
-                Selecciona los ingredientes que quieres incluir:
-              </p>
-              ${checkboxIngredientes}
-              <p style="font-size:11px;color:#bbb;margin-top:8px;">
-                Asi no va a estar pero ahora es prototipo por ahora
-              </p>
-            </div>
-          </details>
-        `)
-
-        document.getElementById('btn-confirmar-agregar').addEventListener('click', () => {
-          pedido.push({ nombre, precio, desc })
-          localStorage.setItem('pedido', JSON.stringify(pedido))
-
-          fetch('/menu/agregaritem', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ nombre, precio, desc })
-          })
-            .then(r => r.json())
-            .then(confirmacion => {
-              console.log('Agregado:', confirmacion)
-              cerrarModal()
-              actualizarBotonResumen()
-            })
-            .catch(err => console.log(err))
-        })
-      })
-      .catch(err => console.log(err))
-  })
+// Su único trabajo es leer el HTML y devolver un objeto limpio con la información del platillo.
+function obtenerDatosPlatillo (boton) {
+  // Buscamos la tarjeta completa que definimos en el Actor A
+  const tarjeta = boton.closest('.product-card-app')
+  return {
+    id: boton.getAttribute('data-id'), // Usamos el ID que pusimos en el botón
+    nombre: tarjeta.querySelector('.product-name-app').textContent.trim(),
+    precio: tarjeta.querySelector('.product-price-app').textContent.trim()
+    // La descripción la podemos sacar de un data-attribute o del objeto original
+  }
 }
 
-// ── MAPA DE UBICACIÓN ──
+// Esta función solo se encarga de "dibujar". Recibe los datos y devuelve el texto (string) que verás en la pantalla.
+function generarHTMLModal (platillo, dataExtra) {
+  const listaIngredientes = dataExtra.ingredientes
+    .map(ing => `<li>${ing}</li>`).join('')
+
+  return `
+        <div class="modal-detalle-header">
+            <h2 class="title is-4 font-cormorant">${platillo.nombre}</h2>
+            <p class="subtitle is-5 has-text-primary">${platillo.precio}</p>
+        </div>
+        <div class="modal-detalle-body">
+            <p class="description">${dataExtra.descripcion || 'Sin descripción'}</p>
+            <hr>
+            <p class="is-size-7 has-text-weight-bold">INGREDIENTES:</p>
+            <ul class="lista-ingredientes-modal">${listaIngredientes}</ul>
+        </div>
+        <div class="modal-detalle-footer mt-5">
+            <button id="btn-confirmar-agregar" class="button is-black is-fullwidth is-rounded">
+                + Confirmar y agregar
+            </button>
+        </div>
+    `
+}
+
+// Este se encarga de la lógica pesada: hablar con el servidor y guardar en el localStorage.
+async function agregarAlCarrito (platillo) {
+  // Guardar localmente
+  pedido.push(platillo)
+  localStorage.setItem('pedido', JSON.stringify(pedido))
+
+  try {
+    const response = await fetch('/menu/agregaritem', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(platillo)
+    })
+    console.log('Sincronizado con servidor')
+    cerrarModal()
+    actualizarBotonResumen()
+  } catch (err) {
+    console.error('Error al guardar:', err)
+  }
+}
+
+async function verDetalleProducto (id) {
+  try {
+    // 1. Buscamos la info del producto (puedes sacarla de tu array global 'todosLosProductos')
+    const producto = globalProducts.find(p => p.id == id)
+
+    // 2. Lógica del amigo: Consultar disponibilidad real
+    console.log('Buscando producto: ', id)
+    const res = await fetch(`/menu/consultaplatillo?id=${id}`)
+    const data = await res.json()
+
+    if (!data.disponible) {
+      alert('Lo sentimos, este producto se acaba de agotar.')
+      return
+    } else {
+      console.log('Este producto si esta disponible')
+    }
+
+    // 3. Poblar TU modal con los datos recibidos
+    const contenedorContenido = document.getElementById('modal-content')
+
+    // Usamos la función del amigo adaptada para inyectar en tu div
+    contenedorContenido.innerHTML = generarHTMLModal(producto, data)
+
+    // 4. Mostrar el modal
+    const detailModal = document.getElementById('modal-overlay')
+    detailModal.showModal()
+    console.log('Mostrando Modal')
+
+    // 5. Asignar el evento al nuevo botón de confirmar que se acaba de crear
+    document.getElementById('btn-confirmar-agregar').onclick = function () {
+      agregarAlCarrito(producto)
+    }
+  } catch (err) {
+    console.error('Error al abrir detalle:', err)
+  }
+}
+
+// Función para cerrar (conéctala a tu botón modal-close)
+document.getElementById('modal-close').onclick = function () {
+  const detailModal = document.getElementById('modal-overlay')
+  detailModal.close()
+}
+
+/* ── MAPA DE UBICACIÓN ──
 if (navigator.geolocation) {
   navigator.geolocation.getCurrentPosition(
     (position) => {
@@ -161,22 +170,10 @@ if (navigator.geolocation) {
   document.getElementById('mapa-estado').textContent =
     'Tu navegador no soporta geolocalización.'
 }
-
-// ── DROPDOWNS DE SECCIONES ──
-const seccionesCollapsible = document.querySelectorAll('.menu-section--collapsible')
-
-for (const seccion of seccionesCollapsible) {
-  const header = seccion.querySelector('.section-header')
-  const contenido = seccion.querySelector('.section-content')
-
-  header.addEventListener('click', () => {
-    const abierto = seccion.dataset.open === 'true'
-    seccion.dataset.open = abierto ? 'false' : 'true'
-    contenido.style.display = abierto ? 'none' : 'block'
-  })
-}
+*/
 
 /* CU11 Visualizar Menu Digital */
+let globalProducts = [] // Variable global de productos
 
 function ShowMenuErrorModal () {
   console.log('Mostrando Modal de error')
@@ -208,8 +205,15 @@ async function obtenerMenu () {
 
     console.log('Datos obtenidos de Backend: ', data)
 
+    //= =Llamado a promociones ==//
+
+    const PromosData = await getAllPromos()
+
+    console.log('Promos obtenidos del Backend: ', PromosData)
+
     /* === Llamada a Construcción de Menu Dinámico == */
-    contruirMenuDinamico(data)
+    globalProducts = data.arrayProductsInfo
+    contruirMenuDinamico(data, PromosData)
   } catch (error) {
     console.error('Error al obtener el menú:', error)
     ShowMenuErrorModal()
@@ -220,146 +224,223 @@ obtenerMenu()
 
 /* ==Construcción de Menu Dinámico == */
 
-function construirFichaProductos (datosProducto, datosCategorias) {
-  console.log('Repartiendo productos en sus categorías...')
-  datosCategorias.forEach(cat => {
-    const sectionPrincipal = document.getElementById(cat.id)
-    const gridDestino = sectionPrincipal.querySelector('.grid-productos')
-    const productosFiltrados = datosProducto.filter(prod => prod.categoria === cat.nombre)
+/* ==== SISTEMA DE PROMOCIONES ==== */
 
-    if (productosFiltrados.length === 0) {
-      gridDestino.innerHTML = `
-        <div class="empty-state">
-          <span class="empty-icon">🥐</span>
-          <p>Sin productos en esta categoría por el momento.</p>
-        </div>`
-      return
+function getPromosFromProduct (nombre, promosData) {
+  const promosArray = []
+
+  // Extracción segura (por si alguno viene vacío)
+  const PEs = promosData.allPEs[0] || []
+  const PUs = promosData.allPUs[0] || []
+
+  // Filtramos las promociones que coincidan exactamente con el nombre del producto
+  const promosEvento = PEs.filter(promo => promo.Producto === nombre)
+  const promosUnicas = PUs.filter(promo => promo.Producto === nombre)
+
+  // Unimos los resultados en un solo array
+  promosArray.push(...promosEvento, ...promosUnicas)
+
+  return promosArray
+}
+
+function sistemaConflictosPromos (promosArray) {
+  // Si no hay conflictos, regresamos la única promo que existe
+  if (promosArray.length <= 1) return promosArray
+
+  console.log('Resolviendo conflicto entre múltiples promos...')
+
+  // 1. Clasificamos y enriquecemos las promos con la lógica de tu compañero
+  const promosProcesadas = promosArray.map(promo => {
+    const desc = parseFloat(promo.Descuento) || 0
+    let tipo = 'PORCENTAJE'
+    let valorFiltro = desc // Guardamos el valor para compararlo luego
+
+    if (desc >= 1.0) {
+      tipo = 'BOGO'
+      // "redondeado hacia arriba al entero más cercano"
+      let cantidadX = Math.ceil(desc)
+
+      // Ajuste de seguridad por el ejemplo (1 -> 2x1)
+      if (cantidadX === 1) cantidadX = 2
+
+      valorFiltro = cantidadX
     }
 
-    productosFiltrados.forEach((prod, i) => {
-      const cardHTML = `
-        <div class="column is-12-mobile is-6-tablet is-4-desktop">
-          <div class="card product-card h-100" style="animation-delay: ${i * 60}ms">
-            <div class="card-image">
-              <figure class="image is-4by3">
-                <img
-                  src="${prod.imagen}"
-                  alt="${prod.nombre}"
-                  class="product-thumb"
-                  loading="lazy"
-                  onerror="this.src='/img/placeholder.webp'"
-                >
-              </figure>
-            </div>
-            <div class="card-content">
-              <div class="media mb-2">
-                <div class="media-content">
-                  <p class="title is-5 mb-1">${prod.nombre}</p>
-                  <p class="product-price-tag">$${prod.precio}</p>
-                </div>
-              </div>
-              <div class="content">
-                ${prod.descripcion
-                  ? `<p class="product-desc-text">${prod.descripcion}</p>`
-                  : ''}
-                <div class="tags ingredient-tags" id="ingredientes-${prod.id}">
-                  ${generarBadgesIngredientes(prod.ingredientes)}
-                </div>
-                <button
-                  class="btn-agregar"
-                  data-id="${prod.id}"
-                  data-nombre="${prod.nombre}"
-                  data-precio="${prod.precio}"
-                  onclick="agregarAlCarrito(this)"
-                >
-                  <span class="btn-agregar-icon">＋</span>
-                  <span class="btn-agregar-label">Agregar a la orden</span>
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>`
+    return {
+      ...promo,
+      tipoCalculado: tipo,
+      valorReal: valorFiltro
+    }
+  })
 
-      gridDestino.insertAdjacentHTML('beforeend', cardHTML)
-    })
+  // 2. CONFLICTO DESIGUAL: Separamos las promos BOGO (2x1, 3x1)
+  const promosBOGO = promosProcesadas.filter(p => p.tipoCalculado === 'BOGO')
+
+  if (promosBOGO.length > 0) {
+    // Regla: BOGO mata a Porcentaje siempre.
+    // 3. CONFLICTO IGUAL (BOGO vs BOGO): Gana la que regale más productos (mayor X)
+    promosBOGO.sort((a, b) => b.valorReal - a.valorReal)
+    console.log(`Ganador BOGO: ${promosBOGO[0].valorReal}x1`)
+    return [promosBOGO[0]]
+  }
+
+  // 4. CONFLICTO IGUAL (% vs %): Si solo hay porcentajes, gana el mayor descuento
+  promosProcesadas.sort((a, b) => b.valorReal - a.valorReal)
+  console.log(`Ganador %: ${(promosProcesadas[0].valorReal * 100)}% de descuento`)
+
+  return [promosProcesadas[0]]
+}
+
+function menuPromosAgent (cardHTML, finalPromos) {
+  if (!finalPromos || finalPromos.length === 0) return cardHTML
+
+  const promo = finalPromos[0]
+  const tempDiv = document.createElement('div')
+  tempDiv.innerHTML = cardHTML.trim()
+
+  const card = tempDiv.querySelector('.product-card-app')
+  const priceElement = tempDiv.querySelector('.product-price-app')
+  const buttonElement = tempDiv.querySelector('.add-btn-app')
+
+  // 1. Definir Colores y Etiquetas según Origen
+  // PU (Única) -> Naranja | PE (Evento) -> Dorado
+  const isEvento = promo.Origen === 'Evento'
+  const colorPromo = isEvento ? '#b5956a' : '#e67e22'
+  const labelOrigen = isEvento ? 'Evento' : 'Oferta'
+  const claseTab = isEvento ? 'tab-pe' : 'tab-pu'
+
+  // 2. Preparar el Texto de la Pestaña (Minimalista)
+  const valorDesc = parseFloat(promo.Descuento)
+  let textoPestaña = ''
+
+  if (valorDesc >= 1.0) {
+    const cantX = Math.ceil(valorDesc) === 1 ? 2 : Math.ceil(valorDesc)
+    textoPestaña = `${labelOrigen}: ${cantX}x1`
+  } else {
+    textoPestaña = `${labelOrigen}: ${(valorDesc * 100).toFixed(0)}%`
+  }
+
+  // 3. Crear la Pestaña de Folder e inyectarla al inicio de la tarjeta
+  const folderTabHTML = `<div class="promo-folder-tab ${claseTab}">${textoPestaña}</div>`
+  card.insertAdjacentHTML('afterbegin', folderTabHTML)
+
+  // 4. Cambios Visuales en la Tarjeta
+  card.classList.add('has-active-promo')
+  card.style.borderColor = colorPromo
+
+  // 5. Ajuste de Precios (Anterior vs Nuevo)
+  const precioOriginal = parseFloat(priceElement.textContent.replace('$', ''))
+  let precioFinal = precioOriginal
+
+  if (valorDesc < 1.0) {
+    precioFinal = (precioOriginal * (1 - valorDesc)).toFixed(2)
+    priceElement.innerHTML = `
+            <span style="text-decoration: line-through; color: #aaa; font-size: 0.8em; margin-right: 5px;">$${precioOriginal}</span>
+            <span style="color: ${colorPromo}; font-weight: 700;">$${precioFinal}</span>
+        `
+  } else {
+    // En BOGO el precio unitario no cambia visualmente en la tarjeta, pero avisamos
+    priceElement.style.color = colorPromo
+    priceElement.style.fontWeight = '700'
+  }
+
+  // 6. "Embeber" información para el resumen (Backend del Front)
+  // Guardamos el nombre largo (Plantilla_Promo) para usarlo en el carrito después
+  buttonElement.setAttribute('data-precio', precioFinal)
+  buttonElement.setAttribute('data-promo-display', textoPestaña)
+  buttonElement.setAttribute('data-promo-nombre-real', promo.Plantilla_Promo)
+
+  return tempDiv.innerHTML
+}
+
+// Sistema de Promos
+function promosMaster (cardHTML, promosData, productName) {
+  // 1. Extraer promos
+  const arrayPromosProducto = getPromosFromProduct(productName, promosData)
+
+  // Si el producto no tiene promos, cortamos la ejecución para ahorrar recursos
+  if (arrayPromosProducto.length === 0) return cardHTML
+
+  // 2. Resolver conflictos si tenemos mas de 1
+
+  let arrayPromosFinales
+
+  if (arrayPromosProducto.length > 1) {
+    arrayPromosFinales = sistemaConflictosPromos(arrayPromosProducto)
+  } else {
+    arrayPromosFinales = arrayPromosProducto
+  }
+
+  // 3. Aplicar cambios en estetica e info en la carta:
+  const finalCard = menuPromosAgent(cardHTML, arrayPromosFinales)
+
+  // 4. Final: Regresamos la carta inyectada
+  return finalCard
+}
+
+// Actor A: Constructor de fichas individuales
+function construirFichaProductos (productosFiltrados, PromosData, gridDestino) {
+  gridDestino.innerHTML = ''
+
+  productosFiltrados.forEach((prod, i) => {
+    const cardHTML = `
+            <div class="column is-half-mobile is-half-tablet"> 
+                <div class="product-card-app" onclick="verDetalleProducto('${prod.id}')">
+                    
+                    <div class="product-img-wrapper">
+                        <img src="${prod.imagen}" alt="${prod.nombre}" loading="lazy" onerror="this.src='/img/placeholder.webp'">
+                    </div>
+
+                    <div class="product-info-wrapper">
+                        <h3 class="product-name-app">${prod.nombre}</h3>
+                        <p class="product-price-app">$${prod.precio}</p>
+                    </div>
+
+                   <div class="product-action-wrapper">
+    <button class="add-btn-app" 
+            data-id="${prod.id}" 
+            data-nombre="${prod.nombre}"
+            data-precio="${prod.precio}"
+            onclick="event.stopPropagation(); agregarAlCarrito(this)">
+        <span style="font-size: 14px; font-weight: bold;">＋</span>
+        <span>Agregar</span>
+    </button>
+</div>
+
+                </div>
+            </div>`
+
+    // El Promos Master recibe el string, lo pinta y lo devuelve listo para insertarse
+    const completedCardHTML = promosMaster(cardHTML, PromosData, prod.nombre)
+    gridDestino.insertAdjacentHTML('beforeend', completedCardHTML)
   })
 }
 
-// Función auxiliar para la Capa 3: Los Ingredientes
+// Actor B: Función auxiliar para la Capa 3: Los Ingredientes
 function generarBadgesIngredientes (listaIngredientes) {
   if (!listaIngredientes || listaIngredientes.length === 0) return ''
   return listaIngredientes
-    .map(ing => `<span class="tag ing-tag is-rounded">${ing.nombre}</span>`)
+    .map(ing => `<span class="tag">${ing.nombre}</span>`)
     .join('')
 }
 
-/* Sección de categoría */
+/* Actor C: Sección de categoría */
 function construirCategoria (cat, contenedorMenu) {
   const seccionCat = document.createElement('section')
-  seccionCat.className = 'categoria-section mb-4 is-dynamic is-open'
-  seccionCat.id = `cat-${cat.Nombre.toLowerCase().replace(/\s+/g, '-')}`
-  const seccionID = seccionCat.id
-  const idContenedor = `grid-${cat.Nombre.replace(/\s+/g, '-').toLowerCase()}`
+  seccionCat.className = 'categoria-render mb-5 animate-fade-in' // Clase para animación suave
 
+  // Estructura limpia: Título elegante y Grid preparado para 3 columnas
   seccionCat.innerHTML = `
-    <div class="cat-header toggle-menu" role="button" tabindex="0" aria-expanded="true">
-      <h2 class="cat-title">${cat.Nombre}</h2>
-      <span class="cat-chevron" aria-hidden="true">
-        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-          <path d="M3 6l5 5 5-5" stroke="currentColor" stroke-width="1.8"
-                stroke-linecap="round" stroke-linejoin="round"/>
-        </svg>
-      </span>
-    </div>
-    <div id="${idContenedor}" class="columns is-multiline grid-productos mt-2 grid-collapsible">
-    </div>`
-
-  const header = seccionCat.querySelector('.cat-header')
-  const grid = seccionCat.querySelector('.grid-productos')
-
-  /* Toggle con animación real de altura */
-
-  function toggleGrid () {
-    const open = seccionCat.classList.contains('is-open')
-
-    if (open) {
-      // Cerrar: fija la altura actual, luego anima a 0
-      grid.style.maxHeight = grid.scrollHeight + 'px'
-      grid.style.opacity = '1'
-      /* global requestAnimationFrame */
-      requestAnimationFrame(() => {
-        grid.style.maxHeight = '0'
-        grid.style.opacity = '0'
-      })
-      seccionCat.classList.remove('is-open')
-      header.setAttribute('aria-expanded', 'false')
-    } else {
-      // Abrir: anima desde 0 hasta el alto real
-      grid.style.maxHeight = grid.scrollHeight + 'px'
-      grid.style.opacity = '1'
-      seccionCat.classList.add('is-open')
-      header.setAttribute('aria-expanded', 'true')
-      // Una vez terminada la transición, suelta max-height para que
-      // el contenido pueda crecer si se añaden más items
-      grid.addEventListener('transitionend', () => {
-        if (seccionCat.classList.contains('is-open')) {
-          grid.style.maxHeight = 'none'
-        }
-      }, { once: true })
-    }
-  }
-
-  header.addEventListener('click', toggleGrid)
-  header.addEventListener('keydown', e => {
-    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleGrid() }
-  })
+    <h2 class="category-display-title">${cat.Nombre}</h2>
+    <div id="grid-principal" class="columns is-mobile is-multiline product-grid-app">
+        </div>`
 
   contenedorMenu.appendChild(seccionCat)
-  return { id: seccionID, nombre: cat.Nombre }
+  return { id: 'grid-principal', nombre: cat.Nombre }
 }
 
-/* Sticky tabs */
-function generarStickyTabs (categorias) {
+/* Actor D: Sticky tabs */
+function generarStickyTabs (categorias, todosLosProductos, todosLosTipos, promosDatos) {
   const listaTabs = document.getElementById('lista-tabs')
   listaTabs.innerHTML = ''
 
@@ -372,27 +453,16 @@ function generarStickyTabs (categorias) {
 
     li.querySelector('a').addEventListener('click', e => {
       e.preventDefault()
+
+      // Feedback visual de tab activo
       document.querySelectorAll('#lista-tabs li').forEach(el => el.classList.remove('is-active'))
       li.classList.add('is-active')
 
-      const target = document.getElementById(idSeccion)
+      // LLAMADA CLAVE: Re-renderizamos la sección con la categoría clickeada
+      renderizarVistaCategoria(cat, todosLosProductos, todosLosTipos, promosDatos)
 
-      // Si estaba cerrado, ábrir antes de hacer scroll
-      if (!target.classList.contains('is-open')) {
-        const grid = target.querySelector('.grid-productos')
-        grid.style.maxHeight = grid.scrollHeight + 'px'
-        grid.style.opacity = '1'
-        target.classList.add('is-open')
-        target.querySelector('.cat-header').setAttribute('aria-expanded', 'true')
-        grid.addEventListener('transitionend', () => {
-          grid.style.maxHeight = 'none'
-        }, { once: true })
-      }
-
-      // Offset por la sticky nav
-      const stickyH = document.getElementById('sticky-nav-wrapper')?.offsetHeight ?? 0
-      const top = target.getBoundingClientRect().top + window.scrollY - stickyH - 12
-      window.scrollTo({ top, behavior: 'smooth' })
+      // Scroll opcional al inicio del menú por si el usuario estaba muy abajo
+      window.scrollTo({ top: 0, behavior: 'smooth' })
     })
 
     listaTabs.appendChild(li)
@@ -415,34 +485,141 @@ function generarStickyTabs (categorias) {
   document.querySelectorAll('.categoria-section').forEach(s => observer.observe(s))
 }
 
-function contruirMenuDinamico (datos) {
-  // 1. Referencia al contenedor principal
+// Mini función para ordenar los Tipos ([{}])-> Array de objetos
+function ordenarTipos (array) {
+  console.log('Recibiendo tipos desordenados: ', array)
+
+  return [...array].sort((a, b) => {
+    // 1. Regla especial: "Otros" siempre al final
+    if (a.nombre === 'Otros') return 1
+    if (b.nombre === 'Otros') return -1
+
+    // 2. Si no es "Otros", orden alfabético normal
+    return a.nombre.localeCompare(b.nombre)
+  })
+}
+
+// Actor Principal
+function contruirMenuDinamico (datos, promosDatos) {
+  // 1. Guardamos los datos globalmente o en un scope accesible para los filtros
+  const categorias = datos.arrayCategorías[0]
+  const todosLosProductos = datos.arrayProductsInfo
+  const TiposDesordenados = datos.arrayTipos
+  const todosLosTipos = ordenarTipos(TiposDesordenados) // Todos los tipos que hay
+  console.log('Tipos ordenados: ', todosLosTipos)
+
+  // 2. Generamos los Sticky Tabs una sola vez
+  // Pasamos la referencia a los productos para que los tabs puedan disparar el filtro
+  generarStickyTabs(categorias, todosLosProductos, todosLosTipos, promosDatos)
+
+  // 3. Renderizado inicial: Mostramos la primera categoría por defecto
+  if (categorias.length > 0) {
+    const primeraCat = categorias[0]
+    renderizarVistaCategoria(primeraCat, todosLosProductos, todosLosTipos, promosDatos)
+  }
+
+  console.log('Estructura base del menú lista y primera categoría renderizada.')
+}
+
+function construirSeccionTipo (tipoNombre, contenedorPadre) {
+  const wrapperTipo = document.createElement('div')
+  wrapperTipo.className = 'type-accordion mb-2 is-open' // Por defecto abierto
+
+  const idGridTipo = `grid-tipo-${tipoNombre.toLowerCase().replace(/\s+/g, '-')}`
+
+  wrapperTipo.innerHTML = `
+    <div class="type-header" onclick="toggleTipo(this)">
+      <h3 class="type-subtitle">${tipoNombre}</h3>
+      <span class="type-arrow">
+        <i class="fas fa-chevron-down"></i>
+      </span>
+    </div>
+    <div id="${idGridTipo}" class="type-content columns is-mobile is-multiline product-grid-app">
+      </div>
+  `
+
+  contenedorPadre.appendChild(wrapperTipo)
+  return idGridTipo
+}
+
+// Pequeña función  auxiliar de F para el toggle visual
+function toggleTipo (header) {
+  const wrapper = header.parentElement
+  wrapper.classList.toggle('is-open')
+}
+console.log(toggleTipo)
+
+// Actor Promos (Agente P)
+
+async function getAllPromos () {
+  // Esta funcion obtiene todas las PU & PE
+  let Promos
+  console.log('Obteniendo PUs y PEs')
+  try {
+    const response = await fetch('/menu/consultarPromosMenu')
+    const data = await response.json()
+
+    if (!data.ok) {
+      console.log('Error Interno')
+      return
+    }
+
+    console.log('Data recibida: ', data)
+    Promos = data
+  } catch (error) {
+    console.log('Error: ', error)
+  }
+  console.log('Finalizado')
+  return Promos
+}
+
+// Actor E
+function renderizarVistaCategoria (categoriaObj, productos, allTypes, allPromos) {
   const contenedorMenu = document.getElementById('menu-categorias')
   contenedorMenu.innerHTML = ''
 
-  const categoríasInfo = []
+  // 1. Título de la Categoría (Actor C)
+  const infoCategoria = construirCategoria(categoriaObj, contenedorMenu)
+  const mainWrapper = document.getElementById(infoCategoria.id)
+  mainWrapper.innerHTML = ''
 
-  const categorías = datos.arrayCategorías[0]
-  // 2. Iteramos por cada categoría para crear su sección
-  categorías.forEach(cat => {
-    console.log(`Creando sección para catalogo ${cat.Nombre}`)
-    categoríasInfo.push(construirCategoria(cat, contenedorMenu))
+  // 2. Filtro inicial: Productos de esta categoría
+  const productosDeCategoria = productos.filter(p => p.categoria === categoriaObj.Nombre)
+
+  // 3. Clasificación: Separar conocidos de "Otros"
+  let productosRestantes = [...productosDeCategoria]
+
+  // Renderizar Tipos Conocidos
+  allTypes.forEach(tipo => {
+    const productosDeEsteTipo = productosRestantes.filter(p => p.tipo === tipo.nombre)
+
+    if (productosDeEsteTipo.length > 0) {
+      const idGrid = construirSeccionTipo(tipo.nombre, mainWrapper)
+      // Actor A
+      construirFichaProductos(productosDeEsteTipo, allPromos, document.getElementById(idGrid))
+
+      // Quitamos estos productos de la lista de "restantes"
+      productosRestantes = productosRestantes.filter(p => p.tipo !== tipo.nombre)
+    }
   })
 
-  generarStickyTabs(categorías)
+  // 4. Lógica de "Otros": Si quedan productos sin tipo o con tipos no identificados
+  if (productosRestantes.length > 0) {
+    const idGridOtros = construirSeccionTipo('Otros', mainWrapper)
+    const gridOtros = document.getElementById(idGridOtros)
 
-  console.log('ID de categorias en View: ', categoríasInfo)
+    // Forzamos que la sección de Otros empiece colapsada para no estorbar (Opcional)
+    gridOtros.parentElement.classList.remove('is-open')
 
-  const productosInfo = datos.arrayProductsInfo
-  construirFichaProductos(productosInfo, categoríasInfo)
-
-  console.log('Menu dinámico construido con exito')
+    construirFichaProductos(productosRestantes, gridOtros)
+  }
 }
 
+/*
 window.agregarAlCarrito = function (btn) {
   const nombre = btn.dataset.nombre
   const precio = btn.dataset.precio
-  const desc = btn.closest('.card-content')?.querySelector('.product-desc-text')?.textContent?.trim() || ''
+  const desc = btn.closest('.card-content')?.querySelector('.product-desc')?.textContent?.trim() || ''
 
   // Abrir modal con descripción y botón de confirmar
   abrirModal(`
@@ -471,3 +648,4 @@ window.agregarAlCarrito = function (btn) {
     console.log('Item agregado:', item)
   })
 }
+*/

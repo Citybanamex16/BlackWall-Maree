@@ -1,7 +1,10 @@
 const nav = require('../models/breadcrumbs.model.js')
 const productos = require('../models/MenuDigital/productos.model.js')
 const categorías = require('../models/MenuDigital/categorías.model.js')
+const tipos = require('../models/MenuDigital/tipos.model.js')
+const promos = require('../models/promociones.model.js')
 const Pedido = require('../models/pedidos.model.js')
+const sucursal = require('../models/MenuDigital/sucursales.model.js')
 const db = require('../util/database.js')
 
 // CU11 Vizualisar Menu
@@ -14,9 +17,10 @@ exports.getMenuData = async (request, response, next) => {
   console.log('GetMenu ejecutandose...')
   try {
     // 1. Llamado en paralelo de consultas con Promise.all()
-    const [Allcategories, productsData] = await Promise.all([
+    const [Allcategories, productsData, AllTypes] = await Promise.all([
       categorías.fecthAll(), // Async BD call 1.
-      productos.getValidProductData() // async BD call
+      productos.getValidProductData(), // async BD call 2.
+      tipos.fetchAll() // async BD call 3.
     ])
 
     console.log('All Promises realizada con exito')
@@ -27,7 +31,8 @@ exports.getMenuData = async (request, response, next) => {
       ok: true,
       message: 'Consultas realizadas con exito',
       arrayCategorías: Allcategories,
-      arrayProductsInfo: productsData
+      arrayProductsInfo: productsData,
+      arrayTipos: AllTypes
     })
     console.log('Proceso finalizado con exito')
   } catch (err) {
@@ -35,6 +40,56 @@ exports.getMenuData = async (request, response, next) => {
     response.status(500).json({
       ok: false,
       message: err
+    })
+  }
+}
+
+exports.getMenuPromos = async (req, res, nex) => {
+  console.log('Obteniendo PU & PE')
+  try {
+    const [PUs, PEs] = await Promise.all([
+      promos.getPromotionsBySource('PU'),
+      promos.getPromotionsBySource('PE')
+    ])
+
+    console.log('All promises hechas con exito')
+    res.status(200).json({
+      ok: true,
+      message: 'PE & PU obtenidos',
+      allPUs: PUs,
+      allPEs: PEs
+    })
+  } catch (err) {
+    console.log('Error en consulta de PEs & PUs: ', err)
+    res.status(500).json({
+      ok: true,
+      message: 'PE & PU no obtenidos, error',
+      error: err
+    })
+  }
+}
+
+exports.getMapaSucursales = (req, res, nex) => {
+  const breadcrumbs = nav.getBreadcrumbs('Menu')
+  res.render('cliente/mapaSucursal', { breadcrumbs })
+}
+
+exports.getAllSucursales = async (req, res, nex) => {
+  console.log('obteniendo Sucursales ')
+  try {
+    const sucursalesData = await sucursal.fetchAll()
+
+    console.log('Sucursales recuperadas')
+    res.status(200).json({
+      ok: true,
+      message: 'Sucursales obtenidas de manera correcta',
+      allSucursales: sucursalesData
+    })
+  } catch (err) {
+    console.log('Error: ', err)
+    res.status(500).json({
+      ok: false,
+      message: 'Sucursales no obtenidas'
     })
   }
 }
@@ -47,12 +102,14 @@ exports.getOrden = (request, response, next) => {
 }
 
 exports.getPlatillo = async (request, response, next) => {
-  const nombre = request.query.nombre
-  console.log('EN CONTROLLER — buscando:', nombre)
+  const id = request.query.id
+  console.log('Query: ', request.query)
+  console.log('EN CONTROLLER — buscando:', id)
 
-  if (!nombre || typeof nombre !== 'string' || nombre.length > 100) {
+  /* if (!nombre || typeof nombre !== 'string' || nombre.length > 100) {
     return response.status(400).json({ disponible: false, mensaje: 'Nombre inválido' })
   }
+  */
 
   try {
     const [rows] = await db.execute(
@@ -62,9 +119,9 @@ exports.getPlatillo = async (request, response, next) => {
        FROM producto p
        LEFT JOIN producto_tiene_insumo pti ON p.ID_Producto = pti.ID_Producto
        LEFT JOIN insumo i ON pti.ID_Insumo = i.ID_Insumo
-       WHERE p.Nombre = ?
+       WHERE p.ID_Producto = ?
        GROUP BY p.ID_Producto`,
-      [nombre]
+      [id]
     )
 
     console.log('Resultado BD:', rows) // ve qué regresa
