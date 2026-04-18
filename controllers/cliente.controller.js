@@ -9,8 +9,17 @@ const Cliente = require('../models/cliente.model.js')
 // Si esta dentro de una subcarpeta de Views hay que decirle en cual
 
 exports.getMenu = (request, response, next) => {
+  response.render('cliente/menu')
+}
+
+exports.getPromos = (req, res, nex) => {
   const breadcrumbs = nav.getBreadcrumbs('Menu')
-  response.render('cliente/menu', { breadcrumbs })
+  res.render('cliente/promotions', { breadcrumbs })
+}
+
+exports.getEventos = (req, res, nex) => {
+  const breadcrumbs = nav.getBreadcrumbs('Menu')
+  res.render('cliente/eventos', { breadcrumbs })
 }
 
 exports.getProfile = async (req, res, next) => {
