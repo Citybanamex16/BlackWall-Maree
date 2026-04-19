@@ -29,4 +29,8 @@ module.exports = class Categoria {
   static async actualizarCategoria (oldNombre, newNombre) {
     return db.execute('CALL ActualizarCategoria(?, ?)', [oldNombre, newNombre])
   }
+
+  static async eliminarCategoria (nombre) {
+    return db.execute('DELETE FROM `categoría` WHERE Nombre = ?', [nombre])
+  }
 }

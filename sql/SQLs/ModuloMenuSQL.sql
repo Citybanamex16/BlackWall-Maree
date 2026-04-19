@@ -22,6 +22,7 @@ SET time_zone = "+00:00";
 --
 CREATE DATABASE IF NOT EXISTS `mareebd` DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
 USE `mareebd`;
+SET FOREIGN_KEY_CHECKS = 0;
 
 DELIMITER $$
 --
@@ -154,24 +155,6 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `obtener_promociones_por_tipo` (IN `
         -- Mensaje de error si el parámetro no es válido
         SELECT 'Error: El parámetro debe ser PU, PE o PR' AS Mensaje;
     END IF;
-END$$
-
-DROP PROCEDURE IF EXISTS `⁠ ActualizarCategoria ⁠`$$
-CREATE DEFINER=`⁠ root ⁠`@`⁠ localhost ⁠` PROCEDURE `⁠ ActualizarCategoria ⁠` (IN `oldNombre` VARCHAR(50) CHARSET utf8mb4 COLLATE utf8mb4_spanish2_ci, IN `newNombre` VARCHAR(50) CHARSET utf8mb4 COLLATE utf8mb4_spanish2_ci)   BEGIN
-    DECLARE EXIT HANDLER FOR SQLEXCEPTION
-    BEGIN
-        SET FOREIGN_KEY_CHECKS = 1;
-        ROLLBACK;
-        RESIGNAL;
-    END;
-
-    START TRANSACTION;
-        SET FOREIGN_KEY_CHECKS = 0;
-        UPDATE ⁠ categoría ⁠ SET Nombre = newNombre WHERE Nombre = oldNombre;
-        UPDATE ⁠ insumo ⁠ SET ⁠ Categoría ⁠ = newNombre WHERE ⁠ Categoría ⁠ = oldNombre;
-        UPDATE ⁠ producto ⁠ SET ⁠ Categoría ⁠ = newNombre WHERE ⁠ Categoría ⁠ = oldNombre;
-        SET FOREIGN_KEY_CHECKS = 1;
-    COMMIT;
 END$$
 
 DELIMITER ;
@@ -2179,6 +2162,8 @@ ALTER TABLE `rol_tiene_privilegio`
 ALTER TABLE `turno_tiene_sucursal`
   ADD CONSTRAINT `turno_tiene_sucursal_ibfk_1` FOREIGN KEY (`ID_Turno`) REFERENCES `turno` (`ID_Turno`),
   ADD CONSTRAINT `turno_tiene_sucursal_ibfk_2` FOREIGN KEY (`ID_Sucursal`) REFERENCES `sucursal` (`ID_Sucursal`);
+
+  SET FOREIGN_KEY_CHECKS = 1;
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
