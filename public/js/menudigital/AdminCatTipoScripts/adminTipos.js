@@ -29,7 +29,7 @@ document.addEventListener('DOMContentLoaded', () => {
   cargarTablaTipos()
 })
 
-// Tablita
+// Tabla tipos
 async function cargarTablaTipos () {
   try {
     const res = await fetch('/admin/api/tipos')
@@ -56,6 +56,8 @@ async function cargarTablaTipos () {
     tipos.forEach(tipo => {
       const tr = document.createElement('tr')
       tr.innerHTML = `<td style="font-weight:500;">${tipo.nombre}</td>`
+      tr.style.cursor = 'pointer'
+      tr.addEventListener('click', () => abrirModalEditarTipo(tipo.nombre))
       tbody.appendChild(tr)
     })
 
@@ -170,3 +172,97 @@ function mostrarErrorTipo (titulo, mensaje) {
   errorMensajeTipo.textContent = mensaje
   modalErrorTipo.showModal()
 }
+
+// Modal Editar Tipo
+const modalEditarTipo = document.getElementById('ModalEditarTipo')
+const editarSubtituloTipo = document.getElementById('editarSubtituloTipo')
+const editNombreTipo = document.getElementById('editNombreTipo')
+const editarTipoEnUso = document.getElementById('editarTipoEnUso')
+const btnGuardarEditarTipo = document.getElementById('btnGuardarEditarTipo')
+const btnCancelarEditarTipo = document.getElementById('btnCancelarEditarTipo')
+
+let nombreOriginalTipo = null
+
+async function abrirModalEditarTipo (nombre) {
+  nombreOriginalTipo = nombre
+  editarSubtituloTipo.textContent = `Editando: ${nombre}`
+  editNombreTipo.value = nombre
+  editarTipoEnUso.style.display = 'none'
+  editarTipoEnUso.innerHTML = ''
+
+  try {
+    const res = await fetch(`/admin/api/tipos/${encodeURIComponent(nombre)}/verificarEnUso`)
+    const obj = await res.json()
+    if (obj.enUso) {
+      editarTipoEnUso.style.display = 'block'
+      editarTipoEnUso.innerHTML = `
+        ⚠️ Este tipo está siendo usado por
+        <strong>${obj.totalProductos}</strong> producto(s).
+        Al renombrarlo se actualizarán todos.
+      `
+    }
+  } catch (error) {
+    console.error('Error verificando uso:', error)
+  }
+
+  modalEditarTipo.showModal()
+}
+
+btnCancelarEditarTipo.addEventListener('click', () => {
+  modalEditarTipo.close()
+  nombreOriginalTipo = null
+})
+
+btnGuardarEditarTipo.addEventListener('click', async () => {
+  if (!nombreOriginalTipo) return
+
+  const nuevoNombre = editNombreTipo.value.trim()
+
+  if (!nuevoNombre) {
+    mostrarErrorTipo('Campo incompleto', 'El nombre es obligatorio.')
+    return
+  }
+
+  if (nuevoNombre !== nombreOriginalTipo) {
+    try {
+      const resVerif = await fetch(`/admin/api/tipos/verificarNombre?nombre=${encodeURIComponent(nuevoNombre)}`)
+      const objVerif = await resVerif.json()
+      if (objVerif.existe) {
+        mostrarErrorTipo('Nombre duplicado', `Ya existe un tipo con el nombre "${nuevoNombre}".`)
+        return
+      }
+    } catch (error) {
+      mostrarErrorTipo('Error de verificación', 'No se pudo verificar el nombre.')
+      return
+    }
+  }
+
+  try {
+    const res = await fetch(`/admin/api/tipos/${encodeURIComponent(nombreOriginalTipo)}/actualizar`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ nombre: nuevoNombre })
+    })
+
+    if (!res.ok) {
+      const errorData = await res.json().catch(() => ({}))
+      throw new Error(errorData.message || 'Error del servidor')
+    }
+
+    const obj = await res.json()
+
+    if (obj.success) {
+      modalEditarTipo.close()
+      exitoTituloTipo.textContent = 'Tipo actualizado'
+      exitoMensajeTipo.textContent = 'Los cambios fueron guardados correctamente.'
+      modalExitoTipo.showModal()
+      cargarTablaTipos()
+    } else {
+      mostrarErrorTipo('Error al actualizar', obj.message || 'Error desconocido')
+    }
+  } catch (error) {
+    mostrarErrorTipo('Error al modificar', error.message)
+  } finally {
+    nombreOriginalTipo = null
+  }
+})
