@@ -135,7 +135,74 @@
   </div>
 </dialog>
 
+<!-- SECCION TIPOS -->
+<section class="section" style="padding-top: 0;">
+  <div class="container">
+    <div class="ing-header">
+      <div>
+        <h1 class="page-title">Tipos</h1>
+        <p class="page-sub">Sub-categorías para los productos del menú</p>
+      </div>
+      <button id="btnNuevoTipo" class="btn-maree">+ Nuevo Tipo</button>
+    </div>
+    <div class="ing-table-wrap">
+      <div id="tablaTiposContainer">
+        <div class="ing-empty">Cargando tipos...</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- MODAL Registro Tipo -->
+<dialog id="ModalRegistroTipo" class="maree-modal">
+  <div class="modal-inner">
+    <p class="modal-title">Nuevo Tipo</p>
+    <p class="modal-sub">Ingresa el nombre del nuevo tipo</p>
+    <div class="maree-field">
+      <label class="maree-label" for="inputNombreTipo">Nombre</label>
+      <input class="maree-input" type="text" id="inputNombreTipo" placeholder="Ej. Especiales" maxlength="50">
+    </div>
+    <div class="modal-actions">
+      <button id="btnConfirmarRegistroTipo" class="btn-primary">Continuar</button>
+      <button id="btnCerrarRegistroTipo" class="btn-secondary">Cancelar</button>
+    </div>
+  </div>
+</dialog>
+
+<!-- MODAL Resumen Tipo -->
+<dialog id="ModalResumenTipo" class="maree-modal">
+  <div class="modal-inner">
+    <p class="modal-title">Confirmar Registro</p>
+    <p class="modal-sub">Verifica los datos antes de guardar</p>
+    <div id="resumenContenidoTipo"></div>
+    <div class="modal-actions">
+      <button id="btnConfirmarCreacionTipo" class="btn-success">Registrar Tipo</button>
+      <button id="btnVolverFormularioTipo" class="btn-secondary">Regresar</button>
+    </div>
+  </div>
+</dialog>
+
+<!-- MODAL Error Tipo -->
+<dialog id="ModalErrorTipo" class="maree-modal">
+  <div class="modal-inner" style="text-align:center;">
+    <span class="modal-icon">⚠️</span>
+    <p class="modal-title modal-title-danger" id="errorTituloTipo">Error</p>
+    <p id="errorMensajeTipo" style="font-size:14px;color:#555;margin-bottom:24px;"></p>
+    <button id="btnCerrarErrorTipo" class="btn-danger">Cerrar</button>
+  </div>
+</dialog>
+
+<!-- MODAL Exito Tipo -->
+<dialog id="ModalExitoTipo" class="maree-modal">
+  <div class="modal-inner" style="text-align:center;">
+    <span class="modal-icon">✓</span>
+    <p class="modal-title modal-title-success" id="exitoTituloTipo">¡Registrado!</p>
+    <p id="exitoMensajeTipo" style="font-size:14px;color:#555;margin-bottom:24px;"></p>
+    <button id="btnCerrarExitoTipo" class="btn-success">Aceptar</button>
+  </div>
+</dialog>
 
 <script src="/js/menudigital/AdminCatTipoScripts/adminCategorias.js"></script>
+<script src="/js/menudigital/AdminCatTipoScripts/adminTipos.js"></script>
 </body>
 </html>

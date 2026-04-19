@@ -5,6 +5,7 @@ const Ingrediente = require('../models/ingrediente.model.js')
 const MetricasClientes = require('../models/metricasclientes.model.js')
 const MetricasProductos = require('../models/metricasproductos.model.js')
 const Categoria = require('../models/categoria.model.js')
+const Tipo = require('../models/tipo.model.js')
 
 // const bcrypt = require('bcryptjs')
 
@@ -815,5 +816,42 @@ exports.eliminarCategoria = async (req, res, next) => {
   } catch (error) {
     console.error('Error en eliminarCategoria:', error)
     res.status(500).json({ success: false, message: error.message })
+  }
+}
+
+// GET tipos
+exports.getTiposLista = async (req, res, next) => {
+  try {
+    const [tipos] = await Tipo.fetchAll()
+    res.status(200).json({ success: true, data: tipos })
+  } catch (error) {
+    console.error('Error en getTiposLista:', error)
+    res.status(500).json({ success: false, message: 'Error al obtener tipos' })
+  }
+}
+
+// GET verificar nombre tipo
+exports.verificarNombreTipo = async (req, res, next) => {
+  try {
+    const { nombre } = req.query
+    if (!nombre) return res.status(400).json({ success: false, message: 'Nombre requerido' })
+    const [rows] = await Tipo.buscarPorNombre(nombre.trim())
+    res.status(200).json({ existe: rows.length > 0 })
+  } catch (error) {
+    console.error('Error en verificarNombreTipo:', error)
+    res.status(500).json({ success: false, message: 'Error al verificar nombre' })
+  }
+}
+
+// POST crear tipo
+exports.crearTipo = async (req, res, next) => {
+  try {
+    const { nombre } = req.body
+    if (!nombre) return res.status(400).json({ success: false, message: 'Nombre requerido' })
+    await Tipo.insertNuevoTipo(nombre.trim())
+    res.status(200).json({ success: true, message: 'Tipo registrado exitosamente' })
+  } catch (error) {
+    console.error('Error en crearTipo:', error)
+    res.status(500).json({ success: false, message: 'Error al guardar el tipo' })
   }
 }

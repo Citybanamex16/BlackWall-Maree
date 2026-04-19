@@ -51,6 +51,10 @@ router.get('/api/categorias/:nombre/verificarEnUso', isAuth, isAdmin, adminContr
 router.put('/api/categorias/:nombre/actualizar', isAuth, isAdmin, adminControlador.actualizarCategoria)
 router.delete('/api/categorias/:nombre/eliminar', isAuth, isAdmin, adminControlador.eliminarCategoria)
 
+router.get('/api/tipos', isAuth, isAdmin, adminControlador.getTiposLista)
+router.get('/api/tipos/verificarNombre', isAuth, isAdmin, adminControlador.verificarNombreTipo)
+router.post('/api/tipos/crear', isAuth, isAdmin, adminControlador.crearTipo)
+
 router.get('/feedback', isAuth, isAdmin, feedBackControlador.getFeedback)
 router.get('/api/comentarios', isAuth, isAdmin, feedBackControlador.getFeedbackCatalog)
 router.get('/api/comentarios/:id', isAuth, isAdmin, feedBackControlador.getComentarioDetail)
