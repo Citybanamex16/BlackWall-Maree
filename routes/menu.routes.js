@@ -19,10 +19,11 @@ router.get('/Sucursales/getAll', menuControlador.getAllSucursales)
 // Rutas Admin
 router.get('/productos', menuControlador.getProducts)
 router.get('/productosCatalog', menuControlador.getProductsCatalog)
-router.get('/formsTipoPlatillo', menuControlador.getTypes)
+router.get('/productosTipos', menuControlador.getTypes)
+router.get('/formsTipoPlatillo', menuControlador.getCategorys)
 router.get('/formsRegistraPlatillo', menuControlador.getProductfieldsAndIngredientes)
 router.post('/registerNewProduct', menuControlador.postNewProduct)
-router.put('/modifProduct/:id', menuControlador.postModifProduct) // ¡ Ese es PUT !
+router.put('/modifProduct/:id', menuControlador.postModifProduct) 
 // Eliminar Producto
 router.delete('/eliminarProducto', menuControlador.deleteProducto)
 router.put('/desactivarProducto', menuControlador.putDesactivarProducto)
