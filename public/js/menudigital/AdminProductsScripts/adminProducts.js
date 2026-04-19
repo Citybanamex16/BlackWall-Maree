@@ -70,29 +70,36 @@ function construirFichaProductos (datosProducto, datosCategorias) {
 }
 
 // Render de fila compacta
-function renderProductoAdmin (prod) {
-  const disponibleTag = prod.activo
-    ? '<span class="tag is-success is-light">Activo</span>'
-    : '<span class="tag is-danger is-light">Inactivo</span>'
-
-  const ingredientesTexto = (prod.ingredientes && prod.ingredientes.length)
-    ? prod.ingredientes.map(i => i.nombre ?? i).join(', ')
-    : '—'
-
+function renderProductoAdmin(prod) {
+  // Verificamos si tiene tipo, si no, ponemos un placeholder
+  const tipoTexto = prod.tipo ? prod.tipo : 'Otro';
+  
   return `
-    <div class="admin-prod-row" data-id="${prod.id}" title="Ver detalle">
-      <span class="prod-nombre">${prod.nombre}</span>
-      <span class="prod-precio">$${prod.precio}</span>
-      <span class="prod-ingredientes">${ingredientesTexto}</span>
-      ${disponibleTag}
-      <button 
-        class="btn-elim-desact" 
-        data-id-prod="${prod.id}"
-        data-name-prod="${prod.nombre}"
-        title="Eliminar o desactivar producto"
-      >Elim/Desact</button>
-    </div>`
+    <div class="admin-prod-row" data-id="${prod.id}">
+      <div class="admin-prod-info">
+        <div class="admin-prod-img-container">
+            <img src="${prod.imagen}" class="admin-prod-img" onerror="this.src='/img/placeholder.webp'">
+        </div>
+        <div class="admin-prod-texts">
+          <h4 class="admin-prod-name">${prod.nombre}</h4>
+          
+          <div class="admin-prod-meta">
+            <span class="admin-tag-tipo">${tipoTexto}</span>
+            <span class="admin-prod-price">$${prod.precio}</span>
+          </div>
+        </div>
+      </div>
+      
+      <div class="admin-prod-actions">
+        <button class="btn-elim-desact" data-id-prod="${prod.id}" data-name-prod="${prod.nombre}">
+          <i class="fas fa-trash-alt"></i>
+        </button>
+      </div>
+    </div>
+  `;
 }
+
+
 
 // Sección de categoría
 function construirCategoria (cat, contenedorMenu) {
@@ -163,6 +170,7 @@ function construirCatalogoAdmin (datos) {
   console.log('Construyendo catálogo admin...')
   const categorias = datos.arrayCategorías[0]
   const productosInfo = datos.arrayProductsCatalog
+
 
   const contenedor = document.getElementById('admin-catalogo')
   contenedor.innerHTML = ''
