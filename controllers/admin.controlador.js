@@ -895,3 +895,25 @@ exports.actualizarTipo = async (req, res, next) => {
     res.status(500).json({ success: false, message: error.message })
   }
 }
+
+// Eliminar tipo
+exports.eliminarTipo = async (req, res, next) => {
+  try {
+    const nombre = decodeURIComponent(req.params.nombre)
+
+    const uso = await Tipo.buscarEnUso(nombre)
+    if (uso.totalProductos > 0) {
+      return res.status(409).json({
+        success: false,
+        enUso: true,
+        totalProductos: uso.totalProductos
+      })
+    }
+
+    await Tipo.eliminarTipo(nombre)
+    res.status(200).json({ success: true, message: 'Tipo eliminado correctamente' })
+  } catch (error) {
+    console.error('Error en eliminarTipo:', error)
+    res.status(500).json({ success: false, message: error.message })
+  }
+}

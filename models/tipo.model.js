@@ -23,4 +23,9 @@ module.exports = class Tipo {
   static async actualizarTipo (oldNombre, newNombre) {
     return db.execute('CALL ActualizarTipo(?, ?)', [oldNombre, newNombre])
   }
+
+  static async eliminarTipo (nombre) {
+    return db.execute('DELETE FROM `tipos` WHERE nombre = ?', [nombre])
+  }
+
 }

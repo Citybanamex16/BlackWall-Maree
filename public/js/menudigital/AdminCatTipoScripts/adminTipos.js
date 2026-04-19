@@ -48,6 +48,7 @@ async function cargarTablaTipos () {
       <thead>
         <tr>
           <th>Nombre</th>
+          <th></th>
         </tr>
       </thead>
     `
@@ -55,9 +56,21 @@ async function cargarTablaTipos () {
 
     tipos.forEach(tipo => {
       const tr = document.createElement('tr')
-      tr.innerHTML = `<td style="font-weight:500;">${tipo.nombre}</td>`
+      tr.innerHTML = `
+        <td style="font-weight:500;">${tipo.nombre}</td>
+        <td><button class="btn-eliminar" data-nombre="${tipo.nombre}">Eliminar</button></td>
+      `
       tr.style.cursor = 'pointer'
-      tr.addEventListener('click', () => abrirModalEditarTipo(tipo.nombre))
+
+      tr.querySelector('.btn-eliminar').addEventListener('click', () => {
+        abrirModalEliminarTipo(tipo.nombre)
+      })
+
+      tr.addEventListener('click', (e) => {
+        if (e.target.classList.contains('btn-eliminar')) return
+        abrirModalEditarTipo(tipo.nombre)
+      })
+
       tbody.appendChild(tr)
     })
 
@@ -264,5 +277,73 @@ btnGuardarEditarTipo.addEventListener('click', async () => {
     mostrarErrorTipo('Error al modificar', error.message)
   } finally {
     nombreOriginalTipo = null
+  }
+})
+
+// Modal Eliminar Tipo
+const modalEliminarTipo = document.getElementById('ModalEliminarTipo')
+const eliminarNombreTipo = document.getElementById('eliminarNombreTipo')
+const eliminarAdvertenciaTipo = document.getElementById('eliminarAdvertenciaTipo')
+const btnConfirmarEliminarTipo = document.getElementById('btnConfirmarEliminarTipo')
+const btnCancelarEliminarTipo = document.getElementById('btnCancelarEliminarTipo')
+
+let nombreParaEliminarTipo = null
+
+async function abrirModalEliminarTipo (nombre) {
+  nombreParaEliminarTipo = nombre
+  eliminarNombreTipo.textContent = `¿Eliminar "${nombre}"?`
+  eliminarAdvertenciaTipo.innerHTML = '<p style="color:#888;font-size:13px;">Verificando uso...</p>'
+  btnConfirmarEliminarTipo.disabled = false
+  modalEliminarTipo.showModal()
+
+  try {
+    const res = await fetch(`/admin/api/tipos/${encodeURIComponent(nombre)}/verificarEnUso`)
+    const obj = await res.json()
+
+    if (obj.enUso) {
+      eliminarAdvertenciaTipo.innerHTML = `
+        <div style="background:#fdf8f2;border:1px solid #e0c9a8;border-radius:8px;padding:14px;margin-bottom:4px;">
+          <p style="font-size:13px;color:#a03020;font-weight:600;margin-bottom:4px;">No se puede eliminar</p>
+          <p style="font-size:13px;color:#555;margin:0;">
+            Este tipo está siendo usado por <strong>${obj.totalProductos}</strong> producto(s).
+          </p>
+        </div>
+      `
+      btnConfirmarEliminarTipo.disabled = true
+    } else {
+      eliminarAdvertenciaTipo.innerHTML = '<p style="font-size:13px;color:#888;">Este tipo no está en uso.</p>'
+    }
+  } catch (error) {
+    eliminarAdvertenciaTipo.innerHTML = '<p style="font-size:13px;color:#a03020;">Error al verificar uso.</p>'
+  }
+}
+
+btnCancelarEliminarTipo.addEventListener('click', () => {
+  modalEliminarTipo.close()
+  nombreParaEliminarTipo = null
+})
+
+btnConfirmarEliminarTipo.addEventListener('click', async () => {
+  if (!nombreParaEliminarTipo) return
+
+  try {
+    const res = await fetch(`/admin/api/tipos/${encodeURIComponent(nombreParaEliminarTipo)}/eliminar`, {
+      method: 'DELETE'
+    })
+    const obj = await res.json()
+
+    if (obj.success) {
+      modalEliminarTipo.close()
+      exitoTituloTipo.textContent = 'Tipo eliminado'
+      exitoMensajeTipo.textContent = 'El tipo fue eliminado del catálogo.'
+      modalExitoTipo.showModal()
+      cargarTablaTipos()
+    } else {
+      mostrarErrorTipo('Error al eliminar', obj.message || 'Error desconocido')
+    }
+  } catch (error) {
+    mostrarErrorTipo('Error interno', `${error}`)
+  } finally {
+    nombreParaEliminarTipo = null
   }
 })
