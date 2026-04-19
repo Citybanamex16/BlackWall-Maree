@@ -8,7 +8,8 @@ module.exports = class Producto {
     P.ID_Producto AS productoID,
     P.nombre AS productoNombre, 
     P.precio AS productoPrecio, 
-    P.categoría AS productoCategoria, 
+    P.categoría AS productoCategoria,
+    P.Tipo AS productoType, 
     P.imagen AS productoImagen,
     P.Disponible AS productoActivo, 
     I.ID_Insumo AS insumoID,
@@ -19,7 +20,7 @@ module.exports = class Producto {
     INNER JOIN insumo AS I ON PI.ID_Insumo = I.ID_Insumo
     ;`)
 
-    // console.log('Rows: ', rows)
+    console.log('Rows: ', rows)
 
     // 2. Agrupamos utilizando Mapping
     const productosMap = {}
@@ -32,6 +33,7 @@ module.exports = class Producto {
           nombre: fila.productoNombre,
           precio: fila.productoPrecio,
           categoria: fila.productoCategoria,
+          tipo: fila.productoType,
           activo: fila.productoActivo,
           imagen: fila.productoImagen,
           ingredientes: [] // Inicializamos el array de ingredientes
