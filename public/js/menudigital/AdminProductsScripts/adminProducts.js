@@ -270,7 +270,6 @@ function registerButtonOnClick (event) {
 }
 
 async function seleccionarTipoProducto (id) {
-  // Equivalente a los .then()
   try {
     console.log(`Iniciando fetch para el ID: ${id}`)
 
@@ -286,7 +285,9 @@ async function seleccionarTipoProducto (id) {
     // Separación
     const ProductFields = object.data.fields
     const AllIngredientes = object.data.ingredientes[0]
-    createProductRegisterForms(ProductFields, AllIngredientes, id)
+    const AllTypes = object.data.types
+    console.log("Types recvieves: ", AllTypes)
+    createProductRegisterForms(ProductFields, AllIngredientes, id,AllTypes)
   } catch (error) {
     console.error('Hubo un fallo en la operación:', error)
     ShowErrorModal('Error de Conexión con BD', 'Hubo un inconveniente con la conexión a la BD. Intentelo mas tarde')
@@ -512,6 +513,38 @@ function onBtnIngNewClick () {
   updateIngCounter()
 }
 
+function buildTypeSection(typesData) {
+    const fieldWrapper = document.createElement('div');
+    fieldWrapper.className = 'maree-field is-dynamic'; 
+
+    const label = document.createElement('label');
+    label.className = 'maree-label';
+    label.textContent = 'Tipo de Producto';
+    fieldWrapper.appendChild(label);
+
+    const select = document.createElement('select');
+    select.className = 'maree-select';
+    select.id = 'productTypeSelect';
+    select.required = true; // <--- Validación nativa de HTML5
+
+    const defaultOption = document.createElement('option');
+    defaultOption.value = '';
+    defaultOption.textContent = 'Selecciona una categoría...';
+    defaultOption.disabled = true;
+    defaultOption.selected = true;
+    select.appendChild(defaultOption);
+
+    typesData.forEach(tipo => {
+        const option = document.createElement('option');
+        option.value = tipo.nombre; // Asumiendo que el ID es lo que guardas
+        option.textContent = tipo.nombre;
+        select.appendChild(option);
+    });
+
+    fieldWrapper.appendChild(select);
+    return fieldWrapper;
+}
+
 function getIngredientesSeleccionados () {
   return Array.from(
     document.querySelectorAll('#ingredientsList .ingredient-row')
@@ -530,7 +563,8 @@ function getIngredientesSeleccionados () {
 }
 
 /* == Funcion Central == */
-function createProductRegisterForms (Fields, Ingredientes, type) {
+function createProductRegisterForms (Fields, Ingredientes, type, tiposData) {
+  // Type == Categoría
   // Guardar catálogo para usarlo en cada nueva fila
   console.log('Catalogo de Ingredientes: ', Ingredientes)
   catalogoIng = Ingredientes // Indispensable
@@ -546,6 +580,11 @@ function createProductRegisterForms (Fields, Ingredientes, type) {
     fieldEl.style.animationDelay = `${index * 0.05}s`
     registerForm.appendChild(fieldEl)
   })
+
+  //Construir la sección de tipos
+  registerForm.appendChild(buildTypeSection(tiposData))
+
+
   // Construir e inyectar la sección de ingredientes
   registerForm.appendChild(buildIngredientsSection({ mostrarCantidad: false }))
 
@@ -607,15 +646,22 @@ function PostNewProduct (BackupIngredientes, ProductType) {
     data[cb.name] = cb.checked
   })
 
+  //3.5 tipo de producto
+  const tipoSeleccionado = document.getElementById('productTypeSelect').value
+  data.tipo = tipoSeleccionado
+  console.log("Tipo rescatado: ", tipoSeleccionado)
+
   // 4. Ingredientes — array separado de ingredientes
   const ingredientes = getIngredientesSeleccionados()
   console.log('Ingredientes Get: ', ingredientes)
 
   // 4.5 Añadir Tipo
-  data.type = ProductType
+  data.categoría = ProductType
+
 
   // 5. Validación de Reglas de negocio
   const validacion = validarDatosRegistro(data, BackupIngredientes)
+
 
   if (validacion) {
     console.log('Datos válidos :)')
