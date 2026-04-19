@@ -127,16 +127,17 @@ module.exports = class Producto {
     return result // Este objeto contiene affectedRows e insertId
   }
 
-  static async modifyProduct (connection, id, nombre, categoria, Precio, Disponible, Imagen) {
+  static async modifyProduct (connection, id, nombre, categoria,tipo, Precio, Disponible, Imagen) {
     const result = await connection.execute(`
     UPDATE producto
     SET 
       Categoría = ?, 
+      Tipo = ?,
       Nombre = ?,
       Precio = ?,
       Disponible = ?,
       Imagen = ?
-  WHERE ID_Producto = ?;`, [categoria, nombre, Precio, Disponible, Imagen, id])
+  WHERE ID_Producto = ?;`, [categoria,tipo, nombre, Precio, Disponible, Imagen, id])
     return result
   }
 

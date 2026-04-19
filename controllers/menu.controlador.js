@@ -265,24 +265,43 @@ exports.getProductsCatalog = async (req, res, next) => {
   }
 }
 
-
-/* FIN Visualizar Catalogo */
-
-
-exports.getTypes = async (req, res, next) => {
-  try {
-    const productTypes = await categorías.fecthAll()
+exports.getTypes = async (req,res, nex) =>{
+    try {
+    const productTypes = await tipos.fetchAll()
 
     res.status(200).json({
-      success: true,
+      ok: true,
       message: 'Tipos recuperados',
       data: productTypes
     })
   } catch (error) {
     console.error(error)
     res.status(500).json({
-      success: false,
+      ok: false,
       message: 'Error al obtener los tipos de la BD'
+    })
+  }
+
+}
+
+
+/* FIN Visualizar Catalogo */
+
+
+exports.getCategorys = async (req, res, next) => {
+  try {
+    const productsCategorys = await categorías.fecthAll()
+
+    res.status(200).json({
+      success: true,
+      message: 'Tipos recuperados',
+      data: productsCategorys
+    })
+  } catch (error) {
+    console.error(error)
+    res.status(500).json({
+      success: false,
+      message: 'Error al obtener las Categorías de la BD'
     })
   }
 }
@@ -448,7 +467,7 @@ exports.postModifProduct = async (req, res, next) => {
     await connection.beginTransaction()
 
     // A. Cambio de datos en el Producto
-    const modifyResult = await productos.modifyProduct(connection, newdata.id, newdata.nombre, newdata.Categoria, newdata.precio, newdata.activo, newdata.imagen)
+    const modifyResult = await productos.modifyProduct(connection, newdata.id, newdata.nombre, newdata.Categoria,newdata.tipo, newdata.precio, newdata.activo, newdata.imagen)
     console.log(modifyResult)
     // B. Eliminacion de ingredientes removidos
     if (aEliminar.length > 0) {
