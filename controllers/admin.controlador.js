@@ -855,3 +855,43 @@ exports.crearTipo = async (req, res, next) => {
     res.status(500).json({ success: false, message: 'Error al guardar el tipo' })
   }
 }
+
+// GET verificarEnUso tipo
+exports.verificarTipoEnUso = async (req, res, next) => {
+  try {
+    const nombre = decodeURIComponent(req.params.nombre)
+    const uso = await Tipo.buscarEnUso(nombre)
+    res.status(200).json({
+      enUso: uso.totalProductos > 0,
+      totalProductos: uso.totalProductos
+    })
+  } catch (error) {
+    console.error('Error en verificarTipoEnUso:', error)
+    res.status(500).json({ success: false, message: 'Error al verificar uso' })
+  }
+}
+
+// PUT actualizar tipo
+exports.actualizarTipo = async (req, res, next) => {
+  try {
+    const oldNombre = decodeURIComponent(req.params.nombre)
+    const { nombre: newNombre } = req.body
+
+    if (!newNombre || !newNombre.trim()) {
+      return res.status(400).json({ success: false, message: 'El nombre es obligatorio' })
+    }
+
+    if (newNombre.trim() !== oldNombre) {
+      const [rows] = await Tipo.buscarPorNombre(newNombre.trim())
+      if (rows.length > 0) {
+        return res.status(409).json({ success: false, message: `Ya existe un tipo con el nombre "${newNombre.trim()}"` })
+      }
+    }
+
+    await Tipo.actualizarTipo(oldNombre, newNombre.trim())
+    res.status(200).json({ success: true, message: 'Tipo actualizado correctamente' })
+  } catch (error) {
+    console.error('Error en actualizarTipo:', error)
+    res.status(500).json({ success: false, message: error.message })
+  }
+}
