@@ -794,3 +794,26 @@ exports.actualizarCategoria = async (req, res, next) => {
     res.status(500).json({ success: false, message: error.message })
   }
 }
+
+// Eliminar categoria
+exports.eliminarCategoria = async (req, res, next) => {
+  try {
+    const nombre = decodeURIComponent(req.params.nombre)
+
+    const uso = await Categoria.buscarEnUso(nombre)
+    if (uso.totalInsumos > 0 || uso.totalProductos > 0) {
+      return res.status(409).json({
+        success: false,
+        enUso: true,
+        totalInsumos: uso.totalInsumos,
+        totalProductos: uso.totalProductos
+      })
+    }
+
+    await Categoria.eliminarCategoria(nombre)
+    res.status(200).json({ success: true, message: 'Categoría eliminada correctamente' })
+  } catch (error) {
+    console.error('Error en eliminarCategoria:', error)
+    res.status(500).json({ success: false, message: error.message })
+  }
+}

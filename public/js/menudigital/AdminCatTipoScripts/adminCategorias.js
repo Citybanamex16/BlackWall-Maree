@@ -50,6 +50,7 @@ async function cargarTablaCategorias () {
       <thead>
         <tr>
           <th>Nombre</th>
+          <th></th>
         </tr>
       </thead>
     `
@@ -59,9 +60,19 @@ async function cargarTablaCategorias () {
       const tr = document.createElement('tr')
       tr.innerHTML = `
         <td style="font-weight:500;">${cat.Nombre}</td>
+        <td><button class="btn-eliminar" data-nombre="${cat.Nombre}">Eliminar</button></td>
       `
       tr.style.cursor = 'pointer'
-      tr.addEventListener('click', () => abrirModalEditarCategoria(cat.Nombre))
+
+      tr.querySelector('.btn-eliminar').addEventListener('click', () => {
+        abrirModalEliminarCategoria(cat.Nombre)
+      })
+
+      tr.addEventListener('click', (e) => {
+        if (e.target.classList.contains('btn-eliminar')) return
+        abrirModalEditarCategoria(cat.Nombre)
+      })
+
       tbody.appendChild(tr)
     })
 
@@ -281,5 +292,74 @@ btnGuardarEditarCategoria.addEventListener('click', async () => {
     mostrarErrorCat('Error al modificar', error.message)
   } finally {
     nombreOriginalCategoria = null
+  }
+})
+
+// Modal Eliminar Categoría
+const modalEliminarCategoria = document.getElementById('ModalEliminarCategoria')
+const eliminarNombreCategoria = document.getElementById('eliminarNombreCategoria')
+const eliminarAdvertenciaCategoria = document.getElementById('eliminarAdvertenciaCategoria')
+const btnConfirmarEliminarCategoria = document.getElementById('btnConfirmarEliminarCategoria')
+const btnCancelarEliminarCategoria = document.getElementById('btnCancelarEliminarCategoria')
+
+let nombreParaEliminar = null
+
+async function abrirModalEliminarCategoria (nombre) {
+  nombreParaEliminar = nombre
+  eliminarNombreCategoria.textContent = `¿Eliminar "${nombre}"?`
+  eliminarAdvertenciaCategoria.innerHTML = '<p style="color:#888;font-size:13px;">Verificando uso...</p>'
+  btnConfirmarEliminarCategoria.disabled = false
+  modalEliminarCategoria.showModal()
+
+  try {
+    const res = await fetch(`/admin/api/categorias/${encodeURIComponent(nombre)}/verificarEnUso`)
+    const obj = await res.json()
+
+    if (obj.enUso) {
+      eliminarAdvertenciaCategoria.innerHTML = `
+        <div style="background:#fdf8f2;border:1px solid #e0c9a8;border-radius:8px;padding:14px;margin-bottom:4px;">
+          <p style="font-size:13px;color:#a03020;font-weight:600;margin-bottom:4px;">No se puede eliminar</p>
+          <p style="font-size:13px;color:#555;margin:0;">
+            Esta categoría está siendo usada por <strong>${obj.totalInsumos}</strong> insumo(s)
+            y <strong>${obj.totalProductos}</strong> producto(s).
+          </p>
+        </div>
+      `
+      btnConfirmarEliminarCategoria.disabled = true
+    } else {
+      eliminarAdvertenciaCategoria.innerHTML = '<p style="font-size:13px;color:#888;">Esta categoría no está en uso.</p>'
+    }
+  } catch (error) {
+    eliminarAdvertenciaCategoria.innerHTML = '<p style="font-size:13px;color:#a03020;">Error al verificar uso.</p>'
+  }
+}
+
+btnCancelarEliminarCategoria.addEventListener('click', () => {
+  modalEliminarCategoria.close()
+  nombreParaEliminar = null
+})
+
+btnConfirmarEliminarCategoria.addEventListener('click', async () => {
+  if (!nombreParaEliminar) return
+
+  try {
+    const res = await fetch(`/admin/api/categorias/${encodeURIComponent(nombreParaEliminar)}/eliminar`, {
+      method: 'DELETE'
+    })
+    const obj = await res.json()
+
+    if (obj.success) {
+      modalEliminarCategoria.close()
+      exitoTituloCat.textContent = 'Categoría eliminada'
+      exitoMensajeCat.textContent = 'La categoría fue eliminada del catálogo.'
+      modalExitoCat.showModal()
+      cargarTablaCategorias()
+    } else {
+      mostrarErrorCat('Error al eliminar', obj.message || 'Error desconocido')
+    }
+  } catch (error) {
+    mostrarErrorCat('Error interno', `${error}`)
+  } finally {
+    nombreParaEliminar = null
   }
 })
