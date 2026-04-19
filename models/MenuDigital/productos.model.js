@@ -116,11 +116,11 @@ module.exports = class Producto {
     return `${prefijo}${numero}` // "PD1823049231" — 12 chars, bien dentro del varchar(10)...
   }
 
-  static async insertNewProduct (connection, id, nombre, categoria, Precio, Disponible, Imagen) {
+  static async insertNewProduct (connection, id, nombre, categoria, Precio, Disponible, Imagen, tipo) {
     // Al usar await, recibes el resultado de la promesa
     const [result] = await connection.execute(
       'INSERT INTO producto VALUES (?,?,?,?,?,?,?,?)',
-      [id, 'Básico', categoria, nombre, Precio, Disponible, 'Dulce', Imagen]
+      [id, 'Básico', categoria, nombre, Precio, Disponible, tipo, Imagen]
     )
     return result // Este objeto contiene affectedRows e insertId
   }

@@ -191,6 +191,8 @@ exports.validarPedido = async (request, response, next) => {
   }
 }
 
+
+
 exports.confirmarPedido = async (request, response, next) => {
   const { items, forma, telefono } = request.body
 
@@ -225,11 +227,15 @@ exports.confirmarPedido = async (request, response, next) => {
   }
 }
 
+
+
 /* CU 14 Visualizar Catalogo Productos */
 exports.getProducts = (req, res, next) => {
   const breadcrumbs = nav.getBreadcrumbs('AdminSection')
   res.render('admin/products', { breadcrumbs })
 }
+
+
 
 exports.getProductsCatalog = async (req, res, next) => {
   console.log('Backend obteniendo todos los Productos, ingredientes & catalogos')
@@ -258,7 +264,10 @@ exports.getProductsCatalog = async (req, res, next) => {
     })
   }
 }
+
+
 /* FIN Visualizar Catalogo */
+
 
 exports.getTypes = async (req, res, next) => {
   try {
@@ -294,13 +303,16 @@ exports.getProductfieldsAndIngredientes = async (req, res, next) => {
     }
 
     const allIngredientes = await productos.getCategoryIngredientes(typeId)
+    const allTypes = await tipos.fetchAll()
+
     const productFormsFields = ProductFields
     res.status(200).json({
       success: true,
       message: 'Campos e Ingredientes recuperados',
       data: {
         fields: productFormsFields,
-        ingredientes: allIngredientes
+        ingredientes: allIngredientes,
+        types:allTypes
       }
     })
   } catch (error) {
@@ -327,25 +339,36 @@ exports.postNewProduct = async (req, res, next) => {
       Precio,
       Disponible,
       Imagen,
-      type: categoria, // Renombramos 'type' a 'categoria'
+      tipo,
+      categoría, // Renombramos 'type' a 'categoria'
       ingredientesID
     } = NewProductData
 
-    console.log('Nombre: ', Nombre)
-    console.log('Ingredientes: ', ingredientesID)
+
+
+     console.log('Variables a insertar:', {
+      AutoId: 'Generando...',
+      Nombre,
+      categoría,
+      Precio,
+      Disponible,
+      Imagen,
+      tipo,
+      tieneIngredientes: ingredientesID?.length > 0
+    });
+
     const validation = await productos.ValidarDatosRegistro(NewProductData)
     const AutoId = productos.generarID('PD')
-    console.log('Nuevo ID: ', AutoId)
 
     if (validation) {
-      // const postResult = await productos.insertNewProduct(AutoId, Nombre, categoria, Precio, Disponible, Imagen)
+
       if (ingredientesID.length > 0) {
         // Caso producto con ingredientes (transacción)
         // 1. Iniciamos la transacción asincronica -> hasta commit
         await connection.beginTransaction()
 
         // 2. Inserción en Producto
-        await productos.insertNewProduct(connection, AutoId, Nombre, categoria, Precio, Disponible, Imagen)
+        await productos.insertNewProduct(connection, AutoId, Nombre, categoría, Precio, Disponible, Imagen, tipo)
 
         // 3. Inserciones en Ingrediente-Producto
         for (const ing of ingredientesID) {
@@ -362,7 +385,8 @@ exports.postNewProduct = async (req, res, next) => {
         })
       } else {
         // Caso producto Sin ingredientes
-        const postResult = await productos.insertNewProduct(AutoId, Nombre, categoria, Precio, Disponible, Imagen)
+        const postResult = await productos.insertNewProduct(connection, AutoId, Nombre, categoría, Precio, Disponible, Imagen, tipo)
+        
         if (postResult.affectedRows > 0) {
           console.log('Producto Insertado con exito')
           res.status(200).json({
