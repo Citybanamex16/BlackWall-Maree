@@ -1,0 +1,11 @@
+tabla para bd para poder observar la irección een caso de delivery
+
+CREATE TABLE orden_delivery (
+  ID_Orden VARCHAR(10) NOT NULL,
+  Direccion_Entrega VARCHAR(255) NOT NULL,
+  Referencias VARCHAR(255) DEFAULT NULL,
+  PRIMARY KEY (ID_Orden),
+  CONSTRAINT fk_orden_delivery_orden
+    FOREIGN KEY (ID_Orden) REFERENCES orden(ID_Orden)
+    ON DELETE CASCADE
+);

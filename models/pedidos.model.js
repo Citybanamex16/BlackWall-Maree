@@ -110,4 +110,13 @@ module.exports = class Pedido {
       }
     }
   }
+
+  static cancelActiveOrder (idOrden) {
+    const query = `
+      UPDATE orden
+      SET Estado_Orden = 'Cancelado'
+      WHERE ID_Orden = ? AND Estado_Orden NOT IN ('Cancelado', 'Entregado')
+    `
+    return db.execute(query, [idOrden])
+  }
 }
