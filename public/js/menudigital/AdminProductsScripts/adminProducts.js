@@ -422,7 +422,7 @@ function createIngElement (ing) {
   console.log('Creando opción de ingrediente...')
   const opt = document.createElement('option')
   opt.value = ing.id
-  opt.textContent = `${ing.nombre}: $${ing.precio}`
+  opt.textContent = `${ing.nombre}`
 
   // Atriutos del Boton -> se recuperan con -> .getAttribute('data-nombre')
   opt.setAttribute('data-nombre', ing.nombre)
@@ -760,8 +760,9 @@ function createSummaryElement (title, content) {
   wrapper.classList.add('summary-field', 'is-dynamic')
   wrapper.style.cssText = `
     display: flex;
-    gap: 8px;
-    padding: 6px 0;
+    align-items: center; /* Alineamos al centro por si la imagen es alta */
+    gap: 12px;
+    padding: 10px 0;
     border-bottom: 1px solid #e5e5e5;
     font-size: 14px;
   `
@@ -771,10 +772,36 @@ function createSummaryElement (title, content) {
   label.style.cssText = 'font-weight: 600; min-width: 140px; color: #555;'
   label.textContent = `${title}:`
 
-  const value = document.createElement('span')
-  value.classList.add('summary-value', 'is-dynamic')
-  value.style.cssText = 'color: #111;'
-  value.textContent = content ?? '—' // muestra guión si el valor está vacío
+  // --- LÓGICA DE DETECCIÓN DE IMAGEN ---
+  const isImageKey = title.toLowerCase().includes('imagen') || title.toLowerCase().includes('img');
+  
+  let value;
+
+  if (isImageKey && content && (content.startsWith('http') || content.startsWith('/'))) {
+    // Si es imagen, creamos un elemento IMG
+    value = document.createElement('img')
+    value.src = content
+    value.alt = 'Preview'
+    value.style.cssText = `
+      width: 60px;
+      height: 60px;
+      object-fit: cover;
+      border-radius: 8px;
+      border: 1px solid #ddd;
+      background-color: #f9f9f9;
+    `
+    // Placeholder si la URL está rota o mal escrita
+    value.onerror = function() {
+      this.src = 'https://placehold.co/60x60?text=Error'; 
+      this.style.opacity = '0.5';
+    }
+  } else {
+    // Si no es imagen, mantenemos el SPAN original
+    value = document.createElement('span')
+    value.classList.add('summary-value', 'is-dynamic')
+    value.style.cssText = 'color: #111; word-break: break-all;' // Break-all por si hay textos muy largos
+    value.textContent = content ?? '—'
+  }
 
   wrapper.appendChild(label)
   wrapper.appendChild(value)
@@ -799,7 +826,6 @@ function ShowProductSummary (SummaryData, type, Registerdata) {
   // Despliegue de los datos
   SummaryData.forEach((content) => {
     console.log('Key: ', content.key, ' Value: ', content.value)
-
     const SummaryEl = createSummaryElement(content.key, content.value)
     SummaryContent.appendChild(SummaryEl)
   })
