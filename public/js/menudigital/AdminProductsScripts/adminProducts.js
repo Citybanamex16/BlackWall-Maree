@@ -4,8 +4,6 @@
 
 
 //Funciones Globales
-
-
 function showSpinner(mensaje = 'Cargando...') {
     console.log("Mostrando Spinner")
     document.getElementById('spinner-label').textContent = mensaje
@@ -448,7 +446,7 @@ function updateIngCounter () {
 }
 
 // Crea una fila completa: dropdown + input cantidad [+ botón ✕ si no es la primera]
-function createIngRow (index, isFirst = false, mostrarCantidad = true) {
+function createIngRow (index, isFirst = false, mostrarCantidad = false) {
   const row = document.createElement('div')
   row.classList.add('ingredient-row')
   row.dataset.ingIndex = index
@@ -503,7 +501,7 @@ function createIngRow (index, isFirst = false, mostrarCantidad = true) {
 }
 
 // Construye la sección de ingredientes completa y la inyecta en el form
-function buildIngredientsSection ({ mostrarCantidad = true } = {}) {
+function buildIngredientsSection ({ mostrarCantidad = false } = {}) {
   console.log('BUILDING INGREDIENT SECTION......')
   ingCount = 1
 
@@ -634,10 +632,14 @@ function createProductRegisterForms (Fields, Ingredientes, type, tiposData) {
 // Referencias globales de los handlers activos
 let handlerSubmit = null
 let handlerClose = null
+let handlerCloseX = null
+
+const formsDinamicXbtn = document.getElementById('closeRegisterFormsX')
 
 function SetRegisterButtons (tipoAccion, datos1, datos2) {
   if (handlerSubmit) submitFormsRegistrar.removeEventListener('click', handlerSubmit)
   if (handlerClose) RegisterFormClose.removeEventListener('click', handlerClose)
+  if (handlerCloseX) formsDinamicXbtn.removeEventListener('click', handlerCloseX)
 
   handlerSubmit = (event) => {
     event.preventDefault()
@@ -655,8 +657,16 @@ function SetRegisterButtons (tipoAccion, datos1, datos2) {
     }
   }
 
+  handlerCloseX = () =>{
+    RegisterFormModal.close()
+    if (tipoAccion === 'POST') {
+      typeFormsModal.showModal()
+    }
+  }
+
   submitFormsRegistrar.addEventListener('click', handlerSubmit)
   RegisterFormClose.addEventListener('click', handlerClose)
+  formsDinamicXbtn.addEventListener('click', handlerCloseX); 
 
   RegisterFormModal.showModal()
 }
@@ -954,3 +964,59 @@ function closeAllModals () {
 
   console.log(`${modales.length} modales cerrados.`)
 }
+
+
+
+
+//* Conexión de todos los X de los modals*//
+
+// --- LISTENERS PARA CERRAR MODALS (X y Botones de Acción) ---
+
+// 1. Modal: TypeFormsCU04
+document.getElementById('closeTypeFormsX')?.addEventListener('click', () => {
+    document.getElementById('TypeFormsCU04').close();
+    
+});
+
+// 3. Modal: SummaryCU04
+document.getElementById('closeSummaryX')?.addEventListener('click', () => {
+    document.getElementById('SummaryCU04').close();
+    document.getElementById('RegisterFormsCU04').showModal();
+});
+
+
+// 4. Modal: modifSummaryCU05
+document.getElementById('closeSummaryModifX')?.addEventListener('click', () => {
+    document.getElementById('modifSummaryCU05').close();
+    document.getElementById('RegisterFormsCU04').showModal();
+
+});
+
+// 5. Modal: ModalExito
+document.getElementById('closeExito')?.addEventListener('click', () => {
+    document.getElementById('ModalExito').close();
+});
+
+// 6. Modal: ErrorModal
+document.getElementById('closeInvalidData')?.addEventListener('click', () => {
+    document.getElementById('ErrorModal').close();
+});
+
+// 7. Modal: ElimDesactModal
+document.getElementById('closeElimDesact')?.addEventListener('click', () => {
+    document.getElementById('ElimDesactModal').close();
+});
+
+// 8. Modal: ConfirmActionModal
+document.getElementById('closeConfirmAction')?.addEventListener('click', () => {
+    document.getElementById('ConfirmActionModal').close();
+    document.getElementById('ElimDesactModal').showModal();
+});
+
+
+
+
+
+
+
+
