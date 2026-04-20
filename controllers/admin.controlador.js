@@ -6,6 +6,7 @@ const MetricasClientes = require('../models/metricasclientes.model.js')
 const MetricasProductos = require('../models/metricasproductos.model.js')
 const Categoria = require('../models/categoria.model.js')
 const Tipo = require('../models/tipo.model.js')
+const Sucursal = require('../models/sucursal.model.js')
 
 // const bcrypt = require('bcryptjs')
 
@@ -914,6 +915,95 @@ exports.eliminarTipo = async (req, res, next) => {
     res.status(200).json({ success: true, message: 'Tipo eliminado correctamente' })
   } catch (error) {
     console.error('Error en eliminarTipo:', error)
+    res.status(500).json({ success: false, message: error.message })
+  }
+}
+
+// GET sucursales
+exports.getSucursales = (req, res, next) => {
+  res.render('admin/sucursales')
+}
+
+// GET lista sucursales
+exports.getSucursalesLista = async (req, res, next) => {
+  try {
+    const [sucursales] = await Sucursal.fetchAll()
+    res.status(200).json({ success: true, data: sucursales })
+  } catch (error) {
+    console.error('Error en getSucursalesLista:', error)
+    res.status(500).json({ success: false, message: 'Error al obtener sucursales' })
+  }
+}
+
+// Crea Nueva Sucursal
+exports.crearSucursal = async (req, res, next) => {
+  try {
+    const { Nombre, Ciudad, Estado, Pais, Municipio, Calle, Longitud, Latitud } = req.body
+    if (!Nombre || !Ciudad || !Estado || !Pais || !Municipio || !Calle) {
+      return res.status(400).json({ success: false, message: 'Todos los campos obligatorios son requeridos' })
+    }
+    const id = Sucursal.generarID()
+    await Sucursal.insertNuevaSucursal(id, Nombre.trim(), Ciudad.trim(), Estado.trim(), Pais.trim(), Municipio.trim(), Calle.trim(), Longitud, Latitud)
+    res.status(200).json({ success: true, message: 'Sucursal registrada exitosamente', id })
+  } catch (error) {
+    console.error('Error en crearSucursal:', error)
+    res.status(500).json({ success: false, message: 'Error al guardar la sucursal' })
+  }
+}
+
+// actualiza infor sucursal
+exports.actualizarSucursal = async (req, res, next) => {
+  try {
+    const { id } = req.params
+    const { Nombre, Ciudad, Estado, Pais, Municipio, Calle, Longitud, Latitud } = req.body
+    if (!Nombre || !Ciudad || !Estado || !Pais || !Municipio || !Calle) {
+      return res.status(400).json({ success: false, message: 'Todos los campos obligatorios son requeridos' })
+    }
+
+    const [existing] = await Sucursal.buscarPorNombre(Nombre.trim())
+    const duplicado = existing.find(s => s.ID_Sucursal !== id)
+    if (duplicado) {
+      return res.status(409).json({ success: false, message: `Ya existe una sucursal con el nombre "${Nombre.trim()}"` })
+    }
+
+    await Sucursal.actualizarSucursal(id, Nombre.trim(), Ciudad.trim(), Estado.trim(), Pais.trim(), Municipio.trim(), Calle.trim(), Longitud, Latitud)
+    res.status(200).json({ success: true, message: 'Sucursal actualizada correctamente' })
+  } catch (error) {
+    console.error('Error en actualizarSucursal:', error)
+    res.status(500).json({ success: false, message: error.message })
+  }
+}
+
+// verifica si es eliminable
+exports.verificarSucursalEliminable = async (req, res, next) => {
+  try {
+    const { id } = req.params
+    const uso = await Sucursal.buscarEnUso(id)
+    res.status(200).json({
+      eliminable: uso.totalTurnos === 0,
+      totalTurnos: uso.totalTurnos
+    })
+  } catch (error) {
+    console.error('Error en verificarSucursalEliminable:', error)
+    res.status(500).json({ success: false, message: 'Error al verificar' })
+  }
+}
+
+// elimina suc
+exports.eliminarSucursal = async (req, res, next) => {
+  try {
+    const { id } = req.params
+    const uso = await Sucursal.buscarEnUso(id)
+    if (uso.totalTurnos > 0) {
+      return res.status(409).json({
+        success: false,
+        message: `No se puede eliminar: tiene ${uso.totalTurnos} turno(s) asignado(s).`
+      })
+    }
+    await Sucursal.eliminarSucursal(id)
+    res.status(200).json({ success: true, message: 'Sucursal eliminada correctamente' })
+  } catch (error) {
+    console.error('Error en eliminarSucursal:', error)
     res.status(500).json({ success: false, message: error.message })
   }
 }
