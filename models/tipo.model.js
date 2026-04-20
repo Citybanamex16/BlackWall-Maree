@@ -27,5 +27,4 @@ module.exports = class Tipo {
   static async eliminarTipo (nombre) {
     return db.execute('DELETE FROM `tipos` WHERE nombre = ?', [nombre])
   }
-
 }
