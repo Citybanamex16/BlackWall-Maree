@@ -439,7 +439,8 @@ CREATE TABLE `evento` (
   `Descripcion` text DEFAULT NULL,
   `Activo` tinyint(1) DEFAULT 0,
   `Fecha_Inicio` date NOT NULL,
-  `Fecha_Final` date DEFAULT NULL
+  `Fecha_Final` date DEFAULT NULL,
+  `Imagen` text DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish2_ci;
 
 --

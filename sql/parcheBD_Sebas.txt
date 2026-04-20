@@ -18,11 +18,10 @@ INSERT INTO `estado_royalty_da_eventos` (`Nombre_Royalty`, `ID_Evento`) VALUES
 -- Aparte de esto cree estas Stored Procedures como parte de mi laboratorio 23, las uso en las funcionalidades de Royalty
 -- Por lo que les pido agregarlas también a sus BD.
 
--- Consultar Estado de cliente:
+DROP PROCEDURE IF EXISTS sp_EstadoCliente;
 DELIMITER //
-s
 CREATE PROCEDURE sp_EstadoCliente (
-    IN p_telefono VARCHAR(20)
+    IN p_telefono VARCHAR(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish2_ci
 )
 BEGIN
     SELECT 
@@ -33,29 +32,31 @@ BEGIN
     FROM cliente c
     WHERE c.Numero_Telefonico = p_telefono;
 END //
-
 DELIMITER ;
 
 -- Consultar Promociones por nivel de Royalty
+DROP PROCEDURE IF EXISTS sp_fetchPromociones;
 DELIMITER //
 CREATE PROCEDURE sp_fetchPromociones(
-    IN p_Nombre_Royalty VARCHAR(50)
+    IN p_Nombre_Royalty VARCHAR(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish2_ci
 )
 BEGIN
-SELECT P.Nombre, P.Descuento, P.Fecha_inicio, P.Fecha_final, E.Nombre_Royalty
-            FROM estado_royalty E JOIN estado_royalty_da_promociones EP ON E.Nombre_Royalty = EP.Nombre_Royalty 
-            JOIN promocion P ON P.ID_Promocion = EP.ID_Promocion 
-            WHERE E.Número_de_prioridad <= (
-            SELECT Número_de_prioridad FROM estado_royalty WHERE Nombre_Royalty = p_Nombre_Royalty)
-            ORDER BY E.Número_de_prioridad DESC;
+    SELECT P.Nombre, P.Descuento, P.Fecha_inicio, P.Fecha_final, E.Nombre_Royalty
+    FROM estado_royalty E 
+    JOIN estado_royalty_da_promociones EP ON E.Nombre_Royalty = EP.Nombre_Royalty 
+    JOIN promocion P ON P.ID_Promocion = EP.ID_Promocion 
+    WHERE E.Número_de_prioridad <= (
+        SELECT Número_de_prioridad FROM estado_royalty WHERE Nombre_Royalty = p_Nombre_Royalty
+    )
+    ORDER BY E.Número_de_prioridad DESC;
 END //
-
 DELIMITER ;     
 
 -- Consultar Eventos por nivel de Royalty
+DROP PROCEDURE IF EXISTS sp_fetchEventos;
 DELIMITER //
 CREATE PROCEDURE sp_fetchEventos(
-    IN p_Nombre_Royalty VARCHAR(50)
+    IN p_Nombre_Royalty VARCHAR(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish2_ci
 )
 BEGIN
 SELECT E.Nombre AS Nombre_Evento, E.Fecha_Inicio, E.Fecha_final, E.Descripcion, ER.Nombre_Royalty

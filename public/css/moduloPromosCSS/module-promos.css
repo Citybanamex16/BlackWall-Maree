@@ -7,10 +7,6 @@
     --promo-terra: var(--c-danger, #b96f5d);
 }
 
-body {
-    background: var(--c-bg-gradient);
-}
-
 /* ── 1. ENCABEZADO Y CONTROLES ── */
 .promotions-shell {
     display: flex;
@@ -25,7 +21,7 @@ body {
 .promotion-kicker {
     display: inline-block;
     padding: 8px 14px;
-    border-radius: 999px;
+    border-radius: var(--radius-pill);
     background: rgba(181, 149, 106, 0.12);
     color: var(--promo-gold-deep);
     font-size: 12px;
@@ -93,10 +89,10 @@ body {
 /* ── 3. TARJETAS (Cards) ── */
 .promo-card {
     border: 1px solid var(--promo-line);
-    border-radius: 22px;
+    border-radius: var(--radius-lg);
     overflow: hidden;
-    box-shadow: 0 18px 38px rgba(86, 61, 35, 0.08);
-    background: linear-gradient(180deg, #ffffff 0%, var(--c-surface-soft) 100%);
+    box-shadow: var(--shadow-md);
+    background: linear-gradient(180deg, var(--c-surface) 0%, var(--c-surface-soft) 100%);
     height: 100%;
 }
 
@@ -140,6 +136,12 @@ body {
     border-top: 1px solid var(--promo-line);
 }
 
+.promo-card-divider {
+    border: none;
+    height: 1px;
+    background-color: var(--promo-line);
+}
+
 .promo-footer-button {
     border: none;
     background: transparent;
@@ -165,32 +167,13 @@ body {
 }
 
 /* ── 4. ETIQUETAS (Pills / Badges) ── */
-.status-pill {
-    display: inline-flex;
-    align-items: center;
-    border-radius: 999px;
-    padding: 8px 12px;
-    font-size: 12px;
-    font-weight: 600;
-}
-
-.status-pill.is-active {
-    background: var(--c-success-bg);
-    color: var(--c-success);
-}
-
-.status-pill.is-inactive {
-    background: var(--c-danger-bg);
-    color: var(--c-danger-deep);
-}
-
 .promo-benefit {
     display: inline-flex;
     align-items: center;
     gap: 8px;
     padding: 8px 14px;
-    border-radius: 999px;
-    background: #f3e7d6;
+    border-radius: var(--radius-pill);
+    background: var(--c-primary-light);
     color: var(--promo-gold-deep);
     font-size: 13px;
     font-weight: 600;
@@ -206,7 +189,7 @@ body {
     display: inline-flex;
     align-items: center;
     padding: 8px 14px;
-    border-radius: 999px;
+    border-radius: var(--radius-pill);
     border: 1px solid var(--promo-line);
     background: var(--c-surface);
     color: var(--promo-copy);
@@ -216,26 +199,26 @@ body {
 .promo-chip {
     display: inline-flex;
     align-items: center;
-    border-radius: 999px;
+    border-radius: var(--radius-pill);
     padding: 8px 12px;
-    background: #efe2cf;
+    background: var(--c-primary-light);
     color: var(--promo-gold-deep);
     font-size: 13px;
     font-weight: 500;
 }
 
 .promo-chip.empty {
-    background: #f5eee4;
-    color: #8d7358;
+    background: var(--c-primary-bg);
+    color: var(--c-text-muted);
 }
 
 /* ── 5. MODALES Y FORMULARIOS ── */
 .promotion-help-box,
 .promotion-modal-box {
     border: 1px solid var(--promo-line);
-    border-radius: 24px !important;
+    border-radius: var(--radius-lg) !important;
     background: linear-gradient(180deg, var(--c-surface) 0%, var(--c-surface-soft) 100%);
-    box-shadow: 0 24px 50px rgba(78, 54, 28, 0.08);
+    box-shadow: var(--shadow-lg);
 }
 
 .promotion-help-title {
@@ -258,6 +241,10 @@ body {
 
 .promotions-form-grid .field.is-full {
     grid-column: 1 / -1;
+}
+
+.promo-discount-section {
+    display: none;
 }
 
 .input:focus,
@@ -285,7 +272,7 @@ body {
     max-height: 220px;
     overflow-y: auto;
     border: 1px dashed var(--promo-line);
-    border-radius: 18px;
+    border-radius: var(--radius-md);
     padding: 14px;
     background: var(--c-bg-body);
 }

@@ -1,6 +1,6 @@
 :root {
-    --event-accent: #c6674d;
-    --event-accent-deep: #a64e39;
+    --event-accent: var(--c-danger, #c6674d);
+    --event-accent-deep: var(--c-danger-deep, #a64e39);
     --event-cocoa: var(--c-text-main, #4a3426);
     --event-copy: var(--c-text-soft, #70584a);
     --event-line: var(--c-border, #eadbca);
@@ -23,7 +23,7 @@
 .event-kicker {
     display: inline-block;
     padding: 8px 14px;
-    border-radius: 999px;
+    border-radius: var(--radius-pill);
     background: rgba(198, 103, 77, 0.12);
     color: var(--event-accent-deep);
     font-size: 12px;
@@ -90,15 +90,28 @@
 /* ── 3. TARJETAS (Cards) ── */
 .event-card {
     border: 1px solid var(--event-line);
-    border-radius: 24px;
+    border-radius: var(--radius-lg);
     overflow: hidden;
-    background: linear-gradient(180deg, #ffffff 0%, var(--c-surface-soft) 100%);
-    box-shadow: 0 20px 38px rgba(88, 56, 36, 0.09);
+    background: linear-gradient(180deg, var(--c-surface) 0%, var(--c-surface-soft) 100%);
+    box-shadow: var(--shadow-md);
     height: 100%;
 }
 
 .event-card.is-inactive {
     opacity: 0.85;
+}
+
+.event-card-image {
+    aspect-ratio: 16 / 9;
+    overflow: hidden;
+    background: var(--c-bg-body);
+}
+
+.event-card-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
 }
 
 .event-card .card-content {
@@ -136,7 +149,7 @@
 .event-status-pill {
     display: inline-flex;
     align-items: center;
-    border-radius: 999px;
+    border-radius: var(--radius-pill);
     padding: 8px 12px;
     font-size: 12px;
     font-weight: 600;
@@ -162,9 +175,9 @@
 .event-chip {
     display: inline-flex;
     align-items: center;
-    border-radius: 999px;
+    border-radius: var(--radius-pill);
     padding: 8px 12px;
-    background: #f4e3d4;
+    background: var(--c-danger-bg);
     color: var(--event-accent-deep);
     font-size: 13px;
     font-weight: 600;
@@ -179,7 +192,7 @@
     display: inline-flex;
     align-items: center;
     padding: 8px 14px;
-    border-radius: 999px;
+    border-radius: var(--radius-pill);
     border: 1px solid var(--event-line);
     background: var(--c-surface);
     color: var(--event-copy);
@@ -189,6 +202,12 @@
 /* ── 5. FOOTER DE TARJETAS ── */
 .event-card-footer {
     border-top: 1px solid var(--event-line);
+}
+
+.event-card-divider {
+    border: none;
+    height: 1px;
+    background-color: var(--event-line);
 }
 
 .event-footer-button {
@@ -201,7 +220,7 @@
 }
 
 .event-footer-button:hover {
-    background: #fff2ea;
+    background: var(--c-danger-bg);
 }
 
 .event-footer-button.is-danger-text {
@@ -219,9 +238,9 @@
 .event-help-box,
 .event-modal-box {
     border: 1px solid var(--event-line);
-    border-radius: 26px !important;
+    border-radius: var(--radius-lg) !important;
     background: linear-gradient(180deg, var(--c-surface) 0%, var(--c-surface-soft) 100%);
-    box-shadow: 0 24px 50px rgba(78, 54, 28, 0.08);
+    box-shadow: var(--shadow-lg);
 }
 
 .event-help-title {
@@ -252,12 +271,12 @@
     box-shadow: 0 0 0 0.125em rgba(198, 103, 77, 0.18);
 }
 
-.label,
-.event-checkbox {
+.label {
     color: var(--event-cocoa);
 }
 
 .event-checkbox {
+    color: var(--event-cocoa);
     font-weight: 500;
 }
 
@@ -268,12 +287,27 @@
     margin-top: 6px;
 }
 
+.event-current-image {
+    display: grid;
+    gap: 8px;
+    margin-bottom: 12px;
+}
+
+.event-current-image img {
+    width: min(100%, 220px);
+    aspect-ratio: 16 / 9;
+    object-fit: cover;
+    border: 1px solid var(--event-line);
+    border-radius: var(--radius-md);
+    background: var(--c-bg-body);
+}
+
 .event-selection-box {
     min-height: 180px;
     max-height: 240px;
     overflow-y: auto;
     border: 1px dashed var(--event-line);
-    border-radius: 18px;
+    border-radius: var(--radius-md);
     padding: 14px;
     background: var(--c-bg-body);
 }
