@@ -138,40 +138,7 @@ document.getElementById('modal-close').onclick = function () {
   detailModal.close()
 }
 
-/* ── MAPA DE UBICACIÓN ──
-if (navigator.geolocation) {
-  navigator.geolocation.getCurrentPosition(
-    (position) => {
-      const lat = position.coords.latitude
-      const lng = position.coords.longitude
 
-      const mapa = L.map('mapa').setView([lat, lng], 15)
-
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '© OpenStreetMap'
-      }).addTo(mapa)
-
-      // Punto rojo
-      L.circleMarker([lat, lng], {
-        radius: 10,
-        fillColor: '#e74c3c',
-        color: '#fff',
-        weight: 2,
-        fillOpacity: 1
-      }).addTo(mapa).bindPopup('Tú estás aquí').openPopup()
-
-      document.getElementById('mapa-estado').textContent = 'Ubicación detectada'
-    },
-    (_) => {
-      document.getElementById('mapa-estado').textContent =
-        'No se pudo obtener tu ubicación. Permite el acceso en tu navegador.'
-    }
-  )
-} else {
-  document.getElementById('mapa-estado').textContent =
-    'Tu navegador no soporta geolocalización.'
-}
-*/
 
 /* CU11 Visualizar Menu Digital */
 let globalProducts = [] // Variable global de productos
@@ -190,8 +157,119 @@ function ShowMenuErrorModal () {
   document.getElementById('menuErrorModal').showModal()
 }
 
+
+
+async function verificarSesion() {
+    console.log("Obteniendo datos de sesión...")
+    try {
+        // 1. Verificar si hay sesión activa
+        const resSesion = await fetch('/cliente/Sesion')
+        const dataSesion = await resSesion.json()
+
+        if (!dataSesion.autenticado) {
+            console.log('Sin sesión activa — menú normal')
+            return null
+        }
+
+        console.log('Sesión activa:', dataSesion.usuario)
+
+        // 2. Si hay sesión, obtener datos royalty en paralelo
+        const resRoyalty = await fetch('/royalty/royaltyUser/api/datos')
+        const dataRoyalty = await resRoyalty.json()
+
+        // El endpoint royalty redirige si no hay sesión — lo ignoramos
+        // pues ya confirmamos que sí hay sesión en el paso 1
+        if (dataRoyalty.redirectUrl) {
+            console.log('Royalty no disponible')
+            return { usuario: dataSesion.usuario, promociones: [], eventos: [] }
+        }
+
+        // 3. Paquete completo
+        const paqueteSesion = {
+            usuario:     dataSesion.usuario,   // { nombre, telefono, genero, visitas }
+            promociones: dataRoyalty.promociones,
+            eventos:     dataRoyalty.eventos,
+            nivelRoyalty: dataRoyalty.promociones[0]?.Nombre_Royalty ?? null
+        }
+
+        console.log('Paquete de sesión completo:', paqueteSesion)
+        return paqueteSesion
+
+    } catch (error) {
+        console.log('Error verificando sesión:', error)
+        return null
+    }
+}
+
+
+//funcion que obtiene las promociones que rawSesionPromos tiene en AcceptedPromos
+function cleanSesionPromos(rawSesionPromos, AcceptedPromos) {
+    // Si alguna de las listas está vacía, no hay nada que mostrar
+    if (!rawSesionPromos || !AcceptedPromos) return [];
+
+    console.log("rawSesion: ", rawSesionPromos, " vs " , " AcceptedPromos: ", AcceptedPromos)
+    // Comparamos cada promo de la sesión contra el array de aceptadas
+    return rawSesionPromos.filter(rawPromo => {
+        // Buscamos si existe una coincidencia en el catálogo aceptado
+        // Usamos Plantilla_Promo o ID como llave de comparación
+        const esValida = AcceptedPromos.some(accepted => 
+            accepted.Producto === rawPromo.Producto && accepted.Plantilla_Promo === rawPromo.Plantilla_Promo
+        );
+
+        if (!esValida) {
+            console.log(`Promo rechazada por Regla EFUL: ${rawPromo.Plantilla_Promo || rawPromo.Producto}`);
+        }
+
+        return esValida;
+    });
+}
+
+
+//
+async function getSesionPRs(SesionData, AcceptedPromos) {
+    // Validamos que tengamos la lista maestra antes de empezar
+    const masterList = AcceptedPromos?.allPRs[0] || [];
+    console.log("Iniciando validación con Accepted promos:", masterList);
+
+    try {
+        const res = await fetch('/cliente/promosClienteData');
+
+        // La validación .ok va sobre la respuesta del fetch, no sobre el JSON
+        if (!res.ok) {
+            throw new Error(`Error de red: ${res.status}`);
+        }
+
+        const responseData = await res.json();
+
+        
+        // Aquí extraemos las promos que el servidor dice que el usuario tiene
+        // Si el servidor no manda nada, usamos el SesionData que pasaste por parámetro
+        const rawPromos = responseData.PRs || [];
+
+        console.log("PRs obtenidos del servidor con éxito", rawPromos);
+
+
+        
+
+        // Aplicamos el filtro de seguridad (Regla de EFUL)
+        const SesionAcceptedPromos = cleanSesionPromos(rawPromos, masterList);
+
+        console.log(`Resultado final: ${SesionAcceptedPromos.length} promociones autorizadas.`);
+        return SesionAcceptedPromos;
+
+    } catch (err) {
+        console.error("Error fetching Sesion Promos:", err);
+        // En caso de error, devolvemos un array vacío para no romper el resto de la app
+        return [];
+    }
+}
+
+
+
+
+
 // Funcion para obtener los datos del Menu
-async function obtenerMenu () {
+async function obtenerMenu (SesionData) {
   try {
     const response = await fetch('/menu/menuData')
 
@@ -206,49 +284,97 @@ async function obtenerMenu () {
 
     console.log('Datos obtenidos de Backend: ', data)
 
-    //= =Llamado a promociones ==//
+    //= =Llamado a promociones PUs y PEs==//
 
     const PromosData = await getAllPromos()
+        //console.log('Promos obtenidos del Backend: ', PromosData)
 
-    console.log('Promos obtenidos del Backend: ', PromosData)
+
+    // Si contamos con una sesión 
+    let SesionPromos
+    if(SesionData != null && PromosData != undefined){
+      // == Llamado de PRs == //
+      SesionPromos =  await getSesionPRs(SesionData, PromosData)
+      SesionData.PRs = SesionPromos
+    } else {
+      SesionPromos = null
+    }
+
+    
+
+    console.log("Comenzando construccio1n de menu con datos de sesión: ", SesionData )
 
     /* === Llamada a Construcción de Menu Dinámico == */
     globalProducts = data.arrayProductsInfo
-    contruirMenuDinamico(data, PromosData)
+    contruirMenuDinamico(data, PromosData, SesionData)
   } catch (error) {
     console.error('Error al obtener el menú:', error)
     ShowMenuErrorModal()
   }
 }
 
-obtenerMenu()
+
+
+async function getSesionInfo(){
+   //Datos de la sesión:
+  let SesionData
+  try{
+
+    SesionData = await verificarSesion()
+    console.log("Datos de las sesión: ", SesionData)
+
+    obtenerMenu(SesionData)
+
+  } catch(err){
+    console.log("Error al obtener datos de sesión")
+    SesionData = null
+    obtenerMenu(SesionData)
+
+  }
+    
+
+    
+}
+
+getSesionInfo()
+
+
+
 
 /* ==Construcción de Menu Dinámico == */
 
 /* ==== SISTEMA DE PROMOCIONES ==== */
 
-function getPromosFromProduct (nombre, promosData) {
+function getPromosFromProduct (nombre, promosData, PRs) {
   const promosArray = []
 
-  // Extracción segura (por si alguno viene vacío)
-  const PEs = promosData.allPEs[0] || []
-  const PUs = promosData.allPUs[0] || []
+  // 1. Aseguramos que PRs sea un array. Si es null o undefined, usamos []
+  const safePRs = Array.isArray(PRs) ? PRs : []
 
-  // Filtramos las promociones que coincidan exactamente con el nombre del producto
-  const promosEvento = PEs.filter(promo => promo.Producto === nombre)
-  const promosUnicas = PUs.filter(promo => promo.Producto === nombre)
+  // Mantienes tu lógica de seguridad para los otros datos
+  const PEs = promosData?.allPEs?.[0] ?? []
+  const PUs = promosData?.allPUs?.[0] ?? []
+  
+  // 2. Filtramos usando los arrays seguros
+  // filter no fallará si el array está vacío, simplemente devolverá otro []
+  const promosEvento = PEs.filter(promo => promo?.Producto === nombre)
+  const promosUnicas = PUs.filter(promo => promo?.Producto === nombre)
+  const promosRoyalty = safePRs.filter(promo => promo?.Producto === nombre)
 
-  // Unimos los resultados en un solo array
-  promosArray.push(...promosEvento, ...promosUnicas)
+  // 3. Unimos todo. Si alguno es [], push no agregará nada al array final
+  promosArray.push(...promosEvento, ...promosUnicas, ...promosRoyalty)
 
   return promosArray
 }
+
+
+
 
 function sistemaConflictosPromos (promosArray) {
   // Si no hay conflictos, regresamos la única promo que existe
   if (promosArray.length <= 1) return promosArray
 
-  console.log('Resolviendo conflicto entre múltiples promos...')
+  //console.log('Resolviendo conflicto entre múltiples promos...')
 
   // 1. Clasificamos y enriquecemos las promos con la lógica de tu compañero
   const promosProcesadas = promosArray.map(promo => {
@@ -281,83 +407,105 @@ function sistemaConflictosPromos (promosArray) {
     // Regla: BOGO mata a Porcentaje siempre.
     // 3. CONFLICTO IGUAL (BOGO vs BOGO): Gana la que regale más productos (mayor X)
     promosBOGO.sort((a, b) => b.valorReal - a.valorReal)
-    console.log(`Ganador BOGO: ${promosBOGO[0].valorReal}x1`)
+    //console.log(`Ganador BOGO: ${promosBOGO[0].valorReal}x1`)
     return [promosBOGO[0]]
   }
 
   // 4. CONFLICTO IGUAL (% vs %): Si solo hay porcentajes, gana el mayor descuento
   promosProcesadas.sort((a, b) => b.valorReal - a.valorReal)
-  console.log(`Ganador %: ${(promosProcesadas[0].valorReal * 100)}% de descuento`)
+  //console.log(`Ganador %: ${(promosProcesadas[0].valorReal * 100)}% de descuento`)
 
   return [promosProcesadas[0]]
 }
 
-function menuPromosAgent (cardHTML, finalPromos) {
-  if (!finalPromos || finalPromos.length === 0) return cardHTML
 
-  const promo = finalPromos[0]
-  const tempDiv = document.createElement('div')
-  tempDiv.innerHTML = cardHTML.trim()
 
-  const card = tempDiv.querySelector('.product-card-app')
-  const priceElement = tempDiv.querySelector('.product-price-app')
-  const buttonElement = tempDiv.querySelector('.add-btn-app')
 
-  // 1. Definir Colores y Etiquetas según Origen
-  // PU (Única) -> Naranja | PE (Evento) -> Dorado
-  const isEvento = promo.Origen === 'Evento'
-  const colorPromo = isEvento ? '#b5956a' : '#e67e22'
-  const labelOrigen = isEvento ? 'Evento' : 'Oferta'
-  const claseTab = isEvento ? 'tab-pe' : 'tab-pu'
+function menuPromosAgent(cardHTML, finalPromos) {
+    if (!finalPromos || finalPromos.length === 0) return cardHTML;
 
-  // 2. Preparar el Texto de la Pestaña (Minimalista)
-  const valorDesc = parseFloat(promo.Descuento)
-  let textoPestaña = ''
+    // Tomamos la primera (gracias al orden anterior, si hay Royalty, será esta)
+    const promo = finalPromos[0];
+    const tempDiv = document.createElement('div');
+    tempDiv.innerHTML = cardHTML.trim();
 
-  if (valorDesc >= 1.0) {
-    const cantX = Math.ceil(valorDesc) === 1 ? 2 : Math.ceil(valorDesc)
-    textoPestaña = `${labelOrigen}: ${cantX}x1`
-  } else {
-    textoPestaña = `${labelOrigen}: ${(valorDesc * 100).toFixed(0)}%`
-  }
+    const card = tempDiv.querySelector('.product-card-app');
+    const priceElement = tempDiv.querySelector('.product-price-app');
+    const buttonElement = tempDiv.querySelector('.add-btn-app');
 
-  // 3. Crear la Pestaña de Folder e inyectarla al inicio de la tarjeta
-  const folderTabHTML = `<div class="promo-folder-tab ${claseTab}">${textoPestaña}</div>`
-  card.insertAdjacentHTML('afterbegin', folderTabHTML)
+    // 1. Definir Configuración según Origen
+    let colorPromo, labelOrigen, claseTab;
 
-  // 4. Cambios Visuales en la Tarjeta
-  card.classList.add('has-active-promo')
-  card.style.borderColor = colorPromo
+    switch (promo.Origen) {
+        case 'Royalty':
+            colorPromo = '#8e44ad'; // Morado elegante
+            labelOrigen = 'Royalty';
+            claseTab = 'tab-pr';
+            // Plus de vistosidad: añadimos una sombra morada sutil a la tarjeta
+            card.style.boxShadow = '0 4px 15px rgba(142, 68, 173, 0.2)';
+            break;
+        case 'Evento':
+            colorPromo = '#b5956a'; // Dorado
+            labelOrigen = 'Evento';
+            claseTab = 'tab-pe';
+            break;
+        default: // PU / Oferta
+            colorPromo = '#e67e22'; // Naranja
+            labelOrigen = 'Oferta';
+            claseTab = 'tab-pu';
+    }
 
-  // 5. Ajuste de Precios (Anterior vs Nuevo)
-  const precioOriginal = parseFloat(priceElement.textContent.replace('$', ''))
-  let precioFinal = precioOriginal
+    // 2. Preparar el Texto de la Pestaña
+    const valorDesc = parseFloat(promo.Descuento);
+    let textoPestaña = '';
 
-  if (valorDesc < 1.0) {
-    precioFinal = (precioOriginal * (1 - valorDesc)).toFixed(2)
-    priceElement.innerHTML = `
+    if (valorDesc >= 1.0) {
+        const cantX = Math.ceil(valorDesc) === 1 ? 2 : Math.ceil(valorDesc);
+        textoPestaña = `${labelOrigen}: ${cantX}x1`;
+    } else {
+        textoPestaña = `${labelOrigen}: ${(valorDesc * 100).toFixed(0)}%`;
+    }
+
+    // 3. Inyectar Pestaña de Folder
+    const folderTabHTML = `<div class="promo-folder-tab ${claseTab}">${textoPestaña}</div>`;
+    card.insertAdjacentHTML('afterbegin', folderTabHTML);
+
+    // 4. Cambios Visuales en la Tarjeta
+    card.classList.add('has-active-promo');
+    card.style.borderColor = colorPromo;
+
+    // 5. Ajuste de Precios
+    const precioOriginal = parseFloat(priceElement.textContent.replace('$', ''));
+    let precioFinal = precioOriginal;
+
+    if (valorDesc < 1.0) {
+        precioFinal = (precioOriginal * (1 - valorDesc)).toFixed(2);
+        priceElement.innerHTML = `
             <span style="text-decoration: line-through; color: #aaa; font-size: 0.8em; margin-right: 5px;">$${precioOriginal}</span>
-            <span style="color: ${colorPromo}; font-weight: 700;">$${precioFinal}</span>
-        `
-  } else {
-    // En BOGO el precio unitario no cambia visualmente en la tarjeta, pero avisamos
-    priceElement.style.color = colorPromo
-    priceElement.style.fontWeight = '700'
-  }
+            <span style="color: ${colorPromo}; font-weight: 800;">$${precioFinal}</span>
+        `;
+    } else {
+        priceElement.style.color = colorPromo;
+        priceElement.style.fontWeight = '800';
+    }
 
-  // 6. "Embeber" información para el resumen (Backend del Front)
-  // Guardamos el nombre largo (Plantilla_Promo) para usarlo en el carrito después
-  buttonElement.setAttribute('data-precio', precioFinal)
-  buttonElement.setAttribute('data-promo-display', textoPestaña)
-  buttonElement.setAttribute('data-promo-nombre-real', promo.Plantilla_Promo)
+    // 6. Meta-data para el botón
+    buttonElement.setAttribute('data-precio', precioFinal);
+    buttonElement.setAttribute('data-promo-display', textoPestaña);
+    buttonElement.setAttribute('data-promo-nombre-real', promo.Plantilla_Promo);
 
-  return tempDiv.innerHTML
+    return tempDiv.innerHTML;
 }
 
 // Sistema de Promos
-function promosMaster (cardHTML, promosData, productName) {
+function promosMaster (cardHTML, promosData, productName, dataSesion) {
   // 1. Extraer promos
-  const arrayPromosProducto = getPromosFromProduct(productName, promosData)
+  let PRs = []
+  if(dataSesion != null){
+    PRs = dataSesion.PRs
+  }
+
+  const arrayPromosProducto = getPromosFromProduct(productName, promosData, PRs)
 
   // Si el producto no tiene promos, cortamos la ejecución para ahorrar recursos
   if (arrayPromosProducto.length === 0) return cardHTML
@@ -380,7 +528,7 @@ function promosMaster (cardHTML, promosData, productName) {
 }
 
 // Actor A: Constructor de fichas individuales
-function construirFichaProductos (productosFiltrados, PromosData, gridDestino) {
+function construirFichaProductos (productosFiltrados, PromosData, gridDestino, DatosSesion) {
   gridDestino.innerHTML = ''
 
   productosFiltrados.forEach((prod, i) => {
@@ -412,7 +560,7 @@ function construirFichaProductos (productosFiltrados, PromosData, gridDestino) {
             </div>`
 
     // El Promos Master recibe el string, lo pinta y lo devuelve listo para insertarse
-    const completedCardHTML = promosMaster(cardHTML, PromosData, prod.nombre)
+    const completedCardHTML = promosMaster(cardHTML, PromosData, prod.nombre, DatosSesion)
     gridDestino.insertAdjacentHTML('beforeend', completedCardHTML)
   })
 }
@@ -441,7 +589,7 @@ function construirCategoria (cat, contenedorMenu) {
 }
 
 /* Actor D: Sticky tabs */
-function generarStickyTabs (categorias, todosLosProductos, todosLosTipos, promosDatos) {
+function generarStickyTabs (categorias, todosLosProductos, todosLosTipos, promosDatos, datosCliente) {
   const listaTabs = document.getElementById('lista-tabs')
   listaTabs.innerHTML = ''
 
@@ -460,7 +608,7 @@ function generarStickyTabs (categorias, todosLosProductos, todosLosTipos, promos
       li.classList.add('is-active')
 
       // LLAMADA CLAVE: Re-renderizamos la sección con la categoría clickeada
-      renderizarVistaCategoria(cat, todosLosProductos, todosLosTipos, promosDatos)
+      renderizarVistaCategoria(cat, todosLosProductos, todosLosTipos, promosDatos, datosCliente)
 
       // Scroll opcional al inicio del menú por si el usuario estaba muy abajo
       window.scrollTo({ top: 0, behavior: 'smooth' })
@@ -501,25 +649,27 @@ function ordenarTipos (array) {
 }
 
 // Actor Principal
-function contruirMenuDinamico (datos, promosDatos) {
+function contruirMenuDinamico (datos, promosDatos, datosCliente) {
   // 1. Guardamos los datos globalmente o en un scope accesible para los filtros
   const categorias = datos.arrayCategorías[0]
   const todosLosProductos = datos.arrayProductsInfo
   const TiposDesordenados = datos.arrayTipos
   const todosLosTipos = ordenarTipos(TiposDesordenados) // Todos los tipos que hay
-  console.log('Tipos ordenados: ', todosLosTipos)
+  console.log("Constructor recibiendo datos de cliente: ", datosCliente)
+
+
 
   // 2. Generamos los Sticky Tabs una sola vez
   // Pasamos la referencia a los productos para que los tabs puedan disparar el filtro
-  generarStickyTabs(categorias, todosLosProductos, todosLosTipos, promosDatos)
+  generarStickyTabs(categorias, todosLosProductos, todosLosTipos, promosDatos, datosCliente)
 
   // 3. Renderizado inicial: Mostramos la primera categoría por defecto
   if (categorias.length > 0) {
     const primeraCat = categorias[0]
-    renderizarVistaCategoria(primeraCat, todosLosProductos, todosLosTipos, promosDatos)
+    renderizarVistaCategoria(primeraCat, todosLosProductos, todosLosTipos, promosDatos, datosCliente)
   }
 
-  console.log('Estructura base del menú lista y primera categoría renderizada.')
+  
 }
 
 function construirSeccionTipo (tipoNombre, contenedorPadre) {
@@ -553,9 +703,9 @@ console.log(toggleTipo)
 // Actor Promos (Agente P)
 
 async function getAllPromos () {
-  // Esta funcion obtiene todas las PU & PE
+  // Esta funcion obtiene todas las PU, PE & PRs
   let Promos
-  console.log('Obteniendo PUs y PEs')
+  console.log('Obteniendo PUs, PEs y PRs')
   try {
     const response = await fetch('/menu/consultarPromosMenu')
     const data = await response.json()
@@ -570,12 +720,11 @@ async function getAllPromos () {
   } catch (error) {
     console.log('Error: ', error)
   }
-  console.log('Finalizado')
   return Promos
 }
 
 // Actor E
-function renderizarVistaCategoria (categoriaObj, productos, allTypes, allPromos) {
+function renderizarVistaCategoria (categoriaObj, productos, allTypes, allPromos, SesionData) {
   const contenedorMenu = document.getElementById('menu-categorias')
   contenedorMenu.innerHTML = ''
 
@@ -597,7 +746,7 @@ function renderizarVistaCategoria (categoriaObj, productos, allTypes, allPromos)
     if (productosDeEsteTipo.length > 0) {
       const idGrid = construirSeccionTipo(tipo.nombre, mainWrapper)
       // Actor A
-      construirFichaProductos(productosDeEsteTipo, allPromos, document.getElementById(idGrid))
+      construirFichaProductos(productosDeEsteTipo, allPromos, document.getElementById(idGrid), SesionData)
 
       // Quitamos estos productos de la lista de "restantes"
       productosRestantes = productosRestantes.filter(p => p.tipo !== tipo.nombre)

@@ -97,6 +97,45 @@ html {
 
 }
 
+.royalty-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+/* Botón Morado Royalty */
+.btn-royalty-active {
+    background: #8e44ad;
+    color: white;
+    border: none;
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    box-shadow: 0 2px 5px rgba(142, 68, 173, 0.3);
+}
+
+/* Botón Logout Pequeño */
+.btn-logout {
+    background: transparent;
+    border: 1px solid #ddd;
+    color: #999;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-logout:hover {
+    background: #f8f8f8;
+    color: #e74c3c;
+}
+
 /* 2. STICKY NAV: Justo debajo del Top */
 .sticky-nav-container {
     position: fixed !important;
@@ -661,6 +700,26 @@ html {
     padding: 2px 10px;
     border-radius: 6px;
     display: inline-block;
+}
+
+
+/* royalty cards */
+/* Pestaña Royalty */
+.tab-pr { 
+    background-color: #8e44ad !important; 
+    /* Podemos agregar un pequeño gradiente para que sea la más "vistosa" */
+    background: linear-gradient(135deg, #8e44ad 0%, #a569bd 100%) !important;
+}
+
+/* Opcional: Un pulso muy suave para las tarjetas Royalty */
+.tab-pr {
+    animation: pulse-royalty 2s infinite;
+}
+
+@keyframes pulse-royalty {
+    0% { opacity: 1; }
+    50% { opacity: 0.8; }
+    100% { opacity: 1; }
 }
 
 
