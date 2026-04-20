@@ -62,4 +62,11 @@ router.get('/feedback', isAuth, isAdmin, feedBackControlador.getFeedback)
 router.get('/api/comentarios', isAuth, isAdmin, feedBackControlador.getFeedbackCatalog)
 router.get('/api/comentarios/:id', isAuth, isAdmin, feedBackControlador.getComentarioDetail)
 
+router.get('/sucursales', isAuth, isAdmin, adminControlador.getSucursales)
+router.get('/api/sucursales', isAuth, isAdmin, adminControlador.getSucursalesLista)
+router.post('/api/sucursales/crear', isAuth, isAdmin, adminControlador.crearSucursal)
+router.put('/api/sucursales/:id/actualizar', isAuth, isAdmin, adminControlador.actualizarSucursal)
+router.get('/api/sucursales/:id/verificarEliminable', isAuth, isAdmin, adminControlador.verificarSucursalEliminable)
+router.delete('/api/sucursales/:id/eliminar', isAuth, isAdmin, adminControlador.eliminarSucursal)
+
 module.exports = router
