@@ -1112,3 +1112,40 @@ dialog .checkbox {
 
   .btn-maree { width: 100%; justify-content: center; }
 }
+
+
+
+
+/* 
+Spinner CSS
+*/
+
+/* ── Spinner overlay ── */
+.spinner-overlay {
+    /* Eliminamos display, position, inset y z-index de aquí */
+    border: none;
+    background: transparent;
+}
+
+/* Solo aplicamos el flex y centrado cuando el diálogo esté abierto */
+.spinner-overlay[open] {
+    display: flex; 
+    align-items: center;
+    justify-content: center;
+}
+
+/* El fondo (overlay) se define aquí */
+.spinner-overlay::backdrop {
+    background: rgba(255, 255, 255, 0.72);
+    backdrop-filter: blur(2px);
+}
+
+/* El resto (spinner-box, ring, label) se queda igual */
+.spinner-box {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+}
+
+
