@@ -15,6 +15,23 @@ function hideSpinner() {
     document.getElementById('spinner-overlay').close()
 }
 
+// Contador animado de 0 → número final
+function animarContador(idElemento, valorFinal, duracionMs = 800) {
+  const el = document.getElementById(idElemento)
+  const inicio = performance.now()
+
+  function tick(ahora) {
+    const progreso = Math.min((ahora - inicio) / duracionMs, 1)
+    // easeOut: desacelera al llegar al final
+    const valorActual = Math.floor(progreso * (1 - Math.pow(1 - progreso, 3)) * valorFinal + progreso * valorFinal * Math.pow(1 - progreso, 3))
+    el.textContent = Math.round(valorActual)
+    if (progreso < 1) requestAnimationFrame(tick)
+    else el.textContent = valorFinal  // asegura valor exacto al final
+  }
+
+  requestAnimationFrame(tick)
+}
+
 
 //Fin de funciones Globales
 
@@ -111,10 +128,13 @@ function renderProductoAdmin(prod) {
       </div>
       
       <div class="admin-prod-actions">
-        <button class="btn-elim-desact" data-id-prod="${prod.id}" data-name-prod="${prod.nombre}">
-          <i class="fas fa-trash-alt"></i>
-        </button>
-      </div>
+       <button class="btn-elim-desact" data-id-prod="${prod.id}" data-name-prod="${prod.nombre}">
+  <!-- Icono de basura minimalista -->
+  <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <polyline points="3 6 5 6 21 6"></polyline>
+    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+  </svg>
+</button>
     </div>
   `;
 }
@@ -200,10 +220,9 @@ function construirCatalogoAdmin (datos) {
   construirFichaProductos(productosInfo, categoriasInfo)
 
   // Stats del encabezado
-  document.getElementById('statTotal').textContent = productosInfo.length
-  document.getElementById('statCategorias').textContent = categorias.length
-  document.getElementById('statDisponibles').textContent =
-    productosInfo.filter(p => p.activo).length
+ animarContador('statTotal',      productosInfo.length)
+animarContador('statDisponibles', productosInfo.filter(p => p.activo).length)
+animarContador('statCategorias', categorias.length)
 
   // Actualizar badge de cada categoría con su conteo
   categoriasInfo.forEach(cat => {
