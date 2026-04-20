@@ -13,6 +13,9 @@ router.get('/royaltyAdmin/api', isAuth, isAdmin, royaltyControlador.getRoyaltyAd
 
 // Modificar estados Royalties
 router.put('/royaltyAdmin/:nombre', isAuth, isAdmin, royaltyControlador.updateRoyalty)
+router.get('/royaltyMetrics', isAuth, isAdmin, royaltyControlador.getRoyaltyMetrics)
+router.get('/royaltyAdmin/:nombre/promociones', isAuth, isAdmin, royaltyControlador.getPromocionesParaModal)
+router.get('/royaltyAdmin/:nombre/eventos', isAuth, isAdmin, royaltyControlador.getEventosParaModal)
 
 router.delete('/borrar/:nombre', isAuth, isAdmin, royaltyControlador.deleteRoyalty)
 

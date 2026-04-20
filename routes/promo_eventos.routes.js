@@ -1,7 +1,58 @@
 const express = require('express')
+const fs = require('fs')
+const multer = require('multer')
+const path = require('path')
 const router = express.Router()
 
 const evenPromoControlador = require('../controllers/promo_eventos.controlador.js')
+
+const carpetaImagenesEventos = path.join(__dirname, '..', 'public', 'uploads', 'eventos')
+const extensionesImagen = {
+  'image/jpeg': '.jpg',
+  'image/png': '.png',
+  'image/webp': '.webp',
+  'image/gif': '.gif'
+}
+
+const cargaImagenEvento = multer({
+  storage: multer.diskStorage({
+    destination: (req, file, cb) => {
+      fs.mkdirSync(carpetaImagenesEventos, { recursive: true })
+      cb(null, carpetaImagenesEventos)
+    },
+    filename: (req, file, cb) => {
+      const extension = extensionesImagen[file.mimetype]
+      cb(null, `evento-${Date.now()}-${Math.round(Math.random() * 1E9)}${extension}`)
+    }
+  }),
+  fileFilter: (req, file, cb) => {
+    if (!extensionesImagen[file.mimetype]) {
+      return cb(new Error('Solo se permiten imagenes JPG, PNG, WEBP o GIF.'))
+    }
+
+    cb(null, true)
+  },
+  limits: {
+    fileSize: 5 * 1024 * 1024
+  }
+})
+
+const subirImagenEvento = (req, res, next) => {
+  cargaImagenEvento.single('imagenEvento')(req, res, error => {
+    if (!error) {
+      return next()
+    }
+
+    const mensaje = error instanceof multer.MulterError && error.code === 'LIMIT_FILE_SIZE'
+      ? 'La imagen no puede superar 5 MB.'
+      : error.message || 'No se pudo cargar la imagen del evento.'
+
+    return res.status(400).json({
+      success: false,
+      message: mensaje
+    })
+  })
+}
 
 router.get('/eventos', evenPromoControlador.getEvents)
 
@@ -9,9 +60,9 @@ router.get('/eventos/api/all', evenPromoControlador.getEventsAPI)
 
 router.get('/eventos/:idEvento', evenPromoControlador.getEventDetail)
 
-router.post('/eventos/registrar', evenPromoControlador.postRegistrarEvento)
+router.post('/eventos/registrar', subirImagenEvento, evenPromoControlador.postRegistrarEvento)
 
-router.put('/eventos/:idEvento', evenPromoControlador.putUpdateEvent)
+router.put('/eventos/:idEvento', subirImagenEvento, evenPromoControlador.putUpdateEvent)
 
 router.patch('/eventos/:idEvento/desactivar', evenPromoControlador.patchDeactivateEvent)
 

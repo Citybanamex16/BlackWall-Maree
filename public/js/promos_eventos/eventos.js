@@ -29,6 +29,7 @@ function configurarEventosBase () {
   const botonConfirmarDesactivar = document.getElementById('boton-confirmar-desactivar')
   const listaPromociones = document.getElementById('lista-promociones')
   const listaProductos = document.getElementById('lista-productos')
+  const imagenEvento = document.getElementById('imagenEvento')
 
   if (contenedor) {
     contenedor.addEventListener('click', manejarAccionesEvento)
@@ -60,6 +61,10 @@ function configurarEventosBase () {
 
   if (listaProductos) {
     listaProductos.addEventListener('change', manejarCambioCatalogo)
+  }
+
+  if (imagenEvento) {
+    imagenEvento.addEventListener('change', manejarCambioImagenEvento)
   }
 
   document.querySelectorAll('[data-close-modal]').forEach(elemento => {
@@ -128,10 +133,15 @@ function renderizarEventos (lista) {
     const activo = estaActivo(evento.Activo)
     const totalPromociones = Number(evento.TotalPromociones || 0)
     const totalProductos = Number(evento.TotalProductos || 0)
+    const imagenEvento = evento.Imagen || '/img/placeholder.webp'
 
     const cardHTML = `
       <div class="column is-4-desktop is-6-tablet">
         <article class="card event-card ${activo ? '' : 'is-inactive'}">
+          <div class="event-card-image">
+            <img src="${escaparHtml(imagenEvento)}" alt="Imagen del evento ${escaparHtml(evento.Nombre)}">
+          </div>
+
           <div class="card-content">
             <div class="event-card-head">
               <div>
@@ -155,7 +165,7 @@ function renderizarEventos (lista) {
               <span class="event-chip secondary">${totalProductos} ${totalProductos === 1 ? 'producto' : 'productos'}</span>
             </div>
 
-            <hr class="my-4" style="background-color: #efe1d4; height: 1px;">
+            <hr class="my-4 event-card-divider">
 
             <div>
               <p class="event-card-label mb-2">Vigencia</p>
@@ -377,12 +387,16 @@ function establecerModoFormulario (modo) {
   const descripcion = document.getElementById('descripcion-modal-evento')
   const kicker = document.getElementById('kicker-modal-evento')
   const botonGuardar = document.getElementById('boton-guardar-evento')
+  const campoImagen = document.getElementById('campo-imagen-evento')
+  const ayudaImagen = document.getElementById('ayuda-imagen-evento')
 
   if (modo === 'editar') {
     if (titulo) titulo.textContent = 'Modificar Evento'
-    if (descripcion) descripcion.textContent = 'Actualiza nombre, vigencia, estado y relaciones del evento.'
+    if (descripcion) descripcion.textContent = 'Actualiza nombre, vigencia, estado, imagen y relaciones del evento.'
     if (kicker) kicker.textContent = 'Edicion administrativa'
     if (botonGuardar) botonGuardar.textContent = 'Guardar cambios'
+    if (campoImagen) campoImagen.classList.remove('is-hidden')
+    if (ayudaImagen) ayudaImagen.textContent = 'Selecciona una nueva imagen solo si quieres reemplazar la actual.'
     return
   }
 
@@ -390,6 +404,8 @@ function establecerModoFormulario (modo) {
   if (descripcion) descripcion.textContent = 'Captura el evento, define su vigencia y selecciona las promociones o productos vinculados.'
   if (kicker) kicker.textContent = 'Registro administrativo'
   if (botonGuardar) botonGuardar.textContent = 'Guardar evento'
+  if (campoImagen) campoImagen.classList.remove('is-hidden')
+  if (ayudaImagen) ayudaImagen.textContent = 'Usa una imagen JPG, PNG, WEBP o GIF de hasta 5 MB para la tarjeta del catalogo.'
 }
 
 async function prepararModificacion (idEvento) {
@@ -415,9 +431,13 @@ async function prepararModificacion (idEvento) {
     document.getElementById('fechaInicio').value = normalizarFechaInput(evento.Fecha_Inicio)
     document.getElementById('fechaFin').value = normalizarFechaInput(evento.Fecha_Final)
     document.getElementById('activo').checked = estaActivo(evento.Activo)
+    mostrarImagenActualEvento(evento.Imagen)
 
+    const idsPromocionesActivas = new Set(estadoEventos.promocionesCatalogo.map(promocion => String(promocion.id)))
     estadoEventos.promocionesSeleccionadas = new Map(
-      (Array.isArray(evento.promociones) ? evento.promociones : []).map(promocion => [String(promocion.id), promocion.nombre])
+      (Array.isArray(evento.promociones) ? evento.promociones : [])
+        .filter(promocion => idsPromocionesActivas.has(String(promocion.id)))
+        .map(promocion => [String(promocion.id), promocion.nombre])
     )
     estadoEventos.productosSeleccionados = new Map(
       (Array.isArray(evento.productos) ? evento.productos : []).map(producto => [String(producto.id), producto.nombre])
@@ -441,6 +461,7 @@ function obtenerDatosFormulario () {
     descripcion: document.getElementById('descripcion').value.trim(),
     fechaInicio: document.getElementById('fechaInicio').value,
     fechaFin: document.getElementById('fechaFin').value,
+    imagen: document.getElementById('imagenEvento').files[0] || null,
     activo: document.getElementById('activo').checked,
     promociones: Array.from(estadoEventos.promocionesSeleccionadas.keys()),
     productos: Array.from(estadoEventos.productosSeleccionados.keys())
@@ -482,6 +503,11 @@ function validarFormulario (datos) {
     esValido = false
   }
 
+  if (datos.imagen && !['image/jpeg', 'image/png', 'image/webp', 'image/gif'].includes(datos.imagen.type)) {
+    marcarErrorContenedor('campo-imagen-evento', 'Selecciona una imagen JPG, PNG, WEBP o GIF.')
+    esValido = false
+  }
+
   return esValido
 }
 
@@ -507,13 +533,7 @@ async function guardarEvento (event) {
   }
 
   try {
-    const response = await fetch(url, {
-      method,
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(datos)
-    })
+    const response = await fetch(url, construirOpcionesGuardado(method, datos))
     const result = await leerRespuestaJson(response)
 
     if (!response.ok || !result.success) {
@@ -537,6 +557,55 @@ async function guardarEvento (event) {
       botonGuardar.classList.remove('is-loading')
     }
   }
+}
+
+function construirOpcionesGuardado (method, datos) {
+  const formData = new FormData()
+  formData.append('nombre', datos.nombre)
+  formData.append('descripcion', datos.descripcion)
+  formData.append('fechaInicio', datos.fechaInicio)
+  formData.append('fechaFin', datos.fechaFin)
+  formData.append('activo', datos.activo ? 'true' : 'false')
+  formData.append('promociones', JSON.stringify(datos.promociones))
+  formData.append('productos', JSON.stringify(datos.productos))
+
+  if (datos.imagen) {
+    formData.append('imagenEvento', datos.imagen)
+  }
+
+  return {
+    method,
+    body: formData
+  }
+}
+
+function manejarCambioImagenEvento (event) {
+  const archivo = event.target.files[0]
+  const nombreImagen = document.getElementById('nombre-imagen-evento')
+
+  if (nombreImagen) {
+    nombreImagen.textContent = archivo ? archivo.name : 'Selecciona una imagen'
+  }
+
+  limpiarErrorContenedor('campo-imagen-evento')
+}
+
+function mostrarImagenActualEvento (rutaImagen) {
+  const contenedor = document.getElementById('imagen-actual-evento')
+  const imagen = document.getElementById('preview-imagen-evento')
+
+  if (!contenedor || !imagen) {
+    return
+  }
+
+  if (!rutaImagen) {
+    imagen.removeAttribute('src')
+    contenedor.classList.add('is-hidden')
+    return
+  }
+
+  imagen.src = rutaImagen
+  contenedor.classList.remove('is-hidden')
 }
 
 function solicitarCambioEstado (idEvento) {
@@ -727,6 +796,7 @@ function limpiarErroresFormulario () {
 
   limpiarErrorContenedor('lista-promociones')
   limpiarErrorContenedor('lista-productos')
+  limpiarErrorContenedor('campo-imagen-evento')
 }
 
 function limpiarFormulario () {
@@ -742,6 +812,8 @@ function limpiarFormulario () {
 
   document.getElementById('id_evento').value = ''
   document.getElementById('activo').checked = true
+  document.getElementById('nombre-imagen-evento').textContent = 'Selecciona una imagen'
+  mostrarImagenActualEvento(null)
 
   renderizarCatalogo('lista-promociones', estadoEventos.promocionesCatalogo, estadoEventos.promocionesSeleccionadas, 'promocion')
   renderizarCatalogo('lista-productos', estadoEventos.productosCatalogo, estadoEventos.productosSeleccionados, 'producto')

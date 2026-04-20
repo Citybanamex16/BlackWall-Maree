@@ -60,6 +60,7 @@ module.exports = class Cliente {
   static fetchColaborador (idColaborador) {
     const query = `
       SELECT 
+      ID_Colaborador AS id_colaborador,
           Nombre AS nombre,
           Contraseña AS password, 
           ID_Rol AS id_rol

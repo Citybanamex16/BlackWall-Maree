@@ -4,7 +4,7 @@ const Colaborador = require('../models/colaborador.model.js')
 const Ingrediente = require('../models/ingrediente.model.js')
 const MetricasClientes = require('../models/metricasclientes.model.js')
 const MetricasProductos = require('../models/metricasproductos.model.js')
-const bcrypt = require('bcryptjs')
+// const bcrypt = require('bcryptjs')
 
 // const path = require('path')
 
@@ -281,8 +281,8 @@ exports.getCollaboratorsDetails = async (req, res, next) => {
 
 exports.postDarDeBajaColaborador = async (req, res, next) => {
   try {
-    const idColaborador = req.params.id
-    const idAdminSesion = String(req.session.user.id)
+    const idColaborador = String(req.params.id).trim()
+    const idAdminSesion = String(req.session.user.id).trim()
 
     if (idColaborador === idAdminSesion) {
       return res.status(400).json({
@@ -497,7 +497,7 @@ exports.validarIngrediente = async (req, res, next) => {
 // Guarda el nuevo ingrediente en la BD
 exports.crearIngrediente = async (req, res, next) => {
   try {
-    const { Nombre, Precio, Activo, Tipo, Imagen } = req.body
+    const { Nombre, Precio, Activo, Imagen } = req.body
     const Categoria = req.body['Categoría']
 
     // Validación de campos obligatorios
@@ -522,7 +522,7 @@ exports.crearIngrediente = async (req, res, next) => {
     const nuevoID = Ingrediente.generarID()
     console.log('Nuevo ID Ingrediente:', nuevoID)
 
-    console.log('Datos a insertar:', { nuevoID, Nombre, Categoria, Precio, Activo, Tipo, Imagen })
+    console.log('Datos a insertar:', { nuevoID, Nombre, Categoria, Precio, Activo, Imagen })
 
     await Ingrediente.insertNuevoIngrediente(
       nuevoID,
@@ -530,7 +530,6 @@ exports.crearIngrediente = async (req, res, next) => {
       Categoria,
       parseFloat(Precio),
       Activo !== undefined ? Activo : true,
-      Tipo || null,
       Imagen || null
     )
 
@@ -581,7 +580,7 @@ exports.eliminarIngrediente = async (req, res, next) => {
 exports.actualizarIngrediente = async (req, res, next) => {
   try {
     const { id } = req.params
-    const { Nombre, Precio, Activo, Tipo, Imagen } = req.body
+    const { Nombre, Precio, Activo, Imagen } = req.body
     const Categoria = req.body['Categoría']
 
     if (!id || !Nombre || !Categoria || !Precio) {
@@ -590,7 +589,7 @@ exports.actualizarIngrediente = async (req, res, next) => {
 
     await Ingrediente.actualizarIngrediente(
       id, Nombre.trim(), Categoria,
-      parseFloat(Precio), Activo, Tipo || null, Imagen || null
+      parseFloat(Precio), Activo, Imagen || null
     )
 
     res.status(200).json({ success: true, message: 'Ingrediente actualizado correctamente' })
@@ -673,13 +672,13 @@ exports.postNewCollaborator = async (req, res, next) => {
       })
     }
 
-    const contrasenaHasheada = await bcrypt.hash(contrasena, 12)
+    // const contrasenaHasheada = await bcrypt.hash(contrasena, 12)
 
     await Colaborador.create(
       idColaborador,
       rol,
       nombre,
-      contrasenaHasheada
+      contrasena
     )
 
     return res.redirect('/admin/colaboradores')
