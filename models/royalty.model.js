@@ -30,12 +30,12 @@ module.exports = class Royalty {
     )
   }
 
+  // We used stored procedures to save promotions for each royalty
   static guardarEstadoRoyaltyPromociones (NombreRoyalty, idsPromocion) {
-    const valores = idsPromocion.map(idPromocion => [NombreRoyalty, idPromocion])
-    return db.query(
-      'INSERT INTO estado_royalty_da_promociones (Nombre_Royalty, ID_Promocion) VALUES ?',
-      [valores]
+    const promesas = idsPromocion.map(idPromocion =>
+      db.execute('CALL sp_GuardarRoyaltyPromocion(?, ?)', [NombreRoyalty, idPromocion])
     )
+    return Promise.all(promesas)
   }
 
   static guardarEstadoRoyaltyEventos (NombreRoyalty, idsEventos) {
