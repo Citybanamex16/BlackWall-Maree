@@ -1,11 +1,31 @@
 /* global ConstruirModifModal, ModifyProduct, eliminarDesactivarModal */
 // JS FRONTEND de la vista de Productos del Admin
 
+
+
+//Funciones Globales
+
+
+function showSpinner(mensaje = 'Cargando...') {
+    console.log("Mostrando Spinner")
+    document.getElementById('spinner-label').textContent = mensaje
+    document.getElementById('spinner-overlay').showModal()
+}
+
+function hideSpinner() {
+  console.log("Closing Spinner")
+    document.getElementById('spinner-overlay').close()
+}
+
+
+//Fin de funciones Globales
+
 /* CU Visualizar Catalogo de Productos */
 
 async function getCatalogoProductos () {
   console.log('Obteniendo Catalogo de Productos')
   try {
+    showSpinner("Obteniendo Catalogo de Productos")
     const response = await fetch('/menu/productosCatalog')
     if (!response.ok) {
       ShowErrorModal('Error Interno', 'Error en Obtener Catalogo')
@@ -17,6 +37,8 @@ async function getCatalogoProductos () {
     construirCatalogoAdmin(object)
   } catch (error) {
     console.log('Error obteniendo Catalogo: '.error)
+  } finally{
+    hideSpinner()
   }
 }
 getCatalogoProductos()
@@ -216,9 +238,10 @@ function registerButtonOnClick (event) {
   // Logica de Registrar Nuevo Producto
   event.preventDefault()
   console.log('Iniciando CU Registrar Nuevo Producto...')
-
+  showSpinner("Obteniendo Categorías")
   fetch('/menu/formsTipoPlatillo')
     .then(response => {
+      hideSpinner()
       if (!response.ok) {
         ShowErrorModal('Error Interno Backedn', 'Error en Fetch de Categorías')
         throw new Error('Error en Register Button Click')
@@ -282,6 +305,7 @@ async function seleccionarTipoProducto (id) {
     console.log(`Iniciando fetch para el ID: ${id}`)
 
     /* 1. Fetch: Obtener campos del producto e Ingredientes */
+    showSpinner("Obteniendo Campos e Ingredientes")
     const respuesta = await fetch(`/menu/formsRegistraPlatillo?id=${id}`)
 
     if (!respuesta.ok) {
@@ -299,6 +323,8 @@ async function seleccionarTipoProducto (id) {
   } catch (error) {
     console.error('Hubo un fallo en la operación:', error)
     ShowErrorModal('Error de Conexión con BD', 'Hubo un inconveniente con la conexión a la BD. Intentelo mas tarde')
+  } finally{
+    hideSpinner()
   }
 }
 
@@ -403,6 +429,7 @@ function createIngElement (ing) {
   opt.setAttribute('data-precio', ing.precio)
   return opt
 }
+
 
 // Rellena un <select> vacío usando createIngElement
 function populateDropdown (selectEl) {
@@ -521,6 +548,7 @@ function onBtnIngNewClick () {
   updateIngCounter()
 }
 
+
 function buildTypeSection(typesData) {
     const fieldWrapper = document.createElement('div');
     fieldWrapper.className = 'maree-field is-dynamic'; 
@@ -552,6 +580,7 @@ function buildTypeSection(typesData) {
     fieldWrapper.appendChild(select);
     return fieldWrapper;
 }
+
 
 function getIngredientesSeleccionados () {
   return Array.from(
@@ -795,11 +824,14 @@ async function registerNewProduct (NewProductData, ProductType) {
   console.log('Mandando datos a backend: ', NewProductData)
   try {
     console.log('POST NEW PRODUCT')
+
+    showSpinner("Guardando Producto")
     const postrequest = await fetch('/menu/registerNewProduct', {
       method: 'POST',
       headers: { 'Content-Type': 'application/JSON' },
       body: JSON.stringify(NewProductData)
     })
+
 
     const response = await postrequest.json()
     if (response.ok) {
@@ -812,7 +844,10 @@ async function registerNewProduct (NewProductData, ProductType) {
     }
   } catch (error) {
     ShowErrorModal(`Error al intentar Registrar ${ProductType}`, 'Hubo in fallo en la conexión con la BD. Favor de intentarlo mas tarde')
+  } finally {
+    hideSpinner()
   }
+
 }
 
 const SuccessModal = document.getElementById('ModalExito')
