@@ -956,16 +956,17 @@ dialog .checkbox {
   overflow: hidden;
 }
 
-.admin-prod-header,
-.admin-prod-row {
-  display: grid;
-  grid-template-columns: 2fr 80px 3fr 90px;
-  gap: 8px;
-  padding: 8px 14px;
-  align-items: center;
-  font-size: 13px;
+.admin-prod-header {
+  display: flex;
+  justify-content: space-between;
+  padding: 8px 16px;
+  background: #f5f5f5;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+  color: #888;
 }
-
 .admin-prod-header {
   background: #f5f5f5;
   font-weight: 600;
@@ -1146,6 +1147,215 @@ Spinner CSS
     flex-direction: column;
     align-items: center;
     gap: 16px;
+}
+
+
+
+/* ═══════════════════════════════════════════
+   HUÉRFANOS — 20 Abril 2025
+   Clases sin declaración previa, identificadas
+   en auditoría de fusión CSS
+═══════════════════════════════════════════ */
+
+/* FAB variante con sombra — complementa a .fab */
+.button-floating {
+  box-shadow: 0 4px 16px rgba(181, 149, 106, 0.35);
+  transition: box-shadow 0.2s, transform 0.15s;
+}
+.button-floating:hover {
+  box-shadow: 0 6px 24px rgba(181, 149, 106, 0.5);
+  transform: translateY(-2px);
+}
+
+/* Contenedor de opciones en modal Elim/Desact */
+.elim-desact-opciones {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 4px;
+}
+
+/* Botón grande de acción (Eliminar / Desactivar) */
+.elim-desact-btn {
+  display: flex !important;
+  align-items: center !important;
+  gap: 12px !important;
+  height: auto !important;
+  padding: 12px 16px !important;
+  text-align: left !important;
+  justify-content: flex-start !important;
+  border-radius: 8px !important;
+  transition: transform 0.1s, box-shadow 0.15s !important;
+}
+.elim-desact-btn:hover {
+  transform: translateX(3px);
+}
+
+/* Bloque de texto interno del botón */
+.elim-desact-btn-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+/* Título principal del botón */
+.elim-desact-btn-title {
+  font-family: 'Jost', sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  color: inherit;
+  line-height: 1.2;
+}
+
+/* Subtítulo descriptivo del botón */
+.elim-desact-btn-sub {
+  font-family: 'Jost', sans-serif;
+  font-size: 11px;
+  font-weight: 400;
+  opacity: 0.72;
+  line-height: 1.4;
+}
+
+
+/* ═══════════════════════════════════════════
+   HUÉRFANOS DINÁMICOS — 20 Abril 2026
+   Generados por renderProductoAdmin() y
+   construirCategoria() en adminProducts.js
+═══════════════════════════════════════════ */
+
+/* ── Sección de categoría ── */
+.categoria-section {
+  margin-bottom: 24px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.cat-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 18px;
+  background: var(--gold-bg);
+  cursor: pointer;
+  user-select: none;
+  transition: background 0.15s;
+}
+.cat-header:hover { background: #f5ece0; }
+
+.cat-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 20px;
+  font-weight: 400;
+  color: var(--text-main);
+  margin: 0;
+  flex: 1;
+}
+
+.cat-chevron {
+  color: var(--gold);
+  transition: transform 0.25s ease;
+  display: flex;
+  align-items: center;
+}
+.categoria-section.is-open .cat-chevron { transform: rotate(180deg); }
+
+/* ── Grid colapsable ── */
+.grid-collapsible {
+  transition: max-height 0.3s ease, opacity 0.3s ease;
+  overflow: hidden;
+}
+
+/* ── Fila de producto — ahora flex en lugar de grid ── */
+.admin-prod-row {
+  display: flex !important;        /* sobreescribe el grid anterior */
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 16px;
+  border-top: 1px solid var(--border);
+  cursor: pointer;
+  transition: background 0.12s;
+  gap: 12px;
+}
+.admin-prod-row:hover { background: #fdf8f2; }
+
+/* ── Bloque izquierdo: imagen + textos ── */
+.admin-prod-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+  min-width: 0;        /* permite que el texto haga ellipsis */
+}
+
+/* ── Textos del producto ── */
+.admin-prod-texts {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.admin-prod-name {
+  font-family: 'Jost', sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-main);
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.admin-prod-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* ── Bloque derecho: botón acción ── */
+.admin-prod-actions {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+/* ── Botón eliminar/desactivar ── */
+.btn-elim-desact {
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  border: 1px solid #ffb3b3;
+  background: #fff5f5;
+  color: #cc0000;
+  font-size: 13px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s, border-color 0.15s, transform 0.1s;
+  flex-shrink: 0;
+}
+.btn-elim-desact:hover {
+  background: #ffe0e0;
+  border-color: #e00000;
+  transform: scale(1.08);
+}
+
+/* ── Estado vacío de categoría ── */
+.empty-state {
+  padding: 40px 20px;
+  text-align: center;
+  color: var(--text-muted);
+  font-family: 'Jost', sans-serif;
+  font-size: 13px;
+}
+
+.empty-icon {
+  font-size: 28px;
+  display: block;
+  margin-bottom: 8px;
+  opacity: 0.6;
 }
 
 
