@@ -141,13 +141,10 @@ function construirCategoria (cat, contenedorMenu) {
     </div>
     <div id="${idContenedor}" class="grid-productos admin-grid mt-1 grid-collapsible">
       <!-- Cabecera de columnas -->
-      <div class="admin-prod-header">
-        <span>Nombre</span>
-        <span>Precio</span>
-        <span>Ingredientes</span>
-        <span>Estado</span>
-        <span>Acción</span>
-      </div>
+     <div class="admin-prod-header">
+  <span>Producto</span>
+  <span>Acción</span>
+</div>
     </div>`
 
   const header = seccionCat.querySelector('.cat-header')
@@ -1012,6 +1009,8 @@ document.getElementById('closeConfirmAction')?.addEventListener('click', () => {
     document.getElementById('ConfirmActionModal').close();
     document.getElementById('ElimDesactModal').showModal();
 });
+
+
 
 
 
