@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="light">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Sucursales - Marée</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@1.0.4/css/bulma.min.css">
+  <link rel="stylesheet" href="/css/CSSglobales/global_theme.css">
+  <link rel="stylesheet" href="/css/CSSglobales/global_components.css">
+  <link rel="stylesheet" href="/css/moduloMenuCSS/ingredientes.css">
+</head>
+
+<body>
+
+<nav class="navbar" role="navigation">
+  <div class="navbar-brand">
+    <div class="navbar-item">
+      <div class="logo-area">
+        <span class="logo-text">MARÉE</span>
+        <span class="logo-sub">Love at First Crêpe</span>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<section class="section">
+  <div class="container">
+
+    <a href="/admin" class="back-link">← Admin Dashboard</a>
+
+    <div class="ing-header">
+      <div>
+        <h1 class="page-title">Sucursales</h1>
+        <p class="page-sub">Ubicaciones del restaurante</p>
+      </div>
+      <button id="btnNuevaSucursal" class="btn-maree">+ Nueva Sucursal</button>
+    </div>
+
+    <div class="ing-table-wrap">
+      <div id="tablaSucursalesContainer">
+        <div class="ing-empty">Cargando sucursales...</div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- MODAL Registro -->
+<dialog id="ModalRegistroSucursal" class="maree-modal">
+  <div class="modal-inner">
+    <p class="modal-title">Nueva Sucursal</p>
+    <p class="modal-sub">Completa los datos de la sucursal</p>
+
+    <div class="maree-field">
+      <label class="maree-label" for="inputNombreSuc">Nombre</label>
+      <input class="maree-input" type="text" id="inputNombreSuc" placeholder="Ej. Sucursal Centro" maxlength="50">
+    </div>
+    <div class="maree-field">
+      <label class="maree-label" for="inputCiudadSuc">Ciudad</label>
+      <input class="maree-input" type="text" id="inputCiudadSuc" placeholder="Ej. Mazatlán" maxlength="50">
+    </div>
+    <div class="maree-field">
+      <label class="maree-label" for="inputEstadoSuc">Estado</label>
+      <input class="maree-input" type="text" id="inputEstadoSuc" placeholder="Ej. Sinaloa" maxlength="50">
+    </div>
+    <div class="maree-field">
+      <label class="maree-label" for="inputPaisSuc">País</label>
+      <input class="maree-input" type="text" id="inputPaisSuc" placeholder="Ej. México" maxlength="50" value="México">
+    </div>
+    <div class="maree-field">
+      <label class="maree-label" for="inputMunicipioSuc">Municipio</label>
+      <input class="maree-input" type="text" id="inputMunicipioSuc" placeholder="Ej. Mazatlán" maxlength="50">
+    </div>
+    <div class="maree-field">
+      <label class="maree-label" for="inputCalleSuc">Calle</label>
+      <input class="maree-input" type="text" id="inputCalleSuc" placeholder="Ej. Av. Olas Altas 123" maxlength="50">
+    </div>
+    <div class="maree-field">
+      <label class="maree-label">Coordenadas <span style="font-weight:400;text-transform:none;letter-spacing:0;">(opcional)</span></label>
+      <div style="display:flex;gap:8px;">
+        <input class="maree-input" type="text" id="inputLongitudSuc" placeholder="Longitud">
+        <input class="maree-input" type="text" id="inputLatitudSuc" placeholder="Latitud">
+      </div>
+    </div>
+
+    <div class="modal-actions">
+      <button id="btnConfirmarRegistroSucursal" class="btn-primary">Continuar</button>
+      <button id="btnCerrarRegistroSucursal" class="btn-secondary">Cancelar</button>
+    </div>
+  </div>
+</dialog>
+
+<!-- MODAL Resumen -->
+<dialog id="ModalResumenSucursal" class="maree-modal">
+  <div class="modal-inner">
+    <p class="modal-title">Confirmar Registro</p>
+    <p class="modal-sub">Verifica los datos antes de guardar</p>
+    <div id="resumenContenidoSucursal"></div>
+    <div class="modal-actions">
+      <button id="btnConfirmarCreacionSucursal" class="btn-success">Registrar Sucursal</button>
+      <button id="btnVolverFormularioSucursal" class="btn-secondary">Regresar</button>
+    </div>
+  </div>
+</dialog>
+
+<!-- MODAL Error -->
+<dialog id="ModalErrorSuc" class="maree-modal">
+  <div class="modal-inner" style="text-align:center;">
+    <span class="modal-icon">⚠️</span>
+    <p class="modal-title modal-title-danger" id="errorTituloSuc">Error</p>
+    <p id="errorMensajeSuc" style="font-size:14px;color:#555;margin-bottom:24px;"></p>
+    <button id="btnCerrarErrorSuc" class="btn-danger">Cerrar</button>
+  </div>
+</dialog>
+
+<!-- MODAL Exito -->
+<dialog id="ModalExitoSuc" class="maree-modal">
+  <div class="modal-inner" style="text-align:center;">
+    <span class="modal-icon">✓</span>
+    <p class="modal-title modal-title-success" id="exitoTituloSuc">¡Registrado!</p>
+    <p id="exitoMensajeSuc" style="font-size:14px;color:#555;margin-bottom:24px;"></p>
+    <button id="btnCerrarExitoSuc" class="btn-success">Aceptar</button>
+  </div>
+</dialog>
+
+<!-- MODAL Modificar -->
+<dialog id="ModalEditarSucursal" class="maree-modal">
+  <div class="modal-inner">
+    <p class="modal-title">Editar Sucursal</p>
+    <p class="modal-sub" id="editarSubtituloSucursal"></p>
+
+    <div class="maree-field">
+      <label class="maree-label">Nombre</label>
+      <input class="maree-input" type="text" id="editNombreSuc" maxlength="50">
+    </div>
+    <div class="maree-field">
+      <label class="maree-label">Ciudad</label>
+      <input class="maree-input" type="text" id="editCiudadSuc" maxlength="50">
+    </div>
+    <div class="maree-field">
+      <label class="maree-label">Estado</label>
+      <input class="maree-input" type="text" id="editEstadoSuc" maxlength="50">
+    </div>
+    <div class="maree-field">
+      <label class="maree-label">País</label>
+      <input class="maree-input" type="text" id="editPaisSuc" maxlength="50">
+    </div>
+    <div class="maree-field">
+      <label class="maree-label">Municipio</label>
+      <input class="maree-input" type="text" id="editMunicipioSuc" maxlength="50">
+    </div>
+    <div class="maree-field">
+      <label class="maree-label">Calle</label>
+      <input class="maree-input" type="text" id="editCalleSuc" maxlength="50">
+    </div>
+    <div class="maree-field">
+      <label class="maree-label">Coordenadas <span style="font-weight:400;text-transform:none;letter-spacing:0;">(opcional)</span></label>
+      <div style="display:flex;gap:8px;">
+        <input class="maree-input" type="text" id="editLongitudSuc" placeholder="Longitud">
+        <input class="maree-input" type="text" id="editLatitudSuc" placeholder="Latitud">
+      </div>
+    </div>
+
+    <div class="modal-actions">
+      <button id="btnGuardarEditarSucursal" class="btn-primary">Guardar cambios</button>
+      <button id="btnCancelarEditarSucursal" class="btn-secondary">Cancelar</button>
+    </div>
+  </div>
+</dialog>
+
+<!-- MODAL Eliminar -->
+<dialog id="ModalEliminarSucursal" class="maree-modal">
+  <div class="modal-inner">
+    <p class="modal-title">Eliminar Sucursal</p>
+    <p class="modal-sub" id="eliminarNombreSucursal"></p>
+    <div id="eliminarAdvertenciaSucursal"></div>
+    <div class="modal-actions">
+      <button id="btnConfirmarEliminarSucursal" class="btn-danger">Eliminar</button>
+      <button id="btnCancelarEliminarSucursal" class="btn-secondary">Cancelar</button>
+    </div>
+  </div>
+</dialog>
+
+<script src="/js/menudigital/AdminSucursalesScripts/adminSucursales.js"></script>
+</body>
+</html>
