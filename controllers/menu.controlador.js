@@ -10,7 +10,8 @@ const db = require('../util/database.js')
 // CU11 Vizualisar Menu
 exports.getMenu = (request, response, next) => {
   const breadcrumbs = nav.getBreadcrumbs('Menu')
-  response.render('cliente/menu', { breadcrumbs })
+  const SesionData = request.session.cliente
+  response.render('cliente/menu', { breadcrumbs, datosCliente:SesionData })
 }
 
 exports.getMenuData = async (request, response, next) => {
@@ -47,9 +48,10 @@ exports.getMenuData = async (request, response, next) => {
 exports.getMenuPromos = async (req, res, nex) => {
   console.log('Obteniendo PU & PE')
   try {
-    const [PUs, PEs] = await Promise.all([
+    const [PUs, PEs, PRs] = await Promise.all([
       promos.getPromotionsBySource('PU'),
-      promos.getPromotionsBySource('PE')
+      promos.getPromotionsBySource('PE'),
+      promos.getPromotionsBySource('PR')
     ])
 
     console.log('All promises hechas con exito')
@@ -57,7 +59,8 @@ exports.getMenuPromos = async (req, res, nex) => {
       ok: true,
       message: 'PE & PU obtenidos',
       allPUs: PUs,
-      allPEs: PEs
+      allPEs: PEs,
+      allPRs: PRs
     })
   } catch (err) {
     console.log('Error en consulta de PEs & PUs: ', err)

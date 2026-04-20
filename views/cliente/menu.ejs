@@ -5,19 +5,33 @@
      TODO: poblar con datos de sesión
 ════════════════════════════════════════ -->
 <div id="sticky-top" class="sticky-top-app">
-    <!-- Botón de Iniciar Sesión -->
-    <button type="button" class="user-profile" onclick="location.href='/';" aria-label="Iniciar Sesión">
-        <div class="logo-area">
-            <span class="logo-text">MARÉE</span>
-            <span class="logo-sub">LOVE AT FIRST CRÊPE</span>
+    <% if (!datosCliente) { %>
+        <button type="button" class="user-profile" onclick="location.href='/';" aria-label="Logo Marée">
+            <div class="logo-area">
+                <span class="logo-text">MARÉE</span>
+                <span class="logo-sub">LOVE AT FIRST CRÊPE</span>
+            </div>
+        </button>
+        <button type="button" class="royalty-badge" onclick="location.href='/cliente/login';" aria-label="Ver Royalty">
+            <i class="fas fa-crown"></i>
+            <span>Iniciar Sesión</span>
+        </button>
+    <% } else { %>
+        <div class="user-profile">
+            <div class="logo-area">
+                <span class="logo-text">MARÉE</span>
+                <span class="logo-sub">Bienvenido, <%= datosCliente.nombre %></span>
+            </div>
         </div>
-    </button>
-
-    <!-- Botón de Royalty -->
-    <button type="button" class="royalty-badge" onclick="location.href='/cliente/login';" aria-label="Ver Royalty">
-        <i class="fas fa-crown"></i>
-        <span>Iniciar Sesión</span>
-    </button>
+        <div class="royalty-actions">
+            <button type="button" class="btn-royalty-active" onclick="location.href='/royalty/royaltyUser'">
+                <i class="fas fa-crown"></i> Royalty
+            </button>
+            <button type="button" class="btn-logout" onclick="location.href='/'" aria-label="Cerrar Sesión">
+                <i class="fas fa-sign-out-alt"></i>
+            </button>
+        </div>
+    <% } %>
 </div>
 
 
