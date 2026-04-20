@@ -20,7 +20,7 @@ INSERT INTO `estado_royalty_da_eventos` (`Nombre_Royalty`, `ID_Evento`) VALUES
 
 -- Consultar Estado de cliente:
 DELIMITER //
-
+s
 CREATE PROCEDURE sp_EstadoCliente (
     IN p_telefono VARCHAR(20)
 )
@@ -60,7 +60,7 @@ CREATE PROCEDURE sp_fetchEventos(
 BEGIN
 SELECT E.Nombre AS Nombre_Evento, E.Fecha_Inicio, E.Fecha_final, E.Descripcion, ER.Nombre_Royalty
         FROM evento E
-        INNER JOIN estado_royalty_da_eventos RE ON e.ID_Evento = RE.ID_Evento
+        INNER JOIN estado_royalty_da_eventos RE ON E.ID_Evento = RE.ID_Evento
         INNER JOIN estado_royalty ER ON ER.Nombre_Royalty = RE.Nombre_Royalty
         WHERE ER.Número_de_prioridad <= (
         SELECT Número_de_prioridad FROM estado_royalty WHERE Nombre_Royalty = p_Nombre_Royalty)
@@ -148,7 +148,7 @@ DELIMITER ;
 -- Traer los 3 platillos o bebidas favoritos del cliente
 DELIMITER //
 CREATE PROCEDURE sp_fetchFavCliente(
-    IN p_Numero_Telefonico VARCHAR(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish2_ci
+    IN p_Numero_Telefonico VARCHAR(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish2_ci,
     IN p_Categoría VARCHAR(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish2_ci
 )
 
@@ -166,3 +166,46 @@ BEGIN
 END //
 DELIMITER ;
 
+
+-- Cree una tabla que sirve para aplicar triggers, en este caso es una bitacora
+-- que sirve para ver los logins diarios de las personas, asi podemos ver si hay ataques a la BD
+
+CREATE TABLE log_accesos_otp (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    telefono VARCHAR(20),
+    accion VARCHAR(20),
+    fecha TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish2_ci;
+
+-- Al eliminar OTP se guarda el registro de log in en esta tabla
+DELIMITER //
+CREATE TRIGGER tras_usar_otp
+BEFORE DELETE ON codigo_verificacion
+FOR EACH ROW
+BEGIN
+    INSERT INTO log_accesos_otp (telefono, accion)
+    VALUES (OLD.Numero_Telefonico, 'OTP_ELIMINADO');
+END //
+DELIMITER ;
+
+-- Verifica el numero de visitas de un cliente y actualiza su nivel royalty si es necesario
+DELIMITER //
+CREATE TRIGGER actualizar_nivel_por_visitas
+AFTER UPDATE ON cliente
+FOR EACH ROW
+BEGIN
+    -- Solo actuamos si el número de visitas cambió
+    IF OLD.Visitas_Actuales <> NEW.Visitas_Actuales THEN
+        -- Buscamos el nombre del nivel que le corresponde
+        -- y lo actualizamos en la columna FK del cliente
+        UPDATE cliente
+        SET Nombre_Royalty = (
+            SELECT Nombre_Royalty
+            FROM estado_royalty
+            WHERE NEW.Visitas_Actuales BETWEEN Min_Visitas AND Max_Visitas
+            LIMIT 1
+        )
+        WHERE Numero_Telefonico = NEW.Numero_Telefonico;
+    END IF;
+END //
+DELIMITER ;
