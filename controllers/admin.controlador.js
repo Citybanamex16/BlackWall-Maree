@@ -4,6 +4,7 @@ const Colaborador = require('../models/colaborador.model.js')
 const Ingrediente = require('../models/ingrediente.model.js')
 const MetricasClientes = require('../models/metricasclientes.model.js')
 const MetricasProductos = require('../models/metricasproductos.model.js')
+const Calendario = require('../models/calendario.model.js')
 const bcrypt = require('bcryptjs')
 
 // const path = require('path')
@@ -694,6 +695,38 @@ exports.postNewCollaborator = async (req, res, next) => {
         nombre: req.body.nombre || '',
         rol: req.body.rol || 'Colaborador'
       }
+    })
+  }
+}
+
+//dias habiless
+exports.getDiasHabiles = async (req, res, next) => {
+  try {
+    const diasHabiles = await Calendario.fetchDiasHabiles()
+
+    if (!diasHabiles || diasHabiles.length === 0) {
+      return res.render('admin/diasHabiles', {
+        pageTitle: 'Días hábiles',
+        diasHabiles: [],
+        error: null,
+        mensaje: 'No existen días hábiles configurados.'
+      })
+    }
+
+    return res.render('admin/diasHabiles', {
+      pageTitle: 'Días hábiles',
+      diasHabiles,
+      error: null,
+      mensaje: null
+    })
+  } catch (error) {
+    console.error('Error al recuperar días hábiles:', error)
+
+    return res.status(500).render('admin/diasHabiles', {
+      pageTitle: 'Días hábiles',
+      diasHabiles: [],
+      error: 'No se pudo recuperar la configuración de días hábiles.',
+      mensaje: null
     })
   }
 }
