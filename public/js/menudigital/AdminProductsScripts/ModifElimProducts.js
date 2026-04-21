@@ -1,4 +1,4 @@
-/* global ShowErrorModal, showSuccessModal, catalogoIng:writable, limpiarModal, createFieldElement, buildIngredientsSection, SetRegisterButtons, onBtnIngNewClick, getIngredientesSeleccionados, validarDatosRegistro */
+/* global ShowErrorModal, showSuccessModal, catalogoIng:writable , catalogTipos:writable , limpiarModal, createFieldElement, buildIngredientsSection, SetRegisterButtons, onBtnIngNewClick, getIngredientesSeleccionados, validarDatosRegistro */
 /* exported ConstruirModifModal, ModifyProduct */
 
 /* CU05 Modificar Platillo Existente */
@@ -25,7 +25,6 @@ async function getAllTypesCatalog () {
 
     if (!response.ok) {
       throw new Error('Error al obtener tipos de BD')
-      return
     }
 
     const tiposCatalogData = await response.json()
