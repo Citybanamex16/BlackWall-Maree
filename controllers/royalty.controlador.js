@@ -1,5 +1,4 @@
 /* eslint-env browser */
-/* global alert */
 
 /* eslint-disable no-unused-vars */
 
@@ -241,6 +240,7 @@ exports.getRoyaltyCli = async (request, response, next) => {
 }
 
 exports.getRoyaltyDataAPI = async (request, response, next) => {
+  console.log('getRoyaltyDataAPI llamado')
   if (!request.session.isLoggedIn || request.session.rol !== 'Usuario') {
     return response.status(401).json({ redirectUrl: '/cliente/login' })
   }
@@ -263,6 +263,8 @@ exports.getRoyaltyDataAPI = async (request, response, next) => {
       clienteInfo.Visitas,
       clienteInfo.maxVisitas
     )
+    console.log('TOKEN JWT:', walletLink.split('/').pop())
+    console.log('Wallet link generado:', walletLink)
 
     const [[promotionsData], [eventsData]] = await Promise.all([
       Royalty.fetchPromotions(nivelId),

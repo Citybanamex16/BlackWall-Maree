@@ -56,6 +56,23 @@
     </section>
 </main>
 
+<a id="btn-wallet" href="#" target="_blank">
+  <img src="https://help.ipswichtheatres.co.uk/hc/article_attachments/24188305565329" 
+       alt="Agregar a Google Wallet" style="height: 48px;">
+</a>
+
+<script>
+  fetch('/royalty/royaltyUser/api/datos')
+    .then(r => r.json())
+    .then(data => {
+        console.log('Respuesta API:', data)
+        if (data.walletLink) {
+            document.getElementById('btn-wallet').href = data.walletLink
+      }
+    })
+</script>
+
+
 <script src="/js/Royalty/royalty.cliente.js"></script>
 </body>
 </html>
