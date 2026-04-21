@@ -9,6 +9,7 @@ const MetricasProductos = require('../models/metricasproductos.model.js')
 // const path = require('path')
 
 // Exports
+
 /** ejemplo:
  * exports.get_new = (request, response, next) => {
     response.render('new');
