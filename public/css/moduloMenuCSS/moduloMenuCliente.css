@@ -121,20 +121,25 @@ html {
 
 /* Botón Logout Pequeño */
 .btn-logout {
-    background: transparent;
-    border: 1px solid #ddd;
-    color: #999;
-    width: 32px;
-    height: 32px;
-    border-radius: 50%;
+    background: #b5956a;
+    color: white;
+    border: none;
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
     cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    box-shadow: 0 2px 5px rgba(181, 149, 106, 0.3);
     transition: all 0.2s;
 }
 
 .btn-logout:hover {
-    background: #f8f8f8;
-    color: #e74c3c;
+    background: #a07d55;
 }
+
 
 /* 2. STICKY NAV: Justo debajo del Top */
 .sticky-nav-container {

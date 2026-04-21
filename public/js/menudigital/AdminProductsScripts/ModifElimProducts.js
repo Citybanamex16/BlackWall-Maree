@@ -19,13 +19,12 @@ async function getAllIngredientesCatalog () {
   }
 }
 
-
-async function getAllTypesCatalog(){
+async function getAllTypesCatalog () {
   try {
     const response = await fetch('/Menu/productosTipos')
 
     if (!response.ok) {
-      throw new Error("Error al obtener tipos de BD")
+      throw new Error('Error al obtener tipos de BD')
       return
     }
 
@@ -34,7 +33,6 @@ async function getAllTypesCatalog(){
   } catch (error) {
     ShowErrorModal('Error en funcion global', 'No es posible obtener tipos')
   }
-
 }
 
 // Referencias del modal
@@ -57,7 +55,7 @@ async function ConstruirModifModal (productData, AllCategorys) {
   catalogoIng = await getAllIngredientesCatalog()
 
   catalogTipos = await getAllTypesCatalog()
-  console.log("Tipos obtenidos: ", catalogTipos)
+  console.log('Tipos obtenidos: ', catalogTipos)
 
   // 1. Limpieza
   limpiarModal(ModifModal)
@@ -69,7 +67,7 @@ async function ConstruirModifModal (productData, AllCategorys) {
 
   // 2. Construir fields desde productData
   // Keys que tienen tratamiento especial — se excluyen del loop general
-  const KEYS_EXCLUIDAS = ['id', 'ingredientes', 'categoria','tipo'] // Nombres Sincronizados con Backend
+  const KEYS_EXCLUIDAS = ['id', 'ingredientes', 'categoria', 'tipo'] // Nombres Sincronizados con Backend
 
   Object.entries(productData).forEach(([key, value]) => {
     if (KEYS_EXCLUIDAS.includes(key)) return
@@ -105,7 +103,7 @@ async function ConstruirModifModal (productData, AllCategorys) {
   catField.classList.add('is-dynamic')
   ModifForm.appendChild(catField)
 
-  //4.5 Dropdown de tipo
+  // 4.5 Dropdown de tipo
   const tipoField = buildTipoDropdown(catalogTipos, productData.tipo)
   tipoField.classList.add('is-dynamic')
   ModifForm.appendChild(tipoField)
@@ -140,13 +138,12 @@ function buildCategoriaDropdown (categorias, valorActual) {
   return wrapper
 }
 
-
 // ── Dropdown de Tipo de Producto ──────────────────────────────────
 function buildTipoDropdown (tipos, valorActual) {
   console.log('Tipos Catálogo: ', tipos, ' | Tipo Actual -> ', valorActual)
   const wrapper = document.createElement('div')
   wrapper.classList.add('field', 'is-dynamic')
-  
+
   // Usamos la misma estructura de Bulma/Marée que tienes en categorías
   wrapper.innerHTML = `
     <label class="label">Tipo de Producto</label>
@@ -156,11 +153,11 @@ function buildTipoDropdown (tipos, valorActual) {
           <option value="" disabled ${!valorActual ? 'selected' : ''}>Selecciona un tipo...</option>
           ${tipos.map(t => {
             // Manejamos si el tipo viene como objeto {id, nombre} o solo string
-            const nombre = t.nombre || t;
+            const nombre = t.nombre || t
             return `
               <option value="${nombre}" ${nombre === valorActual ? 'selected' : ''}>
                 ${nombre}
-              </option>`;
+              </option>`
           }).join('')}
         </select>
       </div>
@@ -205,9 +202,7 @@ function ModifyProduct (BackupIngredientes, oldProductData) {
   // 4. Ingredientes — array separado de ingredientes
   const ingredientes = getIngredientesSeleccionados()
 
-
-  console.log("datos POST: ", data)
-
+  console.log('datos POST: ', data)
 
   // 5. Validación de Reglas de negocio
   const validacion = validarDatosRegistro(data, BackupIngredientes)

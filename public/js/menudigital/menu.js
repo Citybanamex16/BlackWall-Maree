@@ -3,89 +3,100 @@
 
 /* CU01 */
 const platillobotones = document.getElementsByClassName('platillo-btn')
-const overlay = document.getElementById('modal-overlay')
+const modalOverlay = document.getElementById('modal-overlay')
 const modalContent = document.getElementById('modal-content')
-const modalClose = document.getElementById('modal-close')
 const pedido = []
 
-// ── MODAL ──
-const abrirModal = (contenido) => {
-  modalContent.innerHTML = contenido
-  overlay.classList.add('active')
-}
-
+// MODAL
 const cerrarModal = () => {
-  overlay.classList.remove('active')
+  modalOverlay.close()
   modalContent.innerHTML = ''
 }
 
-overlay.addEventListener('click', (e) => {
-  if (e.target === overlay) cerrarModal()
+modalOverlay.addEventListener('click', (e) => {
+  // Cierra al hacer click afuera
+  if (e.target === modalOverlay) cerrarModal()
 })
-modalClose.addEventListener('click', cerrarModal)
+document.getElementById('modal-close').addEventListener('click', cerrarModal)
 
-// ── ACTUALIZAR BOTÓN RESUMEN ──
+// ACTUALIZA BOTON RESUMEN (numeril)
 function actualizarBotonResumen () {
   const btnTitle = document.querySelector('.order-btn-title')
   const btnSub = document.querySelector('.order-btn-sub')
-  if (pedido.length === 0) {
-    btnTitle.textContent = 'Ver Resumen de Pedido'
-    btnSub.textContent = 'Revisa y confirma los artículos de tu orden'
-  } else {
-    btnTitle.textContent = `Ver Resumen de Pedido (${pedido.length})`
-    btnSub.textContent = pedido.map(p => p.nombre).join(', ')
+  if (btnTitle && btnSub) {
+    if (pedido.length === 0) {
+      btnTitle.textContent = 'Ver Resumen de Pedido'
+      btnSub.textContent = 'Revisa y confirma los artículos de tu orden'
+    } else {
+      btnTitle.textContent = `Ver Resumen de Pedido (${pedido.length})`
+      btnSub.textContent = pedido.map(p => p.nombre).join(', ')
+    }
   }
+  const fabBadge = document.querySelector('.fab-badge')
+  if (fabBadge) fabBadge.textContent = pedido.length
 }
 
-// ── Conexion BOTONES DE PLATILLOS DEL MENU ──
-
-// Su único trabajo es leer el HTML y devolver un objeto limpio con la información del platillo.
+// Datos platillo seleccionado
 function obtenerDatosPlatillo (boton) {
-  // Buscamos la tarjeta completa que definimos en el Actor A
   const tarjeta = boton.closest('.product-card-app')
   return {
-    id: boton.getAttribute('data-id'), // Usamos el ID que pusimos en el botón
+    id: boton.getAttribute('data-id'), // Se usa el ID del boton
     nombre: tarjeta.querySelector('.product-name-app').textContent.trim(),
     precio: tarjeta.querySelector('.product-price-app').textContent.trim()
-    // La descripción la podemos sacar de un data-attribute o del objeto original
   }
 }
 
-// Esta función solo se encarga de "dibujar". Recibe los datos y devuelve el texto (string) que verás en la pantalla.
-function generarHTMLModal (platillo, dataExtra) {
-  const listaIngredientes = dataExtra.ingredientes
-    .map(ing => `<li>${ing}</li>`).join('')
+// Modal con datos de l platillo
+function generarHTMLModal (platillo, dataExtra, promoDisplay, promoPrecio) {
+  const listaIngredientes = (dataExtra.ingredientes || [])
+    .map(ing => `<li>${ing}</li>`).join('') || '<li>Sin ingredientes registrados</li>'
+
+  const precioOriginal = Number(platillo.precio || dataExtra.precio || 0)
+  const precioFinal = promoPrecio ? Number(promoPrecio) : precioOriginal
+
+  const precioHTML = promoPrecio
+    ? `<span style="text-decoration:line-through;color:#aaa;font-size:0.85em;margin-right:6px;">$${precioOriginal.toFixed(2)}</span>
+       <span style="color:#b5956a;font-weight:700;">$${precioFinal.toFixed(2)}</span>`
+    : `<span style="color:#b5956a;font-weight:700;">$${precioOriginal.toFixed(2)}</span>`
+
+  const promoHTML = promoDisplay
+    ? `<div style="display:inline-block;background:#fdf3e3;color:#b5956a;border:1px solid #f0d9b5;
+                  border-radius:6px;padding:4px 10px;font-size:12px;margin-top:6px;">
+         🏷️ ${promoDisplay}
+       </div>`
+    : ''
 
   return `
-        <div class="modal-detalle-header">
-            <h2 class="title is-4 font-cormorant">${platillo.nombre}</h2>
-            <p class="subtitle is-5 has-text-primary">${platillo.precio}</p>
-        </div>
-        <div class="modal-detalle-body">
-            <p class="description">${dataExtra.descripcion || 'Sin descripción'}</p>
-            <hr>
-            <p class="is-size-7 has-text-weight-bold">INGREDIENTES:</p>
-            <ul class="lista-ingredientes-modal">${listaIngredientes}</ul>
-        </div>
-        <div class="modal-detalle-footer mt-5">
-            <button id="btn-confirmar-agregar" class="button is-black is-fullwidth is-rounded">
-                + Confirmar y agregar
-            </button>
-        </div>
-    `
+    <div class="modal-detalle-header">
+        <h2 class="title is-4 font-cormorant" style="font-family:'Cormorant Garamond',serif;margin-bottom:4px;">${platillo.nombre}</h2>
+        <p class="subtitle is-5" style="margin-bottom:4px;">${precioHTML}</p>
+        ${promoHTML}
+    </div>
+    <div class="modal-detalle-body" style="margin-top:16px;">
+        <p class="description" style="color:#666;font-size:14px;">${dataExtra.base ? `Categoría: ${dataExtra.base}` : 'Crepa artesanal preparada al momento.'}</p>
+        <hr style="margin:12px 0;">
+        <p style="font-size:12px;font-weight:600;letter-spacing:1px;color:#888;margin-bottom:8px;">INGREDIENTES</p>
+        <ul class="lista-ingredientes-modal" style="list-style:disc;padding-left:18px;color:#555;font-size:13px;">${listaIngredientes}</ul>
+    </div>
+    <div class="modal-detalle-footer" style="margin-top:20px;display:flex;justify-content:flex-end;">
+        <button id="btn-confirmar-agregar"
+          style="padding:12px 24px;background:#222;color:#fff;border:none;border-radius:6px;
+                 font-size:14px;cursor:pointer;font-family:'Jost',sans-serif;">
+            + Confirmar y agregar
+        </button>
+    </div>
+  `
 }
 
-// Este se encarga de la lógica pesada: hablar con el servidor y guardar en el localStorage.
-async function agregarAlCarrito (platillo) {
-  // Guardar localmente
-  pedido.push(platillo)
+async function agregarAlCarrito (item) {
+  pedido.push(item)
   localStorage.setItem('pedido', JSON.stringify(pedido))
 
   try {
     await fetch('/menu/agregaritem', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(platillo)
+      body: JSON.stringify(item)
     })
     console.log('Sincronizado con servidor')
     cerrarModal()
@@ -97,48 +108,41 @@ async function agregarAlCarrito (platillo) {
 
 async function verDetalleProducto (id) {
   try {
-    // 1. Buscamos la info del producto (puedes sacarla de tu array global 'todosLosProductos')
     const producto = globalProducts.find(p => p.id === id)
 
-    // 2. Lógica del amigo: Consultar disponibilidad real
-    console.log('Buscando producto: ', id)
+    // Chedca datos de promo
+    const btn = document.querySelector(`.add-btn-app[data-id="${id}"]`)
+    const promoDisplay = btn?.getAttribute('data-promo-display') || null
+    const promoPrecio = promoDisplay ? btn?.getAttribute('data-precio') || null : null
+
+    console.log('Buscando producto:', id)
     const res = await fetch(`/menu/consultaplatillo?id=${id}`)
     const data = await res.json()
 
     if (!data.disponible) {
       alert('Lo sentimos, este producto se acaba de agotar.')
       return
-    } else {
-      console.log('Este producto si esta disponible')
     }
 
-    // 3. Poblar TU modal con los datos recibidos
-    const contenedorContenido = document.getElementById('modal-content')
+    // Lo construye bien para meterlo al carrito
+    const precioFinal = promoPrecio ? Number(promoPrecio) : Number(data.precio || producto?.precio || 0)
+    const itemParaCarrito = {
+      id,
+      nombre: data.nombre,
+      precio: '$' + precioFinal.toFixed(2),
+      desc: [data.base, producto?.tipo].filter(Boolean).join(' · ')
+    }
 
-    // Usamos la función del amigo adaptada para inyectar en tu div
-    contenedorContenido.innerHTML = generarHTMLModal(producto, data)
+    modalContent.innerHTML = generarHTMLModal(producto, data, promoDisplay, promoPrecio)
+    modalOverlay.showModal()
 
-    // 4. Mostrar el modal
-    const detailModal = document.getElementById('modal-overlay')
-    detailModal.showModal()
-    console.log('Mostrando Modal')
-
-    // 5. Asignar el evento al nuevo botón de confirmar que se acaba de crear
     document.getElementById('btn-confirmar-agregar').onclick = function () {
-      agregarAlCarrito(producto)
+      agregarAlCarrito(itemParaCarrito)
     }
   } catch (err) {
     console.error('Error al abrir detalle:', err)
   }
 }
-
-// Función para cerrar (conéctala a tu botón modal-close)
-document.getElementById('modal-close').onclick = function () {
-  const detailModal = document.getElementById('modal-overlay')
-  detailModal.close()
-}
-
-
 
 /* CU11 Visualizar Menu Digital */
 let globalProducts = [] // Variable global de productos
@@ -157,116 +161,102 @@ function ShowMenuErrorModal () {
   document.getElementById('menuErrorModal').showModal()
 }
 
+async function verificarSesion () {
+  console.log('Obteniendo datos de sesión...')
+  try {
+    // 1. Verificar si hay sesión activa
+    const resSesion = await fetch('/cliente/Sesion')
+    const dataSesion = await resSesion.json()
 
-
-async function verificarSesion() {
-    console.log("Obteniendo datos de sesión...")
-    try {
-        // 1. Verificar si hay sesión activa
-        const resSesion = await fetch('/cliente/Sesion')
-        const dataSesion = await resSesion.json()
-
-        if (!dataSesion.autenticado) {
-            console.log('Sin sesión activa — menú normal')
-            return null
-        }
-
-        console.log('Sesión activa:', dataSesion.usuario)
-
-        // 2. Si hay sesión, obtener datos royalty en paralelo
-        const resRoyalty = await fetch('/royalty/royaltyUser/api/datos')
-        const dataRoyalty = await resRoyalty.json()
-
-        // El endpoint royalty redirige si no hay sesión — lo ignoramos
-        // pues ya confirmamos que sí hay sesión en el paso 1
-        if (dataRoyalty.redirectUrl) {
-            console.log('Royalty no disponible')
-            return { usuario: dataSesion.usuario, promociones: [], eventos: [] }
-        }
-
-        // 3. Paquete completo
-        const paqueteSesion = {
-            usuario:     dataSesion.usuario,   // { nombre, telefono, genero, visitas }
-            promociones: dataRoyalty.promociones,
-            eventos:     dataRoyalty.eventos,
-            nivelRoyalty: dataRoyalty.promociones[0]?.Nombre_Royalty ?? null
-        }
-
-        console.log('Paquete de sesión completo:', paqueteSesion)
-        return paqueteSesion
-
-    } catch (error) {
-        console.log('Error verificando sesión:', error)
-        return null
+    if (!dataSesion.autenticado) {
+      console.log('Sin sesión activa — menú normal')
+      return null
     }
+
+    console.log('Sesión activa:', dataSesion.usuario)
+
+    // 2. Si hay sesión, obtener datos royalty en paralelo
+    const resRoyalty = await fetch('/royalty/royaltyUser/api/datos')
+    const dataRoyalty = await resRoyalty.json()
+
+    // El endpoint royalty redirige si no hay sesión — lo ignoramos
+    // pues ya confirmamos que sí hay sesión en el paso 1
+    if (dataRoyalty.redirectUrl) {
+      console.log('Royalty no disponible')
+      return { usuario: dataSesion.usuario, promociones: [], eventos: [] }
+    }
+
+    // 3. Paquete completo
+    const paqueteSesion = {
+      usuario: dataSesion.usuario, // { nombre, telefono, genero, visitas }
+      promociones: dataRoyalty.promociones,
+      eventos: dataRoyalty.eventos,
+      nivelRoyalty: dataRoyalty.promociones[0]?.Nombre_Royalty ?? null
+    }
+
+    console.log('Paquete de sesión completo:', paqueteSesion)
+    return paqueteSesion
+  } catch (error) {
+    console.log('Error verificando sesión:', error)
+    return null
+  }
 }
 
+// funcion que obtiene las promociones que rawSesionPromos tiene en AcceptedPromos
+function cleanSesionPromos (rawSesionPromos, AcceptedPromos) {
+  // Si alguna de las listas está vacía, no hay nada que mostrar
+  if (!rawSesionPromos || !AcceptedPromos) return []
 
-//funcion que obtiene las promociones que rawSesionPromos tiene en AcceptedPromos
-function cleanSesionPromos(rawSesionPromos, AcceptedPromos) {
-    // Si alguna de las listas está vacía, no hay nada que mostrar
-    if (!rawSesionPromos || !AcceptedPromos) return [];
+  console.log('rawSesion: ', rawSesionPromos, ' vs ', ' AcceptedPromos: ', AcceptedPromos)
+  // Comparamos cada promo de la sesión contra el array de aceptadas
+  return rawSesionPromos.filter(rawPromo => {
+    // Buscamos si existe una coincidencia en el catálogo aceptado
+    // Usamos Plantilla_Promo o ID como llave de comparación
+    const esValida = AcceptedPromos.some(accepted =>
+      accepted.Producto === rawPromo.Producto && accepted.Plantilla_Promo === rawPromo.Plantilla_Promo
+    )
 
-    console.log("rawSesion: ", rawSesionPromos, " vs " , " AcceptedPromos: ", AcceptedPromos)
-    // Comparamos cada promo de la sesión contra el array de aceptadas
-    return rawSesionPromos.filter(rawPromo => {
-        // Buscamos si existe una coincidencia en el catálogo aceptado
-        // Usamos Plantilla_Promo o ID como llave de comparación
-        const esValida = AcceptedPromos.some(accepted => 
-            accepted.Producto === rawPromo.Producto && accepted.Plantilla_Promo === rawPromo.Plantilla_Promo
-        );
+    if (!esValida) {
+      console.log(`Promo rechazada por Regla EFUL: ${rawPromo.Plantilla_Promo || rawPromo.Producto}`)
+    }
 
-        if (!esValida) {
-            console.log(`Promo rechazada por Regla EFUL: ${rawPromo.Plantilla_Promo || rawPromo.Producto}`);
-        }
-
-        return esValida;
-    });
+    return esValida
+  })
 }
-
 
 //
-async function getSesionPRs(SesionData, AcceptedPromos) {
-    // Validamos que tengamos la lista maestra antes de empezar
-    const masterList = AcceptedPromos?.allPRs[0] || [];
-    console.log("Iniciando validación con Accepted promos:", masterList);
+async function getSesionPRs (SesionData, AcceptedPromos) {
+  // Validamos que tengamos la lista maestra antes de empezar
+  const masterList = AcceptedPromos?.allPRs[0] || []
+  console.log('Iniciando validación con Accepted promos:', masterList)
 
-    try {
-        const res = await fetch('/cliente/promosClienteData');
+  try {
+    const res = await fetch('/cliente/promosClienteData')
 
-        // La validación .ok va sobre la respuesta del fetch, no sobre el JSON
-        if (!res.ok) {
-            throw new Error(`Error de red: ${res.status}`);
-        }
-
-        const responseData = await res.json();
-
-        
-        // Aquí extraemos las promos que el servidor dice que el usuario tiene
-        // Si el servidor no manda nada, usamos el SesionData que pasaste por parámetro
-        const rawPromos = responseData.PRs || [];
-
-        console.log("PRs obtenidos del servidor con éxito", rawPromos);
-
-
-        
-
-        // Aplicamos el filtro de seguridad (Regla de EFUL)
-        const SesionAcceptedPromos = cleanSesionPromos(rawPromos, masterList);
-
-        console.log(`Resultado final: ${SesionAcceptedPromos.length} promociones autorizadas.`);
-        return SesionAcceptedPromos;
-
-    } catch (err) {
-        console.error("Error fetching Sesion Promos:", err);
-        // En caso de error, devolvemos un array vacío para no romper el resto de la app
-        return [];
+    // La validación .ok va sobre la respuesta del fetch, no sobre el JSON
+    if (!res.ok) {
+      throw new Error(`Error de red: ${res.status}`)
     }
+
+    const responseData = await res.json()
+
+    // Aquí extraemos las promos que el servidor dice que el usuario tiene
+    // Si el servidor no manda nada, usamos el SesionData que pasaste por parámetro
+    const rawPromos = responseData.PRs || []
+
+    console.log('PRs obtenidos del servidor con éxito', rawPromos)
+
+    // Aplicamos el filtro de seguridad (Regla de EFUL)
+    const SesionAcceptedPromos = cleanSesionPromos(rawPromos, masterList)
+
+    console.log(`Resultado final: ${SesionAcceptedPromos.length} promociones autorizadas.`)
+    return SesionAcceptedPromos
+  } catch (err) {
+    console.error('Error fetching Sesion Promos:', err)
+    // En caso de error, devolvemos un array vacío para no romper el resto de la app
+    return []
+  }
 }
-
-
-
-
 
 // Funcion para obtener los datos del Menu
 async function obtenerMenu (SesionData) {
@@ -287,22 +277,19 @@ async function obtenerMenu (SesionData) {
     //= =Llamado a promociones PUs y PEs==//
 
     const PromosData = await getAllPromos()
-        //console.log('Promos obtenidos del Backend: ', PromosData)
+    // console.log('Promos obtenidos del Backend: ', PromosData)
 
-
-    // Si contamos con una sesión 
+    // Si contamos con una sesión
     let SesionPromos
-    if(SesionData != null && PromosData != undefined){
+    if (SesionData != null && PromosData != undefined) {
       // == Llamado de PRs == //
-      SesionPromos =  await getSesionPRs(SesionData, PromosData)
+      SesionPromos = await getSesionPRs(SesionData, PromosData)
       SesionData.PRs = SesionPromos
     } else {
       SesionPromos = null
     }
 
-    
-
-    console.log("Comenzando construccio1n de menu con datos de sesión: ", SesionData )
+    console.log('Comenzando construccio1n de menu con datos de sesión: ', SesionData)
 
     /* === Llamada a Construcción de Menu Dinámico == */
     globalProducts = data.arrayProductsInfo
@@ -313,33 +300,22 @@ async function obtenerMenu (SesionData) {
   }
 }
 
-
-
-async function getSesionInfo(){
-   //Datos de la sesión:
+async function getSesionInfo () {
+  // Datos de la sesión:
   let SesionData
-  try{
-
+  try {
     SesionData = await verificarSesion()
-    console.log("Datos de las sesión: ", SesionData)
+    console.log('Datos de las sesión: ', SesionData)
 
     obtenerMenu(SesionData)
-
-  } catch(err){
-    console.log("Error al obtener datos de sesión")
+  } catch (err) {
+    console.log('Error al obtener datos de sesión')
     SesionData = null
     obtenerMenu(SesionData)
-
   }
-    
-
-    
 }
 
 getSesionInfo()
-
-
-
 
 /* ==Construcción de Menu Dinámico == */
 
@@ -354,7 +330,7 @@ function getPromosFromProduct (nombre, promosData, PRs) {
   // Mantienes tu lógica de seguridad para los otros datos
   const PEs = promosData?.allPEs?.[0] ?? []
   const PUs = promosData?.allPUs?.[0] ?? []
-  
+
   // 2. Filtramos usando los arrays seguros
   // filter no fallará si el array está vacío, simplemente devolverá otro []
   const promosEvento = PEs.filter(promo => promo?.Producto === nombre)
@@ -367,14 +343,11 @@ function getPromosFromProduct (nombre, promosData, PRs) {
   return promosArray
 }
 
-
-
-
 function sistemaConflictosPromos (promosArray) {
   // Si no hay conflictos, regresamos la única promo que existe
   if (promosArray.length <= 1) return promosArray
 
-  //console.log('Resolviendo conflicto entre múltiples promos...')
+  // console.log('Resolviendo conflicto entre múltiples promos...')
 
   // 1. Clasificamos y enriquecemos las promos con la lógica de tu compañero
   const promosProcesadas = promosArray.map(promo => {
@@ -407,101 +380,98 @@ function sistemaConflictosPromos (promosArray) {
     // Regla: BOGO mata a Porcentaje siempre.
     // 3. CONFLICTO IGUAL (BOGO vs BOGO): Gana la que regale más productos (mayor X)
     promosBOGO.sort((a, b) => b.valorReal - a.valorReal)
-    //console.log(`Ganador BOGO: ${promosBOGO[0].valorReal}x1`)
+    // console.log(`Ganador BOGO: ${promosBOGO[0].valorReal}x1`)
     return [promosBOGO[0]]
   }
 
   // 4. CONFLICTO IGUAL (% vs %): Si solo hay porcentajes, gana el mayor descuento
   promosProcesadas.sort((a, b) => b.valorReal - a.valorReal)
-  //console.log(`Ganador %: ${(promosProcesadas[0].valorReal * 100)}% de descuento`)
+  // console.log(`Ganador %: ${(promosProcesadas[0].valorReal * 100)}% de descuento`)
 
   return [promosProcesadas[0]]
 }
 
+function menuPromosAgent (cardHTML, finalPromos) {
+  if (!finalPromos || finalPromos.length === 0) return cardHTML
 
+  // Tomamos la primera (gracias al orden anterior, si hay Royalty, será esta)
+  const promo = finalPromos[0]
+  const tempDiv = document.createElement('div')
+  tempDiv.innerHTML = cardHTML.trim()
 
+  const card = tempDiv.querySelector('.product-card-app')
+  const priceElement = tempDiv.querySelector('.product-price-app')
+  const buttonElement = tempDiv.querySelector('.add-btn-app')
 
-function menuPromosAgent(cardHTML, finalPromos) {
-    if (!finalPromos || finalPromos.length === 0) return cardHTML;
+  // 1. Definir Configuración según Origen
+  let colorPromo, labelOrigen, claseTab
 
-    // Tomamos la primera (gracias al orden anterior, si hay Royalty, será esta)
-    const promo = finalPromos[0];
-    const tempDiv = document.createElement('div');
-    tempDiv.innerHTML = cardHTML.trim();
+  switch (promo.Origen) {
+    case 'Royalty':
+      colorPromo = '#8e44ad' // Morado elegante
+      labelOrigen = 'Royalty'
+      claseTab = 'tab-pr'
+      // Plus de vistosidad: añadimos una sombra morada sutil a la tarjeta
+      card.style.boxShadow = '0 4px 15px rgba(142, 68, 173, 0.2)'
+      break
+    case 'Evento':
+      colorPromo = '#b5956a' // Dorado
+      labelOrigen = 'Evento'
+      claseTab = 'tab-pe'
+      break
+    default: // PU / Oferta
+      colorPromo = '#e67e22' // Naranja
+      labelOrigen = 'Oferta'
+      claseTab = 'tab-pu'
+  }
 
-    const card = tempDiv.querySelector('.product-card-app');
-    const priceElement = tempDiv.querySelector('.product-price-app');
-    const buttonElement = tempDiv.querySelector('.add-btn-app');
+  // 2. Preparar el Texto de la Pestaña
+  const valorDesc = parseFloat(promo.Descuento)
+  let textoPestaña = ''
 
-    // 1. Definir Configuración según Origen
-    let colorPromo, labelOrigen, claseTab;
+  if (valorDesc >= 1.0) {
+    const cantX = Math.ceil(valorDesc) === 1 ? 2 : Math.ceil(valorDesc)
+    textoPestaña = `${labelOrigen}: ${cantX}x1`
+  } else {
+    textoPestaña = `${labelOrigen}: ${(valorDesc * 100).toFixed(0)}%`
+  }
 
-    switch (promo.Origen) {
-        case 'Royalty':
-            colorPromo = '#8e44ad'; // Morado elegante
-            labelOrigen = 'Royalty';
-            claseTab = 'tab-pr';
-            // Plus de vistosidad: añadimos una sombra morada sutil a la tarjeta
-            card.style.boxShadow = '0 4px 15px rgba(142, 68, 173, 0.2)';
-            break;
-        case 'Evento':
-            colorPromo = '#b5956a'; // Dorado
-            labelOrigen = 'Evento';
-            claseTab = 'tab-pe';
-            break;
-        default: // PU / Oferta
-            colorPromo = '#e67e22'; // Naranja
-            labelOrigen = 'Oferta';
-            claseTab = 'tab-pu';
-    }
+  // 3. Inyectar Pestaña de Folder
+  const folderTabHTML = `<div class="promo-folder-tab ${claseTab}">${textoPestaña}</div>`
+  card.insertAdjacentHTML('afterbegin', folderTabHTML)
 
-    // 2. Preparar el Texto de la Pestaña
-    const valorDesc = parseFloat(promo.Descuento);
-    let textoPestaña = '';
+  // 4. Cambios Visuales en la Tarjeta
+  card.classList.add('has-active-promo')
+  card.style.borderColor = colorPromo
 
-    if (valorDesc >= 1.0) {
-        const cantX = Math.ceil(valorDesc) === 1 ? 2 : Math.ceil(valorDesc);
-        textoPestaña = `${labelOrigen}: ${cantX}x1`;
-    } else {
-        textoPestaña = `${labelOrigen}: ${(valorDesc * 100).toFixed(0)}%`;
-    }
+  // 5. Ajuste de Precios
+  const precioOriginal = parseFloat(priceElement.textContent.replace('$', ''))
+  let precioFinal = precioOriginal
 
-    // 3. Inyectar Pestaña de Folder
-    const folderTabHTML = `<div class="promo-folder-tab ${claseTab}">${textoPestaña}</div>`;
-    card.insertAdjacentHTML('afterbegin', folderTabHTML);
-
-    // 4. Cambios Visuales en la Tarjeta
-    card.classList.add('has-active-promo');
-    card.style.borderColor = colorPromo;
-
-    // 5. Ajuste de Precios
-    const precioOriginal = parseFloat(priceElement.textContent.replace('$', ''));
-    let precioFinal = precioOriginal;
-
-    if (valorDesc < 1.0) {
-        precioFinal = (precioOriginal * (1 - valorDesc)).toFixed(2);
-        priceElement.innerHTML = `
+  if (valorDesc < 1.0) {
+    precioFinal = (precioOriginal * (1 - valorDesc)).toFixed(2)
+    priceElement.innerHTML = `
             <span style="text-decoration: line-through; color: #aaa; font-size: 0.8em; margin-right: 5px;">$${precioOriginal}</span>
             <span style="color: ${colorPromo}; font-weight: 800;">$${precioFinal}</span>
-        `;
-    } else {
-        priceElement.style.color = colorPromo;
-        priceElement.style.fontWeight = '800';
-    }
+        `
+  } else {
+    priceElement.style.color = colorPromo
+    priceElement.style.fontWeight = '800'
+  }
 
-    // 6. Meta-data para el botón
-    buttonElement.setAttribute('data-precio', precioFinal);
-    buttonElement.setAttribute('data-promo-display', textoPestaña);
-    buttonElement.setAttribute('data-promo-nombre-real', promo.Plantilla_Promo);
+  // 6. Meta-data para el botón
+  buttonElement.setAttribute('data-precio', precioFinal)
+  buttonElement.setAttribute('data-promo-display', textoPestaña)
+  buttonElement.setAttribute('data-promo-nombre-real', promo.Plantilla_Promo)
 
-    return tempDiv.innerHTML;
+  return tempDiv.innerHTML
 }
 
 // Sistema de Promos
 function promosMaster (cardHTML, promosData, productName, dataSesion) {
   // 1. Extraer promos
   let PRs = []
-  if(dataSesion != null){
+  if (dataSesion != null) {
     PRs = dataSesion.PRs
   }
 
@@ -534,7 +504,7 @@ function construirFichaProductos (productosFiltrados, PromosData, gridDestino, D
   productosFiltrados.forEach((prod, i) => {
     const cardHTML = `
             <div class="column is-half-mobile is-half-tablet"> 
-                <div class="product-card-app" onclick="verDetalleProducto('${prod.id}')">
+                <div class="product-card-app">
                     
                     <div class="product-img-wrapper">
                         <img src="${prod.imagen}" alt="${prod.nombre}" loading="lazy" onerror="this.src='/img/placeholder.webp'">
@@ -546,11 +516,11 @@ function construirFichaProductos (productosFiltrados, PromosData, gridDestino, D
                     </div>
 
                    <div class="product-action-wrapper">
-    <button class="add-btn-app" 
-            data-id="${prod.id}" 
+    <button class="add-btn-app"
+            data-id="${prod.id}"
             data-nombre="${prod.nombre}"
             data-precio="${prod.precio}"
-            onclick="event.stopPropagation(); agregarAlCarrito(this)">
+            onclick="event.stopPropagation(); verDetalleProducto('${prod.id}')">
         <span style="font-size: 14px; font-weight: bold;">＋</span>
         <span>Agregar</span>
     </button>
@@ -655,9 +625,7 @@ function contruirMenuDinamico (datos, promosDatos, datosCliente) {
   const todosLosProductos = datos.arrayProductsInfo
   const TiposDesordenados = datos.arrayTipos
   const todosLosTipos = ordenarTipos(TiposDesordenados) // Todos los tipos que hay
-  console.log("Constructor recibiendo datos de cliente: ", datosCliente)
-
-
+  console.log('Constructor recibiendo datos de cliente: ', datosCliente)
 
   // 2. Generamos los Sticky Tabs una sola vez
   // Pasamos la referencia a los productos para que los tabs puedan disparar el filtro
@@ -668,8 +636,6 @@ function contruirMenuDinamico (datos, promosDatos, datosCliente) {
     const primeraCat = categorias[0]
     renderizarVistaCategoria(primeraCat, todosLosProductos, todosLosTipos, promosDatos, datosCliente)
   }
-
-  
 }
 
 function construirSeccionTipo (tipoNombre, contenedorPadre) {
