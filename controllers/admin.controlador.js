@@ -4,7 +4,8 @@ const Colaborador = require('../models/colaborador.model.js')
 const Ingrediente = require('../models/ingrediente.model.js')
 const MetricasClientes = require('../models/metricasclientes.model.js')
 const MetricasProductos = require('../models/metricasproductos.model.js')
-// const bcrypt = require('bcryptjs')
+const Calendario = require('../models/calendario.model.js')
+const bcrypt = require('bcryptjs')
 
 // const path = require('path')
 
@@ -694,6 +695,114 @@ exports.postNewCollaborator = async (req, res, next) => {
         id_colaborador: req.body.id_colaborador || '',
         nombre: req.body.nombre || '',
         rol: req.body.rol || 'Colaborador'
+      }
+    })
+  }
+}
+
+//dias habiless
+exports.getDiasHabiles = async (req, res, next) => {
+  try {
+    const diasHabiles = await Calendario.fetchDiasHabiles()
+    const sucursales = await Calendario.fetchSucursales()
+
+    return res.render('admin/diasHabiles', {
+      pageTitle: 'Días hábiles',
+      diasHabiles,
+      sucursales,
+      error: null,
+      mensaje: null,
+      oldInput: {
+        id_sucursal: '',
+        fecha: '',
+        es_laboral: '1',
+        descripcion: ''
+      }
+    })
+  } catch (error) {
+    console.error('Error al recuperar días hábiles:', error)
+
+    return res.status(500).render('admin/diasHabiles', {
+      pageTitle: 'Días hábiles',
+      diasHabiles: [],
+      sucursales: [],
+      error: 'No se pudo recuperar la configuración de días hábiles.',
+      mensaje: null,
+      oldInput: {
+        id_sucursal: '',
+        fecha: '',
+        es_laboral: '1',
+        descripcion: ''
+      }
+    })
+  }
+}
+
+exports.postDiasHabiles = async (req, res, next) => {
+  try {
+    const idSucursal = String(req.body.id_sucursal || '').trim()
+    const fecha = String(req.body.fecha || '').trim()
+    const esLaboral = String(req.body.es_laboral || '').trim()
+    const descripcion = String(req.body.descripcion || '').trim()
+
+    const sucursales = await Calendario.fetchSucursales()
+    const diasHabiles = await Calendario.fetchDiasHabiles()
+
+    if (!idSucursal || !fecha || (esLaboral !== '0' && esLaboral !== '1')) {
+      return res.status(400).render('admin/diasHabiles', {
+        pageTitle: 'Días hábiles',
+        diasHabiles,
+        sucursales,
+        error: 'Información inválida. Verifica los datos capturados.',
+        mensaje: null,
+        oldInput: {
+          id_sucursal: idSucursal,
+          fecha,
+          es_laboral: esLaboral || '1',
+          descripcion
+        }
+      })
+    }
+
+    await Calendario.createDiaHabil(
+      idSucursal,
+      fecha,
+      Number(esLaboral),
+      descripcion || null
+    )
+
+    const diasHabilesActualizados = await Calendario.fetchDiasHabiles()
+
+    return res.render('admin/diasHabiles', {
+      pageTitle: 'Días hábiles',
+      diasHabiles: diasHabilesActualizados,
+      sucursales,
+      error: null,
+      mensaje: 'Configuración guardada exitosamente.',
+      oldInput: {
+        id_sucursal: '',
+        fecha: '',
+        es_laboral: '1',
+        descripcion: ''
+      }
+    })
+  } catch (error) {
+    console.error('Error al guardar días hábiles:', error)
+
+    const sucursales = await Calendario.fetchSucursales().catch(() => [])
+    const diasHabiles = await Calendario.fetchDiasHabiles().catch(() => [])
+
+    return res.status(500).render('admin/diasHabiles', {
+      pageTitle: 'Días hábiles',
+      diasHabiles,
+      sucursales,
+      error: 'No fue posible guardar la configuración.',
+      mensaje: null,
+      oldInput: {
+        id_sucursal: req.body.id_sucursal || '',
+        fecha: req.body.fecha || '',
+        es_laboral: req.body.es_laboral || '1',
+        descripcion: req.body.descripcion || ''
       }
     })
   }
