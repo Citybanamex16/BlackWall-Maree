@@ -7,7 +7,7 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
-util\GoogleCredentials\google-wallet.json
+util/GoogleCredentials/google-wallet.json
 
 ############################
 # Environment variables
