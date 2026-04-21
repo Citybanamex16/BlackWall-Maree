@@ -34,6 +34,81 @@ exports.getRoyaltyAdmin = async (request, response, next) => {
   }
 }
 
+exports.postRegistrarEstadoRoyalty = (request, response, next) => {
+  console.log('Body recibido:', request.body)
+  const { nombre, prioridad, descripcion, minVisitas, maxVisitas, promociones, eventos } = request.body
+
+  if (!nombre || prioridad === undefined || !descripcion || !minVisitas || !maxVisitas) {
+    return response.status(400).json({
+      success: false,
+      message: 'Faltan datos obligatorios para registrar Estado Royalty'
+    })
+  }
+
+  const nuevoEstadoRoyalty = new Royalty(nombre, prioridad, descripcion, maxVisitas, minVisitas)
+
+  nuevoEstadoRoyalty.save()
+    .then(() => {
+      const promesas = []
+      if (promociones && promociones.length > 0) {
+        const idsPromociones = promociones.map(p => p.id)
+        promesas.push(Royalty.guardarEstadoRoyaltyPromociones(nombre, idsPromociones))
+      }
+      if (eventos && eventos.length > 0) {
+        const idsEventos = eventos.map(e => e.id)
+        promesas.push(Royalty.guardarEstadoRoyaltyEventos(nombre, idsEventos))
+      }
+      return Promise.all(promesas)
+    })
+    .then(() => {
+      response.status(200).json({
+        success: true,
+        message: 'Estado Royalty registrado correctamente'
+      })
+    })
+    .catch((error) => {
+      console.log('Error al guardar datos:', error)
+      response.status(500).json({
+        success: false,
+        message: 'Error al guardar el estado royalty'
+      })
+    })
+}
+
+exports.getFilterPromocionesEventos = async (request, response, next) => {
+  try {
+    const { promociones, eventos } = request.query
+    const [productos] = await Royalty.fetchPromocionesEventos(promociones, eventos)
+    response.status(200).json({
+      success: true,
+      data: productos
+    })
+  } catch (error) {
+    console.log(error)
+    next(error)
+  }
+}
+
+exports.getTodasPromociones = async (request, response, next) => {
+  try {
+    const [todas] = await Royalty.fetchTodasPromociones()
+    response.status(200).json({ success: true, data: todas })
+  } catch (error) {
+    console.log(error)
+    response.status(500).json({ success: false })
+  }
+}
+
+exports.getTodosEventos = async (request, response, next) => {
+  try {
+    const [todas] = await Royalty.fetchTodosEventos()
+    response.status(200).json({ success: true, data: todas })
+  } catch (error) {
+    console.log(error)
+    response.status(500).json({ success: false })
+  }
+}
+
 exports.getRoyaltyAdminJSON = async (request, response, next) => {
   try {
     // Obtenemos los royalties
