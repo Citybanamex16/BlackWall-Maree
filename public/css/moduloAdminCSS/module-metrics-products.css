@@ -1,0 +1,57 @@
+:root {
+    --mp-gold: var(--c-primary, #b5956a);
+    --mp-border: var(--c-border, #ede8e0);
+    --mp-text: var(--c-text-main, #222222);
+    --mp-muted: var(--c-text-muted, #7a7a7a);
+    --mp-soft: var(--c-surface-soft, #f7f1ea);
+    --mp-danger: var(--c-danger, #b94a48);
+}
+
+body {
+    background: var(--c-bg-body);
+    color: var(--mp-text);
+}
+
+.card-box {
+    background: var(--c-surface);
+    border: 1px solid var(--mp-border);
+    border-radius: var(--radius-lg, 12px);
+    padding: 24px;
+    box-shadow: var(--shadow-sm, 0 4px 20px rgba(0,0,0,0.05));
+    margin-bottom: 24px;
+}
+
+.section-title {
+    font-family: var(--font-heading);
+    font-size: 24px;
+    color: var(--mp-text);
+    margin-bottom: 8px;
+}
+
+.small-note {
+    font-size: 13px;
+    color: var(--mp-muted);
+}
+
+.pill {
+    display: inline-block;
+    padding: 4px 10px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 600;
+    background: var(--mp-soft);
+    color: var(--mp-gold);
+}
+
+/* Tablas */
+.table-container {
+    overflow-x: auto;
+}
+
+.table th {
+    color: var(--mp-muted);
+    font-weight: 600;
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}

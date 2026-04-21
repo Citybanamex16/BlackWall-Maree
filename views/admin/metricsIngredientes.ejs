@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Métricas de Ingredientes - Marée</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;600&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@1.0.4/css/bulma.min.css">
+  <link rel="stylesheet" href="/css/CSSglobales/adminstyle.css">
+  <link rel="stylesheet" href="/css/moduloMenuCSS/moduloMenuAdminCSS.css">
+</head>
+<body>
+
+<nav class="navbar" role="navigation">
+  <div class="navbar-brand">
+    <div class="navbar-item">
+      <div class="logo-area">
+        <span class="logo-text">MARÉE</span>
+        <span class="logo-sub">Love at First Crêpe</span>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<section class="section">
+  <div class="container">
+
+    <a href="/admin/ingredientes" class="back-link">← Gestión de Ingredientes</a>
+
+    <div class="metrics-header">
+      <div>
+        <h1 class="page-title">Métricas de Ingredientes</h1>
+        <p class="page-sub">Análisis del catálogo de insumos del restaurante</p>
+      </div>
+    </div>
+
+    <div id="statusBox" class="status-box"></div>
+
+    <div id="dashboardContent">
+      <!-- KPIs -->
+      <div class="kpi-grid">
+        <div class="kpi-card">
+          <p class="kpi-label">Total Insumos</p>
+          <p class="kpi-value" id="kpiTotal">—</p>
+        </div>
+        <div class="kpi-card">
+          <p class="kpi-label">Activos</p>
+          <p class="kpi-value" id="kpiActivos">—</p>
+        </div>
+        <div class="kpi-card">
+          <p class="kpi-label">Inactivos</p>
+          <p class="kpi-value" id="kpiInactivos">—</p>
+        </div>
+        <div class="kpi-card">
+          <p class="kpi-label">Sin Uso</p>
+          <p class="kpi-value" id="kpiSinUso">—</p>
+        </div>
+      </div>
+
+      <!-- Graficas fila numero eins -->
+      <div class="charts-row">
+        <div class="chart-card">
+          <h2 class="chart-title">Ingredientes más usados</h2>
+          <p class="chart-sub">Top 10 por número de productos</p>
+          <div class="chart-wrap">
+            <canvas id="chartMasUsados"></canvas>
+          </div>
+        </div>
+        <div class="chart-card">
+          <h2 class="chart-title">Insumos por categoría</h2>
+          <p class="chart-sub">Distribución del catálogo</p>
+          <div class="chart-wrap">
+            <canvas id="chartPorCategoria"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tablas fila 2 -->
+      <div class="charts-row">
+        <div class="chart-card">
+          <h2 class="chart-title">Productos afectados por inactivos</h2>
+          <p class="chart-sub">Platillos con al menos un ingrediente inactivo</p>
+          <div class="table-wrap">
+            <table class="metrics-table">
+              <thead>
+                <tr>
+                  <th>Producto</th>
+                  <th>Categoría</th>
+                  <th>Inactivos</th>
+                  <th>Detalle</th>
+                </tr>
+              </thead>
+              <tbody id="afectadosBody">
+                <tr><td colspan="4">Cargando...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <div class="chart-card">
+          <h2 class="chart-title">Ingredientes sin uso</h2>
+          <p class="chart-sub">Insumos no vinculados a ningún producto</p>
+          <div class="table-wrap">
+            <table class="metrics-table">
+              <thead>
+                <tr>
+                  <th>Nombre</th>
+                  <th>Categoría</th>
+                  <th>Precio</th>
+                </tr>
+              </thead>
+              <tbody id="sinUsoBody">
+                <tr><td colspan="3">Cargando...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="/js/menudigital/AdminIngredientsScripts/adminmetricsIngredientes.js"></script>
+</body>
+</html>
