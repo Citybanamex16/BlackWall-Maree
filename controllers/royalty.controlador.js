@@ -149,7 +149,7 @@ exports.getRoyaltyCli = async (request, response, next) => {
     try {
       qrCodeDataUrl = await QRCode.toDataURL(String(telefono), {
         color: { dark: '#000000', light: '#0000' },
-        width: 200,
+        width: 340,
         margin: 2
       })
     } catch (err) {
