@@ -3,7 +3,6 @@
 
 // Funciones Globales
 
-
 function showSpinner (mensaje = 'Cargando...') {
   console.log('Mostrando Spinner')
   document.getElementById('spinner-label').textContent = mensaje
@@ -15,27 +14,24 @@ function hideSpinner () {
   document.getElementById('spinner-overlay').close()
 }
 
-
 // Contador animado de 0 → número final
-function animarContador(idElemento, valorFinal, duracionMs = 800) {
+function animarContador (idElemento, valorFinal, duracionMs = 800) {
   const el = document.getElementById(idElemento)
   const inicio = performance.now()
 
-  function tick(ahora) {
+  function tick (ahora) {
     const progreso = Math.min((ahora - inicio) / duracionMs, 1)
     // easeOut: desacelera al llegar al final
     const valorActual = Math.floor(progreso * (1 - Math.pow(1 - progreso, 3)) * valorFinal + progreso * valorFinal * Math.pow(1 - progreso, 3))
     el.textContent = Math.round(valorActual)
     if (progreso < 1) requestAnimationFrame(tick)
-    else el.textContent = valorFinal  // asegura valor exacto al final
+    else el.textContent = valorFinal // asegura valor exacto al final
   }
 
   requestAnimationFrame(tick)
 }
 
-
-//Fin de funciones Globales
-
+// Fin de funciones Globales
 
 /* CU Visualizar Catalogo de Productos */
 
@@ -219,9 +215,9 @@ function construirCatalogoAdmin (datos) {
   construirFichaProductos(productosInfo, categoriasInfo)
 
   // Stats del encabezado
- animarContador('statTotal',      productosInfo.length)
-animarContador('statDisponibles', productosInfo.filter(p => p.activo).length)
-animarContador('statCategorias', categorias.length)
+  animarContador('statTotal', productosInfo.length)
+  animarContador('statDisponibles', productosInfo.filter(p => p.activo).length)
+  animarContador('statCategorias', categorias.length)
 
   // Actualizar badge de cada categoría con su conteo
   categoriasInfo.forEach(cat => {
@@ -668,7 +664,7 @@ function SetRegisterButtons (tipoAccion, datos1, datos2) {
     }
   }
 
-  handlerCloseX = () =>{
+  handlerCloseX = () => {
     RegisterFormModal.close()
     if (tipoAccion === 'POST') {
       typeFormsModal.showModal()
@@ -677,7 +673,7 @@ function SetRegisterButtons (tipoAccion, datos1, datos2) {
 
   submitFormsRegistrar.addEventListener('click', handlerSubmit)
   RegisterFormClose.addEventListener('click', handlerClose)
-  formsDinamicXbtn.addEventListener('click', handlerCloseX); 
+  formsDinamicXbtn.addEventListener('click', handlerCloseX)
 
   RegisterFormModal.showModal()
 }
@@ -792,9 +788,9 @@ function createSummaryElement (title, content) {
   label.textContent = `${title}:`
 
   // --- LÓGICA DE DETECCIÓN DE IMAGEN ---
-  const isImageKey = title.toLowerCase().includes('imagen') || title.toLowerCase().includes('img');
-  
-  let value;
+  const isImageKey = title.toLowerCase().includes('imagen') || title.toLowerCase().includes('img')
+
+  let value
 
   if (isImageKey && content && (content.startsWith('http') || content.startsWith('/'))) {
     // Si es imagen, creamos un elemento IMG
@@ -810,9 +806,9 @@ function createSummaryElement (title, content) {
       background-color: #f9f9f9;
     `
     // Placeholder si la URL está rota o mal escrita
-    value.onerror = function() {
-      this.src = 'https://placehold.co/60x60?text=Error'; 
-      this.style.opacity = '0.5';
+    value.onerror = function () {
+      this.src = 'https://placehold.co/60x60?text=Error'
+      this.style.opacity = '0.5'
     }
   } else {
     // Si no es imagen, mantenemos el SPAN original
@@ -972,60 +968,44 @@ function closeAllModals () {
   console.log(`${modales.length} modales cerrados.`)
 }
 
-
-
-
 //* Conexión de todos los X de los modals*//
 
 // --- LISTENERS PARA CERRAR MODALS (X y Botones de Acción) ---
 
 // 1. Modal: TypeFormsCU04
 document.getElementById('closeTypeFormsX')?.addEventListener('click', () => {
-    document.getElementById('TypeFormsCU04').close();
-    
-});
+  document.getElementById('TypeFormsCU04').close()
+})
 
 // 3. Modal: SummaryCU04
 document.getElementById('closeSummaryX')?.addEventListener('click', () => {
-    document.getElementById('SummaryCU04').close();
-    document.getElementById('RegisterFormsCU04').showModal();
-});
-
+  document.getElementById('SummaryCU04').close()
+  document.getElementById('RegisterFormsCU04').showModal()
+})
 
 // 4. Modal: modifSummaryCU05
 document.getElementById('closeSummaryModifX')?.addEventListener('click', () => {
-    document.getElementById('modifSummaryCU05').close();
-    document.getElementById('RegisterFormsCU04').showModal();
-
-});
+  document.getElementById('modifSummaryCU05').close()
+  document.getElementById('RegisterFormsCU04').showModal()
+})
 
 // 5. Modal: ModalExito
 document.getElementById('closeExito')?.addEventListener('click', () => {
-    document.getElementById('ModalExito').close();
-});
+  document.getElementById('ModalExito').close()
+})
 
 // 6. Modal: ErrorModal
 document.getElementById('closeInvalidData')?.addEventListener('click', () => {
-    document.getElementById('ErrorModal').close();
-});
+  document.getElementById('ErrorModal').close()
+})
 
 // 7. Modal: ElimDesactModal
 document.getElementById('closeElimDesact')?.addEventListener('click', () => {
-    document.getElementById('ElimDesactModal').close();
-});
+  document.getElementById('ElimDesactModal').close()
+})
 
 // 8. Modal: ConfirmActionModal
 document.getElementById('closeConfirmAction')?.addEventListener('click', () => {
-    document.getElementById('ConfirmActionModal').close();
-    document.getElementById('ElimDesactModal').showModal();
-});
-
-
-
-
-
-
-
-
-
-
+  document.getElementById('ConfirmActionModal').close()
+  document.getElementById('ElimDesactModal').showModal()
+})

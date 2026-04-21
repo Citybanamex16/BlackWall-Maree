@@ -281,7 +281,7 @@ async function obtenerMenu (SesionData) {
 
     // Si contamos con una sesión
     let SesionPromos
-    if (SesionData != null && PromosData != undefined) {
+    if (SesionData !== null && PromosData !== undefined) {
       // == Llamado de PRs == //
       SesionPromos = await getSesionPRs(SesionData, PromosData)
       SesionData.PRs = SesionPromos
