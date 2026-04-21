@@ -181,7 +181,7 @@ module.exports = class Promocion {
     return result
   }
 
-  static async getPRs(idRoyalty){
+  static async getPRs (idRoyalty) {
     const [result] = await db.execute(`
    SELECT 
     'Royalty' AS Origen, -- <--- Atributo fijo siempre como "Royalty"
@@ -200,7 +200,7 @@ WHERE er.Nombre_Royalty = ?;
 
 
 
-    `,[idRoyalty])
+    `, [idRoyalty])
     return result
   }
 }
