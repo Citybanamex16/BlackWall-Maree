@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Acceso - Maree</title>
+    <link rel="stylesheet" href="/css/bulma.min.css">
+    <link rel="stylesheet" href="/css/moduloRoyaltyCSS/auth-style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="login-shell">
+        <div class="breadcrumb-line">
+            <% breadcrumbs.forEach((crumb, index) => { %>
+                <% if (crumb.url) { %>
+                    <a href="<%= crumb.url %>"><%= crumb.name %></a>
+                <% } else { %>
+                    <span><%= crumb.name %></span>
+                <% } %>
+                <% if (index < breadcrumbs.length - 1) { %>&nbsp;—&nbsp;<% } %>
+            <% }) %>
+        </div>
+        <hr class="divider">
+        <div id="alert-box" class="notification is-danger is-light is-hidden"></div>
+        <div id="success-box" class="notification is-success is-light is-hidden"></div>
+
+        <h1 class="page-title" id="main-title">Iniciar Sesión</h1>
+
+        <div class="tabs-row" id="tabs-container">
+            <a class="mode-tab active" id="tab-login">Log In</a>
+            <a class="mode-tab" id="tab-signup">Sign In</a>
+        </div>
+
+        <div class="auth-card">
+            <form id="form-login">
+                <div class="field">
+                    <label class="label">Identificador (Teléfono o ID)</label>
+                    <div class="control">
+                        <input class="input auth-input" type="text" name="telefono" placeholder="10 dígitos o CL..." required>
+                    </div>
+                </div>
+                <div class="field mt-4 is-hidden" id="password-field">
+                    <label class="label">Contraseña de Colaborador</label>
+                    <div class="control">
+                        <input class="input auth-input" type="password" name="password" placeholder="••••••••">
+                    </div>
+                </div>
+                <button class="primary-btn mt-4" type="submit">Continuar</button>
+            </form>
+
+            <form id="form-signup" class="is-hidden">
+                <div class="field">
+                    <label class="label">Teléfono</label>
+                    <div class="control">
+                        <input class="input auth-input" type="text" name="telefono" placeholder="10 dígitos" required>
+                    </div>
+                </div>
+                <div class="field"><label class="label">Nombre Completo</label><div class="control"><input class="input auth-input" type="text" name="nombre" required></div></div>
+                <div class="field"><label class="label">Género</label><div class="control"><div class="select is-fullwidth"><select name="genero" required><option value="" disabled selected>Selecciona</option><option value="Masculino">Hombre</option><option value="Femenino">Mujer</option><option value="Otro">Otro</option></select></div></div></div>
+                <div class="field"><label class="label">Nacimiento</label><div class="control"><input class="input auth-input" type="date" name="birthday" required></div></div>
+                <div class="field"><label class="label">Mail</label><div class="control"><input class="input auth-input" type="email" name="mail" required></div></div>
+                <button class="primary-btn mt-4" type="submit">Registrarse</button>
+            </form>
+
+            <div id="panel-otp" class="otp-panel is-hidden">
+                <p class="otp-title">Verificación</p>
+                <p class="otp-meta mb-2" id="otp-phone-text"></p>
+                <p class="otp-meta mb-4 is-hidden" id="debug-code-box">Código (Dev Mode): <span class="otp-code" id="debug-code-text"></span></p>
+                
+                <form id="form-otp">
+                    <div class="field">
+                        <div class="control"><input class="input auth-input" type="text" name="codigo" placeholder="123456" maxlength="6" required></div>
+                    </div>
+                    <button class="primary-btn" type="submit">Validar código</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script src="/js/login.js"></script>
+</body>
+</html>

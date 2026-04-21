@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="light">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Colaboradores - Admin Marée</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@1.0.4/css/bulma.min.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com"> 
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;600&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/CSSglobales/global_theme.css">
+  <link rel="stylesheet" href="/css/CSSglobales/global_components.css">
+  <link rel="stylesheet" href="/css/CSSglobales/module-dashboard.css">
+  <link rel="stylesheet" href="/css/CSSglobales/adminstyle.css">  
+</head>
+<body>
+  <nav class="navbar">
+    <div class="navbar-brand">
+      <div class="navbar-item" style="display:flex; flex-direction:column; align-items:flex-start;">
+        <div class="logo-text">MARÉE</div>
+        <div class="logo-sub">Admin</div>
+      </div>
+    </div>
+    <div class="navbar-end" style="display:flex;">
+      <a href="/admin" class="navbar-item">Dashboard</a>
+      <a href="/admin/colaboradores" class="navbar-item" style="color: var(--gold);">Colaboradores</a>
+    </div>
+  </nav>
+
+  <section class="page-wrap">
+  <header style="margin-bottom: 32px;">
+    <h1 class="page-title">Colaboradores</h1>
+    <p class="page-sub">Gestión de empleados</p>
+  </header>
+
+  <% if (typeof error !== 'undefined' && error) { %>
+    <div class="notification status-pill is-danger" style="border-radius: var(--radius-md); padding: 16px; width: 100%;">
+      <%= error %>
+    </div>
+  <% } %>
+
+  <div style="margin-bottom: 24px;">
+    <a href="/admin/colaboradores/nuevo" class="btn-primary">
+      + Registrar nuevo colaborador
+    </a>
+  </div>
+
+  <div class="card-base">
+    <table class="table is-fullwidth is-hoverable" style="background: transparent;">
+      <thead>
+        <tr>
+          <th style="color: var(--c-text-muted); font-size: 12px; text-transform: uppercase;">ID</th>
+          <th style="color: var(--c-text-muted); font-size: 12px; text-transform: uppercase;">Nombre</th>
+          <th style="color: var(--c-text-muted); font-size: 12px; text-transform: uppercase;">Rol</th>
+          <th style="color: var(--c-text-muted); font-size: 12px; text-transform: uppercase;">Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% colaboradores.forEach(colaborador => { %>
+          <tr>
+            <td><strong><%= colaborador.id_colaborador %></strong></td>
+            <td style="font-weight: 500;"><%= colaborador.nombre %></td>
+            <td><span class="status-pill is-neutral"><%= colaborador.rol %></span></td>
+            <td>
+              <div style="display: flex; gap: 8px;">
+                <a href="/admin/colaboradores/<%= colaborador.id_colaborador %>" class="btn-ghost" style="padding: 4px 10px; font-size: 12px;">Ver detalle</a>
+                <button class="btn-danger btn-baja" data-id="<%= colaborador.id_colaborador %>" data-nombre="<%= colaborador.nombre %>" style="padding: 4px 10px; font-size: 12px;">Dar de baja</button>
+              </div>
+            </td>
+          </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  </div>
+
+  <div style="margin-top: 24px;">
+    <a href="/admin" class="btn-ghost" style="border: none;">← Volver al dashboard</a>
+  </div>
+</main>
+
+<script src="/js/admin.js"></script>
+</body>
+</html>

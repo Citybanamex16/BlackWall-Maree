@@ -1,0 +1,356 @@
+:root {
+    --event-accent: var(--c-danger, #c6674d);
+    --event-accent-deep: var(--c-danger-deep, #a64e39);
+    --event-cocoa: var(--c-text-main, #4a3426);
+    --event-copy: var(--c-text-soft, #70584a);
+    --event-line: var(--c-border, #eadbca);
+    --event-sage: var(--c-success, #8aa57a);
+    --event-sage-soft: var(--c-success-bg, #edf5e8);
+    --event-danger: var(--c-danger, #b85f4c);
+}
+
+/* ── 1. ENCABEZADO Y CONTROLES ── */
+.events-shell {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    gap: 24px;
+    flex-wrap: wrap;
+    margin-bottom: 28px;
+}
+
+.events-kicker,
+.event-kicker {
+    display: inline-block;
+    padding: 8px 14px;
+    border-radius: var(--radius-pill);
+    background: rgba(198, 103, 77, 0.12);
+    color: var(--event-accent-deep);
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 1.4px;
+    text-transform: uppercase;
+}
+
+.events-copy,
+.event-help-copy {
+    max-width: 700px;
+    margin-top: 14px;
+    color: var(--event-copy);
+    font-size: 15px;
+    line-height: 1.8;
+}
+
+.events-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+/* ── 2. BOTONES ── */
+.event-primary-button {
+    background: linear-gradient(135deg, var(--event-accent) 0%, var(--event-accent-deep) 100%) !important;
+    border: none !important;
+    color: #fff !important;
+    box-shadow: 0 18px 32px rgba(166, 78, 57, 0.2);
+}
+
+.event-primary-button:hover,
+.event-primary-button:focus {
+    background: linear-gradient(135deg, #bc5c43 0%, #954430 100%) !important;
+    color: #fff !important;
+}
+
+.button.event-ghost {
+    border-color: var(--event-line);
+    color: var(--event-copy);
+    background: var(--c-surface);
+}
+
+.button.event-ghost:hover,
+.button.event-ghost:focus {
+    border-color: var(--event-accent);
+    color: var(--event-accent-deep);
+    background: #fff7f3;
+}
+
+.button.event-danger {
+    background: var(--event-danger);
+    border-color: var(--event-danger);
+    color: #fff;
+}
+
+.button.event-danger:hover,
+.button.event-danger:focus {
+    background: var(--c-danger-deep);
+    border-color: var(--c-danger-deep);
+    color: #fff;
+}
+
+/* ── 3. TARJETAS (Cards) ── */
+.event-card {
+    border: 1px solid var(--event-line);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    background: linear-gradient(180deg, var(--c-surface) 0%, var(--c-surface-soft) 100%);
+    box-shadow: var(--shadow-md);
+    height: 100%;
+}
+
+.event-card.is-inactive {
+    opacity: 0.85;
+}
+
+.event-card-image {
+    aspect-ratio: 16 / 9;
+    overflow: hidden;
+    background: var(--c-bg-body);
+}
+
+.event-card-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+.event-card .card-content {
+    padding: 28px;
+}
+
+.event-card .title {
+    font-size: 32px !important;
+    margin-bottom: 10px !important;
+    font-family: var(--font-heading);
+}
+
+.event-card-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 16px;
+    margin-bottom: 18px;
+}
+
+.event-card-label {
+    font-size: 11px;
+    letter-spacing: 1.4px;
+    text-transform: uppercase;
+    color: var(--c-text-muted);
+}
+
+.event-description {
+    min-height: 96px;
+    color: var(--event-cocoa);
+    line-height: 1.8;
+}
+
+/* ── 4. ETIQUETAS Y CHIPS ── */
+.event-status-pill {
+    display: inline-flex;
+    align-items: center;
+    border-radius: var(--radius-pill);
+    padding: 8px 12px;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.event-status-pill.is-active {
+    background: var(--event-sage-soft);
+    color: var(--event-sage);
+}
+
+.event-status-pill.is-inactive {
+    background: var(--c-danger-bg);
+    color: var(--event-danger);
+}
+
+.event-badges {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 18px;
+}
+
+.event-chip {
+    display: inline-flex;
+    align-items: center;
+    border-radius: var(--radius-pill);
+    padding: 8px 12px;
+    background: var(--c-danger-bg);
+    color: var(--event-accent-deep);
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.event-chip.secondary {
+    background: var(--event-sage-soft);
+    color: var(--event-sage);
+}
+
+.event-date-tag {
+    display: inline-flex;
+    align-items: center;
+    padding: 8px 14px;
+    border-radius: var(--radius-pill);
+    border: 1px solid var(--event-line);
+    background: var(--c-surface);
+    color: var(--event-copy);
+    font-size: 13px;
+}
+
+/* ── 5. FOOTER DE TARJETAS ── */
+.event-card-footer {
+    border-top: 1px solid var(--event-line);
+}
+
+.event-card-divider {
+    border: none;
+    height: 1px;
+    background-color: var(--event-line);
+}
+
+.event-footer-button {
+    border: none;
+    background: transparent;
+    color: var(--event-accent-deep);
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.event-footer-button:hover {
+    background: var(--c-danger-bg);
+}
+
+.event-footer-button.is-danger-text {
+    color: var(--event-danger);
+}
+
+.event-footer-button.is-disabled,
+.event-footer-button:disabled {
+    color: var(--c-text-muted);
+    cursor: not-allowed;
+    background: var(--c-bg-body);
+}
+
+/* ── 6. MODALES Y FORMULARIOS ── */
+.event-help-box,
+.event-modal-box {
+    border: 1px solid var(--event-line);
+    border-radius: var(--radius-lg) !important;
+    background: linear-gradient(180deg, var(--c-surface) 0%, var(--c-surface-soft) 100%);
+    box-shadow: var(--shadow-lg);
+}
+
+.event-help-title {
+    font-size: 16px;
+    font-weight: 700;
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+    color: var(--event-accent-deep);
+}
+
+.event-modal-box .title {
+    font-size: 38px !important;
+}
+
+.events-form-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 18px;
+}
+
+.events-form-grid .field.is-full {
+    grid-column: 1 / -1;
+}
+
+.input:focus,
+.textarea:focus {
+    border-color: var(--event-accent);
+    box-shadow: 0 0 0 0.125em rgba(198, 103, 77, 0.18);
+}
+
+.label {
+    color: var(--event-cocoa);
+}
+
+.event-checkbox {
+    color: var(--event-cocoa);
+    font-weight: 500;
+}
+
+.helper-note {
+    color: var(--c-text-muted);
+    font-size: 12px;
+    line-height: 1.6;
+    margin-top: 6px;
+}
+
+.event-current-image {
+    display: grid;
+    gap: 8px;
+    margin-bottom: 12px;
+}
+
+.event-current-image img {
+    width: min(100%, 220px);
+    aspect-ratio: 16 / 9;
+    object-fit: cover;
+    border: 1px solid var(--event-line);
+    border-radius: var(--radius-md);
+    background: var(--c-bg-body);
+}
+
+.event-selection-box {
+    min-height: 180px;
+    max-height: 240px;
+    overflow-y: auto;
+    border: 1px dashed var(--event-line);
+    border-radius: var(--radius-md);
+    padding: 14px;
+    background: var(--c-bg-body);
+}
+
+.event-selection-box.event-box-error {
+    border-color: var(--event-danger);
+    background: var(--c-danger-bg);
+}
+
+.event-option {
+    display: block;
+    padding: 8px 0;
+    color: var(--event-copy);
+}
+
+.event-selected-summary {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    min-height: 42px;
+}
+
+/* ── 7. UTILIDADES Y RESPONSIVE ── */
+.modal-background {
+    background: rgba(34, 34, 34, 0.6);
+}
+
+.is-centered-copy {
+    margin-inline: auto;
+}
+
+@media (max-width: 768px) {
+    .events-form-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .event-card .title,
+    .event-modal-box .title {
+        font-size: 30px !important;
+    }
+
+    .events-toolbar {
+        width: 100%;
+        justify-content: space-between;
+    }
+}

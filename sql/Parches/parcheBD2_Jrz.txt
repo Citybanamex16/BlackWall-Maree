@@ -1,0 +1,54 @@
+-- Subir esto a la base de datos para la transaccion de EliminarIngrediente y en el delimitador cambiar de ; a $$
+
+CREATE PROCEDURE EliminarIngrediente(IN p_idInsumo VARCHAR(10) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish2_ci)
+BEGIN
+  DECLARE v_error_msg VARCHAR(500);
+  
+  DECLARE EXIT HANDLER FOR SQLEXCEPTION
+  BEGIN
+    GET DIAGNOSTICS CONDITION 1 v_error_msg = MESSAGE_TEXT;
+    ROLLBACK;
+    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = v_error_msg;
+  END;
+
+  START TRANSACTION;
+    DELETE FROM producto_tiene_insumo WHERE ID_Insumo = p_idInsumo;
+    DELETE FROM insumo WHERE ID_Insumo = p_idInsumo;
+  COMMIT;
+END$$
+
+-- subir esto tambien pt2 cambiar delimitador de ; a $$
+
+DROP PROCEDURE IF EXISTS ActualizarIngrediente;
+
+CREATE PROCEDURE ActualizarIngrediente(
+  IN p_idInsumo VARCHAR(10) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish2_ci,
+  IN p_nombre VARCHAR(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish2_ci,
+  IN p_categoria VARCHAR(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish2_ci,
+  IN p_precio DECIMAL(10,2),
+  IN p_activo TINYINT(1),
+  IN p_imagen TEXT CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish2_ci
+)
+BEGIN
+  DECLARE v_error_msg VARCHAR(500);
+  DECLARE EXIT HANDLER FOR SQLEXCEPTION
+  BEGIN
+    GET DIAGNOSTICS CONDITION 1 v_error_msg = MESSAGE_TEXT;
+    ROLLBACK;
+    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = v_error_msg;
+  END;
+
+  START TRANSACTION;
+    UPDATE insumo
+    SET Nombre = p_nombre,
+        `Categoría` = p_categoria,
+        Precio = p_precio,
+        Activo = p_activo,
+        Imagen = p_imagen
+    WHERE ID_Insumo = p_idInsumo;
+  COMMIT;
+END$$
+
+-- Y esto pt 3 (creo que ya no ha de estar para uds pero por si acaso)
+
+ALTER TABLE insumo DROP COLUMN Tipo;

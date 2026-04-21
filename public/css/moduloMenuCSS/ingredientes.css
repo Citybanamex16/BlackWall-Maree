@@ -1,0 +1,379 @@
+/* Seccion ingredientes (check) */
+
+
+/* ── Variables ── */
+:root {
+  --gold:       #b5956a;
+  --gold-light: #e0c9a8;
+  --gold-bg:    #fdf8f2;
+  --pink:       #eac9c1;
+  --pink-hover: rgb(225, 165, 195);
+  --border:     #eee;
+  --text-main:  #222;
+  --text-muted: #888;
+  --white:      #fff;
+}
+
+/* ── Encabezado de página ── */
+.ing-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  margin-bottom: 40px;
+  padding-bottom: 24px;
+  border-bottom: 1px solid var(--border);
+}
+
+.ing-header .page-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 52px;
+  font-weight: 400;
+  color: var(--text-main);
+  margin: 0 !important;
+  line-height: 1;
+}
+
+.ing-header .page-sub {
+  font-family: 'Jost', sans-serif;
+  font-size: 13px;
+  color: var(--text-muted);
+  letter-spacing: 1px;
+  margin-top: 6px;
+}
+
+/* ── Botón principal ── */
+.btn-maree {
+  font-family: 'Jost', sans-serif;
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  background: var(--text-main);
+  color: var(--white);
+  border: none;
+  border-radius: 6px;
+  padding: 12px 24px;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.15s;
+}
+
+.btn-maree:hover {
+  background: var(--gold);
+  transform: translateY(-1px);
+}
+
+/* ── Tabla ── */
+.ing-table-wrap {
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.ing-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: 'Jost', sans-serif;
+  font-size: 14px;
+}
+
+.ing-table thead tr {
+  background: var(--gold-bg);
+  border-bottom: 1px solid var(--gold-light);
+}
+
+.ing-table thead th {
+  padding: 14px 20px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--gold);
+  text-align: left;
+}
+
+.ing-table tbody tr {
+  border-bottom: 1px solid var(--border);
+  transition: background 0.15s;
+}
+
+.ing-table tbody tr:last-child {
+  border-bottom: none;
+}
+
+.ing-table tbody tr:hover {
+  background: #fafaf8;
+}
+
+.ing-table td {
+  padding: 14px 20px;
+  color: var(--text-main);
+  vertical-align: middle;
+}
+
+.ing-table td.muted {
+  color: var(--text-muted);
+}
+
+/* ── Badges ── */
+.badge {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.5px;
+}
+
+.badge-activo {
+  background: #f7ede9;
+  color: var(--gold);
+}
+
+.badge-inactivo {
+  background: #f0f0f0;
+  color: #999;
+}
+
+.badge-cat {
+  background: var(--gold-bg);
+  color: var(--gold);
+  border: 1px solid var(--gold-light);
+}
+
+/* ── Estado vacio ── */
+.ing-empty {
+  padding: 60px 20px;
+  text-align: center;
+  color: var(--text-muted);
+  font-family: 'Jost', sans-serif;
+  font-size: 14px;
+}
+
+/* ── Modales ── */
+dialog.maree-modal {
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 0;
+  box-shadow: 0 16px 48px rgba(0,0,0,0.10);
+  min-width: 420px;
+  max-width: 500px;
+  font-family: 'Jost', sans-serif;
+}
+
+dialog.maree-modal::backdrop {
+  background: rgba(0,0,0,0.35);
+}
+
+.modal-inner {
+  padding: 32px;
+}
+
+.modal-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 28px;
+  font-weight: 400;
+  color: var(--text-main);
+  margin-bottom: 4px;
+}
+
+.modal-sub {
+  font-size: 13px;
+  color: var(--text-muted);
+  margin-bottom: 28px;
+}
+
+/* ── Campos de formulario ── */
+.maree-field {
+  margin-bottom: 18px;
+}
+
+.maree-label {
+  display: block;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-bottom: 6px;
+}
+
+.maree-input,
+.maree-select {
+  width: 100%;
+  padding: 10px 14px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font-family: 'Jost', sans-serif;
+  font-size: 14px;
+  color: var(--text-main);
+  background: var(--white);
+  transition: border-color 0.2s;
+  outline: none;
+  box-sizing: border-box;
+}
+
+.maree-input:focus,
+.maree-select:focus {
+  border-color: var(--gold);
+}
+
+.maree-checkbox-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 14px;
+  color: var(--text-main);
+  cursor: pointer;
+}
+
+.maree-checkbox-row input[type="checkbox"] {
+  accent-color: var(--gold);
+  width: 16px;
+  height: 16px;
+}
+
+/* ── Botones de modal ── */
+.modal-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 28px;
+}
+
+.btn-primary {
+  flex: 1;
+  padding: 11px 0;
+  background: var(--text-main);
+  color: var(--white);
+  border: none;
+  border-radius: 6px;
+  font-family: 'Jost', sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 0.5px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.btn-primary:hover { background: var(--gold); }
+
+.btn-secondary {
+  padding: 11px 20px;
+  background: transparent;
+  color: var(--text-muted);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font-family: 'Jost', sans-serif;
+  font-size: 13px;
+  cursor: pointer;
+  transition: border-color 0.2s, color 0.2s;
+}
+
+.btn-secondary:hover {
+  border-color: var(--gold);
+  color: var(--gold);
+}
+
+.btn-danger,
+.btn-success {
+  flex: 1;
+  padding: 11px 0;
+  background: var(--pink);
+  color: var(--white);
+  border: none;
+  border-radius: 6px;
+  font-family: 'Jost', sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.btn-danger:hover,
+.btn-success:hover { background: var(--pink-hover); }
+
+/* ── Resumen ── */
+.resumen-fila {
+  display: flex;
+  gap: 12px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 14px;
+}
+
+.resumen-fila:last-child { border-bottom: none; }
+
+.resumen-label {
+  font-weight: 600;
+  min-width: 110px;
+  color: var(--text-muted);
+  font-size: 12px;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  padding-top: 1px;
+}
+
+.resumen-valor { color: var(--text-main); }
+
+/* ── Modales exito o error ── */
+.modal-icon {
+  font-size: 40px;
+  margin-bottom: 12px;
+  display: block;
+}
+
+.modal-title-danger,
+.modal-title-success { color: var(--gold); }
+
+/* ── Back link ── */
+.back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: 'Jost', sans-serif;
+  font-size: 13px;
+  color: var(--text-muted);
+  text-decoration: none;
+  margin-bottom: 32px;
+  transition: color 0.2s;
+}
+
+.back-link:hover { color: var(--gold); }
+
+.btn-eliminar {
+  font-family: 'Jost', sans-serif;
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.5px;
+  background: transparent;
+  color: #c0392b;
+  border: 1px solid #e8c4c0;
+  border-radius: 6px;
+  padding: 6px 14px;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+}
+
+.btn-eliminar:hover {
+  background: #fde0da;
+  color: #a03020;
+}
+/* --- RESPONSIVE INGREDIENTES --- */
+@media (max-width: 768px) {
+  .ing-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+    padding-bottom: 16px;
+    margin-bottom: 24px;
+  }
+
+  .ing-header .page-title {
+    font-size: 34px !important;
+  }
+
+  .btn-maree {
+    width: 100%;
+    justify-content: center;
+  }
+}

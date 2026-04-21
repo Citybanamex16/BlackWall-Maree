@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="/css/bulma.min.css">
+    <title>Error 404 - Página no encontrada</title>
+    <style>
+        /* Estilo adicional para asegurar que el hero ocupe toda la altura de la ventana */
+        html, body {
+            height: 100%;
+        }
+        .is-fullheight-with-navbar {
+            /* Calcula la altura total menos el espacio para una posible barra de navegación si la tuvieras */
+            min-height: 100vh;
+        }
+    </style>
+</head>
+<body>
+
+<!-- Componente Hero de Bulma -->
+<section class="hero is-danger is-fullheight-with-navbar">
+    <!-- Contenido del Hero (centrado verticalmente por defecto con hero-body) -->
+    <div class="hero-body">
+        <div class="container has-text-centered">
+            <!-- Título principal con clases de tipografía de Bulma -->
+            <p class="title is-1">
+                404
+            </p>
+            <!-- Subtítulo -->
+            <p class="subtitle is-3">
+                ¡Ups! La página que buscas no existe.
+            </p>
+            <!-- Botón para regresar al inicio -->
+            <a href="/" class="button is-light is-medium mt-5">
+                Ir a la página de inicio
+            </a>
+        </div>
+    </div>
+</section>
+
+</body>
+</html>

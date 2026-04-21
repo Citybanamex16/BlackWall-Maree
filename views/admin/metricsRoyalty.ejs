@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="light">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title><%= pageTitle %> - Admin Marée</title>
+
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@1.0.4/css/bulma.min.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;600&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link rel="stylesheet" href="/css/CSSglobales/global_theme.css">
+  <link rel="stylesheet" href="/css/CSSglobales/global_components.css">
+  <link rel="stylesheet" href="/css/CSSglobales/module-metrics.css">
+  <link rel="stylesheet" href="/css/moduloAdminCSS/moduloAdmincss.css">
+
+</head>
+<body>
+  <nav class="navbar">
+    <div class="navbar-brand">
+      <div class="navbar-item" style="display:flex; flex-direction:column; align-items:flex-start;">
+        <div class="logo-text">MARÉE</div>
+        <div class="logo-sub">Admin</div>
+      </div>
+    </div>
+    <div class="navbar-end" style="display:flex;">
+      <a href="/admin" class="navbar-item">Dashboard</a>
+      <a href="/admin/royaltyMetrics" class="navbar-item" style="color: var(--gold);">Métricas clientes</a>
+    </div>
+  </nav>
+
+  <section class="page-wrap">
+    <h1 class="page-title">Métricas de clientes</h1>
+    <p class="page-subtitle">
+      Consulta clientes activos, clientes nuevos aproximados por primera compra,
+      frecuencia de visita, historial de consumo y promociones usadas.
+    </p>
+
+    <div id="statusBox" class="status-box"></div>
+
+    <div class="card-box">
+      <h2 class="section-title">Filtros</h2>
+
+      <form id="filtersForm" class="filters-grid">
+        <div>
+          <label class="label">Fecha inicio</label>
+          <input class="input" type="date" name="fechaInicio">
+        </div>
+
+        <div>
+          <label class="label">Fecha fin</label>
+          <input class="input" type="date" name="fechaFin">
+        </div>
+
+        <div>
+          <label class="label">Género</label>
+          <div class="select is-fullwidth">
+            <select name="genero">
+              <option value="">Todos</option>
+              <option value="f">Femenino</option>
+              <option value="m">Masculino</option>
+            </select>
+          </div>
+        </div>
+
+        <div>
+          <label class="label">Nivel royalty</label>
+          <div class="select is-fullwidth">
+            <select name="royalty">
+              <option value="">Todos</option>
+              <option value="Fan">Fan</option>
+              <option value="Super Fan">Super Fan</option>
+              <option value="Mega Fan">Mega Fan</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="actions-row" style="grid-column: 1 / -1;">
+          <button type="button" id="btnLimpiar" class="button is-light">Limpiar</button>
+          <button type="submit" id="btnConsultar" class="button" style="background:#b5956a; color:white;">
+            Consultar métricas
+          </button>
+          <button type="button" id="btnExportar" class="button is-dark">
+            Exportar CSV
+          </button>
+        </div>
+      </form>
+    </div>
+
+    <div id="dashboardContent">
+      <div class="kpi-grid">
+        <div class="kpi-card">
+          <div class="kpi-label">Clientes activos</div>
+          <div id="kpiActivos" class="kpi-value">0</div>
+        </div>
+
+        <div class="kpi-card">
+          <div class="kpi-label">Clientes nuevos aprox.</div>
+          <div id="kpiNuevos" class="kpi-value">0</div>
+        </div>
+
+        <div class="kpi-card">
+          <div class="kpi-label">Frecuencia promedio</div>
+          <div id="kpiFrecuencia" class="kpi-value">0</div>
+        </div>
+
+        <div class="kpi-card">
+          <div class="kpi-label">Ticket promedio</div>
+          <div id="kpiTicket" class="kpi-value">$0</div>
+        </div>
+
+        <div class="kpi-card">
+          <div class="kpi-label">Clientes con promoción</div>
+          <div id="kpiPromos" class="kpi-value">0</div>
+        </div>
+      </div>
+
+      <div class="tables-grid" style="margin-top:20px;">
+        <div class="card-box">
+          <h2 class="section-title">Top clientes por consumo</h2>
+          <p class="small-note">Historial consolidado por rango seleccionado</p>
+
+          <div class="table-container" style="margin-top:14px;">
+            <table class="table is-fullwidth is-hoverable">
+              <thead>
+                <tr>
+                  <th>Cliente</th>
+                  <th>Royalty</th>
+                  <th>Órdenes</th>
+                  <th>Gastado</th>
+                  <th>Última compra</th>
+                </tr>
+              </thead>
+              <tbody id="topClientesBody">
+                <tr>
+                  <td colspan="5">Sin datos aún</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="card-box">
+          <h2 class="section-title">Promociones usadas</h2>
+          <p class="small-note">Promociones ligadas al comportamiento del cliente</p>
+
+          <div class="table-container" style="margin-top:14px;">
+            <table class="table is-fullwidth is-hoverable">
+              <thead>
+                <tr>
+                  <th>Promoción</th>
+                  <th>Usos</th>
+                  <th>Clientes</th>
+                </tr>
+              </thead>
+              <tbody id="promocionesBody">
+                <tr>
+                  <td colspan="3">Sin datos aún</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <div class="card-box">
+        <h2 class="section-title">Distribución por género</h2>
+        <p class="small-note">Clientes y órdenes asociadas</p>
+
+        <div class="table-container" style="margin-top:14px;">
+          <table class="table is-fullwidth is-hoverable">
+            <thead>
+              <tr>
+                <th>Género</th>
+                <th>Clientes</th>
+                <th>Órdenes</th>
+              </tr>
+            </thead>
+            <tbody id="generoBody">
+              <tr>
+                <td colspan="3">Sin datos aún</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <p class="small-note" style="margin-top:10px;">
+          Nota: “clientes nuevos” se calcula aquí como primera compra en el rango, porque tu esquema actual no guarda fecha de registro real del cliente.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <script src="/js/adminmetricsclientes.js"></script>
+</body>
+</html>

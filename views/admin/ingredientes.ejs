@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="light">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Gestión de Ingredientes - Marée</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
+  
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@1.0.4/css/bulma.min.css">
+  
+  <link rel="stylesheet" href="/css/CSSglobales/global_theme.css">
+  <link rel="stylesheet" href="/css/CSSglobales/global_components.css">
+  <link rel="stylesheet" href="/css/moduloMenuCSS/moduloMenuAdminCSS.css">
+</head>
+
+<body>
+
+<!-- NAVIGATION Bar-->
+<nav class="navbar" role="navigation">
+  <div class="navbar-brand">
+    <div class="navbar-item">
+      <div class="logo-area">
+        <span class="logo-text">MARÉE</span>
+        <span class="logo-sub">Love at First Crêpe</span>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<section class="section">
+  <div class="container">
+
+    <a href="/admin" class="back-link">← Admin Dashboard</a>
+
+    <!-- Encabezado -->
+    <div class="ing-header">
+      <div>
+        <h1 class="page-title">Ingredientes</h1>
+        <p class="page-sub">Catálogo de insumos del restaurante</p>
+      </div>
+      <div style="display:flex; gap:12px; align-items:center;">
+        <a href="/admin/metricas-ingredientes" class="btn-maree" style="text-decoration:none; background:#b5956a;">
+          📊 Ver Métricas
+        </a>
+      <button id="btnRegistrarIngrediente" class="btn-maree">
+        + Nuevo Ingrediente
+      </button>
+      </div>
+    </div>
+
+    <!-- Tabla -->
+    <div class="ing-table-wrap">
+      <div id="tablaContainer">
+        <div class="ing-empty">Cargando ingredientes...</div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!--MODAL Formulario de Registro-->
+<dialog id="ModalRegistroIngrediente" class="maree-modal">
+  <div class="modal-inner">
+    <p class="modal-title">Nuevo Ingrediente</p>
+    <p class="modal-sub">Completa los datos del insumo a registrar</p>
+
+    <div class="maree-field">
+      <label class="maree-label" for="inputNombre">Nombre</label>
+      <input class="maree-input" type="text" id="inputNombre" placeholder="Ej. Nutella" maxlength="50">
+    </div>
+
+    <div class="maree-field">
+      <label class="maree-label" for="selectCategoria">Categoría</label>
+      <select class="maree-select" id="selectCategoria">
+        <option value="">Cargando...</option>
+      </select>
+    </div>
+
+    <div class="maree-field">
+      <label class="maree-label" for="inputPrecio">Precio adicional ($)</label>
+      <input class="maree-input" type="number" id="inputPrecio" placeholder="0.00" min="0" step="0.01">
+    </div>
+
+    <div class="maree-field">
+      <label class="maree-label" for="inputImagen">
+        URL de Imagen <span style="font-weight:400;text-transform:none;letter-spacing:0;">(opcional)</span>
+      </label>
+      <input class="maree-input" type="text" id="inputImagen" placeholder="https://...">
+    </div>
+
+    <div class="maree-field">
+      <label class="maree-checkbox-row">
+        <input type="checkbox" id="checkActivo" checked>
+        Disponible
+      </label>
+    </div>
+
+    <div class="modal-actions">
+      <button id="btnConfirmarRegistro" class="btn-primary">Continuar</button>
+      <button id="btnCerrarRegistro" class="btn-secondary">Cancelar</button>
+    </div>
+  </div>
+</dialog>
+
+<!--MODAL Resumen-->
+<dialog id="ModalResumen" class="maree-modal">
+  <div class="modal-inner">
+    <p class="modal-title">Confirmar Registro</p>
+    <p class="modal-sub">Verifica los datos antes de guardar</p>
+    <div id="resumenContenido"></div>
+    <div class="modal-actions">
+      <button id="btnConfirmarCreacion" class="btn-success">Registrar Ingrediente</button>
+      <button id="btnVolverFormulario" class="btn-secondary">Regresar</button>
+    </div>
+  </div>
+</dialog>
+
+<!--MODAL Error-->
+<dialog id="ModalError" class="maree-modal">
+  <div class="modal-inner" style="text-align:center;">
+    <span class="modal-icon">⚠️</span>
+    <p class="modal-title modal-title-danger" id="errorTitulo">Error</p>
+    <p id="errorMensaje" style="font-size:14px;color:#555;margin-bottom:24px;"></p>
+    <button id="btnCerrarError" class="btn-danger">Cerrar</button>
+  </div>
+</dialog>
+
+<!--MODAL Exito-->
+<dialog id="ModalExito" class="maree-modal">
+  <div class="modal-inner" style="text-align:center;">
+    <span class="modal-icon">✓</span>
+    <p class="modal-title modal-title-success" id="exitoTitulo">¡Registrado!</p>
+    <p id="exitoMensaje" style="font-size:14px;color:#555;margin-bottom:24px;"></p>
+    <button id="btnCerrarExito" class="btn-success">Aceptar</button>
+  </div>
+</dialog>
+
+<dialog id="ModalEliminar" class="maree-modal">
+  <div class="modal-inner">
+    <p class="modal-title">Eliminar Ingrediente</p>
+    <p class="modal-sub" id="eliminarNombre"></p>
+    <div id="eliminarAdvertencia"></div>
+    <div class="modal-actions">
+      <button id="btnConfirmarEliminar" class="btn-danger">Eliminar</button>
+      <button id="btnCancelarEliminar" class="btn-secondary">Cancelar</button>
+    </div>
+  </div>
+</dialog>
+
+<dialog id="ModalEditar" class="maree-modal">
+  <div class="modal-inner">
+    <p class="modal-title">Editar Ingrediente</p>
+    <p class="modal-sub" id="editarSubtitulo"></p>
+
+    <div class="maree-field">
+      <label class="maree-label">Nombre</label>
+      <input class="maree-input" type="text" id="editNombre" maxlength="50">
+    </div>
+    <div class="maree-field">
+      <label class="maree-label">Categoría</label>
+      <select class="maree-select" id="editCategoria"></select>
+    </div>
+    <div class="maree-field">
+      <label class="maree-label">Precio ($)</label>
+      <input class="maree-input" type="number" id="editPrecio" min="0" step="0.01">
+    </div>
+    <div class="maree-field">
+      <label class="maree-label">URL Imagen <span style="font-weight:400;text-transform:none;letter-spacing:0;">(opcional)</span></label>
+      <input class="maree-input" type="text" id="editImagen">
+    </div>
+    <div class="maree-field">
+      <label class="maree-checkbox-row">
+        <input type="checkbox" id="editActivo">
+        Disponible
+      </label>
+    </div>
+
+    <div class="modal-actions">
+      <button id="btnGuardarEditar" class="btn-primary">Guardar cambios</button>
+      <button id="btnCancelarEditar" class="btn-secondary">Cancelar</button>
+    </div>
+  </div>
+</dialog>
+
+<script src="/js/menudigital/AdminIngredientsScripts/adminIngredientes.js"></script>
+</body>
+</html>
