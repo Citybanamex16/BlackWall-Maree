@@ -1,22 +1,26 @@
 const nav = require('../models/breadcrumbs.model.js')
 const productos = require('../models/MenuDigital/productos.model.js')
 const categorías = require('../models/MenuDigital/categorías.model.js')
+const tipos = require('../models/MenuDigital/tipos.model.js')
+const promos = require('../models/promociones.model.js')
 const Pedido = require('../models/pedidos.model.js')
+const sucursal = require('../models/MenuDigital/sucursales.model.js')
 const db = require('../util/database.js')
 
 // CU11 Vizualisar Menu
 exports.getMenu = (request, response, next) => {
   const breadcrumbs = nav.getBreadcrumbs('Menu')
-  response.render('cliente/menu', { breadcrumbs })
+  const SesionData = request.session.cliente
+  response.render('cliente/menu', { breadcrumbs, datosCliente: SesionData })
 }
 
 exports.getMenuData = async (request, response, next) => {
   console.log('GetMenu ejecutandose...')
   try {
-    // 1. Llamado en paralelo de consultas con Promise.all()
-    const [Allcategories, productsData] = await Promise.all([
-      categorías.fecthAll(), // Async BD call 1.
-      productos.getValidProductData() // async BD call
+    const [Allcategories, productsData, AllTypes] = await Promise.all([
+      categorías.fecthAll(),
+      productos.getValidProductData(),
+      tipos.fetchAll()
     ])
 
     console.log('All Promises realizada con exito')
@@ -27,7 +31,8 @@ exports.getMenuData = async (request, response, next) => {
       ok: true,
       message: 'Consultas realizadas con exito',
       arrayCategorías: Allcategories,
-      arrayProductsInfo: productsData
+      arrayProductsInfo: productsData,
+      arrayTipos: AllTypes
     })
     console.log('Proceso finalizado con exito')
   } catch (err) {
@@ -39,7 +44,57 @@ exports.getMenuData = async (request, response, next) => {
   }
 }
 
-// Fin CU11
+exports.getMenuPromos = async (req, res, nex) => {
+  console.log('Obteniendo PU & PE')
+  try {
+    const [PUs, PEs, PRs] = await Promise.all([
+      promos.getPromotionsBySource('PU'),
+      promos.getPromotionsBySource('PE'),
+      promos.getPromotionsBySource('PR')
+    ])
+
+    console.log('All promises hechas con exito')
+    res.status(200).json({
+      ok: true,
+      message: 'PE & PU obtenidos',
+      allPUs: PUs,
+      allPEs: PEs,
+      allPRs: PRs
+    })
+  } catch (err) {
+    console.log('Error en consulta de PEs & PUs: ', err)
+    res.status(500).json({
+      ok: true,
+      message: 'PE & PU no obtenidos, error',
+      error: err
+    })
+  }
+}
+
+exports.getMapaSucursales = (req, res, nex) => {
+  const breadcrumbs = nav.getBreadcrumbs('Menu')
+  res.render('cliente/mapaSucursal', { breadcrumbs })
+}
+
+exports.getAllSucursales = async (req, res, nex) => {
+  console.log('obteniendo Sucursales ')
+  try {
+    const sucursalesData = await sucursal.fetchAll()
+
+    console.log('Sucursales recuperadas')
+    res.status(200).json({
+      ok: true,
+      message: 'Sucursales obtenidas de manera correcta',
+      allSucursales: sucursalesData
+    })
+  } catch (err) {
+    console.log('Error: ', err)
+    res.status(500).json({
+      ok: false,
+      message: 'Sucursales no obtenidas'
+    })
+  }
+}
 
 exports.getOrden = (request, response, next) => {
   const breadcrumbs = nav.getBreadcrumbs('Orden')
@@ -47,12 +102,14 @@ exports.getOrden = (request, response, next) => {
 }
 
 exports.getPlatillo = async (request, response, next) => {
-  const nombre = request.query.nombre
-  console.log('EN CONTROLLER — buscando:', nombre)
+  const id = request.query.id
+  console.log('Query: ', request.query)
+  console.log('EN CONTROLLER — buscando:', id)
 
-  if (!nombre || typeof nombre !== 'string' || nombre.length > 100) {
+  /* if (!nombre || typeof nombre !== 'string' || nombre.length > 100) {
     return response.status(400).json({ disponible: false, mensaje: 'Nombre inválido' })
   }
+  */
 
   try {
     const [rows] = await db.execute(
@@ -62,9 +119,9 @@ exports.getPlatillo = async (request, response, next) => {
        FROM producto p
        LEFT JOIN producto_tiene_insumo pti ON p.ID_Producto = pti.ID_Producto
        LEFT JOIN insumo i ON pti.ID_Insumo = i.ID_Insumo
-       WHERE p.Nombre = ?
+       WHERE p.ID_Producto = ?
        GROUP BY p.ID_Producto`,
-      [nombre]
+      [id]
     )
 
     console.log('Resultado BD:', rows) // ve qué regresa
@@ -74,8 +131,6 @@ exports.getPlatillo = async (request, response, next) => {
     }
 
     const row = rows[0]
-
-    // Disponible puede venir como string '1'/'0' o número 1/0
     const disponible = row.Disponible === 1 || row.Disponible === '1'
 
     response.status(200).json({
@@ -108,8 +163,6 @@ exports.validarPedido = async (request, response, next) => {
   for (const item of items) {
     if (
       typeof item.nombre !== 'string' ||
-      typeof item.precio !== 'string' ||
-      typeof item.desc !== 'string' ||
       item.nombre.trim() === '' ||
       item.nombre.length > 100
     ) {
@@ -118,10 +171,10 @@ exports.validarPedido = async (request, response, next) => {
   }
 
   try {
-    const nombres = items.map(i => i.nombre)
-    const nombresUnicos = [...new Set(nombres)]
-    const resultado = await Pedido.verificarDisponibilidad(nombresUnicos)
-    if (Number(resultado.count) !== nombresUnicos.length) {
+    const ids = items.map(i => i.id)
+    const idsDisponibles = await Pedido.verificarDisponibilidadPorId(ids)
+    const todosDisponibles = ids.every(id => idsDisponibles.includes(id))
+    if (!todosDisponibles) {
       return response.status(200).json({
         pedidoValido: false,
         mensaje: 'Algunos platillos de tu pedido ya no están disponibles.'
@@ -155,10 +208,10 @@ exports.confirmarPedido = async (request, response, next) => {
     // 1 Verifica cliente (o lo crea si no hay)
     await Pedido.verificarOCrearCliente(telefonoLimpio)
 
-    // 2 Guardar la orden
+    // 2 Guarda la orden
     const idOrden = await Pedido.guardarOrden(telefonoLimpio, forma, 'Cliente')
 
-    // 3. Guardar los items
+    // 3. Guarda los items
     await Pedido.guardarItems(idOrden, items)
 
     response.status(200).json({ pedidoConfirmado: true, idOrden })
@@ -201,22 +254,41 @@ exports.getProductsCatalog = async (req, res, next) => {
     })
   }
 }
-/* FIN Visualizar Catalogo */
 
-exports.getTypes = async (req, res, next) => {
+exports.getTypes = async (req, res, nex) => {
   try {
-    const productTypes = await categorías.fecthAll()
+    const productTypes = await tipos.fetchAll()
 
     res.status(200).json({
-      success: true,
+      ok: true,
       message: 'Tipos recuperados',
       data: productTypes
     })
   } catch (error) {
     console.error(error)
     res.status(500).json({
-      success: false,
+      ok: false,
       message: 'Error al obtener los tipos de la BD'
+    })
+  }
+}
+
+/* FIN Visualizar Catalogo */
+
+exports.getCategorys = async (req, res, next) => {
+  try {
+    const productsCategorys = await categorías.fecthAll()
+
+    res.status(200).json({
+      success: true,
+      message: 'Tipos recuperados',
+      data: productsCategorys
+    })
+  } catch (error) {
+    console.error(error)
+    res.status(500).json({
+      success: false,
+      message: 'Error al obtener las Categorías de la BD'
     })
   }
 }
@@ -237,13 +309,16 @@ exports.getProductfieldsAndIngredientes = async (req, res, next) => {
     }
 
     const allIngredientes = await productos.getCategoryIngredientes(typeId)
+    const allTypes = await tipos.fetchAll()
+
     const productFormsFields = ProductFields
     res.status(200).json({
       success: true,
       message: 'Campos e Ingredientes recuperados',
       data: {
         fields: productFormsFields,
-        ingredientes: allIngredientes
+        ingredientes: allIngredientes,
+        types: allTypes
       }
     })
   } catch (error) {
@@ -270,25 +345,33 @@ exports.postNewProduct = async (req, res, next) => {
       Precio,
       Disponible,
       Imagen,
-      type: categoria, // Renombramos 'type' a 'categoria'
+      tipo,
+      categoría, // Renombramos 'type' a 'categoria'
       ingredientesID
     } = NewProductData
 
-    console.log('Nombre: ', Nombre)
-    console.log('Ingredientes: ', ingredientesID)
+    console.log('Variables a insertar:', {
+      AutoId: 'Generando...',
+      Nombre,
+      categoría,
+      Precio,
+      Disponible,
+      Imagen,
+      tipo,
+      tieneIngredientes: ingredientesID?.length > 0
+    })
+
     const validation = await productos.ValidarDatosRegistro(NewProductData)
     const AutoId = productos.generarID('PD')
-    console.log('Nuevo ID: ', AutoId)
 
     if (validation) {
-      // const postResult = await productos.insertNewProduct(AutoId, Nombre, categoria, Precio, Disponible, Imagen)
       if (ingredientesID.length > 0) {
         // Caso producto con ingredientes (transacción)
         // 1. Iniciamos la transacción asincronica -> hasta commit
         await connection.beginTransaction()
 
         // 2. Inserción en Producto
-        await productos.insertNewProduct(connection, AutoId, Nombre, categoria, Precio, Disponible, Imagen)
+        await productos.insertNewProduct(connection, AutoId, Nombre, categoría, Precio, Disponible, Imagen, tipo)
 
         // 3. Inserciones en Ingrediente-Producto
         for (const ing of ingredientesID) {
@@ -305,7 +388,8 @@ exports.postNewProduct = async (req, res, next) => {
         })
       } else {
         // Caso producto Sin ingredientes
-        const postResult = await productos.insertNewProduct(AutoId, Nombre, categoria, Precio, Disponible, Imagen)
+        const postResult = await productos.insertNewProduct(connection, AutoId, Nombre, categoría, Precio, Disponible, Imagen, tipo)
+
         if (postResult.affectedRows > 0) {
           console.log('Producto Insertado con exito')
           res.status(200).json({
@@ -367,7 +451,7 @@ exports.postModifProduct = async (req, res, next) => {
     await connection.beginTransaction()
 
     // A. Cambio de datos en el Producto
-    const modifyResult = await productos.modifyProduct(connection, newdata.id, newdata.nombre, newdata.Categoria, newdata.precio, newdata.activo, newdata.imagen)
+    const modifyResult = await productos.modifyProduct(connection, newdata.id, newdata.nombre, newdata.Categoria, newdata.tipo, newdata.precio, newdata.activo, newdata.imagen)
     console.log(modifyResult)
     // B. Eliminacion de ingredientes removidos
     if (aEliminar.length > 0) {
