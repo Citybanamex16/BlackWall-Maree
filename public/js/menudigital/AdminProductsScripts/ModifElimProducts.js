@@ -1,4 +1,4 @@
-/* global ShowErrorModal, showSuccessModal, catalogoIng:writable, limpiarModal, createFieldElement, buildIngredientsSection, SetRegisterButtons, onBtnIngNewClick, getIngredientesSeleccionados, validarDatosRegistro */
+/* global ShowErrorModal, showSuccessModal, catalogoIng:writable , catalogTipos:writable , limpiarModal, createFieldElement, buildIngredientsSection, SetRegisterButtons, onBtnIngNewClick, getIngredientesSeleccionados, validarDatosRegistro */
 /* exported ConstruirModifModal, ModifyProduct */
 
 /* CU05 Modificar Platillo Existente */
@@ -16,6 +16,21 @@ async function getAllIngredientesCatalog () {
     return ingCatalogData.ingCatalog[0]
   } catch (error) {
     ShowErrorModal('Error en funcion global', 'No es posible obtener ingredientes')
+  }
+}
+
+async function getAllTypesCatalog () {
+  try {
+    const response = await fetch('/Menu/productosTipos')
+
+    if (!response.ok) {
+      throw new Error('Error al obtener tipos de BD')
+    }
+
+    const tiposCatalogData = await response.json()
+    return tiposCatalogData.data
+  } catch (error) {
+    ShowErrorModal('Error en funcion global', 'No es posible obtener tipos')
   }
 }
 
@@ -37,7 +52,9 @@ async function ConstruirModifModal (productData, AllCategorys) {
 
   console.log('Obteniendo catalogo global de ingredientes ')
   catalogoIng = await getAllIngredientesCatalog()
-  console.log('Catalogo de ingredientes obtenido para modificacion: ', catalogoIng)
+
+  catalogTipos = await getAllTypesCatalog()
+  console.log('Tipos obtenidos: ', catalogTipos)
 
   // 1. Limpieza
   limpiarModal(ModifModal)
@@ -49,7 +66,7 @@ async function ConstruirModifModal (productData, AllCategorys) {
 
   // 2. Construir fields desde productData
   // Keys que tienen tratamiento especial — se excluyen del loop general
-  const KEYS_EXCLUIDAS = ['id', 'ingredientes', 'categoria'] // Nombres Sincronizados con Backend
+  const KEYS_EXCLUIDAS = ['id', 'ingredientes', 'categoria', 'tipo'] // Nombres Sincronizados con Backend
 
   Object.entries(productData).forEach(([key, value]) => {
     if (KEYS_EXCLUIDAS.includes(key)) return
@@ -85,6 +102,11 @@ async function ConstruirModifModal (productData, AllCategorys) {
   catField.classList.add('is-dynamic')
   ModifForm.appendChild(catField)
 
+  // 4.5 Dropdown de tipo
+  const tipoField = buildTipoDropdown(catalogTipos, productData.tipo)
+  tipoField.classList.add('is-dynamic')
+  ModifForm.appendChild(tipoField)
+
   // 5. Pre-seleccionar ingredientes actuales en los dropdowns
   precargarIngredientes(ingData, productData)
 
@@ -109,6 +131,33 @@ function buildCategoriaDropdown (categorias, valorActual) {
             <option value="${cat.nombre}" ${cat.nombre === valorActual ? 'selected' : ''}>
               ${cat.nombre}
             </option>`).join('')}
+        </select>
+      </div>
+    </div>`
+  return wrapper
+}
+
+// ── Dropdown de Tipo de Producto ──────────────────────────────────
+function buildTipoDropdown (tipos, valorActual) {
+  console.log('Tipos Catálogo: ', tipos, ' | Tipo Actual -> ', valorActual)
+  const wrapper = document.createElement('div')
+  wrapper.classList.add('field', 'is-dynamic')
+
+  // Usamos la misma estructura de Bulma/Marée que tienes en categorías
+  wrapper.innerHTML = `
+    <label class="label">Tipo de Producto</label>
+    <div class="control">
+      <div class="select is-fullwidth">
+        <select id="selectTipo" name="tipo">
+          <option value="" disabled ${!valorActual ? 'selected' : ''}>Selecciona un tipo...</option>
+          ${tipos.map(t => {
+            // Manejamos si el tipo viene como objeto {id, nombre} o solo string
+            const nombre = t.nombre || t
+            return `
+              <option value="${nombre}" ${nombre === valorActual ? 'selected' : ''}>
+                ${nombre}
+              </option>`
+          }).join('')}
         </select>
       </div>
     </div>`
@@ -151,7 +200,8 @@ function ModifyProduct (BackupIngredientes, oldProductData) {
 
   // 4. Ingredientes — array separado de ingredientes
   const ingredientes = getIngredientesSeleccionados()
-  console.log('Ingredientes Get: ', ingredientes)
+
+  console.log('datos POST: ', data)
 
   // 5. Validación de Reglas de negocio
   const validacion = validarDatosRegistro(data, BackupIngredientes)
