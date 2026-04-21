@@ -36,7 +36,7 @@ const pool = mysql.createPool({
 
 // Santi
 // Pool de conexiones
-/*
+
 const pool = mysql.createPool({
   host: 'mysql-maree2.alwaysdata.net',
   user: 'maree2',
@@ -44,16 +44,6 @@ const pool = mysql.createPool({
   password: 'maree123',
   waitForConnection: true,
   connectionLimit: 10
-
-})
-*/
-const pool = mysql.createPool({
-  host: 'mysql-maree2.alwaysdata.net',
-  user: 'maree2',
-  database: 'maree2_3',
-  password: 'maree123',
-  waitForConnections: true,
-  connectionLimit: 3
 
 })
 
