@@ -2,6 +2,7 @@ const express = require('express')
 const router = express.Router()
 
 const royaltyControlador = require('../controllers/royalty.controlador.js')
+const adminControlador = require('../controllers/admin.controlador.js')
 const isAuth = require('../middleware/isAuth.js')
 const isAdmin = require('../middleware/isAdmin.js')
 
@@ -9,6 +10,7 @@ const isAdmin = require('../middleware/isAdmin.js')
 // Visualizar estados Royalties
 router.get('/royaltyAdmin', isAuth, isAdmin, royaltyControlador.getRoyaltyAdmin)
 router.get('/royaltyAdmin/api', isAuth, isAdmin, royaltyControlador.getRoyaltyAdminJSON)
+
 // Modificar estados Royalties
 router.put('/royaltyAdmin/:nombre', isAuth, isAdmin, royaltyControlador.updateRoyalty)
 router.get('/royaltyMetrics', isAuth, isAdmin, royaltyControlador.getRoyaltyMetrics)
@@ -23,6 +25,10 @@ router.get('/royaltyAdmin/todas/promociones-disponibles', isAuth, isAdmin, royal
 router.get('/royaltyAdmin/todas/eventos-disponibles', isAuth, isAdmin, royaltyControlador.getTodosEventos)
 
 router.delete('/borrar/:nombre', isAuth, isAdmin, royaltyControlador.deleteRoyalty)
+
+router.get('/royaltyAdmin/metricsRoyalty', isAuth, isAdmin, adminControlador.getRoyaltyMetrics)
+router.get('/royaltyAdmin/metricsRoyalty/api/royalty', isAuth, isAdmin, adminControlador.getRoyaltyMetricsData)
+router.get('/royaltyAdmin/metricsRoyalty/api/royalty/export', isAuth, isAdmin, adminControlador.exportRoyaltyMetricsCsv)
 
 // CLIENTE
 router.get('/royaltyUser', royaltyControlador.getRoyaltyCli)

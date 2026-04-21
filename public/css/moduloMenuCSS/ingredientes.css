@@ -1,3 +1,5 @@
+/* Seccion ingredientes (check) */
+
 
 /* ── Variables ── */
 :root {
@@ -355,4 +357,23 @@ dialog.maree-modal::backdrop {
 .btn-eliminar:hover {
   background: #fde0da;
   color: #a03020;
+}
+/* --- RESPONSIVE INGREDIENTES --- */
+@media (max-width: 768px) {
+  .ing-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+    padding-bottom: 16px;
+    margin-bottom: 24px;
+  }
+
+  .ing-header .page-title {
+    font-size: 34px !important;
+  }
+
+  .btn-maree {
+    width: 100%;
+    justify-content: center;
+  }
 }

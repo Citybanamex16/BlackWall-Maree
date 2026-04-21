@@ -13,9 +13,6 @@ router.get('/', isAuth, isAdmin, adminControlador.getHub)
 router.get('/ingredientes', isAuth, isAdmin, adminControlador.getIngredients)
 router.get('/productos', isAuth, isAdmin, adminControlador.getProducts)
 
-router.get('/royalty', isAuth, isAdmin, adminControlador.getRoyaltyMetrics)
-router.get('/api/royalty', isAuth, isAdmin, adminControlador.getRoyaltyMetricsData)
-router.get('/api/royalty/export', isAuth, isAdmin, adminControlador.exportRoyaltyMetricsCsv)
 router.get('/api/metricas-clientes', isAuth, isAdmin, adminControlador.getRoyaltyMetricsData)
 router.get('/api/metricas-clientes/export', isAuth, isAdmin, adminControlador.exportRoyaltyMetricsCsv)
 router.get('/metricas-productos', isAuth, isAdmin, adminControlador.getProductIngredientMetrics)
@@ -41,5 +38,8 @@ router.post('/api/ingredientes/validar', adminControlador.validarIngrediente)
 router.post('/api/ingredientes/crear', adminControlador.crearIngrediente)
 router.get('/api/ingredientes/:id/validarEliminable', adminControlador.validarIngredienteEliminable)
 router.delete('/api/ingredientes/:id/eliminar', adminControlador.eliminarIngrediente)
+router.put('/api/ingredientes/:id/actualizar', adminControlador.actualizarIngrediente)
+router.get('/metricas-ingredientes', adminControlador.getMetricasIngredientes)
+router.get('/api/metricas-ingredientes', adminControlador.getMetricasIngredientesData)
 
 module.exports = router

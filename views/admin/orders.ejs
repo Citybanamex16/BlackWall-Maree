@@ -1,33 +1,39 @@
 <!DOCTYPE html>
-<html>
+<html lang="es" data-theme="light">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Órdenes</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@1.0.4/css/bulma.min.css">
-  <link rel="stylesheet" href="/css/menustyle.css">
-  <link rel="stylesheet" href="/css/orders-panel.css">
+  <link rel="stylesheet" href="/css/CSSglobales/global_theme.css">
+  <link rel="stylesheet" href="/css/CSSglobales/global_components.css">
+  <link rel="stylesheet" href="/css/CSSglobales/module-dashboard.css">
+  <link rel="stylesheet" href="/css/moduloMenuCSS/moduloMenuAdminCSS.css">
+  <link rel="stylesheet" href="/css/moduloAdminCSS/moduloAdmincss.css">
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=Jost:wght@300;400;500&display=swap" rel="stylesheet">
 </head>
 
 <body>
-  <nav class="navbar" role="navigation">
+  <nav class="navbar">
     <div class="navbar-brand">
-      <a class="navbar-item logo-area" href="/">
-        <span class="logo-text">MARÉE</span>
-        <span class="logo-sub">LOVE AT FIRST CRÊPE</span>
-      </a>
+      <div class="navbar-item" style="display:flex; flex-direction:column; align-items:flex-start;">
+        <div class="logo-text">MARÉE</div>
+        <div class="logo-sub">Admin</div>
+      </div>
     </div>
-
-    <%- include('../partials/breadcrumbs') %>
-    <%- include('../partials/Sesion') %>
+    <div class="navbar-end" style="display:flex;">
+      <a href="/admin" class="navbar-item">Dashboard</a>
+      <a href="/admin/ordenes" class="navbar-item" style="color: var(--gold);">Órdenes</a>
+    </div>
   </nav>
 
-  <section class="section">
-    <div class="container">
-      <h1 class="title">Catálogo de Órdenes</h1>
-      <p class="subtitle">Aquí se visualizan las órdenes registradas y se pueden cancelar las que sigan activas.</p>
+  <section class="page-wrap">
+    <h1 class="page-title">Catálogo de Órdenes</h1>
+    <p class="page-subtitle">Aquí se visualizan las órdenes registradas y se pueden cancelar las que sigan activas.</p>
 
+    <div id="statusBox" class="status-box"></div>
+
+    <div class="container">
       <% if (error) { %>
         <article class="message is-danger">
           <div class="message-body">

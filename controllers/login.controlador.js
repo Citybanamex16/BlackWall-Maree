@@ -40,9 +40,17 @@ exports.postLogin = async (request, response, next) => {
       if (password) {
         if (password === colaborador.password) {
           request.session.isLoggedIn = true
-          request.session.user = colaborador.nombre
+          request.session.user = {
+            id: colaborador.id_colaborador,
+            nombre: colaborador.nombre
+          }
           request.session.rol = colaborador.id_rol
-          return response.status(200).json({ success: true, redirectUrl: '/menu/menu' })
+
+          const redirectUrl = colaborador.id_rol === 'Administrador'
+            ? '/admin'
+            : '/menu/menu'
+
+          return response.status(200).json({ success: true, redirectUrl })
         }
         return response.status(401).json({ error: 'Contraseña incorrecta.' })
       }
@@ -73,6 +81,7 @@ exports.postLogin = async (request, response, next) => {
 
     return response.status(400).json({ error: 'Formato inválido.' })
   } catch (error) {
+    console.error('ERROR EN postLogin:', error)
     return response.status(500).json({
       redirectUrl: '/menu/menu?authError=database'
     })
@@ -101,6 +110,7 @@ exports.postSignUp = async (request, response, next) => {
       message: '¡Cuenta creada con éxito!'
     })
   } catch (error) {
+    console.error('ERROR EN postSignUp:', error)
     if (error.code === 'ER_DUP_ENTRY') {
       return response.status(409).json({
         error: 'Ya existe un Usuario con ese teléfono. Por favor inicia sesión',
@@ -146,6 +156,7 @@ exports.postVerifyOtp = async (request, response, next) => {
 
     return response.status(400).json({ error: 'El código de verificación es incorrecto.' })
   } catch (error) {
+    console.error('ERROR EN postVerifyOtp:', error)
     return response.status(500).json({
       redirectUrl: '/menu/menu?authError=database'
     })

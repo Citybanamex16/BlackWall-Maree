@@ -1,0 +1,321 @@
+:root {
+    --promo-gold: var(--c-primary, #b5956a);
+    --promo-gold-deep: var(--c-primary-deep, #a67f4f);
+    --promo-ink: var(--c-text-main, #222222);
+    --promo-copy: var(--c-text-soft, #4a413a);
+    --promo-line: var(--c-border, #ede8e0);
+    --promo-terra: var(--c-danger, #b96f5d);
+}
+
+/* ── 1. ENCABEZADO Y CONTROLES ── */
+.promotions-shell {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    gap: 24px;
+    margin-bottom: 28px;
+    flex-wrap: wrap;
+}
+
+.promotions-kicker,
+.promotion-kicker {
+    display: inline-block;
+    padding: 8px 14px;
+    border-radius: var(--radius-pill);
+    background: rgba(181, 149, 106, 0.12);
+    color: var(--promo-gold-deep);
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+}
+
+.promotions-copy,
+.promotion-help-copy {
+    max-width: 680px;
+    color: var(--promo-copy);
+    font-size: 15px;
+    line-height: 1.8;
+    margin-top: 14px;
+}
+
+.promotion-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+/* ── 2. BOTONES ── */
+.maree-action-button {
+    background: linear-gradient(135deg, var(--promo-gold) 0%, var(--promo-gold-deep) 100%) !important;
+    border: none !important;
+    color: #fff !important;
+    padding-inline: 20px;
+    box-shadow: 0 16px 30px rgba(166, 127, 79, 0.2);
+}
+
+.maree-action-button:hover,
+.maree-action-button:focus {
+    background: linear-gradient(135deg, var(--promo-gold-deep) 0%, #946d40 100%) !important;
+    color: #fff !important;
+}
+
+.button.maree-ghost {
+    border-color: var(--promo-line);
+    color: var(--promo-copy);
+    background: var(--c-surface);
+}
+
+.button.maree-ghost:hover,
+.button.maree-ghost:focus {
+    border-color: var(--promo-gold);
+    color: var(--promo-gold-deep);
+    background: var(--c-surface-soft);
+}
+
+.button.maree-danger {
+    background: var(--promo-terra);
+    border-color: var(--promo-terra);
+    color: #fff;
+}
+
+.button.maree-danger:hover,
+.button.maree-danger:focus {
+    background: var(--c-danger-deep);
+    border-color: var(--c-danger-deep);
+    color: #fff;
+}
+
+/* ── 3. TARJETAS (Cards) ── */
+.promo-card {
+    border: 1px solid var(--promo-line);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    box-shadow: var(--shadow-md);
+    background: linear-gradient(180deg, var(--c-surface) 0%, var(--c-surface-soft) 100%);
+    height: 100%;
+}
+
+.promo-card.is-inactive {
+    opacity: 0.86;
+}
+
+.promo-card .card-content {
+    padding: 26px;
+}
+
+.promo-card .title {
+    font-size: 34px !important;
+    margin-bottom: 10px !important;
+    font-family: var(--font-heading);
+}
+
+.promo-card-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 16px;
+    margin-bottom: 18px;
+}
+
+.promo-card-id,
+.promo-card-label {
+    font-size: 11px;
+    letter-spacing: 1.4px;
+    text-transform: uppercase;
+    color: var(--c-text-muted);
+}
+
+.promo-conditions {
+    min-height: 90px;
+    color: var(--promo-ink);
+    line-height: 1.8;
+}
+
+.promo-card-footer {
+    border-top: 1px solid var(--promo-line);
+}
+
+.promo-card-divider {
+    border: none;
+    height: 1px;
+    background-color: var(--promo-line);
+}
+
+.promo-footer-button {
+    border: none;
+    background: transparent;
+    color: var(--promo-gold-deep);
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.promo-footer-button:hover {
+    background: var(--c-surface-soft);
+}
+
+.promo-footer-button.is-danger-text {
+    color: var(--promo-terra);
+}
+
+.promo-footer-button.is-disabled,
+.promo-footer-button:disabled {
+    color: var(--c-text-muted);
+    cursor: not-allowed;
+    background: #faf4eb;
+}
+
+/* ── 4. ETIQUETAS (Pills / Badges) ── */
+.promo-benefit {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 14px;
+    border-radius: var(--radius-pill);
+    background: var(--c-primary-light);
+    color: var(--promo-gold-deep);
+    font-size: 13px;
+    font-weight: 600;
+    margin-bottom: 14px;
+}
+
+.promo-benefit.is-neutral {
+    background: var(--c-surface-soft);
+    color: var(--promo-copy);
+}
+
+.promo-date-tag {
+    display: inline-flex;
+    align-items: center;
+    padding: 8px 14px;
+    border-radius: var(--radius-pill);
+    border: 1px solid var(--promo-line);
+    background: var(--c-surface);
+    color: var(--promo-copy);
+    font-size: 13px;
+}
+
+.promo-chip {
+    display: inline-flex;
+    align-items: center;
+    border-radius: var(--radius-pill);
+    padding: 8px 12px;
+    background: var(--c-primary-light);
+    color: var(--promo-gold-deep);
+    font-size: 13px;
+    font-weight: 500;
+}
+
+.promo-chip.empty {
+    background: var(--c-primary-bg);
+    color: var(--c-text-muted);
+}
+
+/* ── 5. MODALES Y FORMULARIOS ── */
+.promotion-help-box,
+.promotion-modal-box {
+    border: 1px solid var(--promo-line);
+    border-radius: var(--radius-lg) !important;
+    background: linear-gradient(180deg, var(--c-surface) 0%, var(--c-surface-soft) 100%);
+    box-shadow: var(--shadow-lg);
+}
+
+.promotion-help-title {
+    font-size: 16px;
+    font-weight: 600;
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+    color: var(--promo-gold-deep);
+}
+
+.promotion-modal-box .title {
+    font-size: 40px !important;
+}
+
+.promotions-form-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 18px;
+}
+
+.promotions-form-grid .field.is-full {
+    grid-column: 1 / -1;
+}
+
+.promo-discount-section {
+    display: none;
+}
+
+.input:focus,
+.textarea:focus,
+.select select:focus {
+    border-color: var(--promo-gold);
+    box-shadow: 0 0 0 0.125em rgba(181, 149, 106, 0.2);
+}
+
+.promo-checkbox {
+    color: var(--promo-ink);
+    font-weight: 500;
+}
+
+.helper-note,
+.promo-inline-note {
+    color: var(--c-text-muted);
+    font-size: 12px;
+    line-height: 1.6;
+    margin-top: 6px;
+}
+
+.promo-selection-box {
+    min-height: 140px;
+    max-height: 220px;
+    overflow-y: auto;
+    border: 1px dashed var(--promo-line);
+    border-radius: var(--radius-md);
+    padding: 14px;
+    background: var(--c-bg-body);
+}
+
+.promo-selection-box.promotion-box-error {
+    border-color: var(--promo-terra);
+    background: var(--c-danger-bg);
+}
+
+.promo-product-option {
+    display: block;
+    padding: 8px 0;
+    color: var(--promo-copy);
+}
+
+.promo-selected-summary {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    min-height: 42px;
+}
+
+/* ── 6. UTILIDADES Y RESPONSIVE ── */
+.modal-background {
+    background: rgba(34, 34, 34, 0.6);
+}
+
+.is-centered-copy {
+    margin-inline: auto;
+}
+
+@media (max-width: 768px) {
+    .promotions-form-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .promo-card .title,
+    .promotion-modal-box .title {
+        font-size: 30px !important;
+    }
+
+    .promotion-toolbar {
+        width: 100%;
+        justify-content: space-between;
+    }
+}

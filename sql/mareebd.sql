@@ -6,7 +6,6 @@
 -- Tiempo de generación: 30-03-2026 a las 21:41:50
 -- Versión del servidor: 10.4.32-MariaDB
 -- Versión de PHP: 8.2.12
-
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 START TRANSACTION;
 SET time_zone = "+00:00";
@@ -440,7 +439,8 @@ CREATE TABLE `evento` (
   `Descripcion` text DEFAULT NULL,
   `Activo` tinyint(1) DEFAULT 0,
   `Fecha_Inicio` date NOT NULL,
-  `Fecha_Final` date DEFAULT NULL
+  `Fecha_Final` date DEFAULT NULL,
+  `Imagen` text DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish2_ci;
 
 --

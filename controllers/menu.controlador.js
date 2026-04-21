@@ -4,7 +4,7 @@ const categorías = require('../models/MenuDigital/categorías.model.js')
 const Pedido = require('../models/pedidos.model.js')
 const db = require('../util/database.js')
 
-// CU11
+// CU11 Vizualisar Menu
 exports.getMenu = (request, response, next) => {
   const breadcrumbs = nav.getBreadcrumbs('Menu')
   response.render('cliente/menu', { breadcrumbs })
@@ -20,8 +20,8 @@ exports.getMenuData = async (request, response, next) => {
     ])
 
     console.log('All Promises realizada con exito')
-    console.log('Categorías Info: ', Allcategories)
-    console.log('Products Info: ', productsData)
+    // console.log('Categorías Info: ', Allcategories)
+    // console.log('Products Info: ', productsData)
 
     response.status(200).json({
       ok: true,
@@ -37,9 +37,9 @@ exports.getMenuData = async (request, response, next) => {
       message: err
     })
   }
-
-  // response.render('cliente/menu', { breadcrumbs })
 }
+
+// Fin CU11
 
 exports.getOrden = (request, response, next) => {
   const breadcrumbs = nav.getBreadcrumbs('Orden')
@@ -119,9 +119,13 @@ exports.validarPedido = async (request, response, next) => {
 
   try {
     const nombres = items.map(i => i.nombre)
-    const resultado = await Pedido.verificarDisponibilidad(nombres)
-    if (resultado.count === 0) {
-      return response.status(200).json({ pedidoValido: false, mensaje: 'Ningún platillo está disponible' })
+    const nombresUnicos = [...new Set(nombres)]
+    const resultado = await Pedido.verificarDisponibilidad(nombresUnicos)
+    if (Number(resultado.count) !== nombresUnicos.length) {
+      return response.status(200).json({
+        pedidoValido: false,
+        mensaje: 'Algunos platillos de tu pedido ya no están disponibles.'
+      })
     }
     response.status(200).json({ pedidoValido: true })
   } catch (err) {
@@ -133,55 +137,75 @@ exports.validarPedido = async (request, response, next) => {
 exports.confirmarPedido = async (request, response, next) => {
   const { items, forma, telefono } = request.body
 
-  // Mapear forma del front al enumerao de la BD
-  const mapaForma = {
-    'Pick-Up': 'Pick-up',
-    'On Site': 'Sucursal',
-    Delivery: 'Delivery'
-  }
-  const tipoOrden = mapaForma[forma]
-  if (!tipoOrden) {
+  const formasValidas = ['Pick-Up', 'On Site', 'Delivery']
+  if (!formasValidas.includes(forma)) {
     return response.status(400).json({ pedidoConfirmado: false, mensaje: 'Forma de entrega inválida' })
   }
 
-  // Validar teléfono
   const telefonoLimpio = String(telefono).replace(/[\s-]/g, '')
   if (!/^\d{7,15}$/.test(telefonoLimpio)) {
     return response.status(400).json({ pedidoConfirmado: false, mensaje: 'Teléfono inválido' })
   }
 
-  // Validar items
   if (!Array.isArray(items) || items.length === 0) {
     return response.status(400).json({ pedidoConfirmado: false, mensaje: 'El pedido está vacío' })
   }
 
-  for (const item of items) {
-    if (typeof item.nombre !== 'string' || item.nombre.trim() === '' || item.nombre.length > 100) {
-      return response.status(400).json({ pedidoConfirmado: false, mensaje: 'Item inválido' })
-    }
-  }
-
   try {
-    const idOrden = await Pedido.guardarOrden(telefono, tipoOrden, 'Cliente')
-    console.log('Orden guardada con ID:', idOrden)
+    // 1 Verifica cliente (o lo crea si no hay)
+    await Pedido.verificarOCrearCliente(telefonoLimpio)
 
+    // 2 Guardar la orden
+    const idOrden = await Pedido.guardarOrden(telefonoLimpio, forma, 'Cliente')
+
+    // 3. Guardar los items
     await Pedido.guardarItems(idOrden, items)
-    console.log('Items guardados para orden:', idOrden)
 
     response.status(200).json({ pedidoConfirmado: true, idOrden })
-  } catch (err) {
-    console.error('Error confirmando pedido:', err)
-    response.status(500).json({ pedidoConfirmado: false, mensaje: 'Error al guardar en BD' })
+  } catch (error) {
+    console.error('Error al confirmar pedido:', error)
+    response.status(500).json({ pedidoConfirmado: false, mensaje: 'Error al guardar el pedido' })
   }
 }
 
+/* CU 14 Visualizar Catalogo Productos */
 exports.getProducts = (req, res, next) => {
-  res.render('admin/products')
+  const breadcrumbs = nav.getBreadcrumbs('AdminSection')
+  res.render('admin/products', { breadcrumbs })
 }
+
+exports.getProductsCatalog = async (req, res, next) => {
+  console.log('Backend obteniendo todos los Productos, ingredientes & catalogos')
+  try {
+    // 1. Llamado en paralelo de consultas con Promise.all()
+    const [Allcategories, allProductsData] = await Promise.all([
+      categorías.fecthAll(), // Async BD call 1.
+      productos.getAllProductsInfo() // async BD call
+    ])
+
+    // console.log('Categorías catalog: ', Allcategories)
+    // console.log('Products catalog: ', allProductsData)
+
+    res.status(200).json({
+      ok: true,
+      message: 'Catalogos Obtenido con exito',
+      arrayCategorías: Allcategories,
+      arrayProductsCatalog: allProductsData
+    })
+    console.log('Catalogos obtenidos con exito')
+  } catch (err) {
+    console.log('Error en get Menu: ', err)
+    res.status(500).json({
+      ok: false,
+      message: err
+    })
+  }
+}
+/* FIN Visualizar Catalogo */
 
 exports.getTypes = async (req, res, next) => {
   try {
-    const productTypes = await productos.getAllcategorys()
+    const productTypes = await categorías.fecthAll()
 
     res.status(200).json({
       success: true,
@@ -212,7 +236,7 @@ exports.getProductfieldsAndIngredientes = async (req, res, next) => {
       return res.status(400).json({ error: 'El ID es requerido' })
     }
 
-    const allIngredientes = await productos.getAllIngredientes(typeId)
+    const allIngredientes = await productos.getCategoryIngredientes(typeId)
     const productFormsFields = ProductFields
     res.status(200).json({
       success: true,
@@ -232,11 +256,13 @@ exports.getProductfieldsAndIngredientes = async (req, res, next) => {
 }
 
 const pool = require('../util/database.js')
-exports.postNewProduct = async (req, res, nex) => {
-  console.log('POST recibido: ', req.body)
-  const connection = await pool.getConnection()
 
+exports.postNewProduct = async (req, res, next) => {
+  console.log('POST recibido: ', req.body)
+  let connection
   try {
+    connection = await pool.getConnection()
+
     const NewProductData = req.body
     // Extracción tipo map
     const {
@@ -251,7 +277,7 @@ exports.postNewProduct = async (req, res, nex) => {
     console.log('Nombre: ', Nombre)
     console.log('Ingredientes: ', ingredientesID)
     const validation = await productos.ValidarDatosRegistro(NewProductData)
-    const AutoId = productos.generarID()
+    const AutoId = productos.generarID('PD')
     console.log('Nuevo ID: ', AutoId)
 
     if (validation) {
@@ -287,7 +313,7 @@ exports.postNewProduct = async (req, res, nex) => {
             message: 'Producto registrado con éxito'
           })
         } else {
-          res.status(400).json({
+          res.status(500).json({
             ok: false,
             message: 'No se pudo insertar el producto'
           })
@@ -304,5 +330,181 @@ exports.postNewProduct = async (req, res, nex) => {
     })
   } finally {
     connection.release() // Siempre liberar la conexión
+  }
+}
+
+exports.postModifProduct = async (req, res, next) => {
+  console.log('Recibiendo datos: ', req.body)
+  const connection = await pool.getConnection()
+
+  try {
+    const newdata = req.body
+    const newIngredientesRaw = newdata.ingredientes || [] // Evitamos fallos si viene vacío
+    const oldIngredientesRaw = await productos.fetchOneProductIngredientes(newdata.id)
+
+    // 1. LIMPIEZA DE DATOS: Convertimos los objetos complejos en arrays de IDs simples
+    // newIds quedará como: ['IN37891778', 'IN12345678']
+    const newIds = newIngredientesRaw.map(ing => ing.id)
+
+    // oldIds quedará como: ['IN37891778']. Ojo: usamos [0] para ignorar la metadata de MySQL
+    const oldIds = oldIngredientesRaw[0].map(ing => ing.id)
+
+    console.log('IDs Nuevos a evaluar: ', newIds)
+    console.log('IDs Viejos en la BD: ', oldIds)
+
+    // 2. EL ALGORITMO DIFERENCIAL (La Magia)
+    // aEliminar: IDs que estaban en la BD (old) pero ya NO vienen en los nuevos.
+    const aEliminar = oldIds.filter(id => !newIds.includes(id))
+
+    // aInsertar: IDs que vienen en los nuevos pero NO estaban en la BD (old).
+    const aInsertar = newIds.filter(id => !oldIds.includes(id))
+
+    console.log('Array a Eliminar: ', aEliminar)
+    console.log('Array a Insertar: ', aInsertar)
+
+    // 3. EJECUCIÓN EN BASE DE DATOS
+    // Setup
+    await connection.beginTransaction()
+
+    // A. Cambio de datos en el Producto
+    const modifyResult = await productos.modifyProduct(connection, newdata.id, newdata.nombre, newdata.Categoria, newdata.precio, newdata.activo, newdata.imagen)
+    console.log(modifyResult)
+    // B. Eliminacion de ingredientes removidos
+    if (aEliminar.length > 0) {
+      console.log(`Eliminando ${aEliminar.length} relaciones obsoletas...`)
+      // TODO: Placeholder para Modelo
+      for (const ingElim of aEliminar) {
+        await productos.eliminateIngProduct(connection, newdata.id, ingElim)
+      }
+    }
+    // C. Insercion de ingredientes nuevos :)
+    if (aInsertar.length > 0) {
+      console.log(`Insertando ${aInsertar.length} relaciones nuevas...`)
+      // TODO: Placeholder para Modelo
+      for (const ingInsert of aInsertar) {
+        await productos.insertNewProductIng(connection, newdata.id, ingInsert)
+      }
+    }
+
+    // Fin de llamado ¿Todos lo lograron ?
+    await connection.commit()
+
+    // 4. RESPUESTA AL FRONTEND
+    res.status(200).json({
+      ok: true,
+      message: 'Producto e ingredientes modificados correctamente'
+    })
+  } catch (error) {
+    console.log('Error crítico en modificación: ', error)
+    await connection.rollback()
+    res.status(500).json({
+      ok: false,
+      message: 'Error al actualizar el producto',
+      error: error.message
+    })
+  } finally {
+    if (connection) connection.release()
+  }
+}
+
+exports.getIngredientesFullCatalog = async (req, res, next) => {
+  try {
+    console.log('Backend: Obteniendo Catalogo de ingredientes ')
+    const ingredientesCatalog = await productos.getAllIngredientes()
+
+    res.status(200).json({
+      ok: true,
+      message: 'Catalogo de Ingredientes Obtenido',
+      ingCatalog: ingredientesCatalog
+    })
+  } catch (err) {
+    console.log('Error en get Ingredientes: ', err)
+    res.status(500).json({
+      ok: false,
+      message: err
+    })
+  }
+}
+
+/* Eliminar/Desactivar Producto */
+exports.deleteProducto = async (req, res, next) => {
+  const { id } = req.body // Más limpio
+
+  // Validar entrada
+  if (!id) {
+    return res.status(400).json({
+      ok: false,
+      message: 'El ID del producto es obligatorio para la eliminación'
+    })
+  }
+
+  try {
+    console.log('Eliminando producto con id: ', id)
+    const productoEliminado = await productos.eliminarProducto(id)
+
+    if (!productoEliminado) {
+      console.log('Error producto no encontrado')
+      return res.status(404).json({
+        ok: false,
+        message: 'Producto no encontrado'
+      })
+    }
+
+    console.log('Producto Eliminado con exito: ', productoEliminado)
+    res.status(200).json({
+      ok: true,
+      message: 'Producto Eliminado con éxito', // Mensaje preciso
+      data: productoEliminado // Opcional: devolver el objeto
+    })
+  } catch (err) {
+    // 3. Logear el error real para debugging
+    console.error('Error al eliminar producto:', err)
+
+    res.status(500).json({
+      ok: false,
+      message: 'Error interno del servidor', // Mensaje seguro para el cliente
+      error: process.env.NODE_ENV === 'development' ? err.message : {}
+    })
+  }
+}
+
+exports.putDesactivarProducto = async (req, res, next) => {
+  const { id } = req.body // Más limpio
+
+  // Validar entrada
+  if (!id) {
+    return res.status(400).json({
+      ok: false,
+      message: 'El ID del producto es obligatorio'
+    })
+  }
+
+  try {
+    // 2. Asumimos que desactivarProducto devuelve el producto actualizado o null
+    const productoDesactivado = await productos.desactivarProducto(id)
+
+    if (!productoDesactivado) {
+      console.log('Error producto no desactivado')
+      return res.status(404).json({
+        ok: false,
+        message: 'Producto no encontrado'
+      })
+    }
+
+    console.log('Producto desactivado con exito')
+    res.status(200).json({
+      ok: true,
+      message: 'Producto desactivado con éxito', // Mensaje preciso
+      data: productoDesactivado // Opcional: devolver el objeto
+    })
+  } catch (err) {
+    // 3. Logear el error real para debugging
+    console.error('Error al desactivar producto:', err)
+
+    res.status(500).json({
+      ok: false,
+      message: 'Error interno del servidor', // Mensaje seguro para el cliente
+      error: process.env.NODE_ENV === 'development' ? err.message : {}
+    })
   }
 }

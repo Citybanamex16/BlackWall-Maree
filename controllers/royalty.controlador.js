@@ -11,7 +11,7 @@ exports.getRoyaltyAdmin = async (request, response, next) => {
       // Obtenemos las promociones
       const [promociones] = await Royalty.fetchPromociones_royalties(royalty.Nombre_Royalty)
       royalty.promociones = promociones
-      console.log(`${royalty.Nombre_Royalty}:`, promociones) // Debuggear
+      console.log(`${royalty.Nombre_Royalty}:`, promociones) // Para debuggear
       const [eventos] = await Royalty.fetchEventos_royalty(royalty.Nombre_Royalty)
       royalty.eventos = eventos
       console.log(`${royalty.Nombre_Royalty}:`, eventos)

@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html lang="es" data-theme="light">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -8,9 +8,12 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
+  
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@1.0.4/css/bulma.min.css">
-  <link rel="stylesheet" href="/css/adminstyle.css">
-  <link rel="stylesheet" href="/css/ingredientes.css">
+  
+  <link rel="stylesheet" href="/css/CSSglobales/global_theme.css">
+  <link rel="stylesheet" href="/css/CSSglobales/global_components.css">
+  <link rel="stylesheet" href="/css/moduloMenuCSS/moduloMenuAdminCSS.css">
 </head>
 
 <body>
@@ -38,9 +41,14 @@
         <h1 class="page-title">Ingredientes</h1>
         <p class="page-sub">Catálogo de insumos del restaurante</p>
       </div>
+      <div style="display:flex; gap:12px; align-items:center;">
+        <a href="/admin/metricas-ingredientes" class="btn-maree" style="text-decoration:none; background:#b5956a;">
+          📊 Ver Métricas
+        </a>
       <button id="btnRegistrarIngrediente" class="btn-maree">
         + Nuevo Ingrediente
       </button>
+      </div>
     </div>
 
     <!-- Tabla -->
@@ -74,13 +82,6 @@
     <div class="maree-field">
       <label class="maree-label" for="inputPrecio">Precio adicional ($)</label>
       <input class="maree-input" type="number" id="inputPrecio" placeholder="0.00" min="0" step="0.01">
-    </div>
-
-    <div class="maree-field">
-      <label class="maree-label" for="inputTipo">
-        Tipo <span style="font-weight:400;text-transform:none;letter-spacing:0;">(opcional)</span>
-      </label>
-      <input class="maree-input" type="text" id="inputTipo" placeholder="Ej. Dulce, Salado..." maxlength="20">
     </div>
 
     <div class="maree-field">
@@ -149,6 +150,41 @@
   </div>
 </dialog>
 
-<script src="/js/menudigital/adminIngredientes.js"></script>
+<dialog id="ModalEditar" class="maree-modal">
+  <div class="modal-inner">
+    <p class="modal-title">Editar Ingrediente</p>
+    <p class="modal-sub" id="editarSubtitulo"></p>
+
+    <div class="maree-field">
+      <label class="maree-label">Nombre</label>
+      <input class="maree-input" type="text" id="editNombre" maxlength="50">
+    </div>
+    <div class="maree-field">
+      <label class="maree-label">Categoría</label>
+      <select class="maree-select" id="editCategoria"></select>
+    </div>
+    <div class="maree-field">
+      <label class="maree-label">Precio ($)</label>
+      <input class="maree-input" type="number" id="editPrecio" min="0" step="0.01">
+    </div>
+    <div class="maree-field">
+      <label class="maree-label">URL Imagen <span style="font-weight:400;text-transform:none;letter-spacing:0;">(opcional)</span></label>
+      <input class="maree-input" type="text" id="editImagen">
+    </div>
+    <div class="maree-field">
+      <label class="maree-checkbox-row">
+        <input type="checkbox" id="editActivo">
+        Disponible
+      </label>
+    </div>
+
+    <div class="modal-actions">
+      <button id="btnGuardarEditar" class="btn-primary">Guardar cambios</button>
+      <button id="btnCancelarEditar" class="btn-secondary">Cancelar</button>
+    </div>
+  </div>
+</dialog>
+
+<script src="/js/menudigital/AdminIngredientsScripts/adminIngredientes.js"></script>
 </body>
 </html>
