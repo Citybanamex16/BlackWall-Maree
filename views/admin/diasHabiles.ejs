@@ -18,28 +18,96 @@
 <section class="section">
   <div class="container">
     <h1 class="title">Gestión de días hábiles</h1>
-    <p class="subtitle">Consulta de días hábiles y horarios de atención</p>
+    <p class="subtitle">Registrar y consultar días hábiles</p>
 
     <% if (error) { %>
       <div class="notification is-danger"><%= error %></div>
     <% } %>
 
     <% if (mensaje) { %>
-      <div class="notification is-warning"><%= mensaje %></div>
-      <div class="mt-4">
-        <a href="/admin" class="button is-light">Volver al dashboard</a>
-      </div>
+      <div class="notification is-success"><%= mensaje %></div>
     <% } %>
 
-    <% if (diasHabiles && diasHabiles.length > 0) { %>
-      <div class="box">
+    <div class="box">
+      <h2 class="title is-5">Registrar día hábil</h2>
+
+      <form action="/admin/dias-habiles" method="POST">
+        <div class="field">
+          <label class="label">Sucursal</label>
+          <div class="control">
+            <div class="select is-fullwidth">
+              <select name="id_sucursal" required>
+                <option value="">Selecciona una sucursal</option>
+                <% sucursales.forEach(sucursal => { %>
+                  <option value="<%= sucursal.id_sucursal %>" <%= oldInput.id_sucursal === String(sucursal.id_sucursal) ? 'selected' : '' %>>
+                    <%= sucursal.nombre %>
+                  </option>
+                <% }) %>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <div class="field">
+          <label class="label">Fecha</label>
+          <div class="control">
+            <input
+              class="input"
+              type="date"
+              name="fecha"
+              value="<%= oldInput.fecha %>"
+              required>
+          </div>
+        </div>
+
+        <div class="field">
+          <label class="label">¿Es laboral?</label>
+          <div class="control">
+            <div class="select is-fullwidth">
+              <select name="es_laboral" required>
+                <option value="1" <%= oldInput.es_laboral === '1' ? 'selected' : '' %>>Sí</option>
+                <option value="0" <%= oldInput.es_laboral === '0' ? 'selected' : '' %>>No</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <div class="field">
+          <label class="label">Descripción</label>
+          <div class="control">
+            <textarea
+              class="textarea"
+              name="descripcion"
+              placeholder="Ej. Día festivo, operación especial, cierre, etc."><%= oldInput.descripcion %></textarea>
+          </div>
+        </div>
+
+        <div class="field is-grouped mt-5">
+          <div class="control">
+            <button class="button is-primary" type="submit">Guardar configuración</button>
+          </div>
+          <div class="control">
+            <a href="/admin" class="button is-light">Volver</a>
+          </div>
+        </div>
+      </form>
+    </div>
+
+    <div class="box">
+      <h2 class="title is-5">Días registrados</h2>
+
+      <% if (!diasHabiles || diasHabiles.length === 0) { %>
+        <div class="notification is-warning">
+          No existen días hábiles configurados.
+        </div>
+      <% } else { %>
         <table class="table is-fullwidth is-striped is-hoverable">
           <thead>
             <tr>
               <th>ID</th>
               <th>Sucursal</th>
               <th>Fecha</th>
-              <th>Laboral</th>
+              <th>Es laboral</th>
               <th>Descripción</th>
             </tr>
           </thead>
@@ -55,10 +123,8 @@
             <% }) %>
           </tbody>
         </table>
-      </div>
-
-      <a href="/admin" class="button is-light">Volver al dashboard</a>
-    <% } %>
+      <% } %>
+    </div>
   </div>
 </section>
 
