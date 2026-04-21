@@ -3,15 +3,48 @@
 
 // Llamar al model
 const nav = require('../models/breadcrumbs.model.js')
+const promos = require('../models/promociones.model.js')
 const Cliente = require('../models/cliente.model.js')
 
 // Recuerden que automaticamente cuando haces render Express busca en Views
 // Si esta dentro de una subcarpeta de Views hay que decirle en cual
 
+// Func utilizadas por Modulo Menu :)
 exports.getMenu = (request, response, next) => {
-  const breadcrumbs = nav.getBreadcrumbs('Menu')
-  response.render('cliente/menu', { breadcrumbs })
+  response.render('cliente/menu', { datosCliente: request.session.cliente || null })
 }
+
+exports.getPromosView = (req, res, nex) => {
+  const breadcrumbs = nav.getBreadcrumbs('Menu')
+  res.render('cliente/promotions', { breadcrumbs })
+}
+
+exports.getEventos = (req, res, nex) => {
+  const breadcrumbs = nav.getBreadcrumbs('Menu')
+  res.render('cliente/eventos', { breadcrumbs })
+}
+
+exports.getPRsData = async (req, res, nex) => {
+  try {
+    const SesionData = req.body
+    console.log('Sesion data received: ', SesionData)
+    const PRsData = await promos.getPRs('Super Fan')
+
+    res.status(200).json({
+      ok: true,
+      message: 'PRs conseguidos de manera exitosa',
+      PRs: PRsData
+    })
+  } catch (err) {
+    console.log('Error desde backend: ', err)
+    res.status(500).json({
+      ok: false,
+      message: 'PRs error en su obtención'
+    })
+  }
+}
+
+// Fin de Modulo menu
 
 exports.getProfile = async (req, res, next) => {
   try {

@@ -1,7 +1,7 @@
 const db = require('../util/database')
 
 class Calendario {
-  static async fetchDiasHabiles() {
+  static async fetchDiasHabiles () {
     const [rows] = await db.execute(`
       SELECT
         c.ID_Calendario AS id_calendario,
@@ -19,7 +19,7 @@ class Calendario {
     return rows
   }
 
-  static async fetchSucursales() {
+  static async fetchSucursales () {
     const [rows] = await db.execute(`
       SELECT
         ID_Sucursal AS id_sucursal,
@@ -31,7 +31,7 @@ class Calendario {
     return rows
   }
 
-  static async createDiaHabil(idSucursal, fecha, esLaboral, descripcion) {
+  static async createDiaHabil (idSucursal, fecha, esLaboral, descripcion) {
     const [result] = await db.execute(`
       INSERT INTO calendario (ID_Sucursal, Fecha, Es_Laboral, Descripción)
       VALUES (?, ?, ?, ?)

@@ -2,10 +2,11 @@
 -- version 5.2.1
 -- https://www.phpmyadmin.net/
 --
--- Servidor: 127.0.0.1:3307
--- Tiempo de generación: 30-03-2026 a las 21:41:50
+-- Servidor: 127.0.0.1
+-- Tiempo de generación: 20-04-2026 a las 21:35:50
 -- Versión del servidor: 10.4.32-MariaDB
 -- Versión de PHP: 8.2.12
+
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 START TRANSACTION;
 SET time_zone = "+00:00";
@@ -19,6 +20,206 @@ SET time_zone = "+00:00";
 --
 -- Base de datos: `mareebd`
 --
+
+DELIMITER $$
+--
+-- Procedimientos
+--
+CREATE DEFINER=`root`@`localhost` PROCEDURE `ActualizarCategoria` (IN `oldNombre` VARCHAR(50) CHARSET utf8mb4 COLLATE utf8mb4_spanish2_ci, IN `newNombre` VARCHAR(50) CHARSET utf8mb4 COLLATE utf8mb4_spanish2_ci)   BEGIN
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+        SET FOREIGN_KEY_CHECKS = 1;
+        ROLLBACK;
+        RESIGNAL;
+    END;
+
+    START TRANSACTION;
+        SET FOREIGN_KEY_CHECKS = 0;
+        UPDATE `categoría` SET Nombre = newNombre WHERE Nombre = oldNombre;
+        UPDATE `insumo` SET `Categoría` = newNombre WHERE `Categoría` = oldNombre;
+        UPDATE `producto` SET `Categoría` = newNombre WHERE `Categoría` = oldNombre;
+        SET FOREIGN_KEY_CHECKS = 1;
+    COMMIT;
+END$$
+
+CREATE DEFINER=`root`@`localhost` PROCEDURE `ActualizarIngrediente` (IN `p_idInsumo` VARCHAR(10) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish2_ci, IN `p_nombre` VARCHAR(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish2_ci, IN `p_categoria` VARCHAR(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish2_ci, IN `p_precio` DECIMAL(10,2), IN `p_activo` TINYINT(1), IN `p_imagen` TEXT CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish2_ci)   BEGIN
+    DECLARE v_error_msg VARCHAR(500);
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+        GET DIAGNOSTICS CONDITION 1 v_error_msg = MESSAGE_TEXT;
+        ROLLBACK;
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = v_error_msg;
+    END;
+
+    START TRANSACTION;
+        UPDATE insumo
+        SET Nombre = p_nombre,
+            `Categoría` = p_categoria,
+            Precio = p_precio,
+            Activo = p_activo,
+            Imagen = p_imagen
+        WHERE ID_Insumo = p_idInsumo;
+    COMMIT;
+END$$
+
+CREATE DEFINER=`root`@`localhost` PROCEDURE `ActualizarTipo` (IN `oldNombre` VARCHAR(50) CHARSET utf8mb4 COLLATE utf8mb4_spanish2_ci, IN `newNombre` VARCHAR(50) CHARSET utf8mb4 COLLATE utf8mb4_spanish2_ci)   BEGIN
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+        SET FOREIGN_KEY_CHECKS = 1;
+        ROLLBACK;
+        RESIGNAL;
+    END;
+
+    START TRANSACTION;
+        SET FOREIGN_KEY_CHECKS = 0;
+        UPDATE `tipos` SET nombre = newNombre WHERE nombre = oldNombre;
+        UPDATE `producto` SET `Tipo` = newNombre WHERE `Tipo` = oldNombre;
+        SET FOREIGN_KEY_CHECKS = 1;
+    COMMIT;
+END$$
+
+CREATE DEFINER=`root`@`localhost` PROCEDURE `EliminarIngrediente` (IN `p_idInsumo` VARCHAR(10) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish2_ci)   BEGIN
+    DECLARE v_error_msg VARCHAR(500);
+    -- Manejador de errores para la transacción
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+        GET DIAGNOSTICS CONDITION 1 v_error_msg = MESSAGE_TEXT;
+        ROLLBACK;
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = v_error_msg;
+    END;
+
+    START TRANSACTION;
+        -- Primero eliminamos la relación para evitar error de FK
+        DELETE FROM producto_tiene_insumo WHERE ID_Insumo = p_idInsumo;
+        -- Luego eliminamos el insumo
+        DELETE FROM insumo WHERE ID_Insumo = p_idInsumo;
+    COMMIT;
+END$$
+
+CREATE DEFINER=`root`@`localhost` PROCEDURE `eliminarProducto` (IN `idProducto` VARCHAR(12) CHARSET utf8mb4)  DETERMINISTIC BEGIN
+
+
+    DECLARE code_sql CHAR(5) DEFAULT '00000';
+    DECLARE msg_text TEXT;
+
+  
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION 
+    BEGIN
+        
+        GET DIAGNOSTICS CONDITION 1 
+            code_sql = RETURNED_SQLSTATE, msg_text = MESSAGE_TEXT;
+        
+    
+        ROLLBACK;
+       
+        SELECT code_sql AS SQL_State, msg_text AS Error_Mensaje;
+    END;
+
+    START TRANSACTION;
+
+        DELETE FROM producto_tiene_insumo 
+        WHERE ID_Producto = idProducto COLLATE utf8mb4_spanish2_ci;
+        
+        DELETE FROM orden_tiene_producto
+        WHERE ID_Producto = idProducto COLLATE utf8mb4_spanish2_ci;
+        
+        DELETE FROM producto_pertenece_evento
+        WHERE ID_Producto = idProducto COLLATE utf8mb4_spanish2_ci;
+        
+        DELETE FROM producto_tiene_promocion
+        WHERE ID_Producto = idProducto COLLATE utf8mb4_spanish2_ci;
+
+        DELETE FROM producto 
+        WHERE ID_Producto = idProducto COLLATE utf8mb4_spanish2_ci;
+
+    COMMIT;
+    SELECT 'Éxito' AS Estado, 'Producto eliminado correctamente' AS Error_Mensaje;
+END$$
+
+CREATE DEFINER=`root`@`localhost` PROCEDURE `obtener_promociones_por_tipo` (IN `tipo_promo` VARCHAR(2))   BEGIN
+    -- Lógica de Jerarquía EFRL (Event First, Royalty Last)
+    
+    IF tipo_promo = 'PE' THEN
+        -- 1. EVENTO: Mandan sobre todas.
+        SELECT 
+            p.Nombre AS Producto, 
+            promo.Nombre AS Plantilla_Promo, 
+            promo.Descuento, -- Nuevo campo agregado
+            'Evento' AS Origen
+        FROM evento_contiene_promocion ecp
+        JOIN producto_tiene_promocion ptp ON ecp.ID_Promocion = ptp.ID_Promocion
+        JOIN Producto p ON ptp.ID_Producto = p.ID_Producto
+        JOIN Promocion promo ON ptp.ID_Promocion = promo.ID_Promocion;
+
+    ELSEIF tipo_promo = 'PU' THEN
+        -- 2. ÚNICA: Solo si NO es Evento y NO es Royalty
+        SELECT 
+            p.Nombre AS Producto, 
+            promo.Nombre AS Plantilla_Promo, 
+            promo.Descuento, -- Nuevo campo agregado
+            'Única' AS Origen
+        FROM producto_tiene_promocion ptp
+        JOIN Producto p ON p.ID_Producto = ptp.ID_Producto
+        JOIN Promocion promo ON promo.ID_Promocion = ptp.ID_Promocion
+        WHERE ptp.ID_Promocion NOT IN (SELECT ID_Promocion FROM evento_contiene_promocion)
+          AND ptp.ID_Promocion NOT IN (SELECT ID_Promocion FROM estado_royalty_da_promociones);
+
+    ELSEIF tipo_promo = 'PR' THEN
+        -- 3. ROYALTY: El remanente (Si es Royalty pero NO es Evento)
+        SELECT 
+            p.Nombre AS Producto, 
+            promo.Nombre AS Plantilla_Promo, 
+            promo.Descuento, -- Nuevo campo agregado
+            'Royalty' AS Origen
+        FROM estado_royalty_da_promociones erp
+        JOIN producto_tiene_promocion ptp ON erp.ID_Promocion = ptp.ID_Promocion
+        JOIN Producto p ON ptp.ID_Producto = p.ID_Producto
+        JOIN Promocion promo ON ptp.ID_Promocion = promo.ID_Promocion
+        WHERE erp.ID_Promocion NOT IN (SELECT ID_Promocion FROM evento_contiene_promocion);
+
+    ELSE
+        -- Mensaje de error si el parámetro no es válido
+        SELECT 'Error: El parámetro debe ser PU, PE o PR' AS Mensaje;
+    END IF;
+END$$
+
+CREATE DEFINER=`root`@`localhost` PROCEDURE `sp_EstadoCliente` (IN `p_telefono` VARCHAR(20))   BEGIN
+    SELECT 
+        c.Nombre, 
+        c.Numero_Telefonico AS telefono, 
+        c.Nombre_Royalty AS nivel, 
+        c.Visitas_Actuales AS visitas
+    FROM cliente c
+     WHERE c.Numero_Telefonico = p_telefono COLLATE utf8mb4_spanish2_ci;
+END$$
+
+CREATE DEFINER=`root`@`localhost` PROCEDURE `sp_fetchEventos` (IN `p_Nombre_Royalty` VARCHAR(50))   BEGIN
+    SELECT E.Nombre AS Nombre_Evento, E.Fecha_Inicio, E.Fecha_final, E.Descripcion, ER.Nombre_Royalty
+    FROM evento E
+    INNER JOIN estado_royalty_da_eventos RE ON e.ID_Evento = RE.ID_Evento
+    INNER JOIN estado_royalty ER ON ER.Nombre_Royalty = RE.Nombre_Royalty
+    WHERE ER.Número_de_prioridad <= (
+        SELECT Número_de_prioridad 
+        FROM estado_royalty 
+        WHERE Nombre_Royalty = p_Nombre_Royalty COLLATE utf8mb4_spanish2_ci
+    )
+    ORDER BY ER.Número_de_prioridad DESC;
+END$$
+
+CREATE DEFINER=`root`@`localhost` PROCEDURE `sp_fetchPromociones` (IN `p_Nombre_Royalty` VARCHAR(50))   BEGIN
+    SELECT P.Nombre, P.Descuento, P.Fecha_inicio, P.Fecha_final, E.Nombre_Royalty
+    FROM estado_royalty E 
+    JOIN estado_royalty_da_promociones EP ON E.Nombre_Royalty = EP.Nombre_Royalty 
+    JOIN promocion P ON P.ID_Promocion = EP.ID_Promocion 
+    WHERE E.Número_de_prioridad <= (
+        SELECT Número_de_prioridad 
+        FROM estado_royalty 
+        WHERE Nombre_Royalty = p_Nombre_Royalty COLLATE utf8mb4_spanish2_ci
+    )
+    ORDER BY E.Número_de_prioridad DESC;
+END$$
+
+DELIMITER ;
 
 -- --------------------------------------------------------
 
@@ -220,7 +421,6 @@ CREATE TABLE `codigo_verificacion` (
 --
 
 INSERT INTO `codigo_verificacion` (`Numero_Telefonico`, `Codigo`, `Fecha_Creacion`, `Fecha_Expiracion`, `Usado`) VALUES
-('55-1156-9800', '834-42', '2026-02-05 06:00:00', '2026-02-05 00:00:00', 1),
 ('55-3225-9858', '889-50', '2026-09-10 06:00:00', '2026-09-10 00:00:00', 1),
 ('55-3885-6878', '183-38', '2026-04-25 06:00:00', '2026-04-25 00:00:00', 0),
 ('55-4606-3624', '697-13', '2026-06-30 06:00:00', '2026-06-30 00:00:00', 1),
@@ -390,6 +590,17 @@ INSERT INTO `estado_royalty` (`Nombre_Royalty`, `Número_de_prioridad`, `Descrip
 -- --------------------------------------------------------
 
 --
+-- Estructura de tabla para la tabla `estado_royalty_da_eventos`
+--
+
+CREATE TABLE `estado_royalty_da_eventos` (
+  `Nombre_Royalty` varchar(50) NOT NULL,
+  `ID_Evento` varchar(20) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish2_ci;
+
+-- --------------------------------------------------------
+
+--
 -- Estructura de tabla para la tabla `estado_royalty_da_promociones`
 --
 
@@ -410,26 +621,6 @@ INSERT INTO `estado_royalty_da_promociones` (`Nombre_Royalty`, `ID_Promocion`) V
 -- --------------------------------------------------------
 
 --
--- Estructura de tabla para la tabla `estado_royalty_da_eventos`
---
-
-CREATE TABLE `estado_royalty_da_eventos` (
-  `Nombre_Royalty` varchar(50) NOT NULL,
-  `ID_Evento` varchar(20) NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish2_ci;
-
---
--- Volcado de datos para la tabla `estado_royalty_da_eventos`
---
-
-INSERT INTO `estado_royalty_da_eventos` (`Nombre_Royalty`, `ID_Evento`) VALUES
-('Fan', 'EV23858748'),
-('Mega Fan', 'EV41575412'),
-('Super Fan', 'EV63596263');
-
--- --------------------------------------------------------
-
---
 -- Estructura de tabla para la tabla `evento`
 --
 
@@ -439,34 +630,33 @@ CREATE TABLE `evento` (
   `Descripcion` text DEFAULT NULL,
   `Activo` tinyint(1) DEFAULT 0,
   `Fecha_Inicio` date NOT NULL,
-  `Fecha_Final` date DEFAULT NULL
+  `Fecha_Final` date DEFAULT NULL,
+  `Imagen` text DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish2_ci;
 
 --
 -- Volcado de datos para la tabla `evento`
 --
 
-INSERT INTO `evento` (`ID_Evento`, `Nombre`, `Descripcion`, `Activo`, `Fecha_Inicio`, `Fecha_Final`) VALUES
-('EV00802058', 'Feria Sabores del Mundo en Crepa', '\"Evento internacional donde las crepas se inspiran en recetas de distintos países.\"', 0, '2019-04-26', '2022-07-26'),
-('EV03455709', 'Festival Giro Dorado', '\"Celebración dedicada al arte de lograr la crepa perfecta: delgada, uniforme y dorada. Incluye demostraciones en vivo y degustaciones especiales.\"', 0, '0006-06-26', '2028-07-26'),
-('EV08580736', 'Jornada Masa en Movimiento', '\"Demostración interactiva del proceso de preparación, desde la mezcla hasta el volteo perfecto.\"', 0, '0001-01-26', '0003-11-26'),
-('EV11967402', 'Encuentro Sabores en Capas', '\"Evento gastronómico que explora distintas combinaciones de rellenos y texturas en cada crepa.\"', 0, '2015-04-26', '2016-08-26'),
-('EV23858748', 'Noche Crepas & Estrellas', '\"Evento nocturno con ambiente romántico y luces cálidas, ideal para disfrutar crepas dulces bajo una atmósfera íntima.\"', 0, '0002-01-26', '0008-07-26'),
-('EV28249203', 'Semana del Antojo Feliz', '\"Promoción extendida con descuentos y sabores especiales cada día.\"', 0, '2013-06-26', '0008-09-26'),
-('EV36081746', 'Noche Fuego y Nutella', '\"Evento nocturno centrado en crepas dulces preparadas al momento con chocolate y cremas untables.\"', 0, '0008-05-26', '2029-09-26'),
-('EV40845617', 'Torneo Maestro Crepero', '\"Competencia entre chefs o participantes para crear la mejor crepa en sabor y presentación.\"', 1, '2028-04-26', '2010-09-26'),
-('EV41575412', 'Maratón 12 Sabores', '\"Reto gastronómico donde los asistentes prueban doce sabores distintos en una sola experiencia.\"', 0, '2022-04-26', '2012-12-26'),
-('EV47036119', 'Expo Toppings Infinitos', '\"Exhibición de ingredientes y coberturas variadas para personalizar cada crepa al gusto.\"', 1, '0003-05-26', '2011-07-26'),
-('EV47873322', 'Ruta de la Crepa Perfecta', '\"Experiencia de degustación donde los asistentes prueban distintas versiones hasta elegir su favorita.\"', 0, '0006-06-26', '2010-09-26'),
-('EV48230988', 'Brunch La Vuelta Francesa', '\"Brunch inspirado en la tradición francesa, con crepas acompañadas de café, mermeladas y opciones saladas.\"', 0, '2023-05-26', '2013-07-26'),
-('EV56656726', 'Feria Dulce Espiral', '\"Muestra enfocada en crepas dulces con combinaciones creativas, desde frutas frescas hasta salsas artesanales.\"', 1, '0008-06-26', '2030-07-26'),
-('EV63596263', 'Gala Sabor Circular', '\"Evento más formal que presenta crepas gourmet con ingredientes premium y presentación elegante.\"', 0, '0008-05-26', '2016-10-26'),
-('EV72477787', 'Carnaval Relleno Supremo', '\"Celebración con crepas de rellenos abundantes y combinaciones intensas, tanto dulces como saladas.\"', 0, '2028-04-26', '2011-08-26'),
-('EV72567097', 'Festival Crepa Lovers', '\"Celebración dedicada a los clientes frecuentes, con promociones y sabores exclusivos.\"', 1, '0001-07-26', '2030-09-26'),
-('EV78005678', 'Tarde Fruta & Chocolate', '\"Degustación enfocada en combinaciones clásicas de frutas frescas y chocolate fundido.\"', 1, '0008-03-26', '2027-12-26'),
-('EV91369328', 'Tarde Azúcar & Canela', '\"Evento temático con recetas tradicionales, destacando sabores cálidos y clásicos.\"', 1, '2010-02-26', '2013-09-26'),
-('EV94074382', 'Cumbre del Relleno Secreto', '\"Presentación de recetas especiales o de temporada que solo se revelan durante el evento.\"', 0, '0008-02-26', '2031-10-26'),
-('EV98982381', 'Sábado de Sartenes', '\"Día especial donde se preparan crepas frente al público, mostrando técnicas y recetas clásicas y modernas.\"', 1, '2026-02-26', '2016-10-26');
+INSERT INTO `evento` (`ID_Evento`, `Nombre`, `Descripcion`, `Activo`, `Fecha_Inicio`, `Fecha_Final`, `Imagen`) VALUES
+('EV00802058', 'Feria Sabores del Mundo en Crepa', '\"Evento internacional donde las crepas se inspiran en recetas de distintos países.\"', 0, '2019-04-26', '2022-07-26', NULL),
+('EV03455709', 'Festival Giro Dorado', '\"Celebración dedicada al arte de lograr la crepa perfecta: delgada, uniforme y dorada. Incluye demostraciones en vivo y degustaciones especiales.\"', 0, '0006-06-26', '2028-07-26', NULL),
+('EV11967402', 'Encuentro Sabores en Capas', '\"Evento gastronómico que explora distintas combinaciones de rellenos y texturas en cada crepa.\"', 0, '2015-04-26', '2016-08-26', NULL),
+('EV28249203', 'Semana del Antojo Feliz', '\"Promoción extendida con descuentos y sabores especiales cada día.\"', 0, '2013-06-26', '0008-09-26', NULL),
+('EV36081746', 'Noche Fuego y Nutella', '\"Evento nocturno centrado en crepas dulces preparadas al momento con chocolate y cremas untables.\"', 0, '0008-05-26', '2029-09-26', NULL),
+('EV40845617', 'Torneo Maestro Game Dev', '\"Competencia entre chefs o participantes para crear la mejor crepa en sabor y presentación.\"', 0, '2028-04-26', '2030-12-26', NULL),
+('EV41575412', 'Maratón 12 Sabores', '\"Reto gastronómico donde los asistentes prueban doce sabores distintos en una sola experiencia.\"', 0, '2022-04-26', '2012-12-26', NULL),
+('EV47036119', 'Expo Toppings Infinitos', '\"Exhibición de ingredientes y coberturas variadas para personalizar cada crepa al gusto.\"', 1, '0003-05-26', '2011-07-26', NULL),
+('EV47873322', 'Ruta de la Crepa Perfecta', '\"Experiencia de degustación donde los asistentes prueban distintas versiones hasta elegir su favorita.\"', 0, '0006-06-26', '2010-09-26', NULL),
+('EV48230988', 'Brunch La Vuelta Francesa', '\"Brunch inspirado en la tradición francesa, con crepas acompañadas de café, mermeladas y opciones saladas.\"', 0, '2023-05-26', '2013-07-26', NULL),
+('EV56656726', 'Feria Dulce Espiral', '\"Muestra enfocada en crepas dulces con combinaciones creativas, desde frutas frescas hasta salsas artesanales.\"', 1, '0008-06-26', '2030-07-26', NULL),
+('EV63596263', 'Gala Sabor Circular', '\"Evento más formal que presenta crepas gourmet con ingredientes premium y presentación elegante.\"', 0, '0008-05-26', '2016-10-26', NULL),
+('EV72477787', 'Carnaval Relleno Supremo', '\"Celebración con crepas de rellenos abundantes y combinaciones intensas, tanto dulces como saladas.\"', 0, '2028-04-26', '2011-08-26', NULL),
+('EV72567097', 'Festival Crepa Lovers', '\"Celebración dedicada a los clientes frecuentes, con promociones y sabores exclusivos.\"', 1, '0001-07-26', '2030-09-26', NULL),
+('EV78005678', 'Tarde Fruta & Chocolate', '\"Degustación enfocada en combinaciones clásicas de frutas frescas y chocolate fundido.\"', 1, '0008-03-26', '2027-12-26', NULL),
+('EV91369328', 'Tarde Azúcar & Canela', '\"Evento temático con recetas tradicionales, destacando sabores cálidos y clásicos.\"', 0, '2010-02-26', '2013-09-26', NULL),
+('EV94074382', 'Cumbre del Relleno Secreto', '\"Presentación de recetas especiales o de temporada que solo se revelan durante el evento.\"', 0, '0008-02-26', '2031-10-26', NULL),
+('EV98982381', 'Sábado de Sartenes', '\"Día especial donde se preparan crepas frente al público, mostrando técnicas y recetas clásicas y modernas.\"', 0, '2026-02-26', '2016-10-26', NULL);
 
 -- --------------------------------------------------------
 
@@ -485,10 +675,11 @@ CREATE TABLE `evento_contiene_promocion` (
 
 INSERT INTO `evento_contiene_promocion` (`ID_Evento`, `ID_Promocion`) VALUES
 ('EV03455709', 'PR44805876'),
-('EV08580736', 'PR33846028'),
 ('EV11967402', 'PR78222949'),
-('EV23858748', 'PR19912809'),
 ('EV36081746', 'PR27804270'),
+('EV40845617', 'PR32616125'),
+('EV40845617', 'PR45005334'),
+('EV40845617', 'PR98448306'),
 ('EV47036119', 'PR62258980'),
 ('EV47873322', 'PR59583389'),
 ('EV48230988', 'PR97994498'),
@@ -510,7 +701,6 @@ CREATE TABLE `insumo` (
   `Categoría` varchar(50) NOT NULL,
   `Precio` decimal(10,2) DEFAULT 0.00,
   `Activo` tinyint(1) DEFAULT 1,
-  `Tipo` varchar(20) DEFAULT NULL,
   `Imagen` text DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish2_ci;
 
@@ -518,104 +708,102 @@ CREATE TABLE `insumo` (
 -- Volcado de datos para la tabla `insumo`
 --
 
-INSERT INTO `insumo` (`ID_Insumo`, `Nombre`, `Categoría`, `Precio`, `Activo`, `Tipo`, `Imagen`) VALUES
-('IN00349247', 'champiñones', 'Platillo', 15.00, 1, 'Bebida', '15'),
-('IN02201393', 'Leche de soya', 'Platillo', 14.00, 1, 'Platillo', '15'),
-('IN02803814', 'Rajas de chile poblano', 'Platillo', 20.00, 1, 'Bebida', '15'),
-('IN03374506', 'arugula', 'Platillo', 13.00, 1, 'Platillo', '15'),
-('IN04894004', 'Kinder Delice', 'Platillo', 19.00, 1, 'Platillo', '15'),
-('IN05269621', 'Cajeta de la casa', 'Platillo', 13.00, 1, 'Bebida', '15'),
-('IN06332851', 'Nutella', 'Platillo', 23.00, 1, 'Bebida', '20'),
-('IN07050794', 'Nuez', 'Platillo', 22.00, 1, 'Bebida', '15'),
-('IN07275176', 'Chai', 'Platillo', 11.00, 1, 'Bebida', '15'),
-('IN09130588', 'Mermelada de fresa', 'Platillo', 19.00, 0, 'Platillo', '15'),
-('IN09927406', 'Fresa ', 'Platillo', 18.00, 1, 'Bebida', '15'),
-('IN12080526', 'Miel de maple', 'Platillo', 13.00, 0, 'Bebida', '15'),
-('IN13297648', 'Mocha', 'Platillo', 21.00, 1, 'Platillo', '15'),
-('IN13442507', 'Coco Tostado', 'Platillo', 14.00, 1, 'Bebida', '15'),
-('IN15204720', 'Albahaca', 'Platillo', 12.00, 1, 'Bebida', '15'),
-('IN15500744', 'Zarzamora', 'Platillo', 24.00, 1, 'Platillo', '15'),
-('IN16420525', 'Avellana', 'Platillo', 17.00, 1, 'Platillo', '15'),
-('IN18602747', 'queso parmesano', 'Platillo', 10.00, 1, 'Bebida', '15'),
-('IN18968294', 'Pesto', 'Platillo', 12.00, 1, 'Platillo', '15'),
-('IN19746459', 'Fresa', 'Platillo', 16.00, 0, 'Platillo', '15'),
-('IN19821749', 'Paleta Magnum', 'Platillo', 16.00, 1, 'Bebida', '15'),
-('IN20877882', 'Nieve', 'Platillo', 17.00, 1, 'Platillo', '25'),
-('IN21283895', 'Snickers', 'Platillo', 15.00, 1, 'Bebida', '15'),
-('IN21585929', 'Oreo', 'Platillo', 10.00, 1, 'Bebida', '15'),
-('IN21882955', 'Fresas naturales', 'Platillo', 23.00, 1, 'Bebida', '15'),
-('IN22197307', 'Lechera', 'Platillo', 23.00, 0, 'Platillo', '15'),
-('IN22595885', 'jamón', 'Platillo', 21.00, 1, 'Platillo', '15'),
-('IN24527442', 'Crema de cacahuate', 'Platillo', 22.00, 0, 'Bebida', '15'),
-('IN25799043', 'tres quesos', 'Platillo', 10.00, 1, 'Platillo', '15'),
-('IN28033998', 'Plátano', 'Platillo', 24.00, 0, 'Bebida', '15'),
-('IN29033240', 'Chai', 'Platillo', 21.00, 1, 'Bebida', '15'),
-('IN29165394', 'Philadelphia', 'Platillo', 11.00, 0, 'Bebida', '15'),
-('IN33700399', 'Arándanos', 'Platillo', 22.00, 1, 'Bebida', '15'),
-('IN34568576', 'Nutella', 'Platillo', 21.00, 1, 'Bebida', '15'),
-('IN36386148', 'Chai', 'Platillo', 18.00, 1, 'Platillo', '15'),
-('IN36405225', 'frosting', 'Platillo', 25.00, 1, 'Platillo', '15'),
-('IN37891778', 'Bubulubu', 'Platillo', 18.00, 1, 'Platillo', '15'),
-('IN37997343', 'Vainilla', 'Platillo', 12.00, 1, 'Platillo', '15'),
-('IN38338698', 'Kit Kat', 'Platillo', 22.00, 1, 'Platillo', '15'),
-('IN44222704', 'Pollo', 'Platillo', 22.00, 1, 'Platillo', '15'),
-('IN45987803', 'Moras Azules', 'Platillo', 25.00, 1, 'Platillo', '15'),
-('IN48200057', 'Queso mozzarella', 'Platillo', 24.00, 1, 'Bebida', '15'),
-('IN50256666', 'Leche de avena', 'Platillo', 24.00, 1, 'Platillo', '15'),
-('IN51420289', 'Leche de coco', 'Platillo', 22.00, 1, 'Bebida', '15'),
-('IN51564559', 'Ferrero', 'Platillo', 20.00, 1, 'Bebida', '15'),
-('IN52715589', 'Caramelo', 'Platillo', 20.00, 1, 'Bebida', '15'),
-('IN53190866', 'Avellana', 'Platillo', 17.00, 1, 'Bebida', '15'),
-('IN53235582', 'Caramelo', 'Platillo', 25.00, 1, 'Platillo', '15'),
-('IN53462867', 'Mora Azul', 'Platillo', 11.00, 1, 'Platillo', '15'),
-('IN54232707', 'Salsa de tomate', 'Platillo', 15.00, 1, 'Bebida', '15'),
-('IN56899901', 'Chispas de Chocolate', 'Platillo', 19.00, 1, 'Platillo', '15'),
-('IN58134969', 'Almendra', 'Platillo', 23.00, 1, 'Platillo', '15'),
-('IN58688454', 'Crema Irlandesa', 'Platillo', 11.00, 1, 'Bebida', '15'),
-('IN58759482', 'Elote', 'Platillo', 12.00, 1, 'Platillo', '15'),
-('IN59087286', 'Azúcar', 'Platillo', 18.00, 1, 'Bebida', '15'),
-('IN59824502', 'Nutella', 'Platillo', 19.00, 1, 'Platillo', '20'),
-('IN60313355', 'Manzana', 'Platillo', 21.00, 1, 'Platillo', '15'),
-('IN61916404', 'pistache natural', 'Platillo', 12.00, 1, 'Platillo', '15'),
-('IN62252551', 'Crema Irlandesa', 'Platillo', 18.00, 1, 'Platillo', '15'),
-('IN63629622', 'Nutella', 'Platillo', 24.00, 1, 'Bebida', '20'),
-('IN63793176', 'crema de chile poblano', 'Platillo', 25.00, 1, 'Bebida', '15'),
-('IN65318693', 'Vainilla', 'Platillo', 15.00, 1, 'Bebida', '15'),
-('IN65885034', 'peperoni', 'Platillo', 11.00, 1, 'Bebida', '15'),
-('IN68263429', 'Mazapán', 'Platillo', 25.00, 1, 'Platillo', '15'),
-('IN68300439', 'Jamaica', 'Platillo', 22.00, 1, 'Platillo', '15'),
-('IN68496031', 'Nieve de vainilla', 'Platillo', 16.00, 1, 'Platillo', '15'),
-('IN68797428', 'Cajeta', 'Platillo', 19.00, 0, 'Platillo', '15'),
-('IN68810175', 'Huevo', 'Platillo', 14.00, 1, 'Bebida', '15'),
-('IN69166690', 'Crema Irlandesa', 'Platillo', 21.00, 1, 'Platillo', '15'),
-('IN70367614', 'Gansito', 'Platillo', 23.00, 1, 'Bebida', '15'),
-('IN70788691', 'Frambuesa', 'Platillo', 17.00, 1, 'Platillo', '15'),
-('IN73813019', 'Manzana verde', 'Platillo', 13.00, 0, 'Platillo', '15'),
-('IN74154670', 'Avellana', 'Platillo', 16.00, 1, 'Platillo', '15'),
-('IN74201967', 'Plátano', 'Platillo', 24.00, 1, 'Platillo', '15'),
-('IN74484938', 'Crema de pistáche', 'Platillo', 21.00, 1, 'Bebida', '15'),
-('IN74817391', 'Leche deslactosada', 'Platillo', 11.00, 1, 'Platillo', '10'),
-('IN75784983', 'Frambuesa', 'Platillo', 23.00, 1, 'Bebida', '15'),
-('IN76382864', 'Crema de almendra', 'Platillo', 11.00, 1, 'Bebida', '15'),
-('IN76712465', 'Chocolate blanco', 'Platillo', 21.00, 1, 'Platillo', '15'),
-('IN78060232', 'Limón', 'Platillo', 20.00, 1, 'Platillo', '15'),
-('IN80392027', 'Crema de lotus', 'Platillo', 16.00, 1, 'Bebida', '15'),
-('IN80740094', 'Canela', 'Platillo', 15.00, 1, 'Bebida', '15'),
-('IN80873458', 'Madreselva', 'Platillo', 11.00, 1, 'Platillo', '15'),
-('IN82503493', 'Fresa', 'Platillo', 19.00, 1, 'Bebida', '15'),
-('IN82598534', 'Zarzamora', 'Platillo', 21.00, 1, 'Bebida', '15'),
-('IN84684230', 'Jamón serrano', 'Platillo', 18.00, 1, 'Platillo', '15'),
-('IN84763568', 'Leche de almendra', 'Platillo', 21.00, 1, 'Bebida', '15'),
-('IN85641851', 'Chocolate cookies n\' cream', 'Platillo', 19.00, 1, 'Platillo', '15'),
-('IN87022030', 'galleta lotus', 'Platillo', 18.00, 1, 'Platillo', '15'),
-('IN90060430', 'Mocha', 'Platillo', 11.00, 1, 'Bebida', '15'),
-('IN90562067', 'Flor de naranja', 'Platillo', 24.00, 1, 'Bebida', '15'),
-('IN93347807', 'Caramelo', 'Platillo', 24.00, 1, 'Bebida', '15'),
-('IN93539227', 'M&M\'s', 'Platillo', 13.00, 1, 'Platillo', '15'),
-('IN97359153', 'Cebolla', 'Platillo', 13.00, 1, 'Bebida', '15'),
-('IN98019116', 'Mocha', 'Platillo', 23.00, 1, 'Platillo', '15'),
-('IN98136923', 'Mermelada de zarzamora', 'Platillo', 23.00, 0, 'Platillo', '15'),
-('IN99852788', 'Vainilla', 'Platillo', 12.00, 1, 'Bebida', '15');
+INSERT INTO `insumo` (`ID_Insumo`, `Nombre`, `Categoría`, `Precio`, `Activo`, `Imagen`) VALUES
+('IN02201393', 'Leche de soya', 'Platillo', 14.00, 1, '15'),
+('IN02803814', 'Rajas de chile poblano', 'Platillo', 20.00, 1, '15'),
+('IN03374506', 'arugula', 'Platillo', 13.00, 1, '15'),
+('IN04894004', 'Kinder Delice', 'Platillo', 19.00, 1, '15'),
+('IN05269621', 'Cajeta de la casa', 'Platillo', 13.00, 1, '15'),
+('IN06332851', 'Nutella', 'Platillo', 23.00, 1, '20'),
+('IN07050794', 'Nuez', 'Platillo', 22.00, 1, '15'),
+('IN07275176', 'Chai', 'Platillo', 11.00, 1, '15'),
+('IN09130588', 'Mermelada de fresa', 'Platillo', 19.00, 0, '15'),
+('IN09927406', 'Fresa ', 'Platillo', 18.00, 1, '15'),
+('IN12080526', 'Miel de maple', 'Platillo', 13.00, 0, '15'),
+('IN13297648', 'Mocha', 'Platillo', 21.00, 1, '15'),
+('IN13442507', 'Coco Tostado', 'Platillo', 14.00, 1, '15'),
+('IN15204720', 'Albahaca', 'Platillo', 12.00, 1, '15'),
+('IN15500744', 'Zarzamora', 'Platillo', 24.00, 1, '15'),
+('IN16420525', 'Avellana', 'Platillo', 17.00, 1, '15'),
+('IN18602747', 'queso parmesano', 'Platillo', 10.00, 1, '15'),
+('IN18968294', 'Pesto', 'Platillo', 12.00, 1, '15'),
+('IN19746459', 'Fresa', 'Platillo', 16.00, 0, '15'),
+('IN19821749', 'Paleta Magnum', 'Platillo', 16.00, 1, '15'),
+('IN20877882', 'Nieve', 'Platillo', 17.00, 1, '25'),
+('IN21283895', 'Snickers', 'Platillo', 15.00, 1, '15'),
+('IN21585929', 'Oreo', 'Platillo', 10.00, 1, '15'),
+('IN21882955', 'Fresas naturales', 'Platillo', 23.00, 1, '15'),
+('IN22197307', 'Lechera', 'Platillo', 23.00, 0, '15'),
+('IN22595885', 'jamón', 'Platillo', 21.00, 1, '15'),
+('IN24527442', 'Crema de cacahuate', 'Platillo', 22.00, 0, '15'),
+('IN25799043', 'tres quesos', 'Platillo', 10.00, 1, '15'),
+('IN28033998', 'Plátano', 'Platillo', 24.00, 0, '15'),
+('IN29033240', 'Chai', 'Platillo', 21.00, 1, '15'),
+('IN29165394', 'Philadelphia', 'Platillo', 11.00, 0, '15'),
+('IN33700399', 'Arándanos', 'Platillo', 22.00, 1, '15'),
+('IN34568576', 'Nutella', 'Platillo', 21.00, 1, '15'),
+('IN36386148', 'Chai', 'Platillo', 18.00, 1, '15'),
+('IN36405225', 'frosting', 'Platillo', 25.00, 1, '15'),
+('IN37891778', 'Bubulubu', 'Platillo', 18.00, 1, '15'),
+('IN37997343', 'Vainilla', 'Platillo', 12.00, 1, '15'),
+('IN38338698', 'Kit Kat', 'Platillo', 22.00, 1, '15'),
+('IN44222704', 'Pollo', 'Platillo', 22.00, 1, '15'),
+('IN45987803', 'Moras Azules', 'Platillo', 25.00, 1, '15'),
+('IN48200057', 'Queso mozzarella', 'Platillo', 24.00, 1, '15'),
+('IN50256666', 'Leche de avena', 'Platillo', 24.00, 1, '15'),
+('IN51420289', 'Leche de coco', 'Platillo', 22.00, 1, '15'),
+('IN51564559', 'Ferrero', 'Platillo', 20.00, 1, '15'),
+('IN52715589', 'Caramelo', 'Platillo', 20.00, 1, '15'),
+('IN53190866', 'Avellana', 'Platillo', 17.00, 1, '15'),
+('IN53235582', 'Caramelo', 'Platillo', 25.00, 1, '15'),
+('IN53462867', 'Mora Azul', 'Platillo', 11.00, 1, '15'),
+('IN54232707', 'Salsa de tomate', 'Platillo', 15.00, 1, '15'),
+('IN56899901', 'Chispas de Chocolate', 'Platillo', 19.00, 1, '15'),
+('IN58134969', 'Almendra', 'Platillo', 23.00, 1, '15'),
+('IN58688454', 'Crema Irlandesa', 'Platillo', 11.00, 1, '15'),
+('IN58759482', 'Elote', 'Platillo', 12.00, 1, '15'),
+('IN59087286', 'Azúcar', 'Platillo', 18.00, 1, '15'),
+('IN59824502', 'Nutella', 'Platillo', 19.00, 1, '20'),
+('IN60313355', 'Manzana', 'Platillo', 21.00, 1, '15'),
+('IN61916404', 'pistache natural', 'Platillo', 12.00, 1, '15'),
+('IN62252551', 'Crema Irlandesa', 'Platillo', 18.00, 1, '15'),
+('IN63629622', 'Nutella', 'Platillo', 24.00, 1, '20'),
+('IN63793176', 'crema de chile poblano', 'Platillo', 25.00, 1, '15'),
+('IN65318693', 'Vainilla', 'Platillo', 15.00, 1, '15'),
+('IN65885034', 'peperoni', 'Platillo', 11.00, 1, '15'),
+('IN68263429', 'Mazapán', 'Platillo', 25.00, 1, '15'),
+('IN68300439', 'Jamaica', 'Platillo', 22.00, 1, '15'),
+('IN68496031', 'Nieve de vainilla', 'Platillo', 16.00, 1, '15'),
+('IN68797428', 'Cajeta', 'Platillo', 19.00, 0, '15'),
+('IN68810175', 'Huevo', 'Platillo', 14.00, 1, '15'),
+('IN69166690', 'Crema Irlandesa', 'Platillo', 21.00, 1, '15'),
+('IN70367614', 'Gansito', 'Platillo', 23.00, 1, '15'),
+('IN70788691', 'Frambuesa', 'Platillo', 17.00, 1, '15'),
+('IN73813019', 'Manzana verde', 'Platillo', 13.00, 0, '15'),
+('IN74154670', 'Avellana', 'Platillo', 16.00, 1, '15'),
+('IN74201967', 'Plátano', 'Platillo', 24.00, 1, '15'),
+('IN74484938', 'Crema de pistáche', 'Platillo', 21.00, 1, '15'),
+('IN74817391', 'Leche deslactosada', 'Platillo', 11.00, 1, '10'),
+('IN75784983', 'Frambuesa', 'Platillo', 23.00, 1, '15'),
+('IN76382864', 'Crema de almendra', 'Platillo', 11.00, 1, '15'),
+('IN76712465', 'Chocolate blanco', 'Platillo', 21.00, 1, '15'),
+('IN78060232', 'Limón', 'Platillo', 20.00, 1, '15'),
+('IN80392027', 'Crema de lotus', 'Platillo', 16.00, 1, '15'),
+('IN80740094', 'Canela', 'Platillo', 15.00, 1, '15'),
+('IN80873458', 'Madreselva', 'Platillo', 11.00, 1, '15'),
+('IN82503493', 'Fresa', 'Platillo', 19.00, 1, '15'),
+('IN82598534', 'Zarzamora', 'Platillo', 21.00, 1, '15'),
+('IN84684230', 'Jamón serrano', 'Platillo', 18.00, 1, '15'),
+('IN84763568', 'Leche de almendra', 'Platillo', 21.00, 1, '15'),
+('IN85641851', 'Chocolate cookies n\' cream', 'Platillo', 19.00, 1, '15'),
+('IN87022030', 'galleta lotus', 'Platillo', 18.00, 1, '15'),
+('IN90060430', 'Mocha', 'Platillo', 11.00, 1, '15'),
+('IN90562067', 'Flor de naranja', 'Platillo', 24.00, 1, '15'),
+('IN93347807', 'Caramelo', 'Platillo', 24.00, 1, '15'),
+('IN93539227', 'M&M\'s', 'Platillo', 13.00, 1, '15'),
+('IN97359153', 'Cebolla', 'Platillo', 13.00, 1, '15'),
+('IN98136923', 'Mermelada de zarzamora', 'Platillo', 23.00, 0, '15'),
+('IN99852788', 'Vainilla', 'Platillo', 12.00, 1, '15');
 
 -- --------------------------------------------------------
 
@@ -765,12 +953,10 @@ CREATE TABLE `orden_tiene_producto` (
 INSERT INTO `orden_tiene_producto` (`ID_Orden`, `ID_Producto`, `Cantidad`, `Precio_Venta`) VALUES
 ('OD03274399', 'PD77475653', 2, 310.00),
 ('OD03911196', 'PD47763167', 2, 320.00),
-('OD04094069', 'PD13600220', 4, 396.00),
 ('OD06185513', 'PD62833458', 2, 310.00),
 ('OD06247561', 'PD27175068', 5, 800.00),
 ('OD07290680', 'PD30894780', 3, 480.00),
 ('OD13125507', 'PD79889565', 3, 480.00),
-('OD13593992', 'PD30576515', 2, 160.00),
 ('OD15848927', 'PD99905805', 2, 60.00),
 ('OD16211107', 'PD18516039', 5, 750.00),
 ('OD16481371', 'PD39713286', 5, 850.00),
@@ -985,87 +1171,93 @@ CREATE TABLE `producto` (
 --
 
 INSERT INTO `producto` (`ID_Producto`, `Tamaño`, `Categoría`, `Nombre`, `Precio`, `Disponible`, `Tipo`, `Imagen`) VALUES
-('PD00387421', 'Chico', 'Platillo', 'Oreo', 155.00, 1, 'Especiales', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSQdyxtqipw0WM6la2yQR9S8zAPHpytii7cIw&s'),
-('PD01400719', 'Chico', 'Platillo', 'Cookies N\' Cream', 155.00, 1, 'Especiales', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRDPLJEYcnQ4U-l-lfscAIBi1troxfm3uEEmA&s'),
-('PD01887055', 'Chico', 'Platillo', '4 Quesos', 155.00, 1, 'Saladas', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQbEZwXDbBsJy80jBGwxHhB04UgEuJ2Z95zmg&s'),
-('PD01993843', 'Chico', 'Bebidas', 'Espresso', 40.00, 1, 'Bebidas Calientes', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSxxdoFNAcppkd8DKoyJ9X1ppnP5pIlScEHJA&s'),
-('PD02624644', 'Chico', 'Platillo', 'M&M´s', 155.00, 1, 'Especiales', 'https://www.cocinadelirante.com/800x600/filters:format(webp):quality(75)/sites/default/files/images/2025/04/receta-de-crepas-con-queso-y-platano.jpg'),
-('PD03687244', 'Chico', 'Platillo', 'Mazapán', 140.00, 0, 'Especiales', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQNmO4dfIq0PDJ7w8b4llpPzSmRef3nZKn15g&s'),
-('PD09374303', 'Chico', 'Bebidas', 'Iced Latte', 85.00, 1, 'Bebidas Frías', 'https://myeverydaytable.com/iced-latte/'),
-('PD10782835', 'Chico', 'Bebidas', 'Refresco', 45.00, 1, 'Otras Bebidas', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQocj0qc80fSGx0_CzOd5nU3AfC4eDh8NuXCw&s'),
-('PD12662761', 'Chico', 'Bebidas', 'Jamaica con arándanos, lima y madreselva', 70.00, 1, 'Infusiones', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS_5wgNA6S_FGDGyR3WYZwiY5O23QrHfU9Lrg&s'),
-('PD12929845', 'Chico', 'Bebidas', 'Mocha', 99.00, 1, 'Frappes', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSdeikbrU4NecryZO5GX72Ps13tZM2rns4Z2Q&s'),
-('PD13048411', 'Chico', 'Platillo', 'La Champi', 155.00, 1, 'Saladas', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQpF5f5ZsW28SGIE8Igp1zibfeHx6ax2EHtag&s'),
-('PD13600220', 'Chico', 'Bebidas', 'Dirty Chai', 99.00, 1, 'Capuccinos & Lattes', 'https://hips.hearstapps.com/hmg-prod/images/cafe-1599479980.jpg'),
-('PD14332305', 'Chico', 'Bebidas', 'Matcha', 99.00, 1, 'Frappes', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQywjNVWD6kkk6bBLkEhDKyKbmXkVRQ_pfknA&s'),
-('PD16012525', 'Chico', 'Bebidas', 'Frapuccino', 99.00, 1, 'Frappes', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQjgDUxsc0OW5htUWs0YXGcJ0szHOrTtoTx_w&s'),
-('PD18516039', 'Chico', 'Platillo', 'Coco Almond', 150.00, 1, 'Artesanales', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTHATP_XWITucUtg6r4y4IYcxCrCVDpmEY0Sg&s'),
-('PD18785978', 'Chico', 'Platillo', 'Dos ingredientes', 105.00, 1, 'Arma tu crepa', 'https://www.directoalpaladar.com.mx/postres/como-hacer-masa-para-crepas-muy-ligeras-finitas-jugosas-ideal-para-hacer-crepas-dulces-saladas'),
-('PD19634039', 'Chico', 'Bebidas', 'Matchai', 99.00, 1, 'Frappes', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR2XabaGar5zJxmaTKTPZHhB5kuJhrUxWTZlA&s'),
-('PD20020753', 'Chico', 'Bebidas', 'Chai', 99.00, 1, 'Frappes', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTYbghvQZMQZiZwQyq4mahtzAnQcv0u-qaxgQ&s'),
-('PD21109349', 'Chico', 'Platillo', 'Magnum', 155.00, 1, 'Especiales', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS4pAf7n3wHyF1F1DhJN9WZaGxr5ripsFZUXA&s'),
-('PD22069675', 'Chico', 'Bebidas', 'Chocolate', 99.00, 1, 'Malteadas', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQxqzWVbW43H-jfkxBGNHU8MGa1sN-Xbe3adg&s'),
-('PD23031389', 'Chico', 'Platillo', 'La Dolce Phila', 109.00, 1, 'Especiales', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSm7jFEBlC1JoRUIQwaZ4KAX4BhDuznYB6e-A&s'),
-('PD27175068', 'Chico', 'Platillo', 'Rajas', 160.00, 1, 'Saladas', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRX6B4tiaR3T6Ca3hGLra6B-yKPw0MsDb13ZQ&s'),
-('PD27496576', 'Chico', 'Bebidas', 'Chamoyada Mango', 90.00, 1, 'Frappes', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTdmUFNnfEze_LjNdXoyBHTK_LfxCiCBpLxIg&s'),
-('PD28020090', 'Chico', 'Bebidas', 'Flat Whiite', 75.00, 1, 'Capuccinos & Lattes', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTod1nJcAwKG6BWdSpGAGmccz_Izh8D1S7Agw&s'),
-('PD28985193', 'Chico', 'Bebidas', 'Carlos V', 99.00, 1, 'Frappes', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQFlI7CKVM0EqyWJxfTJn9wG0CQNXOFLkqGFw&s'),
-('PD30576515', 'Chico', 'Bebidas', 'Choocolate caliente', 80.00, 1, 'Capuccinos & Lattes', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQId_C66C6vGUyD34P_9U7Q0_LDhZDtMbfUDQ&s'),
-('PD30843175', 'Chico', 'Bebidas', 'Chai Latte', 80.00, 1, 'Capuccinos & Lattes', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQDXlnqFGW57ScvZmnMq9d5AVe7f3qfw49KAg&s'),
-('PD30894780', 'Chico', 'Platillo', 'White Pistachio', 160.00, 0, 'Artesanales', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ-oOvHgSqNhQ90eLgrNy9ysZRzKaBFBDkyZw&s'),
-('PD33834469', 'Chico', 'Bebidas', 'Oreo', 99.00, 1, 'Frappes', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTX6mqLk65Z1VzgUa-Jp8ERgSaLdm03wQx1XQ&s'),
-('PD34797161', 'Chico', 'Bebidas', 'Chocolate abuelita', 95.00, 1, 'Frappes', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSg_XpWB_s5dGimGSZSZqX8kR7mkBqb9PZ5tw&s'),
-('PD35805212', 'Chico', 'Platillo', 'Rol de Canela', 160.00, 0, 'Artesanales', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTEr7uwCOR_RA9vz4wLYe_-l_Phk6_zCPff3A&s'),
-('PD39713286', 'Chico', 'Platillo', 'Rosendo Nieblas', 170.00, 1, 'Saladas', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRvwpdUSumcZbObzis337Og907iWv7AeGalaQ&s'),
-('PD43258149', 'Chico', 'Bebidas', 'Americano', 65.00, 1, 'Bebidas Calientes', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSxra9UmQTaLETHKRBIU29BR-Ae72sJW47L5w&s'),
-('PD44220776', 'Chico', 'Bebidas', 'Mocha Latte', 80.00, 1, 'Capuccinos & Lattes', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQOy3668eBzYkJxeU7ltAs36hL7Xpj1jJedHA&s'),
-('PD45693038', 'Chico', 'Platillo', 'Honey Honey', 135.00, 1, 'Especiales', 'https://buenprovecho.hn/wp-content/uploads/2019/01/Crepas-de-fresa-1.jpg'),
-('PD46783344', 'Chico', 'Bebidas', 'Mazapán', 95.00, 1, 'Frappes', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSnawgStunMhXfQQEmJ2SASocJm6e97QGGHlw&s'),
-('PD47763167', 'Chico', 'Platillo', 'Maree Crepe', 160.00, 1, 'Saladas', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS_aO99Ddg3gA4Fr-dU5xZOwVOY9TOyx6L32w&s'),
-('PD48593340', 'Chico', 'Platillo', 'Un ingrediente', 99.00, 1, 'Arma tu crepa', 'https://www.cocinafacil.com.mx/recetas/crepas-con-frutas'),
-('PD48628594', 'Chico', 'Platillo', 'Cinn-Almond Crepe', 145.00, 0, 'Artesanales', 'https://www.instagram.com/p/DOfBkVpjdBa/'),
-('PD52816612', 'Chico', 'Bebidas', 'Nutella', 99.00, 1, 'Frappes', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTNwSeeZA_CqEouT5EN5W3bxIqrjCcRSsIx5Q&s'),
-('PD52877596', 'Chico', 'Bebidas', 'Manzanilla con moras zules y albahaca', 70.00, 1, 'Infusiones', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSKHhRYPy6tcNXXSsLGU-cCF7HER2bPz4F0ig&s'),
-('PD53218892', 'Chico', 'Bebidas', 'Dirty Chai Frappe', 109.00, 1, 'Frappes', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQoD2HGHi85Q8KG6CXwq_Up07nmoubrSA_e0g&s'),
-('PD57856718', 'Chico', 'Platillo', 'Kinder Delice', 155.00, 0, 'Especiales', 'https://revistamolcajete.com/wp-content/uploads/2019/03/IMG_9765-1.jpg'),
-('PD58041511', 'Chico', 'Platillo', 'La Española', 155.00, 1, 'Saladas', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTkRuiFsXGBC9TZSeWDbTVjhMd-HVO85sBKow&s'),
-('PD60185744', 'Chico', 'Platillo', 'Golden Bites', 140.00, 0, 'Especiales', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSRIpnMo4Rp39xPMWa1FLlXR11q6tHW7eWAjA&s'),
-('PD60339348', 'Chico', 'Platillo', 'Kit Kat', 155.00, 1, 'Especiales', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS8Ji1HTWSQ4gmhIVCRgliuvE0NGcKAWdhing&s'),
-('PD62154365', 'Chico', 'Bebidas', 'Iced Dirty Matcha', 105.00, 1, 'Bebida Fría', 'https://http2.mlstatic.com/D_NQ_NP_602534-MLM80622035266_112024-O.webp'),
-('PD62321669', 'Chico', 'Platillo', 'Berry Lotus', 160.00, 0, 'Especiales', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQGlIK60yqu2i866dM9orvLUPwylIiCNv16xA&s'),
-('PD62596246', 'Chico', 'Bebidas', 'Latte', 75.00, 1, 'Capuccinos & Lattes', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSrc2tPztEd3gDD0g_tw2hoFgQzY6oclHt3FQ&s'),
-('PD62833458', 'Chico', 'Platillo', 'Snickers', 155.00, 1, 'Especiales', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRBgZ36J1BV_bl2NH4--AgCenT2hGylAviiJw&s'),
-('PD63821765', 'Chico', 'Bebidas', 'Oreo', 99.00, 1, 'Malteadas', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQnIqURpZHzlti1iF4xe2If7Am3HxJ8vQKwMw&s'),
-('PD66334927', 'Chico', 'Bebidas', 'Vainilla', 99.00, 1, 'Malteadas', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRA3re4lXRJr_f8wr3HTkuXOi2NUbEnSFg2nA&s'),
-('PD66451976', 'Chico', 'Bebidas', 'Motchai Frío', 89.00, 1, 'Bebida Frío', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRQlE1qLRDats1qjW5dBXtkKcYd2tZh4ihRYA&s'),
-('PD68133903', 'Chico', 'Platillo', 'La Pizzeria', 155.00, 1, 'Saladas', 'https://sabrosano.com/wp-content/uploads/2020/05/Crepas_jamon_queso_principal.jpg'),
-('PD68599017', 'Chico', 'Platillo', 'Manzane', 155.00, 1, 'Especiales', 'https://lomaculinaria.com/wp-content/uploads/2023/03/Crepas-Loma-Culinaria-1200x800-1.jpg'),
-('PD68787354', 'Chico', 'Bebidas', 'Chai Frío', 89.00, 1, 'Bebidas Frías', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRQlE1qLRDats1qjW5dBXtkKcYd2tZh4ihRYA&s'),
-('PD69673358', 'Chico', 'Bebidas', 'Macchiato', 50.00, 1, 'Bebidas Calientes', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQGfcxDnQWVvTH1ycIUXZpNtd8TkPf-11oiRw&s'),
-('PD71724278', 'Chico', 'Platillo', 'Cinn-Apple', 150.00, 0, 'Artesanales', 'https://www.laylita.com/recetas/wp-content/uploads/2017/04/Receta-de-las-crepas-francesas.jpg'),
-('PD72174317', 'Chico', 'Bebidas', 'Té Verde Jazmín', 60.00, 1, 'Tés e Infusiones', 'https://blogs.unitec.mx/hubfs/Imported_Blog_Media/cosas-que-debes-saber-del-cafe-1-Dec-17-2022-07-16-41-5859-PM.jpg'),
-('PD72945147', 'Chico', 'Platillo', 'La Verde', 155.00, 1, 'Saladas', 'https://editorialtelevisa.brightspotcdn.com/dims4/default/a5b31ad/2147483647/strip/true/crop/995x560+3+0/resize/1000x563!/quality/90/?url=https%3A%2F%2Fk2-prod-editorial-televisa.s3.us-east-1.amazonaws.com%2Fbrightspot%2Fwp-content%2Fuploads%2F2019%2F01%2Fcrepas-espinacas-consentir-paladar.jpg'),
-('PD76693622', 'Chico', 'Bebidas', 'Matcha Frío', 89.00, 1, 'Bebidas Frías', 'https://http2.mlstatic.com/D_NQ_NP_780150-MLM100986687321_122025-O.webp'),
-('PD77126100', 'Chico', 'Bebidas', 'Dirty Matcha Frappe', 109.00, 1, 'Frappes', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS_Z7vVaeSVKy-lJ2S7VAO4sln1hHher0PdTg&s'),
-('PD77475653', 'Chico', 'Platillo', 'Gansito', 155.00, 0, 'Especiales', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSYx0yyZD3mvwe1_wMSHsKGSH-6sz82D9PdoA&s'),
-('PD79889565', 'Chico', 'Platillo', 'Poblana', 160.00, 1, 'Saladas', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSs8l_-zvcAVaji7WJXPTliXRbQFDkqhzrzcw&s'),
-('PD80503802', 'Chico', 'Bebidas', 'Cajeta', 99.00, 1, 'Frappes', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR1oayZLDSevinYYDe2FxteeZhq0DbQTCDFZA&s'),
-('PD80603665', 'Chico', 'Bebidas', 'Fresa', 99.00, 1, 'Malteadas', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQxqzWVbW43H-jfkxBGNHU8MGa1sN-Xbe3adg&s'),
-('PD81370959', 'Chico', 'Platillo', 'Reese\'s', 155.00, 1, 'Especiales', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSE_dc4i2TENpte8hxjVKtds0kOz2qj7I9oEw&s'),
-('PD83401881', 'Chico', 'Bebidas', 'Americano Frío', 75.00, 1, 'Bebidas Frías', 'https://thumbs.dreamstime.com/b/caf%C3%A9-de-americano-o-fr%C3%ADo-152844660.jpg'),
-('PD84176755', 'Chico', 'Bebidas', 'Cappuccino', 75.00, 1, 'Capuccinos & Lattes', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSHMDzwvg_QgORdgVseVpUqGsqOnWE84bdZZw&ss'),
-('PD84630803', 'Chico', 'Platillo', 'Bubulubu', 155.00, 1, 'Especiales', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQk0i1_C3uCVTS8eZ9yaV4WJRlEWUEXRB1qfQ&s'),
-('PD85252812', 'Chico', 'Platillo', 'Lotus de Nuez', 160.00, 0, 'Especiales', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRuNAWoxe4-U8ZuUNT2xmlononuW5dQUSntgg&s'),
-('PD86903926', 'Chico', 'Platillo', 'Ferrero Rocher', 160.00, 0, 'Especiales', 'https://cdn0.recetasgratis.net/es/posts/3/4/4/crepas_de_fresa_con_queso_crema_57443_orig.jpg'),
-('PD87643434', 'Chico', 'Bebidas', 'Jamaica con fresa, limón y flor de naranja', 70.00, 1, 'Infusiones', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ2P-RIJ6PQkzxr_F5b9S65qYv-pvAzgKKwcw&s'),
-('PD88828639', 'Chico', 'Platillo', 'Choco Berries', 145.00, 1, 'Especiales', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQRPgmlt1HohAFzJ1E7a5dQqmQTSAvb2LX2ww&s'),
-('PD88871658', 'Chico', 'Platillo', 'Tres ingredientes', 109.00, 1, 'Arma tu crepa', 'https://peopleenespanol.com/recetas/10075-masa-para-crepas-b-sica/'),
-('PD88949720', 'Chico', 'Bebidas', 'Manzanilla con zarzamora, frambuesa y jamaica', 70.00, 1, 'Infusiones', 'https://tofuu.getjusto.com/orioneat-local/resized2/nFs4qZ6WEoaNw8v8b-300-x.webp'),
-('PD96171348', 'Chico', 'Bebidas', 'Iced Dirty Chai', 105.00, 1, 'Bebidas Frías', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRWkqU1Y47HvI9PdCuD0u_rWyDOM0gUMhqdLQ&s'),
-('PD96745922', 'Chico', 'Bebidas', 'Té Verde Clásico', 60.00, 1, 'Tés e Infusiones', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRBy0eJCNbaXWLZYe2DMAF8fsrMXrByb109GA&s'),
-('PD97764058', 'Chico', 'Bebidas', 'Chamoyada Jamaica', 90.00, 1, 'Frappes', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ_MhuGUKsc5AH44EDjIvPXoj_MQvwItHcexw&s'),
-('PD99200939', 'Chico', 'Bebidas', 'Mocha Frío', 89.00, 1, 'Bebidas Frías', 'https://images.sabroson.com.mx/insecure/fit/1000/1000/ce/0/plain/https://sabroson-assests.s3.us-west-2.amazonaws.com/af268c/prods/EhUJ8Es8eLkTBHguQPs7IoZ683xwohKsTDfpBkWX.png@webp'),
-('PD99905805', 'Chico', 'Bebidas', 'Agua', 30.00, 1, 'Otras Bebidas', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQIROd_m5TqdXbs60Y_ajK7p9pygWly6Y3zVA&s');
+('PD00387421', 'Chico', 'Platillo', 'Oreo', 155.00, 1, 'Artesanal', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSQdyxtqipw0WM6la2yQR9S8zAPHpytii7cIw&s'),
+('PD01400719', 'Chico', 'Platillo', 'Cookies N\' Cream', 155.00, 1, 'Artesanal', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRDPLJEYcnQ4U-l-lfscAIBi1troxfm3uEEmA&s'),
+('PD01887055', 'Chico', 'Platillo', '4 Quesos', 155.00, 1, 'Salado', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQbEZwXDbBsJy80jBGwxHhB04UgEuJ2Z95zmg&s'),
+('PD01993843', 'Chico', 'Bebidas', 'Espresso con soya', 25.00, 0, 'Caliente', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSxxdoFNAcppkd8DKoyJ9X1ppnP5pIlScEHJA&s'),
+('PD02624644', 'Chico', 'Platillo', 'M&M´s', 155.00, 1, 'Artesanal', 'https://www.cocinadelirante.com/800x600/filters:format(webp):quality(75)/sites/default/files/images/2025/04/receta-de-crepas-con-queso-y-platano.jpg'),
+('PD03687244', 'Chico', 'Platillo', 'Mazapán', 140.00, 0, 'Artesanal', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQNmO4dfIq0PDJ7w8b4llpPzSmRef3nZKn15g&s'),
+('PD09374303', 'Chico', 'Bebidas', 'Iced Latte', 85.00, 0, 'Frío', 'https://myeverydaytable.com/iced-latte/'),
+('PD10782835', 'Chico', 'Bebidas', 'Refresco', 45.00, 1, 'Otros', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQocj0qc80fSGx0_CzOd5nU3AfC4eDh8NuXCw&s'),
+('PD12662761', 'Chico', 'Bebidas', 'Jamaica con arándanos, lima y madreselva', 70.00, 1, 'Caliente', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS_5wgNA6S_FGDGyR3WYZwiY5O23QrHfU9Lrg&s'),
+('PD12929845', 'Chico', 'Bebidas', 'Mocha', 99.00, 1, 'Frío', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSdeikbrU4NecryZO5GX72Ps13tZM2rns4Z2Q&s'),
+('PD13048411', 'Chico', 'Platillo', 'La Champi', 155.00, 1, 'Salado', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQpF5f5ZsW28SGIE8Igp1zibfeHx6ax2EHtag&s'),
+('PD14332305', 'Chico', 'Bebidas', 'Matcha', 99.00, 1, 'Frío', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQywjNVWD6kkk6bBLkEhDKyKbmXkVRQ_pfknA&s'),
+('PD16012525', 'Chico', 'Bebidas', 'Frapuccino', 99.00, 1, 'Frío', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQjgDUxsc0OW5htUWs0YXGcJ0szHOrTtoTx_w&s'),
+('PD18516039', 'Chico', 'Platillo', 'Coco Almond', 150.00, 1, 'Artesanal', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTHATP_XWITucUtg6r4y4IYcxCrCVDpmEY0Sg&s'),
+('PD18785978', 'Chico', 'Platillo', 'Dos ingredientes', 105.00, 1, 'Otros', 'https://www.directoalpaladar.com.mx/postres/como-hacer-masa-para-crepas-muy-ligeras-finitas-jugosas-ideal-para-hacer-crepas-dulces-saladas'),
+('PD19634039', 'Chico', 'Bebidas', 'Matchai', 99.00, 1, 'Frío', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR2XabaGar5zJxmaTKTPZHhB5kuJhrUxWTZlA&s'),
+('PD20020753', 'Chico', 'Bebidas', 'Chai', 99.00, 1, 'Frío', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTYbghvQZMQZiZwQyq4mahtzAnQcv0u-qaxgQ&s'),
+('PD21109349', 'Chico', 'Platillo', 'Magnum', 155.00, 1, 'Artesanal', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS4pAf7n3wHyF1F1DhJN9WZaGxr5ripsFZUXA&s'),
+('PD22069675', 'Chico', 'Bebidas', 'Chocolate', 99.00, 1, 'Frío', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQxqzWVbW43H-jfkxBGNHU8MGa1sN-Xbe3adg&s'),
+('PD23031389', 'Chico', 'Platillo', 'La Dolce Phila', 109.00, 1, 'Artesanal', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSm7jFEBlC1JoRUIQwaZ4KAX4BhDuznYB6e-A&s'),
+('PD27175068', 'Chico', 'Platillo', 'Rajas', 160.00, 1, 'Salado', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRX6B4tiaR3T6Ca3hGLra6B-yKPw0MsDb13ZQ&s'),
+('PD27496576', 'Chico', 'Bebidas', 'Chamoyada Mango', 90.00, 1, 'Frío', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTdmUFNnfEze_LjNdXoyBHTK_LfxCiCBpLxIg&s'),
+('PD28020090', 'Chico', 'Bebidas', 'Flat Whiite', 75.00, 1, 'Caliente', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTod1nJcAwKG6BWdSpGAGmccz_Izh8D1S7Agw&s'),
+('PD28985193', 'Chico', 'Bebidas', 'Carlos V', 99.00, 1, 'Frío', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQFlI7CKVM0EqyWJxfTJn9wG0CQNXOFLkqGFw&s'),
+('PD30843175', 'Chico', 'Bebidas', 'Chai Latte', 80.00, 1, 'Caliente', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQDXlnqFGW57ScvZmnMq9d5AVe7f3qfw49KAg&s'),
+('PD30894780', 'Chico', 'Platillo', 'White Pistachio', 160.00, 0, 'Artesanal', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ-oOvHgSqNhQ90eLgrNy9ysZRzKaBFBDkyZw&s'),
+('PD33834469', 'Chico', 'Bebidas', 'Oreo', 99.00, 1, 'Frío', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTX6mqLk65Z1VzgUa-Jp8ERgSaLdm03wQx1XQ&s'),
+('PD34384229', 'Básico', 'Platillo', 'La crepa de crepas', 25.00, 1, 'Dulce', 'https://images.aws.nestle.recipes/resized/81bcf4cb38911cde6aa17357200368ba_pastel_de_crepas_de_chocolate_1200_628.jpg'),
+('PD35805212', 'Chico', 'Platillo', 'Rol de Canela', 160.00, 0, 'Artesanal', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTEr7uwCOR_RA9vz4wLYe_-l_Phk6_zCPff3A&s'),
+('PD36110746', 'Básico', 'Platillo', 'Crepa de Pollo', 122.00, 1, 'Dulce', 'URL'),
+('PD39713286', 'Chico', 'Platillo', 'Rosendo Nieblas', 170.00, 1, 'Salado', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRvwpdUSumcZbObzis337Og907iWv7AeGalaQ&s'),
+('PD41659387', 'Básico', 'Platillo', 'Crepa Sebas ', 300.00, 1, 'Dulce', 'https://blog.renaware.com/wp-content/uploads/2023/03/Crepas-con-frutos-rojos-1111477-scaled.jpg'),
+('PD41719989', 'Básico', 'Platillo', 'Crepa De Platano', 100.00, 1, 'Dulce', 'URL'),
+('PD42166765', 'Básico', 'Platillo', 'Smoothie Bowl Fresa', 122.00, 1, 'Dulce', 'URL'),
+('PD43258149', 'Chico', 'Bebidas', 'Americano', 65.00, 1, 'Caliente', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSxra9UmQTaLETHKRBIU29BR-Ae72sJW47L5w&s'),
+('PD44220776', 'Chico', 'Bebidas', 'Mocha Latte', 80.00, 1, 'Caliente', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQOy3668eBzYkJxeU7ltAs36hL7Xpj1jJedHA&s'),
+('PD45693038', 'Chico', 'Platillo', 'Honey Honey', 135.00, 1, 'Artesanal', 'https://buenprovecho.hn/wp-content/uploads/2019/01/Crepas-de-fresa-1.jpg'),
+('PD46783344', 'Chico', 'Bebidas', 'Mazapán', 95.00, 1, 'Frío', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSnawgStunMhXfQQEmJ2SASocJm6e97QGGHlw&s'),
+('PD47763167', 'Chico', 'Platillo', 'Maree Crepe', 160.00, 1, 'Salado', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS_aO99Ddg3gA4Fr-dU5xZOwVOY9TOyx6L32w&s'),
+('PD48593340', 'Chico', 'Platillo', 'Un ingrediente', 99.00, 1, 'Otros', 'https://www.cocinafacil.com.mx/recetas/crepas-con-frutas'),
+('PD48628594', 'Chico', 'Platillo', 'Cinn-Almond Crepe', 145.00, 0, 'Artesanal', 'https://www.instagram.com/p/DOfBkVpjdBa/'),
+('PD52816612', 'Chico', 'Bebidas', 'Nutella', 99.00, 1, 'Frío', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTNwSeeZA_CqEouT5EN5W3bxIqrjCcRSsIx5Q&s'),
+('PD52877596', 'Chico', 'Bebidas', 'Manzanilla con moras zules y albahaca', 70.00, 1, 'Caliente', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSKHhRYPy6tcNXXSsLGU-cCF7HER2bPz4F0ig&s'),
+('PD53218892', 'Chico', 'Bebidas', 'Dirty Chai Frappe', 109.00, 1, 'Frío', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQoD2HGHi85Q8KG6CXwq_Up07nmoubrSA_e0g&s'),
+('PD57856718', 'Chico', 'Platillo', 'Kinder Delice', 155.00, 0, 'Artesanal', 'https://revistamolcajete.com/wp-content/uploads/2019/03/IMG_9765-1.jpg'),
+('PD58041511', 'Chico', 'Platillo', 'La Española', 155.00, 1, 'Salado', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTkRuiFsXGBC9TZSeWDbTVjhMd-HVO85sBKow&s'),
+('PD60185744', 'Chico', 'Platillo', 'Golden Bites', 140.00, 0, 'Artesanal', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSRIpnMo4Rp39xPMWa1FLlXR11q6tHW7eWAjA&s'),
+('PD60339348', 'Chico', 'Platillo', 'Kit Kat', 155.00, 1, 'Artesanal', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS8Ji1HTWSQ4gmhIVCRgliuvE0NGcKAWdhing&s'),
+('PD62154365', 'Chico', 'Bebidas', 'Iced Dirty Matcha', 105.00, 1, 'Frío', 'https://http2.mlstatic.com/D_NQ_NP_602534-MLM80622035266_112024-O.webp'),
+('PD62321669', 'Chico', 'Platillo', 'Berry Lotus', 160.00, 0, 'Artesanal', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQGlIK60yqu2i866dM9orvLUPwylIiCNv16xA&s'),
+('PD62596246', 'Chico', 'Bebidas', 'Latte', 75.00, 1, 'Caliente', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSrc2tPztEd3gDD0g_tw2hoFgQzY6oclHt3FQ&s'),
+('PD62833458', 'Chico', 'Platillo', 'Snickers', 155.00, 1, 'Artesanal', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRBgZ36J1BV_bl2NH4--AgCenT2hGylAviiJw&s'),
+('PD63821765', 'Chico', 'Bebidas', 'Oreo', 99.00, 1, 'Frío', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQnIqURpZHzlti1iF4xe2If7Am3HxJ8vQKwMw&s'),
+('PD66334927', 'Chico', 'Bebidas', 'Vainilla', 99.00, 1, 'Frío', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRA3re4lXRJr_f8wr3HTkuXOi2NUbEnSFg2nA&s'),
+('PD66451976', 'Chico', 'Bebidas', 'Motchai Frío', 89.00, 1, 'Frío', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRQlE1qLRDats1qjW5dBXtkKcYd2tZh4ihRYA&s'),
+('PD68133903', 'Chico', 'Platillo', 'La Pizzeria', 155.00, 1, 'Salado', 'https://sabrosano.com/wp-content/uploads/2020/05/Crepas_jamon_queso_principal.jpg'),
+('PD68599017', 'Chico', 'Platillo', 'Manzane', 155.00, 1, 'Artesanal', 'https://lomaculinaria.com/wp-content/uploads/2023/03/Crepas-Loma-Culinaria-1200x800-1.jpg'),
+('PD68787354', 'Chico', 'Bebidas', 'Chai Frío', 89.00, 1, 'Frío', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRQlE1qLRDats1qjW5dBXtkKcYd2tZh4ihRYA&s'),
+('PD69673358', 'Chico', 'Bebidas', 'Macchiato', 50.00, 1, 'Caliente', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQGfcxDnQWVvTH1ycIUXZpNtd8TkPf-11oiRw&s'),
+('PD71724278', 'Chico', 'Platillo', 'Cinn-Apple', 150.00, 0, 'Artesanal', 'https://www.laylita.com/recetas/wp-content/uploads/2017/04/Receta-de-las-crepas-francesas.jpg'),
+('PD72174317', 'Chico', 'Bebidas', 'Té Verde Jazmín', 60.00, 1, 'Caliente', 'https://blogs.unitec.mx/hubfs/Imported_Blog_Media/cosas-que-debes-saber-del-cafe-1-Dec-17-2022-07-16-41-5859-PM.jpg'),
+('PD72945147', 'Chico', 'Platillo', 'La Verde', 155.00, 1, 'Salado', 'https://editorialtelevisa.brightspotcdn.com/dims4/default/a5b31ad/2147483647/strip/true/crop/995x560+3+0/resize/1000x563!/quality/90/?url=https%3A%2F%2Fk2-prod-editorial-televisa.s3.us-east-1.amazonaws.com%2Fbrightspot%2Fwp-content%2Fuploads%2F2019%2F01%2Fcrepas-espinacas-consentir-paladar.jpg'),
+('PD76693622', 'Chico', 'Bebidas', 'Matcha Frío', 89.00, 1, 'Frío', 'https://http2.mlstatic.com/D_NQ_NP_780150-MLM100986687321_122025-O.webp'),
+('PD77126100', 'Chico', 'Bebidas', 'Dirty Matcha Frappe', 109.00, 1, 'Frío', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS_Z7vVaeSVKy-lJ2S7VAO4sln1hHher0PdTg&s'),
+('PD77411067', 'Básico', 'Platillo', 'Crepa CSS', 100.00, 1, 'Dulce', 'URL'),
+('PD77475653', 'Chico', 'Platillo', 'Gansito', 155.00, 0, 'Artesanal', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSYx0yyZD3mvwe1_wMSHsKGSH-6sz82D9PdoA&s'),
+('PD79889565', 'Chico', 'Platillo', 'Poblana', 160.00, 1, 'Salado', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSs8l_-zvcAVaji7WJXPTliXRbQFDkqhzrzcw&s'),
+('PD80503802', 'Chico', 'Bebidas', 'Cajeta', 99.00, 1, 'Frío', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR1oayZLDSevinYYDe2FxteeZhq0DbQTCDFZA&s'),
+('PD80603665', 'Chico', 'Bebidas', 'Fresa', 99.00, 1, 'Frío', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQxqzWVbW43H-jfkxBGNHU8MGa1sN-Xbe3adg&s'),
+('PD81370959', 'Chico', 'Platillo', 'Reese\'s', 155.00, 1, 'Artesanal', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSE_dc4i2TENpte8hxjVKtds0kOz2qj7I9oEw&s'),
+('PD83401881', 'Chico', 'Bebidas', 'Americano Frío', 75.00, 1, 'Frío', 'https://thumbs.dreamstime.com/b/caf%C3%A9-de-americano-o-fr%C3%ADo-152844660.jpg'),
+('PD84176755', 'Chico', 'Bebidas', 'Cappuccino', 75.00, 1, 'Caliente', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSHMDzwvg_QgORdgVseVpUqGsqOnWE84bdZZw&ss'),
+('PD84630803', 'Chico', 'Platillo', 'Bubulubu', 155.00, 1, 'Artesanal', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQk0i1_C3uCVTS8eZ9yaV4WJRlEWUEXRB1qfQ&s'),
+('PD85252812', 'Chico', 'Platillo', 'Lotus de Nuez', 160.00, 0, 'Artesanal', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRuNAWoxe4-U8ZuUNT2xmlononuW5dQUSntgg&s'),
+('PD86903926', 'Chico', 'Platillo', 'Ferrero Rocher', 160.00, 0, 'Artesanal', 'https://cdn0.recetasgratis.net/es/posts/3/4/4/crepas_de_fresa_con_queso_crema_57443_orig.jpg'),
+('PD87643434', 'Chico', 'Bebidas', 'Jamaica con fresa, limón y flor de naranja', 70.00, 1, 'Caliente', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ2P-RIJ6PQkzxr_F5b9S65qYv-pvAzgKKwcw&s'),
+('PD87820692', 'Básico', 'Platillo', 'Crepa Juarez ', 250.00, 1, 'Dulce', 'https://laespanolameats.com/img/cms/nocilla_1.jpg'),
+('PD88828639', 'Chico', 'Platillo', 'Choco Berries', 145.00, 1, 'Artesanal', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQRPgmlt1HohAFzJ1E7a5dQqmQTSAvb2LX2ww&s'),
+('PD88871658', 'Chico', 'Platillo', 'Tres ingredientes', 109.00, 1, 'Otros', 'https://peopleenespanol.com/recetas/10075-masa-para-crepas-b-sica/'),
+('PD88949720', 'Chico', 'Bebidas', 'Manzanilla con zarzamora, frambuesa y jamaica', 70.00, 1, 'Caliente', 'https://tofuu.getjusto.com/orioneat-local/resized2/nFs4qZ6WEoaNw8v8b-300-x.webp'),
+('PD91949758', 'Básico', 'Platillo', 'Platillo Prueba de Unidad', 100.00, 1, 'Dulce', 'URL'),
+('PD93614794', 'Básico', 'Platillo', 'Smoothie Bowl de Plátano ', 100.00, 1, 'Dulce', 'URL'),
+('PD96171348', 'Chico', 'Bebidas', 'Iced Dirty Chai', 105.00, 1, 'Frío', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRWkqU1Y47HvI9PdCuD0u_rWyDOM0gUMhqdLQ&s'),
+('PD96745922', 'Chico', 'Bebidas', 'Té Verde Clásico', 60.00, 1, 'Caliente', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRBy0eJCNbaXWLZYe2DMAF8fsrMXrByb109GA&s'),
+('PD97764058', 'Chico', 'Bebidas', 'Chamoyada Jamaica', 90.00, 1, 'Frío', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ_MhuGUKsc5AH44EDjIvPXoj_MQvwItHcexw&s'),
+('PD99200939', 'Chico', 'Bebidas', 'Mocha Frío', 89.00, 1, 'Frío', 'https://images.sabroson.com.mx/insecure/fit/1000/1000/ce/0/plain/https://sabroson-assests.s3.us-west-2.amazonaws.com/af268c/prods/EhUJ8Es8eLkTBHguQPs7IoZ683xwohKsTDfpBkWX.png@webp'),
+('PD99905805', 'Chico', 'Bebidas', 'Agua', 30.00, 1, 'Otros', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQIROd_m5TqdXbs60Y_ajK7p9pygWly6Y3zVA&s');
 
 -- --------------------------------------------------------
 
@@ -1085,12 +1277,12 @@ CREATE TABLE `producto_pertenece_evento` (
 INSERT INTO `producto_pertenece_evento` (`ID_Evento`, `ID_Producto`) VALUES
 ('EV00802058', 'PD03687244'),
 ('EV03455709', 'PD48593340'),
-('EV08580736', 'PD62321669'),
 ('EV11967402', 'PD71724278'),
-('EV23858748', 'PD18785978'),
 ('EV28249203', 'PD62833458'),
 ('EV36081746', 'PD86903926'),
 ('EV40845617', 'PD02624644'),
+('EV40845617', 'PD43258149'),
+('EV40845617', 'PD83401881'),
 ('EV41575412', 'PD77475653'),
 ('EV47036119', 'PD85252812'),
 ('EV47873322', 'PD48628594'),
@@ -1123,15 +1315,16 @@ INSERT INTO `producto_tiene_insumo` (`ID_Producto`, `ID_Insumo`) VALUES
 ('PD00387421', 'IN33700399'),
 ('PD01400719', 'IN87022030'),
 ('PD01887055', 'IN04894004'),
-('PD01993843', 'IN37891778'),
+('PD01993843', 'IN02201393'),
+('PD01993843', 'IN05269621'),
+('PD01993843', 'IN07050794'),
+('PD01993843', 'IN68810175'),
 ('PD02624644', 'IN20877882'),
 ('PD03687244', 'IN76382864'),
-('PD09374303', 'IN84684230'),
-('PD10782835', 'IN22595885'),
+('PD09374303', 'IN82503493'),
 ('PD12662761', 'IN63629622'),
-('PD12929845', 'IN18602747'),
+('PD12929845', 'IN07050794'),
 ('PD13048411', 'IN93539227'),
-('PD13600220', 'IN19821749'),
 ('PD14332305', 'IN59824502'),
 ('PD16012525', 'IN03374506'),
 ('PD18516039', 'IN98136923'),
@@ -1145,13 +1338,26 @@ INSERT INTO `producto_tiene_insumo` (`ID_Producto`, `ID_Insumo`) VALUES
 ('PD27496576', 'IN53235582'),
 ('PD28020090', 'IN09927406'),
 ('PD28985193', 'IN99852788'),
-('PD30576515', 'IN54232707'),
 ('PD30843175', 'IN53462867'),
 ('PD30894780', 'IN68797428'),
 ('PD33834469', 'IN36386148'),
-('PD34797161', 'IN74154670'),
+('PD34384229', 'IN04894004'),
+('PD34384229', 'IN07050794'),
+('PD34384229', 'IN09130588'),
+('PD34384229', 'IN22197307'),
+('PD34384229', 'IN85641851'),
 ('PD35805212', 'IN12080526'),
 ('PD39713286', 'IN21882955'),
+('PD41659387', 'IN02201393'),
+('PD41659387', 'IN13297648'),
+('PD41659387', 'IN13442507'),
+('PD41659387', 'IN68263429'),
+('PD41719989', 'IN02201393'),
+('PD41719989', 'IN04894004'),
+('PD41719989', 'IN15500744'),
+('PD42166765', 'IN02201393'),
+('PD42166765', 'IN07050794'),
+('PD42166765', 'IN15500744'),
 ('PD43258149', 'IN68496031'),
 ('PD44220776', 'IN85641851'),
 ('PD45693038', 'IN59087286'),
@@ -1180,8 +1386,9 @@ INSERT INTO `producto_tiene_insumo` (`ID_Producto`, `ID_Insumo`) VALUES
 ('PD71724278', 'IN09130588'),
 ('PD72174317', 'IN65885034'),
 ('PD72945147', 'IN21283895'),
-('PD76693622', 'IN44222704'),
+('PD76693622', 'IN51420289'),
 ('PD77126100', 'IN29033240'),
+('PD77411067', 'IN02201393'),
 ('PD77475653', 'IN80740094'),
 ('PD79889565', 'IN68263429'),
 ('PD80503802', 'IN37997343'),
@@ -1193,14 +1400,22 @@ INSERT INTO `producto_tiene_insumo` (`ID_Producto`, `ID_Insumo`) VALUES
 ('PD85252812', 'IN73813019'),
 ('PD86903926', 'IN07050794'),
 ('PD87643434', 'IN74817391'),
+('PD87820692', 'IN03374506'),
+('PD87820692', 'IN20877882'),
+('PD87820692', 'IN93539227'),
+('PD87820692', 'IN98136923'),
 ('PD88828639', 'IN36405225'),
 ('PD88871658', 'IN29165394'),
 ('PD88949720', 'IN62252551'),
+('PD91949758', 'IN93539227'),
+('PD91949758', 'IN98136923'),
+('PD93614794', 'IN02201393'),
+('PD93614794', 'IN07050794'),
+('PD93614794', 'IN21585929'),
 ('PD96171348', 'IN97359153'),
 ('PD96745922', 'IN25799043'),
 ('PD97764058', 'IN58688454'),
-('PD99200939', 'IN48200057'),
-('PD99905805', 'IN00349247');
+('PD99200939', 'IN48200057');
 
 -- --------------------------------------------------------
 
@@ -1240,7 +1455,6 @@ INSERT INTO `producto_tiene_promocion` (`ID_Producto`, `ID_Promocion`) VALUES
 ('PD30843175', 'PR45005334'),
 ('PD30894780', 'PR21011143'),
 ('PD33834469', 'PR78222949'),
-('PD34797161', 'PR45005334'),
 ('PD35805212', 'PR48403051'),
 ('PD39713286', 'PR48403051'),
 ('PD43258149', 'PR62258980'),
@@ -1278,6 +1492,7 @@ INSERT INTO `producto_tiene_promocion` (`ID_Producto`, `ID_Promocion`) VALUES
 ('PD88828639', 'PR44088429'),
 ('PD88871658', 'PR33274771'),
 ('PD88949720', 'PR98448306'),
+('PD93614794', 'PR19912809'),
 ('PD96171348', 'PR52091063'),
 ('PD97764058', 'PR33846028');
 
@@ -1302,7 +1517,7 @@ CREATE TABLE `promocion` (
 --
 
 INSERT INTO `promocion` (`ID_Promocion`, `Nombre`, `Descuento`, `Condiciones`, `Activo`, `Fecha_inicio`, `Fecha_final`) VALUES
-('PR19912809', 'Promoción Navidad', 0.20, '25 de diciembre', 1, '2025-01-26', '0001-08-26'),
+('PR19912809', 'Promoción Navidad 2025', 0.20, '25 de diciembre y con INE vigente', 0, '2025-12-10', '2026-04-05'),
 ('PR21011143', 'Promoción Cumpleaños', 0.50, 'el dia de tu cumpleaños', 1, '0004-06-26', '2029-08-26'),
 ('PR27804270', 'Sábado de Sartenes', 0.25, 'Evento', 1, '0009-03-26', '0006-09-26'),
 ('PR32616125', 'Cumbre del Relleno Secreto', 0.10, 'Evento', 1, '0006-04-26', '0009-07-26'),
@@ -1367,6 +1582,7 @@ INSERT INTO `review` (`ID_Review`, `ID_Orden`, `Puntaje`, `Comentario`, `Fecha`)
 ('RV52971113', 'OD51835069', 5, '\"El lugar estaba demasiado lleno y el ruido era excesivo. No se podía disfrutar la comida con tranquilidad.\"', '2026-03-06 06:00:00'),
 ('RV56152929', 'OD70011240', 5, '\"No se siente un trato personalizado ni interés en que el cliente regrese.\"', '2026-01-21 06:00:00'),
 ('RV56468800', 'OD33951115', 2, '\"La experiencia fue inconsistente: algunos detalles buenos, pero demasiados errores pequeños acumulados.\"', '2026-02-21 06:00:00'),
+('RV56468822', 'OD97294540', 5, '¡Me encanto el servicio al cliente! sigan así Maree :)', '2026-04-08 16:30:17'),
 ('RV57850532', 'OD69891418', 3, '\"La comida tenía buena presentación, pero el sabor fue bastante simple y sin personalidad. Esperaba algo más elaborado por el precio que pagamos.\"', '2026-10-02 06:00:00'),
 ('RV58936868', 'OD45723683', 1, '\"Las porciones no corresponden al costo. Pagas más por la decoración que por la calidad.\"', '2026-03-08 06:00:00'),
 ('RV60602190', 'OD33804496', 1, '\"Las bebidas estaban aguadas y sin sabor. Parecía que habían reducido la calidad para ahorrar costos.\"', '2026-03-20 06:00:00'),
@@ -1528,7 +1744,7 @@ INSERT INTO `sucursal` (`ID_Sucursal`, `Nombre`, `Ciudad`, `Estado`, `País`, `M
 
 CREATE TABLE `tamaño` (
   `Nombre` varchar(50) NOT NULL,
-  `MultiplicadorPrecio` decimal(2,2) NOT NULL
+  `MultiplicadorPrecio` decimal(3,2) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish2_ci;
 
 --
@@ -1536,10 +1752,33 @@ CREATE TABLE `tamaño` (
 --
 
 INSERT INTO `tamaño` (`Nombre`, `MultiplicadorPrecio`) VALUES
+('Básico', 1.00),
 ('Chico', 0.75),
-('Extra Grande', 0.99),
-('Grande', 0.99),
-('Mediano', 0.99);
+('Extra Grande', 1.50),
+('Grande', 1.25);
+
+-- --------------------------------------------------------
+
+--
+-- Estructura de tabla para la tabla `tipos`
+--
+
+CREATE TABLE `tipos` (
+  `nombre` varchar(50) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish2_ci;
+
+--
+-- Volcado de datos para la tabla `tipos`
+--
+
+INSERT INTO `tipos` (`nombre`) VALUES
+('Artesanal'),
+('Caliente'),
+('Dulce'),
+('Frío'),
+('Otros'),
+('Salado'),
+('Vegano');
 
 -- --------------------------------------------------------
 
@@ -1647,18 +1886,18 @@ ALTER TABLE `estado_royalty`
   ADD PRIMARY KEY (`Nombre_Royalty`);
 
 --
+-- Indices de la tabla `estado_royalty_da_eventos`
+--
+ALTER TABLE `estado_royalty_da_eventos`
+  ADD PRIMARY KEY (`Nombre_Royalty`,`ID_Evento`),
+  ADD KEY `fk_evento_id` (`ID_Evento`);
+
+--
 -- Indices de la tabla `estado_royalty_da_promociones`
 --
 ALTER TABLE `estado_royalty_da_promociones`
   ADD PRIMARY KEY (`Nombre_Royalty`,`ID_Promocion`),
   ADD KEY `ID_Promocion` (`ID_Promocion`);
-
---
--- Indices de la tabla `estado_royalty_da_eventos`
---
-ALTER TABLE `estado_royalty_da_eventos`
-  ADD PRIMARY KEY (`Nombre_Royalty`,`ID_Evento`),
-  ADD KEY `ID_Evento` (`ID_Evento`);
 
 --
 -- Indices de la tabla `evento`
@@ -1727,7 +1966,8 @@ ALTER TABLE `privilegio`
 ALTER TABLE `producto`
   ADD PRIMARY KEY (`ID_Producto`),
   ADD KEY `Categoría` (`Categoría`),
-  ADD KEY `Tamaño` (`Tamaño`);
+  ADD KEY `Tamaño` (`Tamaño`),
+  ADD KEY `fk_tipos` (`Tipo`);
 
 --
 -- Indices de la tabla `producto_pertenece_evento`
@@ -1789,6 +2029,12 @@ ALTER TABLE `tamaño`
   ADD PRIMARY KEY (`Nombre`);
 
 --
+-- Indices de la tabla `tipos`
+--
+ALTER TABLE `tipos`
+  ADD PRIMARY KEY (`nombre`);
+
+--
 -- Indices de la tabla `turno`
 --
 ALTER TABLE `turno`
@@ -1845,18 +2091,18 @@ ALTER TABLE `colaborador_tiene_turno`
   ADD CONSTRAINT `colaborador_tiene_turno_ibfk_2` FOREIGN KEY (`ID_Turno`) REFERENCES `turno` (`ID_Turno`) ON DELETE CASCADE;
 
 --
+-- Filtros para la tabla `estado_royalty_da_eventos`
+--
+ALTER TABLE `estado_royalty_da_eventos`
+  ADD CONSTRAINT `fk_evento_id` FOREIGN KEY (`ID_Evento`) REFERENCES `evento` (`ID_Evento`) ON DELETE CASCADE ON UPDATE CASCADE,
+  ADD CONSTRAINT `fk_royalty_nombre` FOREIGN KEY (`Nombre_Royalty`) REFERENCES `estado_royalty` (`Nombre_Royalty`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+--
 -- Filtros para la tabla `estado_royalty_da_promociones`
 --
 ALTER TABLE `estado_royalty_da_promociones`
   ADD CONSTRAINT `estado_royalty_da_promociones_ibfk_1` FOREIGN KEY (`Nombre_Royalty`) REFERENCES `estado_royalty` (`Nombre_Royalty`),
   ADD CONSTRAINT `estado_royalty_da_promociones_ibfk_2` FOREIGN KEY (`ID_Promocion`) REFERENCES `promocion` (`ID_Promocion`);
-
---
--- Filtros para la tabla `estado_royalty_da_eventos`
---
-ALTER TABLE `estado_royalty_da_eventos`
-  ADD CONSTRAINT `estado_royalty_da_eventos_ibfk_1` FOREIGN KEY (`Nombre_Royalty`) REFERENCES `estado_royalty` (`Nombre_Royalty`),
-  ADD CONSTRAINT `estado_royalty_da_eventos_ibfk_2` FOREIGN KEY (`ID_Evento`) REFERENCES `evento` (`ID_Evento`);
 
 --
 -- Filtros para la tabla `evento_contiene_promocion`
@@ -1902,6 +2148,7 @@ ALTER TABLE `pago`
 -- Filtros para la tabla `producto`
 --
 ALTER TABLE `producto`
+  ADD CONSTRAINT `fk_tipos` FOREIGN KEY (`Tipo`) REFERENCES `tipos` (`nombre`) ON UPDATE CASCADE,
   ADD CONSTRAINT `producto_ibfk_1` FOREIGN KEY (`Categoría`) REFERENCES `categoría` (`Nombre`),
   ADD CONSTRAINT `producto_ibfk_2` FOREIGN KEY (`Tamaño`) REFERENCES `tamaño` (`Nombre`);
 

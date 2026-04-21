@@ -8,7 +8,8 @@ module.exports = class Producto {
     P.ID_Producto AS productoID,
     P.nombre AS productoNombre, 
     P.precio AS productoPrecio, 
-    P.categoría AS productoCategoria, 
+    P.categoría AS productoCategoria,
+    P.Tipo AS productoType, 
     P.imagen AS productoImagen,
     P.Disponible AS productoActivo, 
     I.ID_Insumo AS insumoID,
@@ -19,7 +20,7 @@ module.exports = class Producto {
     INNER JOIN insumo AS I ON PI.ID_Insumo = I.ID_Insumo
     ;`)
 
-    // console.log('Rows: ', rows)
+    console.log('Rows: ', rows)
 
     // 2. Agrupamos utilizando Mapping
     const productosMap = {}
@@ -32,6 +33,7 @@ module.exports = class Producto {
           nombre: fila.productoNombre,
           precio: fila.productoPrecio,
           categoria: fila.productoCategoria,
+          tipo: fila.productoType,
           activo: fila.productoActivo,
           imagen: fila.productoImagen,
           ingredientes: [] // Inicializamos el array de ingredientes
@@ -59,6 +61,7 @@ module.exports = class Producto {
     P.nombre AS productoNombre, 
     P.precio AS productoPrecio, 
     P.categoría AS productoCategoria, 
+    P.Tipo  AS productoTipo,
     P.imagen AS productoImagen, 
     I.ID_Insumo AS insumoID,
     I.nombre AS insumoNombre
@@ -80,6 +83,7 @@ module.exports = class Producto {
           nombre: fila.productoNombre,
           precio: fila.productoPrecio,
           categoria: fila.productoCategoria,
+          tipo: fila.productoTipo,
           imagen: fila.productoImagen,
           ingredientes: [] // Inicializamos el array de ingredientes
         }
@@ -114,25 +118,26 @@ module.exports = class Producto {
     return `${prefijo}${numero}` // "PD1823049231" — 12 chars, bien dentro del varchar(10)...
   }
 
-  static async insertNewProduct (connection, id, nombre, categoria, Precio, Disponible, Imagen) {
+  static async insertNewProduct (connection, id, nombre, categoria, Precio, Disponible, Imagen, tipo) {
     // Al usar await, recibes el resultado de la promesa
     const [result] = await connection.execute(
       'INSERT INTO producto VALUES (?,?,?,?,?,?,?,?)',
-      [id, 'Básico', categoria, nombre, Precio, Disponible, 'Dulce', Imagen]
+      [id, 'Básico', categoria, nombre, Precio, Disponible, tipo, Imagen]
     )
     return result // Este objeto contiene affectedRows e insertId
   }
 
-  static async modifyProduct (connection, id, nombre, categoria, Precio, Disponible, Imagen) {
+  static async modifyProduct (connection, id, nombre, categoria, tipo, Precio, Disponible, Imagen) {
     const result = await connection.execute(`
     UPDATE producto
     SET 
       Categoría = ?, 
+      Tipo = ?,
       Nombre = ?,
       Precio = ?,
       Disponible = ?,
       Imagen = ?
-  WHERE ID_Producto = ?;`, [categoria, nombre, Precio, Disponible, Imagen, id])
+  WHERE ID_Producto = ?;`, [categoria, tipo, nombre, Precio, Disponible, Imagen, id])
     return result
   }
 
