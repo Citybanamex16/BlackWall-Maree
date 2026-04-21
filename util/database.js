@@ -2,14 +2,11 @@ const mysql = require('mysql2')
 
 // Pool de conexiones
 const pool = mysql.createPool({
-  // host: 'localhost',
-  host: '172.20.96.1', // NO LO BORREN SOLO COMENTENLO
-  port: '3300',
-  // port: '3000',
+  host: 'localhost',
   user: 'root',
   database: 'mareebd',
-  password: '1234',
-  waitForConnection: true,
+  password: '',
+  waitForConnections: true,
   connectionLimit: 10
 
 })
