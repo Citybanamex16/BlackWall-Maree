@@ -4,6 +4,10 @@ const Colaborador = require('../models/colaborador.model.js')
 const Ingrediente = require('../models/ingrediente.model.js')
 const MetricasClientes = require('../models/metricasclientes.model.js')
 const MetricasProductos = require('../models/metricasproductos.model.js')
+const Categoria = require('../models/categoria.model.js')
+const Tipo = require('../models/tipo.model.js')
+const Sucursal = require('../models/sucursal.model.js')
+
 // const bcrypt = require('bcryptjs')
 
 // const path = require('path')
@@ -694,5 +698,328 @@ exports.postNewCollaborator = async (req, res, next) => {
         rol: req.body.rol || 'Colaborador'
       }
     })
+  }
+}
+
+// Sección Categorias
+
+// GET categorias-tipos
+exports.getCategoriasTipos = (req, res, next) => {
+  res.render('admin/categoriasTipos')
+}
+
+// GET categorias
+exports.getCategoriasLista = async (req, res, next) => {
+  try {
+    const [categorias] = await Categoria.fetchAll()
+    res.status(200).json({ success: true, data: categorias })
+  } catch (error) {
+    console.error('Error en getCategoriasLista:', error)
+    res.status(500).json({ success: false, message: 'Error al obtener categorías' })
+  }
+}
+
+// Verifica nombre de la categoria
+exports.verificarNombreCategoria = async (req, res, next) => {
+  try {
+    const { nombre } = req.query
+    if (!nombre || String(nombre).trim() === '') {
+      return res.status(400).json({ success: false, message: 'Nombre requerido' })
+    }
+    const [rows] = await Categoria.buscarPorNombre(nombre.trim())
+    res.status(200).json({ success: true, existe: rows.length > 0 })
+  } catch (error) {
+    console.error('Error en verificarNombreCategoria:', error)
+    res.status(500).json({ success: false, message: 'Error al verificar nombre' })
+  }
+}
+
+// Inserta nueva categoria
+exports.crearCategoria = async (req, res, next) => {
+  try {
+    const { Nombre } = req.body
+    if (!Nombre || String(Nombre).trim() === '') {
+      return res.status(400).json({ success: false, message: 'El nombre es obligatorio' })
+    }
+    const [existente] = await Categoria.buscarPorNombre(Nombre.trim())
+    if (existente.length > 0) {
+      return res.status(409).json({ success: false, message: 'Ya existe una categoría con ese nombre' })
+    }
+    await Categoria.insertNuevaCategoria(Nombre.trim())
+    res.status(200).json({ success: true, message: 'Categoría registrada exitosamente' })
+  } catch (error) {
+    console.error('Error en crearCategoria:', error)
+    res.status(500).json({ success: false, message: 'Error al guardar la categoría' })
+  }
+}
+
+// GET verificarEnUso
+exports.verificarCategoriaEnUso = async (req, res, next) => {
+  try {
+    const nombre = decodeURIComponent(req.params.nombre)
+    const uso = await Categoria.buscarEnUso(nombre)
+    res.status(200).json({
+      success: true,
+      enUso: uso.totalInsumos > 0 || uso.totalProductos > 0,
+      totalInsumos: uso.totalInsumos,
+      totalProductos: uso.totalProductos
+    })
+  } catch (error) {
+    console.error('Error en verificarCategoriaEnUso:', error)
+    res.status(500).json({ success: false, message: 'Error al verificar uso' })
+  }
+}
+
+// Actualiza categoria
+exports.actualizarCategoria = async (req, res, next) => {
+  try {
+    const oldNombre = decodeURIComponent(req.params.nombre)
+    const { Nombre: newNombre } = req.body
+
+    if (!newNombre || String(newNombre).trim() === '') {
+      return res.status(400).json({ success: false, message: 'El nombre es obligatorio' })
+    }
+
+    if (oldNombre === newNombre.trim()) {
+      return res.status(200).json({ success: true, message: 'Sin cambios' })
+    }
+
+    const [existente] = await Categoria.buscarPorNombre(newNombre.trim())
+    if (existente.length > 0) {
+      return res.status(409).json({ success: false, message: 'Ya existe una categoría con ese nombre' })
+    }
+
+    await Categoria.actualizarCategoria(oldNombre, newNombre.trim())
+    res.status(200).json({ success: true, message: 'Categoría actualizada correctamente' })
+  } catch (error) {
+    console.error('Error en actualizarCategoria:', error)
+    res.status(500).json({ success: false, message: error.message })
+  }
+}
+
+// Eliminar categoria
+exports.eliminarCategoria = async (req, res, next) => {
+  try {
+    const nombre = decodeURIComponent(req.params.nombre)
+
+    const uso = await Categoria.buscarEnUso(nombre)
+    if (uso.totalInsumos > 0 || uso.totalProductos > 0) {
+      return res.status(409).json({
+        success: false,
+        enUso: true,
+        totalInsumos: uso.totalInsumos,
+        totalProductos: uso.totalProductos
+      })
+    }
+
+    await Categoria.eliminarCategoria(nombre)
+    res.status(200).json({ success: true, message: 'Categoría eliminada correctamente' })
+  } catch (error) {
+    console.error('Error en eliminarCategoria:', error)
+    res.status(500).json({ success: false, message: error.message })
+  }
+}
+
+// GET tipos
+exports.getTiposLista = async (req, res, next) => {
+  try {
+    const [tipos] = await Tipo.fetchAll()
+    res.status(200).json({ success: true, data: tipos })
+  } catch (error) {
+    console.error('Error en getTiposLista:', error)
+    res.status(500).json({ success: false, message: 'Error al obtener tipos' })
+  }
+}
+
+// GET verificar nombre tipo
+exports.verificarNombreTipo = async (req, res, next) => {
+  try {
+    const { nombre } = req.query
+    if (!nombre) return res.status(400).json({ success: false, message: 'Nombre requerido' })
+    const [rows] = await Tipo.buscarPorNombre(nombre.trim())
+    res.status(200).json({ existe: rows.length > 0 })
+  } catch (error) {
+    console.error('Error en verificarNombreTipo:', error)
+    res.status(500).json({ success: false, message: 'Error al verificar nombre' })
+  }
+}
+
+// POST crear tipo
+exports.crearTipo = async (req, res, next) => {
+  try {
+    const { nombre } = req.body
+    if (!nombre) return res.status(400).json({ success: false, message: 'Nombre requerido' })
+    await Tipo.insertNuevoTipo(nombre.trim())
+    res.status(200).json({ success: true, message: 'Tipo registrado exitosamente' })
+  } catch (error) {
+    console.error('Error en crearTipo:', error)
+    res.status(500).json({ success: false, message: 'Error al guardar el tipo' })
+  }
+}
+
+// GET verificarEnUso tipo
+exports.verificarTipoEnUso = async (req, res, next) => {
+  try {
+    const nombre = decodeURIComponent(req.params.nombre)
+    const uso = await Tipo.buscarEnUso(nombre)
+    res.status(200).json({
+      enUso: uso.totalProductos > 0,
+      totalProductos: uso.totalProductos
+    })
+  } catch (error) {
+    console.error('Error en verificarTipoEnUso:', error)
+    res.status(500).json({ success: false, message: 'Error al verificar uso' })
+  }
+}
+
+// PUT actualizar tipo
+exports.actualizarTipo = async (req, res, next) => {
+  try {
+    const oldNombre = decodeURIComponent(req.params.nombre)
+    const { nombre: newNombre } = req.body
+
+    if (!newNombre || !newNombre.trim()) {
+      return res.status(400).json({ success: false, message: 'El nombre es obligatorio' })
+    }
+
+    if (newNombre.trim() !== oldNombre) {
+      const [rows] = await Tipo.buscarPorNombre(newNombre.trim())
+      if (rows.length > 0) {
+        return res.status(409).json({ success: false, message: `Ya existe un tipo con el nombre "${newNombre.trim()}"` })
+      }
+    }
+
+    await Tipo.actualizarTipo(oldNombre, newNombre.trim())
+    res.status(200).json({ success: true, message: 'Tipo actualizado correctamente' })
+  } catch (error) {
+    console.error('Error en actualizarTipo:', error)
+    res.status(500).json({ success: false, message: error.message })
+  }
+}
+
+// Eliminar tipo
+exports.eliminarTipo = async (req, res, next) => {
+  try {
+    const nombre = decodeURIComponent(req.params.nombre)
+
+    const uso = await Tipo.buscarEnUso(nombre)
+    if (uso.totalProductos > 0) {
+      return res.status(409).json({
+        success: false,
+        enUso: true,
+        totalProductos: uso.totalProductos
+      })
+    }
+
+    await Tipo.eliminarTipo(nombre)
+    res.status(200).json({ success: true, message: 'Tipo eliminado correctamente' })
+  } catch (error) {
+    console.error('Error en eliminarTipo:', error)
+    res.status(500).json({ success: false, message: error.message })
+  }
+}
+
+// GET sucursales
+exports.getSucursales = (req, res, next) => {
+  res.render('admin/sucursales')
+}
+
+// GET lista sucursales
+exports.getSucursalesLista = async (req, res, next) => {
+  try {
+    const [sucursales] = await Sucursal.fetchAll()
+    res.status(200).json({ success: true, data: sucursales })
+  } catch (error) {
+    console.error('Error en getSucursalesLista:', error)
+    res.status(500).json({ success: false, message: 'Error al obtener sucursales' })
+  }
+}
+
+// Crea Nueva Sucursal
+exports.crearSucursal = async (req, res, next) => {
+  try {
+    const { Nombre, Ciudad, Estado, Pais, Municipio, Calle, Longitud, Latitud } = req.body
+    if (!Nombre || !Ciudad || !Estado || !Pais || !Municipio || !Calle) {
+      return res.status(400).json({ success: false, message: 'Todos los campos obligatorios son requeridos' })
+    }
+    const id = Sucursal.generarID()
+    await Sucursal.insertNuevaSucursal(id, Nombre.trim(), Ciudad.trim(), Estado.trim(), Pais.trim(), Municipio.trim(), Calle.trim(), Longitud, Latitud)
+    res.status(200).json({ success: true, message: 'Sucursal registrada exitosamente', id })
+  } catch (error) {
+    console.error('Error en crearSucursal:', error)
+    res.status(500).json({ success: false, message: 'Error al guardar la sucursal' })
+  }
+}
+
+// actualiza infor sucursal
+exports.actualizarSucursal = async (req, res, next) => {
+  try {
+    const { id } = req.params
+    const { Nombre, Ciudad, Estado, Pais, Municipio, Calle, Longitud, Latitud } = req.body
+    if (!Nombre || !Ciudad || !Estado || !Pais || !Municipio || !Calle) {
+      return res.status(400).json({ success: false, message: 'Todos los campos obligatorios son requeridos' })
+    }
+
+    const [existing] = await Sucursal.buscarPorNombre(Nombre.trim())
+    const duplicado = existing.find(s => s.ID_Sucursal !== id)
+    if (duplicado) {
+      return res.status(409).json({ success: false, message: `Ya existe una sucursal con el nombre "${Nombre.trim()}"` })
+    }
+
+    await Sucursal.actualizarSucursal(id, Nombre.trim(), Ciudad.trim(), Estado.trim(), Pais.trim(), Municipio.trim(), Calle.trim(), Longitud, Latitud)
+    res.status(200).json({ success: true, message: 'Sucursal actualizada correctamente' })
+  } catch (error) {
+    console.error('Error en actualizarSucursal:', error)
+    res.status(500).json({ success: false, message: error.message })
+  }
+}
+
+// verifica si es eliminable
+exports.verificarSucursalEliminable = async (req, res, next) => {
+  try {
+    const { id } = req.params
+    const uso = await Sucursal.buscarEnUso(id)
+    res.status(200).json({
+      eliminable: uso.totalTurnos === 0,
+      totalTurnos: uso.totalTurnos
+    })
+  } catch (error) {
+    console.error('Error en verificarSucursalEliminable:', error)
+    res.status(500).json({ success: false, message: 'Error al verificar' })
+  }
+}
+
+// elimina suc
+exports.eliminarSucursal = async (req, res, next) => {
+  try {
+    const { id } = req.params
+    const uso = await Sucursal.buscarEnUso(id)
+    if (uso.totalTurnos > 0) {
+      return res.status(409).json({
+        success: false,
+        message: `No se puede eliminar: tiene ${uso.totalTurnos} turno(s) asignado(s).`
+      })
+    }
+    await Sucursal.eliminarSucursal(id)
+    res.status(200).json({ success: true, message: 'Sucursal eliminada correctamente' })
+  } catch (error) {
+    console.error('Error en eliminarSucursal:', error)
+    res.status(500).json({ success: false, message: error.message })
+  }
+}
+
+exports.getMetricasRoyalty = async (request, response, next) => {
+  try {
+    const [flujoClientes] = await MetricasClientes.getFlujoClientesMensuales()
+
+    const labelsMeses = flujoClientes.map(row => row.mes)
+    const dataClientes = flujoClientes.map(row => row.total_clientes)
+
+    response.render('metricsRoyalty.ejs', {
+      chartLabels: JSON.stringify(labelsMeses),
+      chartData: JSON.stringify(dataClientes)
+    })
+  } catch (error) {
+    console.log(error)
   }
 }

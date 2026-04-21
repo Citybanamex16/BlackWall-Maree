@@ -956,16 +956,17 @@ dialog .checkbox {
   overflow: hidden;
 }
 
-.admin-prod-header,
-.admin-prod-row {
-  display: grid;
-  grid-template-columns: 2fr 80px 3fr 90px;
-  gap: 8px;
-  padding: 8px 14px;
-  align-items: center;
-  font-size: 13px;
+.admin-prod-header {
+  display: flex;
+  justify-content: space-between;
+  padding: 8px 16px;
+  background: #f5f5f5;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+  color: #888;
 }
-
 .admin-prod-header {
   background: #f5f5f5;
   font-weight: 600;
@@ -978,9 +979,21 @@ dialog .checkbox {
 .admin-prod-row {
   border-top: 1px solid #f0f0f0;
   cursor: pointer;
-  transition: background 0.12s;
+  transition: background 0.18s, transform 0.18s, box-shadow 0.18s;
 }
-.admin-prod-row:hover { background: #fafafa; }
+.admin-prod-row:hover {
+  background: var(--gold-bg) !important;
+  border-left: 3px solid var(--gold);
+  transform: scale(1.01);
+  box-shadow: 0 2px 12px rgba(181, 149, 106, 0.15);
+  z-index: 1;
+  position: relative;
+}
+
+/* El nombre se dora al hacer hover */
+.admin-prod-row:hover .admin-prod-name {
+  color: var(--gold);
+}
 
 .prod-nombre       { font-weight: 500; color: #363636; }
 .prod-precio       { font-weight: 600; color: #3273dc; }
@@ -994,6 +1007,51 @@ dialog .checkbox {
   padding: 1px 9px;
   font-size: 12px;
   font-weight: 600;
+}
+
+
+/* Contenedor de metadatos (Tipo + Precio) */
+.admin-prod-meta {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 6px;
+}
+
+/* El Badge del Tipo */
+.admin-tag-tipo {
+  background-color: #f5f5f5; /* Gris muy tenue neutral */
+  color: #777;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  padding: 2px 8px;
+  border-radius: 4px;
+  border: 1px solid var(--border);
+  letter-spacing: 0.03em;
+}
+
+/* El Precio en Admin */
+.admin-prod-price {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--gold); /* Usamos el dorado de Marée */
+}
+
+/* Pequeño ajuste a la imagen para que no pierda calidad */
+.admin-prod-img-container {
+    width: 45px;
+    height: 45px;
+    border-radius: 8px;
+    overflow: hidden;
+    margin-right: 15px;
+    flex-shrink: 0;
+}
+
+.admin-prod-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
 }
 
 /* ═══════════════════════════════════════════
@@ -1067,3 +1125,317 @@ dialog .checkbox {
 
   .btn-maree { width: 100%; justify-content: center; }
 }
+
+
+
+
+/* 
+Spinner CSS
+*/
+
+/* ── Spinner overlay ── */
+.spinner-overlay {
+    /* Eliminamos display, position, inset y z-index de aquí */
+    border: none;
+    background: transparent;
+}
+
+/* Solo aplicamos el flex y centrado cuando el diálogo esté abierto */
+.spinner-overlay[open] {
+    display: flex; 
+    align-items: center;
+    justify-content: center;
+}
+
+/* El fondo (overlay) se define aquí */
+.spinner-overlay::backdrop {
+    background: rgba(255, 255, 255, 0.72);
+    backdrop-filter: blur(2px);
+}
+
+/* El resto (spinner-box, ring, label) se queda igual */
+.spinner-box {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+}
+
+
+
+/* ═══════════════════════════════════════════
+   HUÉRFANOS — 20 Abril 2025
+   Clases sin declaración previa, identificadas
+   en auditoría de fusión CSS
+═══════════════════════════════════════════ */
+
+/* FAB variante con sombra — complementa a .fab */
+.button-floating {
+  box-shadow: 0 4px 16px rgba(181, 149, 106, 0.35);
+  transition: box-shadow 0.2s, transform 0.15s;
+}
+.button-floating:hover {
+  box-shadow: 0 6px 24px rgba(181, 149, 106, 0.5);
+  transform: translateY(-2px);
+}
+
+/* Contenedor de opciones en modal Elim/Desact */
+.elim-desact-opciones {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 4px;
+}
+
+/* Botón grande de acción (Eliminar / Desactivar) */
+.elim-desact-btn {
+  display: flex !important;
+  align-items: center !important;
+  gap: 12px !important;
+  height: auto !important;
+  padding: 12px 16px !important;
+  text-align: left !important;
+  justify-content: flex-start !important;
+  border-radius: 8px !important;
+  transition: transform 0.1s, box-shadow 0.15s !important;
+}
+.elim-desact-btn:hover {
+  transform: translateX(3px);
+}
+
+/* Bloque de texto interno del botón */
+.elim-desact-btn-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+/* Título principal del botón */
+.elim-desact-btn-title {
+  font-family: 'Jost', sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  color: inherit;
+  line-height: 1.2;
+}
+
+/* Subtítulo descriptivo del botón */
+.elim-desact-btn-sub {
+  font-family: 'Jost', sans-serif;
+  font-size: 11px;
+  font-weight: 400;
+  opacity: 0.72;
+  line-height: 1.4;
+}
+
+
+/* ═══════════════════════════════════════════
+   HUÉRFANOS DINÁMICOS — 20 Abril 2026
+   Generados por renderProductoAdmin() y
+   construirCategoria() en adminProducts.js
+═══════════════════════════════════════════ */
+
+/* ── Sección de categoría ── */
+.categoria-section {
+  margin-bottom: 24px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.cat-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 18px;
+  background: var(--gold-bg);
+  cursor: pointer;
+  user-select: none;
+  transition: background 0.15s;
+}
+.cat-header:hover { background: #f5ece0; }
+
+.cat-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 20px;
+  font-weight: 400;
+  color: var(--text-main);
+  margin: 0;
+  flex: 1;
+}
+
+.cat-chevron {
+  color: var(--gold);
+  transition: transform 0.25s ease;
+  display: flex;
+  align-items: center;
+}
+.categoria-section.is-open .cat-chevron { transform: rotate(180deg); }
+
+/* ── Grid colapsable ── */
+.grid-collapsible {
+  transition: max-height 0.3s ease, opacity 0.3s ease;
+  overflow: hidden;
+}
+
+/* ── Fila de producto — ahora flex en lugar de grid ── */
+.admin-prod-row {
+  display: flex !important;        /* sobreescribe el grid anterior */
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 16px;
+  border-top: 1px solid var(--border);
+  cursor: pointer;
+  transition: background 0.12s;
+  gap: 12px;
+}
+.admin-prod-row:hover { background: #fdf8f2; }
+
+/* ── Bloque izquierdo: imagen + textos ── */
+.admin-prod-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+  min-width: 0;        /* permite que el texto haga ellipsis */
+}
+
+/* ── Textos del producto ── */
+.admin-prod-texts {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.admin-prod-name {
+  font-family: 'Jost', sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-main);
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.admin-prod-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* ── Bloque derecho: botón acción ── */
+.admin-prod-actions {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+/* ── Botón eliminar/desactivar ── */
+.btn-elim-desact {
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  border: 1px solid #ffb3b3;
+  background: #fff5f5;
+  color: #cc0000;
+  font-size: 13px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s, border-color 0.15s, transform 0.1s;
+  flex-shrink: 0;
+}
+.btn-elim-desact:hover {
+  background: #ffe0e0;
+  border-color: #e00000;
+  transform: scale(1.08);
+}
+
+/* ── Estado vacío de categoría ── */
+.empty-state {
+  padding: 40px 20px;
+  text-align: center;
+  color: var(--text-muted);
+  font-family: 'Jost', sans-serif;
+  font-size: 13px;
+}
+
+.empty-icon {
+  font-size: 28px;
+  display: block;
+  margin-bottom: 8px;
+  opacity: 0.6;
+}
+
+/* ═══════════════════════════════════════════
+   ARREGLOS ESTÉTICOS — 20 Abril 2026
+═══════════════════════════════════════════ */
+
+/* 2. Encabezado de página — estilo crepería */
+.section {
+  background: var(--gold-bg);
+  border-bottom: 1px solid var(--gold-light);
+  padding-bottom: 32px;
+}
+
+/* Título principal */
+.section .title {
+  font-family: 'Cormorant Garamond', serif !important;
+  font-size: 42px !important;
+  font-weight: 400 !important;
+  color: var(--text-main) !important;
+  letter-spacing: 0.5px;
+}
+
+/* Subtítulo */
+.section .subtitle {
+  font-family: 'Jost', sans-serif !important;
+  font-size: 12px !important;
+  letter-spacing: 1.5px !important;
+  text-transform: uppercase;
+  color: var(--text-muted) !important;
+}
+
+/* Buscador con acento dorado */
+.section .input {
+  border-color: var(--gold-light);
+  background: var(--white);
+  font-family: 'Jost', sans-serif;
+  font-size: 13px;
+}
+.section .input:focus {
+  border-color: var(--gold);
+  box-shadow: 0 0 0 2px rgba(181, 149, 106, 0.15);
+}
+
+/* Barra de métricas — caja con estilo */
+.stats-bar {
+  background: var(--white);
+  border: 1px solid var(--gold-light);
+  border-radius: 10px;
+  padding: 20px 32px;
+}
+
+/* Números de las métricas — dorado Marée */
+.stats-bar .title {
+  font-family: 'Cormorant Garamond', serif !important;
+  font-size: 38px !important;
+  font-weight: 400 !important;
+  color: var(--gold) !important;
+  line-height: 1;
+}
+
+/* Etiquetas de las métricas */
+.stats-bar .heading {
+  font-family: 'Jost', sans-serif;
+  font-size: 10px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-bottom: 6px;
+}
+
+
