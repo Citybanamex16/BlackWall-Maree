@@ -1,19 +1,20 @@
 /* global ConstruirModifModal, ModifyProduct, eliminarDesactivarModal */
 // JS FRONTEND de la vista de Productos del Admin
 
+// Funciones Globales
 
 
-//Funciones Globales
-function showSpinner(mensaje = 'Cargando...') {
-    console.log("Mostrando Spinner")
-    document.getElementById('spinner-label').textContent = mensaje
-    document.getElementById('spinner-overlay').showModal()
+function showSpinner (mensaje = 'Cargando...') {
+  console.log('Mostrando Spinner')
+  document.getElementById('spinner-label').textContent = mensaje
+  document.getElementById('spinner-overlay').showModal()
 }
 
-function hideSpinner() {
-  console.log("Closing Spinner")
-    document.getElementById('spinner-overlay').close()
+function hideSpinner () {
+  console.log('Closing Spinner')
+  document.getElementById('spinner-overlay').close()
 }
+
 
 // Contador animado de 0 → número final
 function animarContador(idElemento, valorFinal, duracionMs = 800) {
@@ -35,12 +36,13 @@ function animarContador(idElemento, valorFinal, duracionMs = 800) {
 
 //Fin de funciones Globales
 
+
 /* CU Visualizar Catalogo de Productos */
 
 async function getCatalogoProductos () {
   console.log('Obteniendo Catalogo de Productos')
   try {
-    showSpinner("Obteniendo Catalogo de Productos")
+    showSpinner('Obteniendo Catalogo de Productos')
     const response = await fetch('/menu/productosCatalog')
     if (!response.ok) {
       ShowErrorModal('Error Interno', 'Error en Obtener Catalogo')
@@ -52,7 +54,7 @@ async function getCatalogoProductos () {
     construirCatalogoAdmin(object)
   } catch (error) {
     console.log('Error obteniendo Catalogo: '.error)
-  } finally{
+  } finally {
     hideSpinner()
   }
 }
@@ -107,10 +109,10 @@ function construirFichaProductos (datosProducto, datosCategorias) {
 }
 
 // Render de fila compacta
-function renderProductoAdmin(prod) {
+function renderProductoAdmin (prod) {
   // Verificamos si tiene tipo, si no, ponemos un placeholder
-  const tipoTexto = prod.tipo ? prod.tipo : 'Otro';
-  
+  const tipoTexto = prod.tipo ? prod.tipo : 'Otro'
+
   return `
     <div class="admin-prod-row" data-id="${prod.id}">
       <div class="admin-prod-info">
@@ -136,10 +138,8 @@ function renderProductoAdmin(prod) {
   </svg>
 </button>
     </div>
-  `;
+  `
 }
-
-
 
 // Sección de categoría
 function construirCategoria (cat, contenedorMenu) {
@@ -208,7 +208,6 @@ function construirCatalogoAdmin (datos) {
   const categorias = datos.arrayCategorías[0]
   const productosInfo = datos.arrayProductsCatalog
 
-
   const contenedor = document.getElementById('admin-catalogo')
   contenedor.innerHTML = ''
 
@@ -252,7 +251,7 @@ function registerButtonOnClick (event) {
   // Logica de Registrar Nuevo Producto
   event.preventDefault()
   console.log('Iniciando CU Registrar Nuevo Producto...')
-  showSpinner("Obteniendo Categorías")
+  showSpinner('Obteniendo Categorías')
   fetch('/menu/formsTipoPlatillo')
     .then(response => {
       hideSpinner()
@@ -319,7 +318,7 @@ async function seleccionarTipoProducto (id) {
     console.log(`Iniciando fetch para el ID: ${id}`)
 
     /* 1. Fetch: Obtener campos del producto e Ingredientes */
-    showSpinner("Obteniendo Campos e Ingredientes")
+    showSpinner('Obteniendo Campos e Ingredientes')
     const respuesta = await fetch(`/menu/formsRegistraPlatillo?id=${id}`)
 
     if (!respuesta.ok) {
@@ -332,12 +331,12 @@ async function seleccionarTipoProducto (id) {
     const ProductFields = object.data.fields
     const AllIngredientes = object.data.ingredientes[0]
     const AllTypes = object.data.types
-    console.log("Types recvieves: ", AllTypes)
-    createProductRegisterForms(ProductFields, AllIngredientes, id,AllTypes)
+    console.log('Types recvieves: ', AllTypes)
+    createProductRegisterForms(ProductFields, AllIngredientes, id, AllTypes)
   } catch (error) {
     console.error('Hubo un fallo en la operación:', error)
     ShowErrorModal('Error de Conexión con BD', 'Hubo un inconveniente con la conexión a la BD. Intentelo mas tarde')
-  } finally{
+  } finally {
     hideSpinner()
   }
 }
@@ -443,7 +442,6 @@ function createIngElement (ing) {
   opt.setAttribute('data-precio', ing.precio)
   return opt
 }
-
 
 // Rellena un <select> vacío usando createIngElement
 function populateDropdown (selectEl) {
@@ -562,39 +560,37 @@ function onBtnIngNewClick () {
   updateIngCounter()
 }
 
+function buildTypeSection (typesData) {
+  const fieldWrapper = document.createElement('div')
+  fieldWrapper.className = 'maree-field is-dynamic'
 
-function buildTypeSection(typesData) {
-    const fieldWrapper = document.createElement('div');
-    fieldWrapper.className = 'maree-field is-dynamic'; 
+  const label = document.createElement('label')
+  label.className = 'maree-label'
+  label.textContent = 'Tipo de Producto'
+  fieldWrapper.appendChild(label)
 
-    const label = document.createElement('label');
-    label.className = 'maree-label';
-    label.textContent = 'Tipo de Producto';
-    fieldWrapper.appendChild(label);
+  const select = document.createElement('select')
+  select.className = 'maree-select'
+  select.id = 'productTypeSelect'
+  select.required = true // <--- Validación nativa de HTML5
 
-    const select = document.createElement('select');
-    select.className = 'maree-select';
-    select.id = 'productTypeSelect';
-    select.required = true; // <--- Validación nativa de HTML5
+  const defaultOption = document.createElement('option')
+  defaultOption.value = ''
+  defaultOption.textContent = 'Selecciona una categoría...'
+  defaultOption.disabled = true
+  defaultOption.selected = true
+  select.appendChild(defaultOption)
 
-    const defaultOption = document.createElement('option');
-    defaultOption.value = '';
-    defaultOption.textContent = 'Selecciona una categoría...';
-    defaultOption.disabled = true;
-    defaultOption.selected = true;
-    select.appendChild(defaultOption);
+  typesData.forEach(tipo => {
+    const option = document.createElement('option')
+    option.value = tipo.nombre // Asumiendo que el ID es lo que guardas
+    option.textContent = tipo.nombre
+    select.appendChild(option)
+  })
 
-    typesData.forEach(tipo => {
-        const option = document.createElement('option');
-        option.value = tipo.nombre; // Asumiendo que el ID es lo que guardas
-        option.textContent = tipo.nombre;
-        select.appendChild(option);
-    });
-
-    fieldWrapper.appendChild(select);
-    return fieldWrapper;
+  fieldWrapper.appendChild(select)
+  return fieldWrapper
 }
-
 
 function getIngredientesSeleccionados () {
   return Array.from(
@@ -632,9 +628,8 @@ function createProductRegisterForms (Fields, Ingredientes, type, tiposData) {
     registerForm.appendChild(fieldEl)
   })
 
-  //Construir la sección de tipos
+  // Construir la sección de tipos
   registerForm.appendChild(buildTypeSection(tiposData))
-
 
   // Construir e inyectar la sección de ingredientes
   registerForm.appendChild(buildIngredientsSection({ mostrarCantidad: false }))
@@ -709,10 +704,10 @@ function PostNewProduct (BackupIngredientes, ProductType) {
     data[cb.name] = cb.checked
   })
 
-  //3.5 tipo de producto
+  // 3.5 tipo de producto
   const tipoSeleccionado = document.getElementById('productTypeSelect').value
   data.tipo = tipoSeleccionado
-  console.log("Tipo rescatado: ", tipoSeleccionado)
+  console.log('Tipo rescatado: ', tipoSeleccionado)
 
   // 4. Ingredientes — array separado de ingredientes
   const ingredientes = getIngredientesSeleccionados()
@@ -721,10 +716,8 @@ function PostNewProduct (BackupIngredientes, ProductType) {
   // 4.5 Añadir Tipo
   data.categoría = ProductType
 
-
   // 5. Validación de Reglas de negocio
   const validacion = validarDatosRegistro(data, BackupIngredientes)
-
 
   if (validacion) {
     console.log('Datos válidos :)')
@@ -877,13 +870,12 @@ async function registerNewProduct (NewProductData, ProductType) {
   try {
     console.log('POST NEW PRODUCT')
 
-    showSpinner("Guardando Producto")
+    showSpinner('Guardando Producto')
     const postrequest = await fetch('/menu/registerNewProduct', {
       method: 'POST',
       headers: { 'Content-Type': 'application/JSON' },
       body: JSON.stringify(NewProductData)
     })
-
 
     const response = await postrequest.json()
     if (response.ok) {
@@ -899,7 +891,6 @@ async function registerNewProduct (NewProductData, ProductType) {
   } finally {
     hideSpinner()
   }
-
 }
 
 const SuccessModal = document.getElementById('ModalExito')

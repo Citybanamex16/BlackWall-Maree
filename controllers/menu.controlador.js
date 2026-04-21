@@ -11,17 +11,16 @@ const db = require('../util/database.js')
 exports.getMenu = (request, response, next) => {
   const breadcrumbs = nav.getBreadcrumbs('Menu')
   const SesionData = request.session.cliente
-  response.render('cliente/menu', { breadcrumbs, datosCliente:SesionData })
+  response.render('cliente/menu', { breadcrumbs, datosCliente: SesionData })
 }
 
 exports.getMenuData = async (request, response, next) => {
   console.log('GetMenu ejecutandose...')
   try {
-    // 1. Llamado en paralelo de consultas con Promise.all()
     const [Allcategories, productsData, AllTypes] = await Promise.all([
-      categorías.fecthAll(), // Async BD call 1.
-      productos.getValidProductData(), // async BD call 2.
-      tipos.fetchAll() // async BD call 3.
+      categorías.fecthAll(),
+      productos.getValidProductData(),
+      tipos.fetchAll()
     ])
 
     console.log('All Promises realizada con exito')
@@ -97,8 +96,6 @@ exports.getAllSucursales = async (req, res, nex) => {
   }
 }
 
-// Fin CU11
-
 exports.getOrden = (request, response, next) => {
   const breadcrumbs = nav.getBreadcrumbs('Orden')
   response.render('cliente/order', { breadcrumbs })
@@ -134,8 +131,6 @@ exports.getPlatillo = async (request, response, next) => {
     }
 
     const row = rows[0]
-
-    // Disponible puede venir como string '1'/'0' o número 1/0
     const disponible = row.Disponible === 1 || row.Disponible === '1'
 
     response.status(200).json({
@@ -168,8 +163,6 @@ exports.validarPedido = async (request, response, next) => {
   for (const item of items) {
     if (
       typeof item.nombre !== 'string' ||
-      typeof item.precio !== 'string' ||
-      typeof item.desc !== 'string' ||
       item.nombre.trim() === '' ||
       item.nombre.length > 100
     ) {
@@ -178,10 +171,10 @@ exports.validarPedido = async (request, response, next) => {
   }
 
   try {
-    const nombres = items.map(i => i.nombre)
-    const nombresUnicos = [...new Set(nombres)]
-    const resultado = await Pedido.verificarDisponibilidad(nombresUnicos)
-    if (Number(resultado.count) !== nombresUnicos.length) {
+    const ids = items.map(i => i.id)
+    const idsDisponibles = await Pedido.verificarDisponibilidadPorId(ids)
+    const todosDisponibles = ids.every(id => idsDisponibles.includes(id))
+    if (!todosDisponibles) {
       return response.status(200).json({
         pedidoValido: false,
         mensaje: 'Algunos platillos de tu pedido ya no están disponibles.'
@@ -193,8 +186,6 @@ exports.validarPedido = async (request, response, next) => {
     next(err)
   }
 }
-
-
 
 exports.confirmarPedido = async (request, response, next) => {
   const { items, forma, telefono } = request.body
@@ -217,10 +208,10 @@ exports.confirmarPedido = async (request, response, next) => {
     // 1 Verifica cliente (o lo crea si no hay)
     await Pedido.verificarOCrearCliente(telefonoLimpio)
 
-    // 2 Guardar la orden
+    // 2 Guarda la orden
     const idOrden = await Pedido.guardarOrden(telefonoLimpio, forma, 'Cliente')
 
-    // 3. Guardar los items
+    // 3. Guarda los items
     await Pedido.guardarItems(idOrden, items)
 
     response.status(200).json({ pedidoConfirmado: true, idOrden })
@@ -230,15 +221,11 @@ exports.confirmarPedido = async (request, response, next) => {
   }
 }
 
-
-
 /* CU 14 Visualizar Catalogo Productos */
 exports.getProducts = (req, res, next) => {
   const breadcrumbs = nav.getBreadcrumbs('AdminSection')
   res.render('admin/products', { breadcrumbs })
 }
-
-
 
 exports.getProductsCatalog = async (req, res, next) => {
   console.log('Backend obteniendo todos los Productos, ingredientes & catalogos')
@@ -268,8 +255,8 @@ exports.getProductsCatalog = async (req, res, next) => {
   }
 }
 
-exports.getTypes = async (req,res, nex) =>{
-    try {
+exports.getTypes = async (req, res, nex) => {
+  try {
     const productTypes = await tipos.fetchAll()
 
     res.status(200).json({
@@ -284,12 +271,9 @@ exports.getTypes = async (req,res, nex) =>{
       message: 'Error al obtener los tipos de la BD'
     })
   }
-
 }
 
-
 /* FIN Visualizar Catalogo */
-
 
 exports.getCategorys = async (req, res, next) => {
   try {
@@ -334,7 +318,7 @@ exports.getProductfieldsAndIngredientes = async (req, res, next) => {
       data: {
         fields: productFormsFields,
         ingredientes: allIngredientes,
-        types:allTypes
+        types: allTypes
       }
     })
   } catch (error) {
@@ -366,9 +350,7 @@ exports.postNewProduct = async (req, res, next) => {
       ingredientesID
     } = NewProductData
 
-
-
-     console.log('Variables a insertar:', {
+    console.log('Variables a insertar:', {
       AutoId: 'Generando...',
       Nombre,
       categoría,
@@ -377,13 +359,12 @@ exports.postNewProduct = async (req, res, next) => {
       Imagen,
       tipo,
       tieneIngredientes: ingredientesID?.length > 0
-    });
+    })
 
     const validation = await productos.ValidarDatosRegistro(NewProductData)
     const AutoId = productos.generarID('PD')
 
     if (validation) {
-
       if (ingredientesID.length > 0) {
         // Caso producto con ingredientes (transacción)
         // 1. Iniciamos la transacción asincronica -> hasta commit
@@ -408,7 +389,7 @@ exports.postNewProduct = async (req, res, next) => {
       } else {
         // Caso producto Sin ingredientes
         const postResult = await productos.insertNewProduct(connection, AutoId, Nombre, categoría, Precio, Disponible, Imagen, tipo)
-        
+
         if (postResult.affectedRows > 0) {
           console.log('Producto Insertado con exito')
           res.status(200).json({
@@ -470,7 +451,7 @@ exports.postModifProduct = async (req, res, next) => {
     await connection.beginTransaction()
 
     // A. Cambio de datos en el Producto
-    const modifyResult = await productos.modifyProduct(connection, newdata.id, newdata.nombre, newdata.Categoria,newdata.tipo, newdata.precio, newdata.activo, newdata.imagen)
+    const modifyResult = await productos.modifyProduct(connection, newdata.id, newdata.nombre, newdata.Categoria, newdata.tipo, newdata.precio, newdata.activo, newdata.imagen)
     console.log(modifyResult)
     // B. Eliminacion de ingredientes removidos
     if (aEliminar.length > 0) {
