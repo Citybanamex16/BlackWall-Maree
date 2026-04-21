@@ -1007,3 +1007,19 @@ exports.eliminarSucursal = async (req, res, next) => {
     res.status(500).json({ success: false, message: error.message })
   }
 }
+
+exports.getMetricasRoyalty = async (request, response, next) => {
+  try {
+    const [flujoClientes] = await MetricasClientes.getFlujoClientesMensuales()
+
+    const labelsMeses = flujoClientes.map(row => row.mes)
+    const dataClientes = flujoClientes.map(row => row.total_clientes)
+
+    response.render('metricsRoyalty.ejs', {
+      chartLabels: JSON.stringify(labelsMeses),
+      chartData: JSON.stringify(dataClientes)
+    })
+  } catch (error) {
+    console.log(error)
+  }
+}
