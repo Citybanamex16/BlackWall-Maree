@@ -168,3 +168,16 @@ const issueOtpForClient = async (telefono) => {
   console.log(`\n[TEST] OTP para ${telefono}: ${otpCode}\n`)
   return { code: otpCode, expires: expirationDate }
 }
+
+// === Funciones que utiliza el equipo de Menu :) ==
+exports.getSesion = (req, res) => {
+  if (req.session.isLoggedIn && req.session.cliente) {
+    return res.json({
+      autenticado: true,
+      rol: 'cliente',
+      usuario: req.session.cliente
+      // Devuelve: { nombre, telefono, genero, visitas }
+    })
+  }
+  res.json({ autenticado: false })
+}

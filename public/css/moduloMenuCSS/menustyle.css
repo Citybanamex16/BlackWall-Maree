@@ -430,7 +430,7 @@ html {
 }
 
 /* ── Descripción corta ── */
-.product-desc-text {
+.product-desc {
     font-size: 13px;
     color: #888;
     line-height: 1.55;
@@ -457,7 +457,7 @@ html {
 }
 
 /* ── Botón agregar ── */
-.btn-agregar {
+.btn btn-primary {
     display: flex;
     align-items: center;
     justify-content: center;
@@ -477,18 +477,18 @@ html {
     transition: background 0.2s, color 0.2s, transform 0.15s, box-shadow 0.2s;
 }
 
-.btn-agregar:hover {
+.btn btn-primary:hover {
     background: #b5956a;
     color: #fff;
     box-shadow: 0 3px 12px rgba(181, 149, 106, 0.3);
     transform: translateY(-1px);
 }
 
-.btn-agregar:active {
+.btn btn-primary:active {
     transform: translateY(0);
 }
 
-.btn-agregar-icon {
+.btn btn-primary-icon {
     font-size: 16px;
     line-height: 1;
     font-weight: 300;
@@ -501,7 +501,7 @@ html {
     100% { box-shadow: 0 0 0 0 rgba(80, 160, 100, 0); }
 }
 
-.btn-agregar.is-success-flash {
+.btn btn-primary.is-success-flash {
     background: #4a9e6a;
     border-color: #4a9e6a;
     color: #fff;
@@ -571,3 +571,8 @@ html {
         font-size: 18px;
     }
 }
+
+
+
+
+
