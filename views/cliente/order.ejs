@@ -9,19 +9,27 @@
     <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=Jost:wght@300;400;500&display=swap" rel="stylesheet">
 </head>
 <body>
-    <nav class="navbar" role="navigation">
-        <div class="navbar-brand">
-        <div class="navbar-item">
+    <nav class="navbar" role="navigation" style="padding:12px 24px;border-bottom:1px solid #eee;display:flex;align-items:center;justify-content:space-between;">
+        <div style="display:flex;align-items:center;gap:32px;">
+            <a href="/menu/menu" style="display:flex;align-items:center;gap:6px;color:#555;font-size:14px;text-decoration:none;font-family:'Jost',sans-serif;">
+                <span style="font-size:18px;">←</span>
+                <span>Menú</span>
+            </a>
             <div class="logo-area">
-            <span class="logo-text">MARÉE</span>
-            <span class="logo-sub">Love at First Crêpe</span>
+                <span class="logo-text">MARÉE</span>
+                <span class="logo-sub">Love at First Crêpe</span>
             </div>
         </div>
+        <div style="display:flex;align-items:center;gap:16px;">
+        <a href="/cliente/login"
+            style="padding:8px 18px;border:1px solid #b5956a;border-radius:6px;
+                    color:#b5956a;font-size:13px;text-decoration:none;font-family:'Jost',sans-serif;">
+            Iniciar Sesión
+        </a>
+        <span id="nav-item-count" style="font-size:13px;color:#888;font-family:'Jost',sans-serif;"></span>
         </div>
     </nav>
     
-    <%- include('../partials/breadcrumbs') %>
-
     <section class="section">
         <div class="container">
 
