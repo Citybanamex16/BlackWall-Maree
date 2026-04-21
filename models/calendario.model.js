@@ -13,11 +13,31 @@ class Calendario {
       FROM calendario c
       LEFT JOIN sucursal s
         ON c.ID_Sucursal = s.ID_Sucursal
-      WHERE c.Es_Laboral = 1
       ORDER BY c.Fecha ASC
     `)
 
     return rows
+  }
+
+  static async fetchSucursales() {
+    const [rows] = await db.execute(`
+      SELECT
+        ID_Sucursal AS id_sucursal,
+        Nombre AS nombre
+      FROM sucursal
+      ORDER BY Nombre ASC
+    `)
+
+    return rows
+  }
+
+  static async createDiaHabil(idSucursal, fecha, esLaboral, descripcion) {
+    const [result] = await db.execute(`
+      INSERT INTO calendario (ID_Sucursal, Fecha, Es_Laboral, Descripción)
+      VALUES (?, ?, ?, ?)
+    `, [idSucursal, fecha, esLaboral, descripcion])
+
+    return result
   }
 }
 
