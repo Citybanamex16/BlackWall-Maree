@@ -1,6 +1,13 @@
+/* eslint-env browser */
+/* global alert */
+
+/* eslint-disable no-unused-vars */
+
 // const { request } = require('express')
 const nav = require('../models/breadcrumbs.model.js')
 const Royalty = require('../models/royalty.model.js')
+const WalletModel = require('../models/googleWallet.model.js')
+const { request } = require('express')
 
 // Admin
 exports.getRoyaltyAdmin = async (request, response, next) => {
@@ -69,6 +76,8 @@ exports.updateRoyalty = async (request, response, next) => {
     await Royalty.updateEstadoRoyalty(nombreOriginal, nombre, prioridad, descripcion, minVisitas, maxVisitas)
     await Royalty.updatePromocionesRoyalty(nombre, promociones)
     await Royalty.updateEventosRoyalty(nombre, eventos)
+    // Actualizar WalletModel
+    await WalletModel.actualizarTarjetaPorNivel(nombreOriginal, nombre, descripcion)
     response.status(200).json({
       success: true,
       message: 'Se han modificado los datos correctamente'
@@ -172,6 +181,14 @@ exports.getRoyaltyDataAPI = async (request, response, next) => {
     const clienteInfo = statusData[0]
     const nivelId = clienteInfo.nivel
 
+    // Wallet
+    const walletLink = await WalletModel.generarLinkWallet(
+      telefono,
+      clienteInfo.Nombre_Royalty,
+      clienteInfo.Visitas,
+      clienteInfo.maxVisitas
+    )
+
     const [[promotionsData], [eventsData]] = await Promise.all([
       Royalty.fetchPromotions(nivelId),
       Royalty.fetchEvents(nivelId)
@@ -180,7 +197,8 @@ exports.getRoyaltyDataAPI = async (request, response, next) => {
     return response.status(200).json({
       clienteNivel: nivelId,
       promociones: promotionsData,
-      eventos: eventsData
+      eventos: eventsData,
+      walletLink // wallet
     })
   } catch (error) {
     console.error(error)

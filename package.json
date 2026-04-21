@@ -103,6 +103,8 @@
     "glob-parent": "^6.0.2",
     "globals": "^13.24.0",
     "globalthis": "^1.0.4",
+    "google-auth-library": "^10.6.2",
+    "googleapis": "^171.4.0",
     "gopd": "^1.2.0",
     "graceful-fs": "^4.2.11",
     "graphemer": "^1.4.0",
@@ -256,7 +258,7 @@
     "launch": "node --watch server.js",
     "prepare": "husky",
     "santi": "SET USER=maree2& SET HOST=mysql-maree2.alwaysdata.net& SET DB=maree2_2& SET PASSWORD=maree123& node --watch server.js",
-    "test":"jest"
+    "test": "jest"
   },
   "lint-staged": {
     "*.js": "standard --fix"
