@@ -7,6 +7,7 @@ const nav = require('../models/breadcrumbs.model.js')
 const Royalty = require('../models/royalty.model.js')
 const WalletModel = require('../models/googleWallet.model.js')
 const { request } = require('express')
+const QRCode = require('qrcode')
 
 // Admin
 exports.getRoyaltyAdmin = async (request, response, next) => {
@@ -225,13 +226,24 @@ exports.getRoyaltyCli = async (request, response, next) => {
     const [statusData] = await Royalty.fetchClientStatus(telefono)
     const clienteInfo = statusData[0]
 
-    if (!clienteInfo) {
-      return response.status(404).render('errores/404', { error: 'Información no encontrada.' })
+    if (!clienteInfo) return response.redirect('/menu/menu')
+
+    let qrCodeDataUrl = ''
+    try {
+      qrCodeDataUrl = await QRCode.toDataURL(String(telefono), {
+        color: { dark: '#000000', light: '#0000' },
+        width: 200,
+        margin: 2
+      })
+    } catch (err) {
+      console.error('Error generando QR:', err)
     }
+
     return response.render('cliente/royalty', {
       pageTitle: 'Mi Estado Royalty',
       breadcrumbs: nav.getBreadcrumbs('Royalty'),
-      cliente: clienteInfo
+      cliente: clienteInfo,
+      qrCode: qrCodeDataUrl
     })
   } catch (error) {
     console.error('Error al cargar vista Royalty:', error)
@@ -243,10 +255,6 @@ exports.getRoyaltyDataAPI = async (request, response, next) => {
   console.log('getRoyaltyDataAPI llamado')
   if (!request.session.isLoggedIn || request.session.rol !== 'Usuario') {
     return response.status(401).json({ redirectUrl: '/cliente/login' })
-  }
-
-  if (request.session.rol !== 'Usuario') {
-    return response.status(403).json({ redirectUrl: '/royalty/royaltyAdmin' })
   }
 
   const telefono = request.session.cliente.telefono
@@ -266,19 +274,40 @@ exports.getRoyaltyDataAPI = async (request, response, next) => {
     console.log('TOKEN JWT:', walletLink.split('/').pop())
     console.log('Wallet link generado:', walletLink)
 
-    const [[promotionsData], [eventsData]] = await Promise.all([
+    const [
+      [promotionsData],
+      [eventsData],
+      [topBebidasResult],
+      [topPlatillosResult],
+      [favBebidasResult],
+      [favPlatillosResult]
+    ] = await Promise.all([
       Royalty.fetchPromotions(nivelId),
-      Royalty.fetchEvents(nivelId)
+      Royalty.fetchEvents(nivelId),
+      Royalty.fetchTopPlatillos('Bebidas'),
+      Royalty.fetchTopPlatillos('Platillo'),
+      Royalty.fetchFavoritosCliente(telefono, 'Bebidas'),
+      Royalty.fetchFavoritosCliente(telefono, 'Platillo')
     ])
 
     return response.status(200).json({
       clienteNivel: nivelId,
       promociones: promotionsData,
       eventos: eventsData,
-      walletLink // wallet
+      walletLink, // wallet
+      metrics: {
+        global: {
+          bebidas: topBebidasResult[0] || [],
+          platillos: topPlatillosResult[0] || []
+        },
+        personal: {
+          bebidas: favBebidasResult[0] || [],
+          platillos: favPlatillosResult[0] || []
+        }
+      }
     })
   } catch (error) {
-    console.error(error)
+    console.error('Error en API de Royalty:', error)
     return response.status(500).json({
       redirectUrl: '/menu/menu?authError=database'
     })

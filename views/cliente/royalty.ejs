@@ -14,8 +14,12 @@
 
                 <div class="qr-container mb-4">
                     <div class="qr-placeholder mx-auto">
-                        <i class="bi bi-qr-code-scan"></i>
-                        <span class="mt-2 small text-muted">Generando...</span>
+                        <% if (typeof qrCode !== 'undefined' && qrCode) { %>
+                            <img src="<%= qrCode %>" alt="Código QR de <%= cliente.Nombre %>" class="img-fluid rounded shadow-sm">
+                        <% } else { %>
+                            <i class="bi bi-qr-code-scan text-danger"></i>
+                            <span class="mt-2 small text-danger">Error al cargar QR</span>
+                        <% } %>
                     </div>
                     <p class="text-muted mt-3 mb-0"><small><i class="bi bi-info-circle"></i> Muestra este código en caja</small></p>
                 </div>
@@ -54,6 +58,14 @@
             </div>
         </div>
     </section>
+
+    <section id="contenedor-metricas" class="container-fluid px-2 px-md-0 mb-4">
+    <div class="w-100 text-center py-4">
+        <div class="spinner-border text-gold spinner-border-sm" role="status"></div>
+        <span class="ms-2 small text-muted">Calculando tus estadísticas...</span>
+    </div>
+    </section>
+
 </main>
 
 <a id="btn-wallet" href="#" target="_blank">

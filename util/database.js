@@ -1,19 +1,18 @@
 const mysql = require('mysql2')
 
-/* Pool de conexiones
+// Pool de conexiones
 const pool = mysql.createPool({
-  //host: 'localhost',
+  // host: 'localhost',
   host: '172.20.96.1', // NO LO BORREN SOLO COMENTENLO
   port: '3300',
-  //port: '3000',
+  // port: '3000',
   user: 'root',
   database: 'mareebd',
-  password: '',
+  password: '1234',
   waitForConnection: true,
   connectionLimit: 10
 
 })
-*/
 
 /* ==Contraseñas y usuario ==
 Usuario: CL85565990
@@ -36,6 +35,9 @@ const pool = mysql.createPool({
 */
 
 // Santi
+/*
+// JUAREZ
+
 // Pool de conexiones
 const pool = mysql.createPool({
   host: 'localhost',

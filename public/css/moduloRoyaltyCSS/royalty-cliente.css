@@ -155,3 +155,71 @@ body {
         transition: all 0.2s ease-in-out;
     }
 }
+
+.metrics-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 1.5rem;
+}
+
+.metrics-card {
+    background: #ffffff;
+    border-radius: 24px;
+    padding: 1.5rem;
+    box-shadow: var(--card-shadow);
+    border: 1px solid rgba(0,0,0,0.02);
+}
+
+.ranking-container {
+    display: flex;
+    flex-direction: column;
+    gap: 0.8rem;
+}
+
+.ranking-item {
+    display: flex;
+    align-items: center;
+    padding: 0.6rem 1rem;
+    background: var(--maree-light-bg);
+    border-radius: 12px;
+    transition: all 0.2s ease;
+}
+
+.ranking-item:hover {
+    transform: scale(1.02);
+    background: white;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+}
+
+.rank-number {
+    width: 28px;
+    height: 28px;
+    background: var(--maree-dark);
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.8rem;
+    font-weight: bold;
+    margin-right: 12px;
+}
+
+.ranking-item:first-child .rank-number {
+    background: var(--maree-gold);
+    box-shadow: 0 0 10px rgba(212, 175, 55, 0.4);
+}
+
+.fav-highlight {
+    text-align: center;
+    padding: 1rem;
+    border: 1.5px solid rgba(212, 175, 55, 0.1);
+    border-radius: 20px;
+    margin-bottom: 1rem;
+}
+
+.fav-highlight i {
+    font-size: 2.5rem;
+    margin-bottom: 0.5rem;
+    display: block;
+}

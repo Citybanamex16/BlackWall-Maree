@@ -34,13 +34,13 @@
         <div class="auth-card">
             <form id="form-login">
                 <div class="field">
-                    <label class="label">Identificador (Teléfono o ID)</label>
+                    <label class="auth-label">Identificador (Teléfono o ID)</label>
                     <div class="control">
                         <input class="input auth-input" type="text" name="telefono" placeholder="10 dígitos o CL..." required>
                     </div>
                 </div>
                 <div class="field mt-4 is-hidden" id="password-field">
-                    <label class="label">Contraseña de Colaborador</label>
+                    <label class="auth-label">Contraseña de Colaborador</label>
                     <div class="control">
                         <input class="input auth-input" type="password" name="password" placeholder="••••••••">
                     </div>
@@ -50,15 +50,15 @@
 
             <form id="form-signup" class="is-hidden">
                 <div class="field">
-                    <label class="label">Teléfono</label>
+                    <label class="auth-label">Teléfono</label>
                     <div class="control">
                         <input class="input auth-input" type="text" name="telefono" placeholder="10 dígitos" required>
                     </div>
                 </div>
-                <div class="field"><label class="label">Nombre Completo</label><div class="control"><input class="input auth-input" type="text" name="nombre" required></div></div>
-                <div class="field"><label class="label">Género</label><div class="control"><div class="select is-fullwidth"><select name="genero" required><option value="" disabled selected>Selecciona</option><option value="Masculino">Hombre</option><option value="Femenino">Mujer</option><option value="Otro">Otro</option></select></div></div></div>
-                <div class="field"><label class="label">Nacimiento</label><div class="control"><input class="input auth-input" type="date" name="birthday" required></div></div>
-                <div class="field"><label class="label">Mail</label><div class="control"><input class="input auth-input" type="email" name="mail" required></div></div>
+                <div class="field"><label class="auth-label">Nombre Completo</label><div class="control"><input class="input auth-input" type="text" name="nombre" required></div></div>
+                <div class="field"><label class="auth-label">Género</label><div class="control"><div class="select is-fullwidth"><select name="genero" required><option value="" disabled selected>Selecciona</option><option value="Masculino">Hombre</option><option value="Femenino">Mujer</option><option value="Otro">Otro</option></select></div></div></div>
+                <div class="field"><label class="auth-label">Nacimiento</label><div class="control"><input class="input auth-input" type="date" name="birthday" required></div></div>
+                <div class="field"><label class="auth-label">Mail</label><div class="control"><input class="input auth-input" type="email" name="mail" required></div></div>
                 <button class="primary-btn mt-4" type="submit">Registrarse</button>
             </form>
 

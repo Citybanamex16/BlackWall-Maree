@@ -32,7 +32,6 @@ exports.postLogin = async (request, response, next) => {
     if (/^CL\d{8}$/i.test(telefono)) {
       const [rows] = await Login.fetchColaborador(telefono)
       const colaborador = rows[0]
-
       if (!colaborador) {
         return response.status(404).json({ error: 'ID de Colaborador no encontrado.' })
       }
@@ -54,7 +53,6 @@ exports.postLogin = async (request, response, next) => {
         }
         return response.status(401).json({ error: 'Contraseña incorrecta.' })
       }
-
       return response.status(200).json({ requirePassword: true })
     }
 
@@ -150,7 +148,7 @@ exports.postVerifyOtp = async (request, response, next) => {
 
       return response.status(200).json({
         success: true,
-        redirectUrl: '/royalty/royaltyUser'
+        redirectUrl: '/menu/menu'
       })
     }
 
