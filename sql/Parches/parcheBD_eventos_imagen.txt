@@ -1,0 +1,13 @@
+Parche para agregar imagenes a eventos
+
+Primero verifica si ya esta la columna de Imagen dentro de tabla de evento. 
+Si no aparece :
+Ejecuta este parche una sola vez en phpMyAdmin, dentro de la base de datos,
+antes de probar la carga de imagenes en el modulo de eventos. Agrega la columna
+Imagen a la tabla evento, donde se guarda la ruta del archivo subido desde el
+administrador para mostrarlo en la tarjeta del catalogo de eventos.
+
+SQL:
+
+ALTER TABLE `evento`
+  ADD COLUMN `Imagen` text DEFAULT NULL AFTER `Fecha_Final`;

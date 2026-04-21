@@ -5,7 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Products - Admin Marée</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@1.0.4/css/bulma.min.css">
-    <link rel="stylesheet" href="/css/productCatalog.css">
+    <link rel="stylesheet" href="/css/moduloMenuCSS/moduloMenuAdminCSS.css">
+
 </head>
 <body>
 
@@ -62,7 +63,7 @@
     </section>
 
      <!-- BOTÓN Registrar nuevo Producto -->
-    <a href="#" id="registrarNuevoProducto" class="button fab is-primary is-rounded button-floating">
+    <a href="#" id="registrarNuevoProducto" class="button fab is-primary is-rounded">
         <span class="icon">
             <i class="fas fa-plus"></i> 
         </span>
@@ -71,7 +72,7 @@
 
 
 <dialog id="TypeFormsCU04" class="mymodal">
-  <button class="modal-close-btn" id="closeRegisterX">✕</button>
+  <button class="modal-close-btn" id="closeTypeFormsX">✕</button>
   <h2 id="tituloModal">Título dinámico</h2>
   <p>Elige una opción:</p>
   <br>
@@ -80,7 +81,7 @@
 
 
 <dialog id="RegisterFormsCU04" class="mymodal">
-  <button class="modal-close-btn" id="closeRegisterX">✕</button>
+  <button class="modal-close-btn" id="closeRegisterFormsX">✕</button>
   <h2 id="formsRegistrarTitulo">Título dinámico</h2>
   <h3 id ="idSection"></h3>
   <form id="formsRegistrarForm" novalidate>
@@ -101,7 +102,7 @@
 
 
 <dialog id="SummaryCU04" class="mymodal">
-  <button class="modal-close-btn" id="closeRegisterX">✕</button>
+  <button class="modal-close-btn" id="closeSummaryX">✕</button>
   <h2 id="SummaryTitleModal">Título dinámico</h2>
   <p>Revisa los datos antes de registrar</p>
    <hr style="border:none; border-top:1px solid #ebebeb; margin: 12px 0;">
@@ -116,7 +117,7 @@
 
 
 <dialog id="modifSummaryCU05" class="mymodal">
-  <button class="modal-close-btn" id="closeRegisterX">✕</button>
+  <button class="modal-close-btn" id="closeSummaryModifX">✕</button>
 
   <h2 id="SummaryTitleModif">Título dinámico</h2>
   <p style="font-size:13px; color:#888; margin-top:2px;">
@@ -147,19 +148,19 @@
 
 
 <!-- Dialogo de ¡EXITO!-->
-<dialog id="ModalExito" class="error-modal mymodal">
+<dialog id="ModalExito" class=" mymodal">
     <h2 id = "TituloExito">Titulo Dinamico</h2>
     <div class="modal-accent-bar"></div>
     <p id="exitoContent">Contenido Dinámico</p>
     <!-- Botón con ID para manipularlo desde JS -->
-    <button id="closeExito" type="submit" class="modal-close-btn" class="modal-close-btn">Regresar a Catalogo</button>
+    <button id="closeExito" type="submit" class="modal-close-btn">Regresar a Catalogo</button>
 </dialog>
 
 
 
 
 <!-- Dialogo de error -->
-<dialog id="ErrorModal" class="error-modal mymodal">
+<dialog id="ErrorModal" class=" mymodal">
     <h2 id="ErrorTitle">Titulo Dinámico</h2>
     <div class="modal-accent-bar"></div>
     <p id="ErrorMessage">Mensaje Dinámico</p>
@@ -219,6 +220,7 @@
     </div>
 </dialog>
 
+<%- include('../partials/spinnerAdmin') %>
 
 
 
@@ -227,3 +229,81 @@
 <script src="/js/menudigital/AdminProductsScripts/ModifElimProducts.js"></script>
 </body>
 </html>
+
+
+
+<!-- 
+🆔 IDs (Identificadores Únicos)
+Estructura Principal y Estadísticas:
+filtroBusqueda (Input de búsqueda)
+statTotal, statDisponibles, statCategorias (Contenedores de números)
+admin-catalogo (Contenedor donde se inyecta la tabla/lista)
+registrarNuevoProducto (Botón flotante principal)
+1. Modal Selección (TypeFormsCU04):
+TypeFormsCU04, closeTypeFormsX, tituloModal, cerrarModal
+2. Modal Registro/Edición (RegisterFormsCU04):
+RegisterFormsCU04, closeRegisterFormsX, formsRegistrarTitulo, idSection, formsRegistrarForm, cerrarFormsRegistrar, submitFormsRegistrar
+3. Modal Resumen Alta (SummaryCU04):
+SummaryCU04, closeSummaryX, SummaryTitleModal, summaryContent, cerrarSummaryModal, RegisterProduct
+4. Modal Resumen Modificación (modifSummaryCU05):
+modifSummaryCU05, closeSummaryModifX, SummaryTitleModif, modifSummaryContent, cerrarSummaryModif, RegisterModification
+5. Modales de Estado (Éxito/Error):
+ModalExito, TituloExito, exitoContent, closeExito
+ErrorModal, ErrorTitle, ErrorMessage, closeInvalidData
+6. Modales de Acción (Eliminar/Confirmar):
+ElimDesactModal, closeElimDesact, elimDesactNombre, btnDesactivar, btnEliminar, btnSalirElimDesact
+ConfirmActionModal, closeConfirmAction, confirmAccentBar, confirmActionTitle, confirmActionDesc, btnCancelarConfirm, btnConfirmarAccion
+🏷️ Clases (Estilos y Comportamiento)
+Bulma & Layout:
+section, container, level, level-left, level-right, mb-4, mb-5, mb-1, title, subtitle, is-6, field, control, has-icons-left, input, icon, is-left, has-text-centered, heading, is-primary, is-rounded, is-light, is-warning, is-danger, is-fullwidth, button
+Personalizadas (CSS Propio):
+stats-bar (Barra de resumen)
+fab, button-floating (Botón "Añadir")
+mymodal (Clase general de todos los <dialog>)
+modal-close-btn (Botón de cierre "X" y botones de acción de cierre)
+modal-footer (Contenedor inferior de botones)
+error-modal (Estilo específico para éxito/error)
+modal-accent-bar (Barra de color superior en modales)
+modif-summary-header, modif-summary-body, modif-col-label, modif-col-old, modif-col-new (Estructura de comparación de cambios)
+elim-desact-opciones, elim-desact-btn, elim-desact-btn-text, elim-desact-btn-title, elim-desact-btn-sub (Botones grandes de eliminación)
+
+
+
+//Dinámicos (Generado por JS)
+
+🆔 IDs Dinámicos (Generados por JS)
+Estos cambian según el nombre de la categoría:
+cat-[nombre-categoria]: (Ej: cat-bebidas) Identificador único de cada sección <section>.
+grid-[nombre-categoria]: (Ej: grid-bebidas) ID del contenedor donde se inyectan los productos.
+badge-grid-[nombre-categoria]: ID del contador (badge) que muestra cuántos productos hay en esa sección.
+🏷️ Clases Dinámicas
+Contenedores de Categoría:
+categoria-section: Clase base de la sección.
+is-dynamic: Indica que fue creada por JS.
+is-open: Controla si la categoría está desplegada o colapsada.
+cat-header / toggle-menu: El área clickable para abrir/cerrar.
+cat-title: Estilo del nombre de la categoría.
+cat-badge: Estilo del círculo contador.
+cat-chevron: La flecha indicadora.
+grid-productos / admin-grid: El contenedor de la lista de productos.
+grid-collapsible: Clase para aplicar la animación de colapso (CSS).
+Fichas de Producto (Rows):
+admin-prod-row: La fila completa del producto (clickable para editar).
+admin-prod-info: Contenedor de imagen y textos.
+admin-prod-img-container / admin-prod-img: Estilos de la fotografía.
+admin-prod-texts / admin-prod-name / admin-prod-meta: Jerarquía de textos.
+admin-tag-tipo: Etiqueta pequeña para el tipo de producto.
+admin-prod-price: Estilo del precio.
+admin-prod-actions: Contenedor del botón lateral.
+btn-elim-desact: El botón con el icono de basura.
+Estados Especiales:
+empty-state / empty-icon: Se muestran cuando una categoría no tiene productos.
+💾 Atributos de Datos (data-*)
+Estos son vitales para tu lógica de JS, ya que es donde guardas la información que recuperan tus Handlers:
+data-id (en .admin-prod-row): Guarda el ID del producto para abrir el modal de edición correcto.
+data-id-prod (en .btn-elim-desact): El ID para la función de eliminar.
+data-name-prod (en .btn-elim-desact): El nombre para mostrarlo en el modal de confirmación.
+
+
+
+-->

@@ -127,3 +127,8 @@ body {
     font-size: 26px;
     margin-bottom: 10px;
 }
+
+.auth-label, .select select {
+    color: #49413a !important;
+    min-height: 40px;
+}

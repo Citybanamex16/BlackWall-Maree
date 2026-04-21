@@ -3,7 +3,7 @@ const db = require('../util/database.js')
 module.exports = class Ingrediente {
   // Consigue todods los ingredientes activos
   static async fetchAll () {
-    return db.execute('SELECT ID_Insumo, Nombre, Categoría, Precio, Activo, Tipo FROM insumo')
+    return db.execute('SELECT ID_Insumo, Nombre, Categoría, Precio, Activo FROM insumo')
   }
 
   // Busca ingrediente por nombre (para verificar duplicados)
@@ -40,8 +40,8 @@ module.exports = class Ingrediente {
   // Inserta nuevo ingrediente en BD
   static async insertNuevoIngrediente (id, nombre, categoria, precio, activo, tipo, imagen) {
     return db.execute(
-      'INSERT INTO insumo (ID_Insumo, Nombre, `Categoría`, Precio, Activo, Tipo, Imagen) VALUES (?, ?, ?, ?, ?, ?, ?)',
-      [id, nombre, categoria, precio, activo ? 1 : 0, tipo || null, imagen || null]
+      'INSERT INTO insumo (ID_Insumo, Nombre, `Categoría`, Precio, Activo, Imagen) VALUES (?, ?, ?, ?, ?, ?)',
+      [id, nombre, categoria, precio, activo ? 1 : 0, imagen || null]
     )
   }
 
@@ -65,10 +65,10 @@ module.exports = class Ingrediente {
     return db.execute('CALL EliminarIngrediente(?)', [idInsumo])
   }
 
-  static async actualizarIngrediente (id, nombre, categoria, precio, activo, tipo, imagen) {
+  static async actualizarIngrediente (id, nombre, categoria, precio, activo, imagen) {
     return db.execute(
-      'CALL ActualizarIngrediente(?, ?, ?, ?, ?, ?, ?)',
-      [id, nombre, categoria, precio, activo ? 1 : 0, tipo || null, imagen || null]
+      'CALL ActualizarIngrediente(?, ?, ?, ?, ?, ?)',
+      [id, nombre, categoria, precio, activo ? 1 : 0, imagen || null]
     )
   }
 

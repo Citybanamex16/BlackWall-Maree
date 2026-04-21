@@ -27,8 +27,21 @@
     color: var(--c-primary);
 }
 
+/*
 .chart-wrap {
     min-height: 340px;
+    margin-top: 20px;
+    background: var(--c-surface);
+    padding: 16px;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--c-border);
+}
+*/
+
+.chart-wrap {
+    position: relative; /* ¡Súper importante para frenar a Chart.js! */
+    height: 400px;      /* Define una altura estricta en lugar de min-height */
+    width: 100%;        /* Asegura que no se desborde a los lados */
     margin-top: 20px;
     background: var(--c-surface);
     padding: 16px;

@@ -174,4 +174,33 @@ module.exports = class Promocion {
   static deletePromocion (idPromocion) {
     return db.execute('DELETE FROM promocion WHERE ID_Promocion = ?', [idPromocion])
   }
+
+  /* funciones que utiliza modulo menu [lo agregue yo charly :)] */
+  static async getPromotionsBySource (source) {
+    const [result] = await db.execute('CALL obtener_promociones_por_tipo(?)', [source])
+    return result
+  }
+
+  static async getPRs (idRoyalty) {
+    const [result] = await db.execute(`
+   SELECT 
+    'Royalty' AS Origen, -- <--- Atributo fijo siempre como "Royalty"
+    er.Nombre_Royalty,
+    p.ID_Promocion,
+    p.Nombre AS Plantilla_Promo,
+    p.Descuento,
+    prod.ID_Producto,
+    prod.Nombre AS Producto
+FROM Estado_Royalty er
+JOIN estado_royalty_da_promociones erdp ON er.Nombre_Royalty = erdp.Nombre_Royalty
+JOIN Promocion p ON erdp.ID_Promocion = p.ID_Promocion
+JOIN producto_tiene_promocion ptp ON p.ID_Promocion = ptp.ID_Promocion
+JOIN producto prod ON ptp.ID_Producto = prod.ID_Producto
+WHERE er.Nombre_Royalty = ?;
+
+
+
+    `, [idRoyalty])
+    return result
+  }
 }

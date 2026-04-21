@@ -55,6 +55,15 @@ module.exports = class Pedido {
     return rows[0]
   }
 
+  static async verificarDisponibilidadPorId (ids) {
+    if (!ids || ids.length === 0) return []
+    const [rows] = await db.execute(
+      `SELECT ID_Producto FROM producto WHERE ID_Producto IN (${ids.map(() => '?').join(',')}) AND Disponible = 1`,
+      ids
+    )
+    return rows.map(r => r.ID_Producto)
+  }
+
   static async guardarOrden (telefono, tipoOrden, nombreCliente) {
     const idOrden = Pedido.generarID()
     const idTurnoFijo = 'TN26496107'
