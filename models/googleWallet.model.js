@@ -1,7 +1,7 @@
 /* eslint-env browser */
 /* eslint-disable no-unused-vars */
 
-const { walletClient, ISSUER_ID, CLASS_ID } = require('../util/GoogleCredentials/GoogleWallet')
+const { walletClient, ISSUER_ID, CLASS_ID } = require('../util/GoogleCredentials/googleWallet')
 const { GoogleAuth } = require('google-auth-library')
 const db = require('../util/database')
 const jwt = require('jsonwebtoken')
@@ -22,6 +22,11 @@ async function crearLoyaltyObject (telefono, nombreRoyalty, puntosActuales, maxP
         id: objectId,
         classId: CLASS_ID,
         state: 'ACTIVE',
+        barcode: {
+          type: 'QR_CODE',
+          value: String(telefono),
+          alternateText: String(telefono)
+        },
         loyaltyPoints: {
           balance: { int: puntosActuales ?? 0 },
           label: 'Visitas'

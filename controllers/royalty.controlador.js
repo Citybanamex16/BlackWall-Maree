@@ -2,6 +2,7 @@
 const nav = require('../models/breadcrumbs.model.js')
 const Royalty = require('../models/royalty.model.js')
 const QRCode = require('qrcode')
+const WalletModel = require('../models/googleWallet.model.js')
 
 // Admin
 exports.getRoyaltyAdmin = async (request, response, next) => {
@@ -197,10 +198,20 @@ exports.getRoyaltyDataAPI = async (request, response, next) => {
       Royalty.fetchFavoritosCliente(telefono, 'Platillo')
     ])
 
+    const walletLink = await WalletModel.generarLinkWallet(
+      telefono,
+      clienteInfo.nivel,
+      clienteInfo.visitas,
+      clienteInfo.Max_Visitas
+    )
+
+    console.log('Wallet link generado:', walletLink)
+
     return response.status(200).json({
       clienteNivel: nivelId,
       promociones: promotionsData,
       eventos: eventsData,
+      walletLink,
       metrics: {
         global: {
           bebidas: topBebidasResult[0] || [],
