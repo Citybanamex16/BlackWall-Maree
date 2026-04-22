@@ -98,7 +98,7 @@ exports.getAllSucursales = async (req, res, nex) => {
 
 exports.getOrden = (request, response, next) => {
   const breadcrumbs = nav.getBreadcrumbs('Orden')
-  response.render('cliente/order', { breadcrumbs })
+  response.render('cliente/order', { breadcrumbs, datosCliente: request.session.cliente || null })
 }
 
 exports.getPlatillo = async (request, response, next) => {
@@ -188,14 +188,18 @@ exports.validarPedido = async (request, response, next) => {
 }
 
 exports.confirmarPedido = async (request, response, next) => {
-  const { items, forma, telefono } = request.body
+  const { items, forma, telefono: telefonoBody, nombre: nombreBody, direccion } = request.body
 
-  const formasValidas = ['Pick-Up', 'On Site', 'Delivery']
+  const sesion = request.session.cliente
+  const telefonoFinal = sesion ? String(sesion.telefono) : telefonoBody
+  const nombreFinal = sesion ? sesion.nombre : (String(nombreBody || '').trim() || 'Cliente')
+
+  const formasValidas = ['Pick-Up', 'Sucursal', 'Delivery']
   if (!formasValidas.includes(forma)) {
     return response.status(400).json({ pedidoConfirmado: false, mensaje: 'Forma de entrega inválida' })
   }
 
-  const telefonoLimpio = String(telefono).replace(/[\s-]/g, '')
+  const telefonoLimpio = String(telefonoFinal).replace(/[\s-]/g, '')
   if (!/^\d{7,15}$/.test(telefonoLimpio)) {
     return response.status(400).json({ pedidoConfirmado: false, mensaje: 'Teléfono inválido' })
   }
@@ -205,13 +209,8 @@ exports.confirmarPedido = async (request, response, next) => {
   }
 
   try {
-    // 1 Verifica cliente (o lo crea si no hay)
-    await Pedido.verificarOCrearCliente(telefonoLimpio)
-
-    // 2 Guarda la orden
-    const idOrden = await Pedido.guardarOrden(telefonoLimpio, forma, 'Cliente')
-
-    // 3. Guarda los items
+    await Pedido.verificarOCrearCliente(telefonoLimpio, nombreFinal)
+    const idOrden = await Pedido.guardarOrden(telefonoLimpio, forma, nombreFinal, forma === 'Delivery' ? (direccion || null) : null)
     await Pedido.guardarItems(idOrden, items)
 
     response.status(200).json({ pedidoConfirmado: true, idOrden })

@@ -1,4 +1,4 @@
-/* global localStorage */
+/* global localStorage, sesionCliente */
 
 const listaPedido = document.getElementById('lista-pedido')
 const pedidoVacio = document.getElementById('pedido-vacio')
@@ -26,6 +26,27 @@ const cerrarModal = () => {
 // MODAL checkout
 const abrirModalCheckout = () => {
   const overlay = crearOverlay()
+  const conSesion = !!sesionCliente
+
+  const camposIdentidad = conSesion
+    ? `<div style="background:#faf8f5;border-radius:8px;padding:12px 16px;margin-bottom:20px;">
+        <p style="font-size:13px;color:#aaa;margin:0 0 2px 0;">Hola,</p>
+        <p style="font-size:16px;font-weight:600;color:#333;margin:0;">${sesionCliente.nombre}</p>
+       </div>`
+    : `<p style="font-size:13px;font-weight:600;color:#444;margin-bottom:6px;">Nombre</p>
+       <input id="input-nombre" type="text" placeholder="Tu nombre"
+         style="width:100%;padding:10px 14px;border:1px solid #ddd;border-radius:6px;
+                font-size:14px;font-family:'Jost',sans-serif;margin-bottom:16px;
+                box-sizing:border-box;outline:none;">
+
+       <p style="font-size:13px;font-weight:600;color:#444;margin-bottom:6px;">Número telefónico</p>
+       <input id="input-telefono" type="tel" placeholder="Ej. 442 123 4567"
+         style="width:100%;padding:10px 14px;border:1px solid #ddd;border-radius:6px;
+                font-size:14px;font-family:'Jost',sans-serif;margin-bottom:8px;
+                box-sizing:border-box;outline:none;">
+       <p id="error-telefono" style="display:none;color:#e74c3c;font-size:12px;margin-bottom:12px;">
+         Ingresa solo números (7-15 dígitos).
+       </p>`
 
   overlay.innerHTML = `
     <div style="background:#fff;border-radius:12px;padding:32px;width:480px;
@@ -42,25 +63,27 @@ const abrirModalCheckout = () => {
         Completa los detalles para finalizar tu orden
       </p>
 
+      ${camposIdentidad}
+
       <p style="font-size:13px;font-weight:600;color:#444;margin-bottom:10px;">
         Forma de comer
       </p>
       <div style="display:flex;gap:10px;margin-bottom:24px;">
-        <label id="opt-pickup" class="forma-opt forma-opt--active"
+        <label class="forma-opt"
           style="flex:1;border:2px solid #b5956a;border-radius:8px;padding:12px;
                  text-align:center;cursor:pointer;font-size:13px;color:#b5956a;
                  font-family:'Jost',sans-serif;transition:all 0.2s;">
           <input type="radio" name="forma" value="Pick-Up" checked style="display:none;">
           Pick-Up
         </label>
-        <label id="opt-onsite" class="forma-opt"
+        <label class="forma-opt"
           style="flex:1;border:2px solid #eee;border-radius:8px;padding:12px;
                  text-align:center;cursor:pointer;font-size:13px;color:#777;
                  font-family:'Jost',sans-serif;transition:all 0.2s;">
-          <input type="radio" name="forma" value="On Site" style="display:none;">
+          <input type="radio" name="forma" value="Sucursal" style="display:none;">
           On Site
         </label>
-        <label id="opt-delivery" class="forma-opt"
+        <label class="forma-opt"
           style="flex:1;border:2px solid #eee;border-radius:8px;padding:12px;
                  text-align:center;cursor:pointer;font-size:13px;color:#777;
                  font-family:'Jost',sans-serif;transition:all 0.2s;">
@@ -69,7 +92,6 @@ const abrirModalCheckout = () => {
         </label>
       </div>
 
-      <!-- Campo dirección (solo visible en Delivery) -->
       <div id="campo-direccion" style="display:none;margin-bottom:16px;">
         <p style="font-size:13px;font-weight:600;color:#444;margin-bottom:6px;">Dirección de entrega</p>
         <input id="input-direccion" type="text" placeholder="Calle, número, colonia, ciudad"
@@ -79,19 +101,6 @@ const abrirModalCheckout = () => {
           Ingresa una dirección válida.
         </p>
       </div>
-
-      <p style="font-size:13px;font-weight:600;color:#444;margin-bottom:6px;">
-        Número telefónico
-      </p>
-      <input id="input-telefono" type="tel" placeholder="Ej. 442 123 4567"
-        style="width:100%;padding:10px 14px;border:1px solid #ddd;border-radius:6px;
-               font-size:14px;font-family:'Jost',sans-serif;margin-bottom:8px;
-               box-sizing:border-box;outline:none;">
-
-      <p id="error-telefono"
-        style="display:none;color:#e74c3c;font-size:12px;margin-bottom:12px;">
-        Por favor ingresa un número telefónico válido.
-      </p>
 
       <p id="error-servidor"
         style="display:none;color:#e74c3c;font-size:12px;margin-bottom:12px;">
@@ -124,29 +133,33 @@ const abrirModalCheckout = () => {
       opt.style.borderColor = '#b5956a'
       opt.style.color = '#b5956a'
 
-      // Mostrar/ocultar campo address (solo delivery lo enseña)
       const valor = opt.querySelector('input[name="forma"]').value
       document.getElementById('campo-direccion').style.display = valor === 'Delivery' ? 'block' : 'none'
     })
   })
 
   document.getElementById('btn-confirmar-orden').addEventListener('click', () => {
-    const telefono = document.getElementById('input-telefono').value.trim()
     const formaSeleccionada = document.querySelector('input[name="forma"]:checked').value
     const direccion = document.getElementById('input-direccion')?.value.trim() || ''
-    const errorTel = document.getElementById('error-telefono')
     const errorServ = document.getElementById('error-servidor')
     const errorDir = document.getElementById('error-direccion')
 
-    const soloDigitos = telefono.replace(/[\s-]/g, '')
-    const telefonoValido = /^\d{7,15}$/.test(soloDigitos)
+    let telefono, nombre
 
-    if (!telefonoValido) {
-      errorTel.style.display = 'block'
-      errorTel.textContent = 'Ingresa solo números (7-15 dígitos).'
-      return
+    if (conSesion) {
+      telefono = sesionCliente.telefono
+      nombre = sesionCliente.nombre
+    } else {
+      telefono = document.getElementById('input-telefono').value.trim()
+      nombre = document.getElementById('input-nombre').value.trim()
+      const errorTel = document.getElementById('error-telefono')
+      const soloDigitos = telefono.replace(/[\s-]/g, '')
+      if (!/^\d{7,15}$/.test(soloDigitos)) {
+        errorTel.style.display = 'block'
+        return
+      }
+      errorTel.style.display = 'none'
     }
-    errorTel.style.display = 'none'
 
     if (formaSeleccionada === 'Delivery' && direccion.length < 5) {
       errorDir.style.display = 'block'
@@ -154,7 +167,6 @@ const abrirModalCheckout = () => {
     }
     if (errorDir) errorDir.style.display = 'none'
 
-    // Valida pedido
     fetch('/menu/pedidos/validar', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -168,7 +180,6 @@ const abrirModalCheckout = () => {
           return
         }
 
-        // Confirma y registra
         fetch('/menu/pedidos/confirmar', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -176,6 +187,7 @@ const abrirModalCheckout = () => {
             items: pedido,
             forma: formaSeleccionada,
             telefono,
+            nombre,
             direccion: formaSeleccionada === 'Delivery' ? direccion : null
           })
         })
@@ -310,7 +322,6 @@ const renderPedido = () => {
     listaPedido.appendChild(div)
   })
 
-  // Total
   const total = pedido.reduce((sum, item) => {
     const raw = typeof item.precio === 'number'
       ? item.precio
@@ -347,7 +358,6 @@ document.getElementById('btn-checkout').addEventListener('click', () => {
 
 renderPedido()
 
-// Count de platillos y bebidas en orden
 const navCount = document.getElementById('nav-item-count')
 if (navCount && pedido.length > 0) {
   navCount.textContent = `${pedido.length} ${pedido.length === 1 ? 'artículo' : 'artículos'}`

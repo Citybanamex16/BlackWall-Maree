@@ -412,7 +412,7 @@ function menuPromosAgent (cardHTML, finalPromos) {
       labelOrigen = 'Royalty'
       claseTab = 'tab-pr'
       // Plus de vistosidad: sombra azul armonizada con el tono pastel
-      card.style.boxShadow = '0 4px 15px rgba(52, 152, 219, 0.3)';
+      card.style.boxShadow = '0 4px 15px rgba(52, 152, 219, 0.3)'
       break
     case 'Evento':
       colorPromo = '#b5956a' // Dorado
@@ -765,3 +765,39 @@ window.agregarAlCarrito = function (btn) {
   })
 }
 */
+
+// ── BÚSQUEDA ──
+const searchInput = document.querySelector('.search-bar-wrapper input')
+if (searchInput) {
+  let debounceTimer
+
+  searchInput.addEventListener('input', (e) => {
+    clearTimeout(debounceTimer)
+    debounceTimer = setTimeout(() => {
+      const q = e.target.value.trim().toLowerCase()
+      if (!q) return
+
+      const match = globalProducts.find(p => p.nombre.toLowerCase().includes(q))
+      if (!match) return
+
+      const scrollToCard = () => {
+        const btn = document.querySelector(`.add-btn-app[data-id="${match.id}"]`)
+        btn?.closest('.product-card-app')?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+      }
+
+      const btnEnDOM = document.querySelector(`.add-btn-app[data-id="${match.id}"]`)
+      if (btnEnDOM) {
+        scrollToCard()
+        return
+      }
+
+      const tabs = document.querySelectorAll('#lista-tabs li a')
+      tabs.forEach(tab => {
+        if (tab.querySelector('span')?.textContent === match.categoria) {
+          tab.click()
+          setTimeout(scrollToCard, 150)
+        }
+      })
+    }, 300)
+  })
+}

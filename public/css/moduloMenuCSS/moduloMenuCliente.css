@@ -75,8 +75,8 @@ html {
 
 /* 2. El botón cuando pasas el mouse (Hover) */
 #tabs-categorias li a:hover {
-    background-color: #E85D75 !important; /* Fondo rosa pálido */
-    color: d3ccbdff !important;
+    background-color: #d4b896 !important;
+    color: #fff !important;
 }
 
 /* 3. El botón SELECCIONADO (El que brilla) */
@@ -448,13 +448,16 @@ html {
 }
 
 .modal-close-btn {
-    position: absolute;
-    top: 14px;
-    right: 16px;
-    border: none;
+    display: block;
+    margin-left: auto;
+    margin-bottom: 8px;
     background: none;
+    border: none;
+    font-size: 18px;
     cursor: pointer;
+    color: #aaa;
 }
+
 
 /* Estilos para el contenido inyectado en el modal */
 #modal-content h2 {

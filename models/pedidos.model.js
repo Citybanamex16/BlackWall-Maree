@@ -9,7 +9,8 @@ module.exports = class Pedido {
         o.Numero_Telefonico AS telefono,
         o.Tipo_Orden AS tipo_orden,
         o.Estado_Orden AS estado_orden,
-        o.Fecha AS fecha
+        o.Fecha AS fecha,
+        o.Direccion AS direccion
       FROM orden o
       LEFT JOIN cliente c
         ON o.Numero_Telefonico = c.Numero_Telefonico
@@ -64,21 +65,21 @@ module.exports = class Pedido {
     return rows.map(r => r.ID_Producto)
   }
 
-  static async guardarOrden (telefono, tipoOrden, nombreCliente) {
+  static async guardarOrden (telefono, tipoOrden, nombreCliente, direccion = null) {
     const idOrden = Pedido.generarID()
     const idTurnoFijo = 'TN26496107'
 
     await db.execute(
       `INSERT INTO orden
-       (ID_Orden, ID_Turno, Numero_Telefonico, Tipo_Orden, Nombre_cliente, Estado_Orden)
-       VALUES (?, ?, ?, ?, ?, ?)`,
-      [idOrden, idTurnoFijo, telefono, tipoOrden, nombreCliente, 'Pendiente']
+       (ID_Orden, ID_Turno, Numero_Telefonico, Tipo_Orden, Nombre_cliente, Estado_Orden, Direccion)
+       VALUES (?, ?, ?, ?, ?, ?, ?)`,
+      [idOrden, idTurnoFijo, telefono, tipoOrden, nombreCliente, 'Pendiente', direccion]
     )
 
     return idOrden
   }
 
-  static async verificarOCrearCliente (telefono) {
+  static async verificarOCrearCliente (telefono, nombre = 'Cliente') {
     const [rows] = await db.execute(
       'SELECT Numero_Telefonico FROM cliente WHERE Numero_Telefonico = ?',
       [telefono]
@@ -87,8 +88,8 @@ module.exports = class Pedido {
     if (rows.length === 0) {
       await db.execute(
       `INSERT INTO cliente (Numero_Telefonico, Nombre, ID_Rol, Visitas_Actuales)
-       VALUES (?, 'Cliente', 'Usuario', 0)`,
-      [telefono]
+       VALUES (?, ?, 'Usuario', 0)`,
+      [telefono, nombre]
       )
     }
   }
