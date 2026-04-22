@@ -66,25 +66,26 @@
      TODO: poblar con buscador y accesos rápidos
 ════════════════════════════════════════ -->
 <div id="sticky-bottom" class="sticky-bottom-app">
-    <!-- Botón Promos -->
-    <a href="/cliente/promosCliente" class="btn btn-icon">
-        <i class="fas fa-ticket-alt is-size-4"></i>
-        <span class="is-size-7">Promos</span>
+    <a href="/cliente/promosCliente" class="btn btn-icon search-side-btn" aria-label="Promos">
+        <i class="fas fa-tag is-size-4"></i>
     </a>
 
-    <div class="search-bar-wrapper control has-icons-left is-expanded">
-        <input class="input is-rounded" type="text" placeholder="Buscar...">
+    <button id="btn-search-toggle" class="btn btn-icon" aria-label="Buscar">
+        <i class="fas fa-search is-size-4"></i>
+    </button>
+
+    <div class="search-bar-wrapper control has-icons-left" id="search-expanded" style="display:none;flex:1;">
+        <input id="search-input" class="input is-rounded" type="text" placeholder="Buscar...">
         <span class="icon is-left">
             <i class="fas fa-search"></i>
         </span>
     </div>
 
-    <!-- Botón Eventos -->
-    <a href="/cliente/eventosCliente" class="btn btn-icon">
+    <a href="/cliente/eventosCliente" class="btn btn-icon search-side-btn" aria-label="Eventos">
         <i class="fas fa-calendar-alt is-size-4"></i>
-        <span class="is-size-7">Eventos</span>
     </a>
 </div>
+
 
 
 <!-- FAB — Mapa (ARRIBA) -->
@@ -103,10 +104,9 @@
 
 <!-- FAB — Crepa Personalizada (Abajo Izquierda) -->
 <!-- Mantiene los 85px que ya tienes en tu CSS -->
-<button id="fab-personalizado" class="fab-app-der" aria-label="Producto Personalizado">
-    <span class="fab-icon">P</span>
+<button id="fab-personalizado" class="fab-app-der" aria-label="Armar tu Crepa">
+    <i class="fas fa-utensils" style="font-size:20px;color:#fff;"></i>
 </button>
-
 
 
 

@@ -962,3 +962,14 @@ html {
     from { opacity: 0; transform: translateY(10px); }
     to   { opacity: 1; transform: translateY(0); }
 }
+
+#search-input:focus {
+    border-color: #b5956a;
+    box-shadow: 0 0 0 0.125em rgba(181, 149, 106, 0.25);
+    outline: none;
+}
+
+#search-input:focus ~ .icon,
+.search-bar-wrapper.control.has-icons-left .icon {
+    color: #b5956a !important;
+}

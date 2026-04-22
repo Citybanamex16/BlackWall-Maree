@@ -794,30 +794,44 @@ window.agregarAlCarrito = function (btn) {
 */
 
 // ── BÚSQUEDA ──
-const searchInput = document.querySelector('.search-bar-wrapper input')
-if (searchInput) {
-  let debounceTimer
+const btnSearchToggle = document.getElementById('btn-search-toggle')
+const searchExpanded = document.getElementById('search-expanded')
+const searchSideBtns = document.querySelectorAll('.search-side-btn')
+const searchInput = document.getElementById('search-input')
 
+if (btnSearchToggle) {
+  btnSearchToggle.addEventListener('click', (e) => {
+    e.stopPropagation()
+    btnSearchToggle.style.display = 'none'
+    searchExpanded.style.display = 'flex'
+    searchSideBtns.forEach(b => b.style.display = 'none')
+    searchInput.focus()
+  })
+
+  document.addEventListener('click', (e) => {
+    if (searchExpanded.style.display === 'none') return
+    if (!searchExpanded.contains(e.target)) {
+      btnSearchToggle.style.display = ''
+      searchExpanded.style.display = 'none'
+      searchSideBtns.forEach(b => b.style.display = '')
+      searchInput.value = ''
+    }
+  })
+
+  let debounceTimer
   searchInput.addEventListener('input', (e) => {
     clearTimeout(debounceTimer)
     debounceTimer = setTimeout(() => {
       const q = e.target.value.trim().toLowerCase()
       if (!q) return
-
       const match = globalProducts.find(p => p.nombre.toLowerCase().includes(q))
       if (!match) return
-
       const scrollToCard = () => {
         const btn = document.querySelector(`.add-btn-app[data-id="${match.id}"]`)
         btn?.closest('.product-card-app')?.scrollIntoView({ behavior: 'smooth', block: 'center' })
       }
-
       const btnEnDOM = document.querySelector(`.add-btn-app[data-id="${match.id}"]`)
-      if (btnEnDOM) {
-        scrollToCard()
-        return
-      }
-
+      if (btnEnDOM) { scrollToCard(); return }
       const tabs = document.querySelectorAll('#lista-tabs li a')
       tabs.forEach(tab => {
         if (tab.querySelector('span')?.textContent === match.categoria) {
@@ -828,3 +842,4 @@ if (searchInput) {
     }, 300)
   })
 }
+
