@@ -144,6 +144,33 @@ async function verDetalleProducto (id) {
   }
 }
 
+
+//funciones globales 
+
+/* == Conf y Show de Error Modal == */
+// Error elements references
+const ErrorModal = document.getElementById('ErrorModal')
+const ErrorTitle = document.getElementById('ErrorTitle')
+const ErrorContent = document.getElementById('ErrorMessage')
+const ErrorCloseBtn = document.getElementById('closeInvalidData')
+
+function ShowErrorModal (title, content) {
+  ErrorTitle.innerText = title
+  ErrorContent.innerText = content
+  ErrorCloseBtn.addEventListener('click',
+    (event) => {
+      ErrorModal.close()
+    }, { once: true })
+  ErrorModal.showModal()
+}
+
+
+
+
+// fin de funciones globales
+
+
+
 /* CU11 Visualizar Menu Digital */
 let globalProducts = [] // Variable global de productos
 

@@ -13,6 +13,10 @@ router.post('/agregaritem', menuControlador.agregarItem)
 router.post('/pedidos/validar', menuControlador.validarPedido)
 router.post('/pedidos/confirmar', menuControlador.confirmarPedido)
 
+// Productos Personalizados
+router.get('/categorias', menuControlador.getCategorías)
+router.get('/ingActivos', menuControlador.getIngredientesActivos)
+
 // Sección de Mapa
 router.get('/Sucursales/getAll', menuControlador.getAllSucursales)
 

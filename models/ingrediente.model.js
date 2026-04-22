@@ -6,6 +6,11 @@ module.exports = class Ingrediente {
     return db.execute('SELECT ID_Insumo, Nombre, Categoría, Precio, Activo FROM insumo')
   }
 
+  static async fetchAllValid () {
+    return db.execute('SELECT * FROM insumo WHERE Activo = 1')
+  }
+
+
   // Busca ingrediente por nombre (para verificar duplicados)
   static async buscarPorNombre (nombre) {
     return db.execute('SELECT ID_Insumo FROM insumo WHERE Nombre = ?', [nombre])

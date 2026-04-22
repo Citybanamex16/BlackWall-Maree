@@ -181,7 +181,7 @@ module.exports = class Producto {
     return { valido: true, mensaje: '' }
   }
 
-  // Esta se va a ir de este modelo
+  
   static async getAllIngredientes () {
     return db.execute('SELECT Nombre as nombre, ID_Insumo as id, Precio as precio FROM INSUMO')
   }

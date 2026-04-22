@@ -533,6 +533,34 @@ html {
     transition: transform 0.2s ease;
 }
 
+.fab-app-der {
+    position: fixed;
+    bottom: 85px;
+    left: 20px; /* <--- Esto posiciona el botón a 20px del borde DERECHO */
+    /* left: auto; */ /* Asegura que no tenga valor left si heredaba algo */
+    width: 60px;
+    height: 60px;
+    background: #a8bc94; /* Verde crema */
+    color: #1d2b11;      /* Texto/Icono oscuro */
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    text-decoration: none;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    z-index: 1000;
+    transition: transform 0.2s ease;
+}
+
+/* Efecto hover opcional para mejorar la UX */
+.fab-app-der:hover {
+    transform: scale(1.1);
+}
+
+.fab-app:hover {
+    transform: scale(1.1);
+}
+
 /* Icono dentro del FAB */
 .fab-icon {
     font-size: 24px;

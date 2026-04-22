@@ -1,5 +1,6 @@
 const nav = require('../models/breadcrumbs.model.js')
 const productos = require('../models/MenuDigital/productos.model.js')
+const ingrediente = require('../models/ingrediente.model.js')
 const categorías = require('../models/MenuDigital/categorías.model.js')
 const tipos = require('../models/MenuDigital/tipos.model.js')
 const promos = require('../models/promociones.model.js')
@@ -591,3 +592,53 @@ exports.putDesactivarProducto = async (req, res, next) => {
     })
   }
 }
+
+
+
+// Seccion Personalizacion de productos 
+
+
+exports.getCategorías = async (req, res, nex) =>{
+  console.log("Obteniendo las categorías")
+  try{
+    const result = await categorías.fecthAll()
+
+    res.status(200).json({
+      ok: true,
+      message: 'Catalogo de categorías Obtenido',
+      categoriasCatalog: result
+    })
+
+  } catch (err) {
+    res.status(500).json({
+      ok: false,
+      message: err
+    })
+
+
+  }
+
+}
+
+
+exports.getIngredientesActivos = async (req, res, nex) =>{
+  console.log("Obteniendo los ingredientes activos")
+  try{
+    const result = await ingrediente.fetchAllValid()
+
+    res.status(200).json({
+      ok: true,
+      message: 'Catalogo de Ingredientes Activos Obtenido',
+      ingActiveCatalog: result
+    })
+
+  } catch (err){
+    res.status(500).json({
+      ok: false,
+      message: err
+    })
+
+  }
+
+}
+
