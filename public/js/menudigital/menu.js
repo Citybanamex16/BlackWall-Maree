@@ -412,7 +412,7 @@ function menuPromosAgent (cardHTML, finalPromos) {
       labelOrigen = 'Royalty'
       claseTab = 'tab-pr'
       // Plus de vistosidad: sombra azul armonizada con el tono pastel
-      card.style.boxShadow = '0 4px 15px rgba(52, 152, 219, 0.3)';
+      card.style.boxShadow = '0 4px 15px rgba(52, 152, 219, 0.3)'
       break
     case 'Evento':
       colorPromo = '#b5956a' // Dorado
