@@ -142,45 +142,36 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `eliminarProducto` (IN `idProducto` 
 END$$
 
 DROP PROCEDURE IF EXISTS `obtener_promociones_por_tipo`$$
-CREATE DEFINER=`root`@`localhost` PROCEDURE `obtener_promociones_por_tipo` (IN `tipo_promo` VARCHAR(2))   BEGIN
+CREATE DEFINER=`root`@`localhost` PROCEDURE `obtener_promociones_por_tipo` (IN `tipo_promo` VARCHAR(2))
+BEGIN
     -- Lógica de Jerarquía EFRL (Event First, Royalty Last)
-    
     IF tipo_promo = 'PE' THEN
         -- 1. EVENTO: Mandan sobre todas.
-        SELECT 
-            p.Nombre AS Producto, 
-            promo.Nombre AS Plantilla_Promo, 
-            promo.Descuento, -- Nuevo campo agregado
-            'Evento' AS Origen
+        SELECT p.Nombre AS Producto, promo.Nombre AS Plantilla_Promo, promo.Descuento, -- Nuevo campo agregado
+               'Evento' AS Origen
         FROM evento_contiene_promocion ecp
         JOIN producto_tiene_promocion ptp ON ecp.ID_Promocion = ptp.ID_Promocion
-        JOIN Producto p ON ptp.ID_Producto = p.ID_Producto
-        JOIN Promocion promo ON ptp.ID_Promocion = promo.ID_Promocion;
+        JOIN producto p ON ptp.ID_Producto = p.ID_Producto
+        JOIN promocion promo ON ptp.ID_Promocion = promo.ID_Promocion;
 
     ELSEIF tipo_promo = 'PU' THEN
         -- 2. ÚNICA: Solo si NO es Evento y NO es Royalty
-        SELECT 
-            p.Nombre AS Producto, 
-            promo.Nombre AS Plantilla_Promo, 
-            promo.Descuento, -- Nuevo campo agregado
-            'Única' AS Origen
+        SELECT p.Nombre AS Producto, promo.Nombre AS Plantilla_Promo, promo.Descuento, -- Nuevo campo agregado
+               'Única' AS Origen
         FROM producto_tiene_promocion ptp
-        JOIN Producto p ON p.ID_Producto = ptp.ID_Producto
-        JOIN Promocion promo ON promo.ID_Promocion = ptp.ID_Promocion
+        JOIN producto p ON p.ID_Producto = ptp.ID_Producto
+        JOIN promocion promo ON promo.ID_Promocion = ptp.ID_Promocion
         WHERE ptp.ID_Promocion NOT IN (SELECT ID_Promocion FROM evento_contiene_promocion)
           AND ptp.ID_Promocion NOT IN (SELECT ID_Promocion FROM estado_royalty_da_promociones);
 
     ELSEIF tipo_promo = 'PR' THEN
         -- 3. ROYALTY: El remanente (Si es Royalty pero NO es Evento)
-        SELECT 
-            p.Nombre AS Producto, 
-            promo.Nombre AS Plantilla_Promo, 
-            promo.Descuento, -- Nuevo campo agregado
-            'Royalty' AS Origen
+        SELECT p.Nombre AS Producto, promo.Nombre AS Plantilla_Promo, promo.Descuento, -- Nuevo campo agregado
+               'Royalty' AS Origen
         FROM estado_royalty_da_promociones erp
         JOIN producto_tiene_promocion ptp ON erp.ID_Promocion = ptp.ID_Promocion
-        JOIN Producto p ON ptp.ID_Producto = p.ID_Producto
-        JOIN Promocion promo ON ptp.ID_Promocion = promo.ID_Promocion
+        JOIN producto p ON ptp.ID_Producto = p.ID_Producto
+        JOIN promocion promo ON ptp.ID_Promocion = promo.ID_Promocion
         WHERE erp.ID_Promocion NOT IN (SELECT ID_Promocion FROM evento_contiene_promocion);
 
     ELSE
@@ -188,6 +179,7 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `obtener_promociones_por_tipo` (IN `
         SELECT 'Error: El parámetro debe ser PU, PE o PR' AS Mensaje;
     END IF;
 END$$
+
 
 DROP PROCEDURE IF EXISTS `sp_EstadoCliente`$$
 CREATE DEFINER=`root`@`localhost` PROCEDURE `sp_EstadoCliente` (IN `p_telefono` VARCHAR(20))   BEGIN
