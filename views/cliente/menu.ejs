@@ -101,6 +101,13 @@
     <span class="fab-badge">0</span>
 </a>
 
+<!-- FAB — Crepa Personalizada (Abajo Izquierda) -->
+<!-- Mantiene los 85px que ya tienes en tu CSS -->
+<button id="fab-personalizado" class="fab-app-der" aria-label="Producto Personalizado">
+    <span class="fab-icon">P</span>
+</button>
+
+
 
 
 <!-- ═══════════════════════════════════════
@@ -114,6 +121,7 @@
         </div>
     </div>
 </dialog>
+
 
 <!-- ═══════════════════════════════════════
      MODAL — Error de carga del menú
@@ -129,6 +137,28 @@
     </div>
 </dialog>
 
+
+
+<!-- ═══════════════════════════════════════
+     Seccion — Modal Producto personalizado
+════════════════════════════════════════ -->
+
+
+
+
+
+<!-- Dialogo de error -->
+<dialog id="ErrorModal" class=" mymodal">
+    <h2 id="ErrorTitle">Titulo Dinámico</h2>
+    <div class="modal-accent-bar"></div>
+    <p id="ErrorMessage">Mensaje Dinámico</p>
+    <!-- Botón con ID para manipularlo desde JS -->
+    <button id="closeInvalidData" class="modal-close-btn" >Cerrar</button>
+</dialog>
+
+
+
+
 <script>
     const urlParams = new URLSearchParams(window.location.search);
     if (urlParams.get('authError') === 'database') {
@@ -137,5 +167,6 @@
     }
 </script>
 <script src="/js/menudigital/menu.js"></script>
+<script src="/js/menudigital/menuProductoPersonalizado.js"></script>
 </body>
 </html>
