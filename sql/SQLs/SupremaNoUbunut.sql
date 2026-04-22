@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Servidor: localhost
--- Tiempo de generación: 22-04-2026 a las 05:45:46
+-- Tiempo de generación: 22-04-2026 a las 20:42:32
 -- Versión del servidor: 10.4.28-MariaDB
 -- Versión de PHP: 8.2.4
 
@@ -142,51 +142,41 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `eliminarProducto` (IN `idProducto` 
 END$$
 
 DROP PROCEDURE IF EXISTS `obtener_promociones_por_tipo`$$
-CREATE DEFINER=`root`@`localhost` PROCEDURE `obtener_promociones_por_tipo` (IN `tipo_promo` VARCHAR(2))   BEGIN
-    -- Lógica de Jerarquía EFRL (Event First, Royalty Last)
-    
-    IF tipo_promo = 'PE' THEN
-        -- 1. EVENTO: Mandan sobre todas.
-        SELECT 
-            p.Nombre AS Producto, 
-            promo.Nombre AS Plantilla_Promo, 
-            promo.Descuento, -- Nuevo campo agregado
-            'Evento' AS Origen
-        FROM evento_contiene_promocion ecp
-        JOIN producto_tiene_promocion ptp ON ecp.ID_Promocion = ptp.ID_Promocion
-        JOIN Producto p ON ptp.ID_Producto = p.ID_Producto
-        JOIN Promocion promo ON ptp.ID_Promocion = promo.ID_Promocion;
+CREATE DEFINER=`root`@`localhost` PROCEDURE `obtener_promociones_por_tipo` (IN `tipo_promo` VARCHAR(2))   BEGIN 
+    -- Lógica de Jerarquía EFRL (Event First, Royalty Last) 
+    IF tipo_promo = 'PE' THEN 
+        -- 1. EVENTO: Mandan sobre todas. 
+        SELECT p.Nombre AS Producto, promo.Nombre AS Plantilla_Promo, promo.Descuento, 
+        'Evento' AS Origen 
+        FROM evento_contiene_promocion ecp 
+        JOIN producto_tiene_promocion ptp ON ecp.ID_Promocion = ptp.ID_Promocion 
+        JOIN producto p ON ptp.ID_Producto = p.ID_Producto 
+        JOIN promocion promo ON ptp.ID_Promocion = promo.ID_Promocion; 
 
-    ELSEIF tipo_promo = 'PU' THEN
-        -- 2. ÚNICA: Solo si NO es Evento y NO es Royalty
-        SELECT 
-            p.Nombre AS Producto, 
-            promo.Nombre AS Plantilla_Promo, 
-            promo.Descuento, -- Nuevo campo agregado
-            'Única' AS Origen
-        FROM producto_tiene_promocion ptp
-        JOIN Producto p ON p.ID_Producto = ptp.ID_Producto
-        JOIN Promocion promo ON promo.ID_Promocion = ptp.ID_Promocion
-        WHERE ptp.ID_Promocion NOT IN (SELECT ID_Promocion FROM evento_contiene_promocion)
-          AND ptp.ID_Promocion NOT IN (SELECT ID_Promocion FROM estado_royalty_da_promociones);
+    ELSEIF tipo_promo = 'PU' THEN 
+        -- 2. ÚNICA: Solo si NO es Evento y NO es Royalty 
+        SELECT p.Nombre AS Producto, promo.Nombre AS Plantilla_Promo, promo.Descuento, 
+        'Única' AS Origen 
+        FROM producto_tiene_promocion ptp 
+        JOIN producto p ON p.ID_Producto = ptp.ID_Producto 
+        JOIN promocion promo ON promo.ID_Promocion = ptp.ID_Promocion 
+        WHERE ptp.ID_Promocion NOT IN (SELECT ID_Promocion FROM evento_contiene_promocion) 
+        AND ptp.ID_Promocion NOT IN (SELECT ID_Promocion FROM estado_royalty_da_promociones); 
 
-    ELSEIF tipo_promo = 'PR' THEN
-        -- 3. ROYALTY: El remanente (Si es Royalty pero NO es Evento)
-        SELECT 
-            p.Nombre AS Producto, 
-            promo.Nombre AS Plantilla_Promo, 
-            promo.Descuento, -- Nuevo campo agregado
-            'Royalty' AS Origen
-        FROM estado_royalty_da_promociones erp
-        JOIN producto_tiene_promocion ptp ON erp.ID_Promocion = ptp.ID_Promocion
-        JOIN Producto p ON ptp.ID_Producto = p.ID_Producto
-        JOIN Promocion promo ON ptp.ID_Promocion = promo.ID_Promocion
-        WHERE erp.ID_Promocion NOT IN (SELECT ID_Promocion FROM evento_contiene_promocion);
+    ELSEIF tipo_promo = 'PR' THEN 
+        -- 3. ROYALTY: El remanente (Si es Royalty pero NO es Evento) 
+        SELECT p.Nombre AS Producto, promo.Nombre AS Plantilla_Promo, promo.Descuento, 
+        'Royalty' AS Origen 
+        FROM estado_royalty_da_promociones erp 
+        JOIN producto_tiene_promocion ptp ON erp.ID_Promocion = ptp.ID_Promocion 
+        JOIN producto p ON ptp.ID_Producto = p.ID_Producto 
+        JOIN promocion promo ON ptp.ID_Promocion = promo.ID_Promocion 
+        WHERE erp.ID_Promocion NOT IN (SELECT ID_Promocion FROM evento_contiene_promocion); 
 
-    ELSE
-        -- Mensaje de error si el parámetro no es válido
-        SELECT 'Error: El parámetro debe ser PU, PE o PR' AS Mensaje;
-    END IF;
+    ELSE 
+        -- Mensaje de error si el parámetro no es válido 
+        SELECT 'Error: El parámetro debe ser PU, PE o PR' AS Mensaje; 
+    END IF; 
 END$$
 
 DROP PROCEDURE IF EXISTS `sp_EstadoCliente`$$
@@ -383,7 +373,9 @@ INSERT INTO `cliente` (`Numero_Telefonico`, `Nombre_Royalty`, `Nombre`, `Correo`
 ('55-9783-5924', 'Fan', 'Ricardo Antonio Gutiérrez García', 'rgutierrez@gmail.com', 'm', '1980-05-28', 13, 'Usuario'),
 ('55-9862-4951', 'Super Fan', 'Ramón Eliezer De Santos García', 'rgarcia@gmail.com', 'm', '1962-01-17', 6, 'Usuario'),
 ('55-9956-8802', 'Super Fan', 'Rodrigo Alejandro Hurtado Cortés', 'rhurtado@gmail.com', 'm', '1983-02-25', 2, 'Usuario'),
-('8131046812', NULL, 'Cliente', NULL, NULL, NULL, 0, 'Usuario');
+('81-3104-6812', 'Fan', 'Carlos Delgado Contreras', 'A01712819@tec.mx', 'Masculino', '2005-08-16', 0, 'Usuario'),
+('8131046812', NULL, 'Cliente', NULL, NULL, NULL, 0, 'Usuario'),
+('8131046813', NULL, 'Cliente', NULL, NULL, NULL, 0, 'Usuario');
 
 --
 -- Disparadores `cliente`
@@ -700,7 +692,8 @@ CREATE TABLE `estado_royalty_da_promociones` (
 INSERT INTO `estado_royalty_da_promociones` (`Nombre_Royalty`, `ID_Promocion`) VALUES
 ('Fan', 'PR44805876'),
 ('Mega Fan', 'PR33274771'),
-('Super Fan', 'PR19912809');
+('Super Fan', 'PR19912809'),
+('Super Fan', 'PR67763277');
 
 -- --------------------------------------------------------
 
@@ -738,6 +731,7 @@ INSERT INTO `evento` (`ID_Evento`, `Nombre`, `Descripcion`, `Activo`, `Fecha_Ini
 ('EV63596263', 'Gala Sabor Circular', '\"Evento más formal que presenta crepas gourmet con ingredientes premium y presentación elegante.\"', 0, '0008-05-26', '2016-10-26', NULL),
 ('EV72477787', 'Carnaval Relleno Supremo', '\"Celebración con crepas de rellenos abundantes y combinaciones intensas, tanto dulces como saladas.\"', 0, '2028-04-26', '2011-08-26', NULL),
 ('EV72567097', 'Festival Crepa Lovers', '\"Celebración dedicada a los clientes frecuentes, con promociones y sabores exclusivos.\"', 1, '0001-07-26', '2030-09-26', NULL),
+('EV73742046', 'Cumpleaños de Osvaldo', 'Cumple de Osvaldo', 1, '2026-04-20', '2026-04-30', NULL),
 ('EV78005678', 'Tarde Fruta & Chocolate', '\"Degustación enfocada en combinaciones clásicas de frutas frescas y chocolate fundido.\"', 1, '0008-03-26', '2027-12-26', NULL),
 ('EV91369328', 'Tarde Azúcar & Canela', '\"Evento temático con recetas tradicionales, destacando sabores cálidos y clásicos.\"', 0, '2010-02-26', '2013-09-26', NULL),
 ('EV94074382', 'Cumbre del Relleno Secreto', '\"Presentación de recetas especiales o de temporada que solo se revelan durante el evento.\"', 0, '0008-02-26', '2031-10-26', NULL),
@@ -769,6 +763,7 @@ INSERT INTO `evento_contiene_promocion` (`ID_Evento`, `ID_Promocion`) VALUES
 ('EV47036119', 'PR62258980'),
 ('EV47873322', 'PR59583389'),
 ('EV48230988', 'PR97994498'),
+('EV56656726', 'PR32105836'),
 ('EV56656726', 'PR33274771'),
 ('EV72477787', 'PR21011143'),
 ('EV91369328', 'PR48403051'),
@@ -907,6 +902,20 @@ CREATE TABLE `log_accesos_otp` (
   `fecha` timestamp NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish2_ci;
 
+--
+-- Volcado de datos para la tabla `log_accesos_otp`
+--
+
+INSERT INTO `log_accesos_otp` (`id`, `telefono`, `accion`, `fecha`) VALUES
+(1, '55-1156-9800', 'OTP_ELIMINADO', '2026-04-22 03:48:23'),
+(2, '81-3104-6812', 'OTP_ELIMINADO', '2026-04-22 03:54:03'),
+(3, '55-1156-9800', 'OTP_ELIMINADO', '2026-04-22 04:02:48'),
+(4, '81-3104-6812', 'OTP_ELIMINADO', '2026-04-22 04:09:05'),
+(5, '55-1156-9800', 'OTP_ELIMINADO', '2026-04-22 14:58:27'),
+(6, '55-1156-9800', 'OTP_ELIMINADO', '2026-04-22 18:08:02'),
+(7, '55-1156-9800', 'OTP_ELIMINADO', '2026-04-22 18:14:40'),
+(8, '55-1156-9800', 'OTP_ELIMINADO', '2026-04-22 18:25:29');
+
 -- --------------------------------------------------------
 
 --
@@ -1013,6 +1022,7 @@ INSERT INTO `orden` (`ID_Orden`, `ID_Turno`, `Numero_Telefonico`, `Tipo_Orden`, 
 ('OD38730521', 'TN26496107', '55-4203-5221', 'Delivery', 'Ricardo Cortés Espinosa', 'Entregado', '2026-09-25 06:00:00'),
 ('OD39256016', 'TN26496107', '8131046812', 'Pick-up', 'Cliente', 'Pendiente', '2026-04-22 03:19:18'),
 ('OD45723683', 'TN47025996', '55-5018-5507', 'Sucursal', 'Armando Montealegre Villagrán', 'Cancelado', '2026-12-02 06:00:00'),
+('OD46400505', 'TN26496107', '8131046813', 'Pick-up', 'Cliente', 'Pendiente', '2026-04-22 14:58:48'),
 ('OD48634931', 'TN26496107', '55-3672-3148', 'Delivery', 'Alejandro Contreras Magallanes', 'Preparando', '2026-06-18 06:00:00'),
 ('OD51835069', 'TN46937585', '55-8616-1973', 'Pick-up', 'Alberto Barba Arroyo', 'Preparando', '2026-10-25 06:00:00'),
 ('OD52937565', 'TN26496107', '55-2884-7043', 'Sucursal', 'Eduardo Hernández Alonso', 'Listo', '2026-11-15 06:00:00'),
@@ -1084,6 +1094,7 @@ INSERT INTO `orden_tiene_producto` (`ID_Orden`, `ID_Producto`, `Cantidad`, `Prec
 ('OD39256016', 'PD28020090', 1, 75.00),
 ('OD39256016', 'PD44220776', 1, 72.00),
 ('OD45723683', 'PD28020090', 5, 375.00),
+('OD46400505', 'PD12662761', 1, 17.50),
 ('OD48634931', 'PD62321669', 5, 800.00),
 ('OD51835069', 'PD88828639', 1, 145.00),
 ('OD52937565', 'PD60339348', 3, 465.00),
@@ -1407,6 +1418,7 @@ INSERT INTO `producto_pertenece_evento` (`ID_Evento`, `ID_Producto`) VALUES
 ('EV63596263', 'PD60339348'),
 ('EV72477787', 'PD30894780'),
 ('EV72567097', 'PD00387421'),
+('EV73742046', 'PD01887055'),
 ('EV78005678', 'PD84630803'),
 ('EV91369328', 'PD35805212'),
 ('EV94074382', 'PD57856718'),
@@ -1557,6 +1569,7 @@ INSERT INTO `producto_tiene_promocion` (`ID_Producto`, `ID_Promocion`) VALUES
 ('PD02624644', 'PR98448306'),
 ('PD09374303', 'PR76785851'),
 ('PD10782835', 'PR32616125'),
+('PD12662761', 'PR67763277'),
 ('PD12929845', 'PR19912809'),
 ('PD13048411', 'PR78222949'),
 ('PD14332305', 'PR62258980'),
@@ -1600,13 +1613,16 @@ INSERT INTO `producto_tiene_promocion` (`ID_Producto`, `ID_Promocion`) VALUES
 ('PD72945147', 'PR87134462'),
 ('PD76693622', 'PR83010754'),
 ('PD77126100', 'PR27804270'),
+('PD77411067', 'PR32105836'),
 ('PD77475653', 'PR56696931'),
 ('PD79889565', 'PR21011143'),
 ('PD80503802', 'PR21011143'),
 ('PD81370959', 'PR32616125'),
 ('PD84176755', 'PR27804270'),
+('PD84630803', 'PR32105836'),
 ('PD85252812', 'PR62258980'),
 ('PD86903926', 'PR27804270'),
+('PD87643434', 'PR67763277'),
 ('PD88828639', 'PR44088429'),
 ('PD88871658', 'PR33274771'),
 ('PD88949720', 'PR98448306'),
@@ -1639,6 +1655,7 @@ INSERT INTO `promocion` (`ID_Promocion`, `Nombre`, `Descuento`, `Condiciones`, `
 ('PR19912809', 'Promoción Navidad 2025', 0.20, '25 de diciembre y con INE vigente', 0, '2025-12-10', '2026-04-05'),
 ('PR21011143', 'Promoción Cumpleaños', 0.50, 'el dia de tu cumpleaños', 1, '0004-06-26', '2029-08-26'),
 ('PR27804270', 'Sábado de Sartenes', 0.25, 'Evento', 1, '0009-03-26', '0006-09-26'),
+('PR32105836', '%50 en Productos Seleccionados', 0.50, 'Reclamar en caja', 1, '2026-04-08', '2026-04-29'),
 ('PR32616125', 'Cumbre del Relleno Secreto', 0.10, 'Evento', 1, '0006-04-26', '0009-07-26'),
 ('PR33274771', 'Promoción Aniversario', 0.30, '5 de junio', 1, '2023-05-26', '2028-12-26'),
 ('PR33846028', 'Noche Crepas & Estrellas', 0.10, 'Evento', 1, '0001-07-26', '2013-09-26'),
@@ -1651,6 +1668,7 @@ INSERT INTO `promocion` (`ID_Promocion`, `Nombre`, `Descuento`, `Condiciones`, `
 ('PR56696931', 'Noche Fuego y Nutella', 0.20, 'Evento', 1, '0006-04-26', '0009-11-26'),
 ('PR59583389', 'Promoción Semana Santa', 0.10, '2 y 3 de abril', 1, '2016-01-26', '2020-08-26'),
 ('PR62258980', 'Feria Dulce Espiral', 0.10, 'Evento', 1, '2030-03-26', '0004-08-26'),
+('PR67763277', 'Promo de Prueba', 0.75, 'Prueba de Promoción Unica (PU)', 1, '2026-04-20', '2026-04-30'),
 ('PR76785851', 'Gala Sabor Circular', 0.10, 'Evento', 1, '0007-03-26', '0009-08-26'),
 ('PR78222949', 'Promoción Dia de la independencia', 0.10, '16 de septiembre', 1, '2026-01-26', '2011-12-26'),
 ('PR83010754', 'Tarde Fruta & Chocolate', 0.10, 'Evento', 1, '2010-02-26', '2029-11-26'),
@@ -2188,7 +2206,7 @@ ALTER TABLE `turno_tiene_sucursal`
 -- AUTO_INCREMENT de la tabla `log_accesos_otp`
 --
 ALTER TABLE `log_accesos_otp`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
 
 --
 -- Restricciones para tablas volcadas
