@@ -355,6 +355,10 @@ const cerrarModalSoloConfirmacion = () => {
   document.getElementById('modal-confirmarModificarRoyalty').classList.remove('is-active')
 }
 
+const cerrarModalError = () => {
+  document.getElementById('ModalError').classList.remove('is-active')
+}
+
 const cerrarModalConfirmacion = () => {
   document.getElementById('modal-confirmarModificarRoyalty').classList.remove('is-active')
   document.getElementById('modal-modificarRoyalty').classList.remove('is-active')

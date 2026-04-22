@@ -50,9 +50,10 @@ module.exports = class Royalty {
 
   // Buscamos a lo que vamos a borrar
   static async deleteRoyaltyBD (nombre) {
-    await db.execute('DELETE FROM estado_royalty_da_promociones WHERE Nombre_Royalty = ?', [nombre])
-    await db.execute('DELETE FROM estado_royalty_da_eventos WHERE Nombre_Royalty = ?', [nombre])
-    return db.execute('DELETE FROM estado_royalty WHERE Nombre_Royalty = ?', [nombre])
+    return db.execute('DELETE FROM estado_royalty_da_promociones WHERE Nombre_Royalty = ?', [nombre])
+      .then(() => {
+        return db.execute('DELETE FROM estado_royalty WHERE Nombre_Royalty = ?', [nombre])
+      })
   }
 
   // Actualizaión de estado royalty

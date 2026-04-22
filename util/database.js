@@ -2,14 +2,14 @@ const mysql = require('mysql2')
 
 // Pool de conexiones
 const pool = mysql.createPool({
-  // host: 'localhost',
-  host: '172.20.98.47', // NO LO BORREN SOLO COMENTENLO
-  port: '3306',
+  host: 'localhost',
+  // host: '172.20.98.47', // NO LO BORREN SOLO COMENTENLO
+  // port: '3306',
   // port: '3000',
-  user: 'mansi',
+  user: 'root',
   database: 'mareebd',
-  password: '280904',
-  waitForConnection: true,
+  password: '',
+  waitForConnections: true,
   connectionLimit: 10
 
 })
@@ -37,11 +37,16 @@ const pool = mysql.createPool({
 /*
 // Santi
 // Pool de conexiones
+
 const pool = mysql.createPool({
   host: 'localhost',
   user: 'root',
   database: 'mareebd',
   password: '',
+  host: 'mysql-maree2.alwaysdata.net',
+  user: 'maree2',
+  database: 'maree2_final',
+  password: 'maree123',
   waitForConnection: true,
   connectionLimit: 10
 

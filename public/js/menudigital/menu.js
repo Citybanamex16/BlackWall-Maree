@@ -408,11 +408,11 @@ function menuPromosAgent (cardHTML, finalPromos) {
 
   switch (promo.Origen) {
     case 'Royalty':
-      colorPromo = '#8e44ad' // Morado elegante
+      colorPromo = '#7da6baff' // Azul pastel elegante
       labelOrigen = 'Royalty'
       claseTab = 'tab-pr'
-      // Plus de vistosidad: añadimos una sombra morada sutil a la tarjeta
-      card.style.boxShadow = '0 4px 15px rgba(142, 68, 173, 0.2)'
+      // Plus de vistosidad: sombra azul armonizada con el tono pastel
+      card.style.boxShadow = '0 4px 15px rgba(52, 152, 219, 0.3)'
       break
     case 'Evento':
       colorPromo = '#b5956a' // Dorado
