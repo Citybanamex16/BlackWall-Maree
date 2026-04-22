@@ -103,6 +103,8 @@
     "glob-parent": "^6.0.2",
     "globals": "^13.24.0",
     "globalthis": "^1.0.4",
+    "google-auth-library": "^10.6.2",
+    "googleapis": "^171.4.0",
     "gopd": "^1.2.0",
     "graceful-fs": "^4.2.11",
     "graphemer": "^1.4.0",

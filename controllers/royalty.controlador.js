@@ -169,6 +169,7 @@ exports.getRoyaltyCli = async (request, response, next) => {
 }
 
 exports.getRoyaltyDataAPI = async (request, response, next) => {
+  console.log('getRoyaltyDataAPI llamado')
   if (!request.session.isLoggedIn || request.session.rol !== 'Usuario') {
     return response.status(401).json({ redirectUrl: '/cliente/login' })
   }
