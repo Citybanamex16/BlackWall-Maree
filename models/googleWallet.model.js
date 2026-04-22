@@ -28,13 +28,25 @@ async function crearLoyaltyObject (telefono, nombreRoyalty, puntosActuales, maxP
         },
         secondaryLoyaltyPoints: {
           balance: { int: maxPuntos ?? 0 },
-          label: 'Meta'
+          label: 'Meta de visitas'
         },
         textModulesData: [
           {
             id: 'nivel',
             header: 'Nivel Actual',
             body: nombreRoyalty || 'Sin nivel'
+          },
+          {
+            id: 'visitas_info',
+            header: 'Progreso'
+            // body: `${puntoActuales ?? 0} de ${maxPuntos ?? 0} visitas`
+          }
+        ],
+        message: [
+          {
+            header: ` Nivel ${nombreRoyalty}`,
+            body: `Llevas ${puntosActuales ?? 0} visitas de ${maxPuntos ?? 0} para el siguiente nivel`,
+            id: 'progreso'
           }
         ]
       }

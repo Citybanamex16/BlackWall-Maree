@@ -1,5 +1,27 @@
 const { walletClient, CLASS_ID } = require('./GoogleWallet')
 
+await walletClient.loyaltyclass.update({
+  resourceId: CLASS_ID,
+  requestBody: {
+    id: CLASS_ID,
+    issuerName: 'Maree Crepe',
+    programName: 'Royalty Maree',
+    reviewStatus: 'UNDER_REVIEW',
+    discoverableProgram: {
+      merchantSigninInfo: {
+        signInLabel: { defaultValue: { language: 'es', value: 'Ver mi tarjeta' } }
+      }
+    },
+    textModulesData: [
+      {
+        id: 'descripcion',
+        header: 'Descripción',
+        body: 'Programa de lealtad Maree Crepe'
+      }
+    ]
+  }
+})
+
 async function crearClase () {
   try {
     await walletClient.loyaltyclass.insert({

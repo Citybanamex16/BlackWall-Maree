@@ -4,9 +4,13 @@ const mysql = require('mysql2')
 const pool = mysql.createPool({
   host: 'localhost',
   user: 'root',
+  // host: 'localhost',
+  // host: '172.20.98.47', // NO LO BORREN SOLO COMENTENLO
+  // port: '3306',
+  // port: '3000',
   database: 'mareebd',
   password: '',
-  waitForConnections: true,
+  waitForConnection: true,
   connectionLimit: 10
 
 })

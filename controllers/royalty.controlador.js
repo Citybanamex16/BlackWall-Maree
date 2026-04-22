@@ -271,6 +271,11 @@ exports.getRoyaltyDataAPI = async (request, response, next) => {
       clienteInfo.Visitas,
       clienteInfo.maxVisitas
     )
+    console.log('Cliente infor para wallet:', {
+      nombre: clienteInfo.Nombre_Royalty,
+      visitas: clienteInfo.visitas,
+      max: clienteInfo.Max_Visitas
+    })
     console.log('TOKEN JWT:', walletLink.split('/').pop())
     console.log('Wallet link generado:', walletLink)
 
