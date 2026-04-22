@@ -2,10 +2,10 @@
 -- version 5.2.1
 -- https://www.phpmyadmin.net/
 --
--- Servidor: 127.0.0.1
--- Tiempo de generación: 20-04-2026 a las 21:35:50
--- Versión del servidor: 10.4.32-MariaDB
--- Versión de PHP: 8.2.12
+-- Servidor: localhost
+-- Tiempo de generación: 22-04-2026 a las 05:45:46
+-- Versión del servidor: 10.4.28-MariaDB
+-- Versión de PHP: 8.2.4
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 START TRANSACTION;
@@ -25,6 +25,7 @@ DELIMITER $$
 --
 -- Procedimientos
 --
+DROP PROCEDURE IF EXISTS `ActualizarCategoria`$$
 CREATE DEFINER=`root`@`localhost` PROCEDURE `ActualizarCategoria` (IN `oldNombre` VARCHAR(50) CHARSET utf8mb4 COLLATE utf8mb4_spanish2_ci, IN `newNombre` VARCHAR(50) CHARSET utf8mb4 COLLATE utf8mb4_spanish2_ci)   BEGIN
     DECLARE EXIT HANDLER FOR SQLEXCEPTION
     BEGIN
@@ -42,6 +43,7 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `ActualizarCategoria` (IN `oldNombre
     COMMIT;
 END$$
 
+DROP PROCEDURE IF EXISTS `ActualizarIngrediente`$$
 CREATE DEFINER=`root`@`localhost` PROCEDURE `ActualizarIngrediente` (IN `p_idInsumo` VARCHAR(10) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish2_ci, IN `p_nombre` VARCHAR(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish2_ci, IN `p_categoria` VARCHAR(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish2_ci, IN `p_precio` DECIMAL(10,2), IN `p_activo` TINYINT(1), IN `p_imagen` TEXT CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish2_ci)   BEGIN
     DECLARE v_error_msg VARCHAR(500);
     DECLARE EXIT HANDLER FOR SQLEXCEPTION
@@ -62,6 +64,7 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `ActualizarIngrediente` (IN `p_idIns
     COMMIT;
 END$$
 
+DROP PROCEDURE IF EXISTS `ActualizarTipo`$$
 CREATE DEFINER=`root`@`localhost` PROCEDURE `ActualizarTipo` (IN `oldNombre` VARCHAR(50) CHARSET utf8mb4 COLLATE utf8mb4_spanish2_ci, IN `newNombre` VARCHAR(50) CHARSET utf8mb4 COLLATE utf8mb4_spanish2_ci)   BEGIN
     DECLARE EXIT HANDLER FOR SQLEXCEPTION
     BEGIN
@@ -78,6 +81,7 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `ActualizarTipo` (IN `oldNombre` VAR
     COMMIT;
 END$$
 
+DROP PROCEDURE IF EXISTS `EliminarIngrediente`$$
 CREATE DEFINER=`root`@`localhost` PROCEDURE `EliminarIngrediente` (IN `p_idInsumo` VARCHAR(10) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish2_ci)   BEGIN
     DECLARE v_error_msg VARCHAR(500);
     -- Manejador de errores para la transacción
@@ -96,6 +100,7 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `EliminarIngrediente` (IN `p_idInsum
     COMMIT;
 END$$
 
+DROP PROCEDURE IF EXISTS `eliminarProducto`$$
 CREATE DEFINER=`root`@`localhost` PROCEDURE `eliminarProducto` (IN `idProducto` VARCHAR(12) CHARSET utf8mb4)  DETERMINISTIC BEGIN
 
 
@@ -136,6 +141,7 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `eliminarProducto` (IN `idProducto` 
     SELECT 'Éxito' AS Estado, 'Producto eliminado correctamente' AS Error_Mensaje;
 END$$
 
+DROP PROCEDURE IF EXISTS `obtener_promociones_por_tipo`$$
 CREATE DEFINER=`root`@`localhost` PROCEDURE `obtener_promociones_por_tipo` (IN `tipo_promo` VARCHAR(2))   BEGIN
     -- Lógica de Jerarquía EFRL (Event First, Royalty Last)
     
@@ -183,6 +189,7 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `obtener_promociones_por_tipo` (IN `
     END IF;
 END$$
 
+DROP PROCEDURE IF EXISTS `sp_EstadoCliente`$$
 CREATE DEFINER=`root`@`localhost` PROCEDURE `sp_EstadoCliente` (IN `p_telefono` VARCHAR(20))   BEGIN
     SELECT 
         c.Nombre, 
@@ -193,6 +200,7 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `sp_EstadoCliente` (IN `p_telefono` 
      WHERE c.Numero_Telefonico = p_telefono COLLATE utf8mb4_spanish2_ci;
 END$$
 
+DROP PROCEDURE IF EXISTS `sp_fetchEventos`$$
 CREATE DEFINER=`root`@`localhost` PROCEDURE `sp_fetchEventos` (IN `p_Nombre_Royalty` VARCHAR(50))   BEGIN
     SELECT E.Nombre AS Nombre_Evento, E.Fecha_Inicio, E.Fecha_final, E.Descripcion, ER.Nombre_Royalty
     FROM evento E
@@ -206,6 +214,21 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `sp_fetchEventos` (IN `p_Nombre_Roya
     ORDER BY ER.Número_de_prioridad DESC;
 END$$
 
+DROP PROCEDURE IF EXISTS `sp_fetchFavCliente`$$
+CREATE DEFINER=`root`@`localhost` PROCEDURE `sp_fetchFavCliente` (IN `p_Numero_Telefonico` VARCHAR(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish2_ci, IN `p_Categoría` VARCHAR(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish2_ci)   BEGIN
+    SELECT O.Numero_Telefonico, P.Nombre, COUNT(OP.ID_Producto) AS Total
+    FROM orden_tiene_producto OP
+    JOIN producto P ON P.Id_Producto = OP.ID_Producto
+    JOIN orden O ON O.ID_Orden = OP.ID_Orden
+    WHERE P.Categoría = p_Categoría
+    AND O.Numero_Telefonico =p_Numero_Telefonico
+    GROUP BY OP.ID_Producto
+    ORDER BY Total DESC
+    LIMIT 3;
+
+END$$
+
+DROP PROCEDURE IF EXISTS `sp_fetchPromociones`$$
 CREATE DEFINER=`root`@`localhost` PROCEDURE `sp_fetchPromociones` (IN `p_Nombre_Royalty` VARCHAR(50))   BEGIN
     SELECT P.Nombre, P.Descuento, P.Fecha_inicio, P.Fecha_final, E.Nombre_Royalty
     FROM estado_royalty E 
@@ -219,6 +242,17 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `sp_fetchPromociones` (IN `p_Nombre_
     ORDER BY E.Número_de_prioridad DESC;
 END$$
 
+DROP PROCEDURE IF EXISTS `sp_fetchTopGlobal`$$
+CREATE DEFINER=`root`@`localhost` PROCEDURE `sp_fetchTopGlobal` (IN `p_Categoría` VARCHAR(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish2_ci)   BEGIN
+    SELECT P.Nombre, COUNT(OP.ID_Producto) AS Total
+    FROM orden_tiene_producto OP
+    JOIN producto P on P.Id_Producto = OP.ID_Producto
+	WHERE P.Categoría = p_Categoría
+    GROUP BY OP.ID_Producto
+    ORDER BY Total DESC
+    LIMIT 3;
+END$$
+
 DELIMITER ;
 
 -- --------------------------------------------------------
@@ -227,6 +261,7 @@ DELIMITER ;
 -- Estructura de tabla para la tabla `calendario`
 --
 
+DROP TABLE IF EXISTS `calendario`;
 CREATE TABLE `calendario` (
   `ID_Calendario` varchar(10) NOT NULL,
   `ID_Sucursal` varchar(10) NOT NULL,
@@ -259,6 +294,7 @@ INSERT INTO `calendario` (`ID_Calendario`, `ID_Sucursal`, `Fecha`, `Es_Laboral`,
 -- Estructura de tabla para la tabla `categoría`
 --
 
+DROP TABLE IF EXISTS `categoría`;
 CREATE TABLE `categoría` (
   `Nombre` varchar(50) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish2_ci;
@@ -269,7 +305,10 @@ CREATE TABLE `categoría` (
 
 INSERT INTO `categoría` (`Nombre`) VALUES
 ('Bebidas'),
-('Platillo');
+('Crepas'),
+('Infusiones'),
+('Platillo'),
+('Waffles');
 
 -- --------------------------------------------------------
 
@@ -277,6 +316,7 @@ INSERT INTO `categoría` (`Nombre`) VALUES
 -- Estructura de tabla para la tabla `cliente`
 --
 
+DROP TABLE IF EXISTS `cliente`;
 CREATE TABLE `cliente` (
   `Numero_Telefonico` varchar(20) NOT NULL,
   `Nombre_Royalty` varchar(50) DEFAULT NULL,
@@ -342,7 +382,31 @@ INSERT INTO `cliente` (`Numero_Telefonico`, `Nombre_Royalty`, `Nombre`, `Correo`
 ('55-9661-9093', 'Fan', 'Diego Serrano Pardo', 'dserrano@gmail.com', 'm', '2004-05-23', 8, 'Usuario'),
 ('55-9783-5924', 'Fan', 'Ricardo Antonio Gutiérrez García', 'rgutierrez@gmail.com', 'm', '1980-05-28', 13, 'Usuario'),
 ('55-9862-4951', 'Super Fan', 'Ramón Eliezer De Santos García', 'rgarcia@gmail.com', 'm', '1962-01-17', 6, 'Usuario'),
-('55-9956-8802', 'Super Fan', 'Rodrigo Alejandro Hurtado Cortés', 'rhurtado@gmail.com', 'm', '1983-02-25', 2, 'Usuario');
+('55-9956-8802', 'Super Fan', 'Rodrigo Alejandro Hurtado Cortés', 'rhurtado@gmail.com', 'm', '1983-02-25', 2, 'Usuario'),
+('8131046812', NULL, 'Cliente', NULL, NULL, NULL, 0, 'Usuario');
+
+--
+-- Disparadores `cliente`
+--
+DROP TRIGGER IF EXISTS `actualizar_nivel_por_visitas`;
+DELIMITER $$
+CREATE TRIGGER `actualizar_nivel_por_visitas` AFTER UPDATE ON `cliente` FOR EACH ROW BEGIN
+    -- Solo actuamos si el número de visitas cambió
+    IF OLD.Visitas_Actuales <> NEW.Visitas_Actuales THEN
+        -- Buscamos el nombre del nivel que le corresponde
+        -- y lo actualizamos en la columna FK del cliente
+        UPDATE cliente
+        SET Nombre_Royalty = (
+            SELECT Nombre_Royalty
+            FROM estado_royalty
+            WHERE NEW.Visitas_Actuales BETWEEN Min_Visitas AND Max_Visitas
+            LIMIT 1
+        )
+        WHERE Numero_Telefonico = NEW.Numero_Telefonico;
+    END IF;
+END
+$$
+DELIMITER ;
 
 -- --------------------------------------------------------
 
@@ -350,6 +414,7 @@ INSERT INTO `cliente` (`Numero_Telefonico`, `Nombre_Royalty`, `Nombre`, `Correo`
 -- Estructura de tabla para la tabla `cliente_canjea_promociones`
 --
 
+DROP TABLE IF EXISTS `cliente_canjea_promociones`;
 CREATE TABLE `cliente_canjea_promociones` (
   `Numero_Telefonico` varchar(20) NOT NULL,
   `ID_Promocion` varchar(20) NOT NULL,
@@ -408,6 +473,7 @@ INSERT INTO `cliente_canjea_promociones` (`Numero_Telefonico`, `ID_Promocion`, `
 -- Estructura de tabla para la tabla `codigo_verificacion`
 --
 
+DROP TABLE IF EXISTS `codigo_verificacion`;
 CREATE TABLE `codigo_verificacion` (
   `Numero_Telefonico` varchar(20) NOT NULL,
   `Codigo` varchar(6) NOT NULL,
@@ -430,12 +496,25 @@ INSERT INTO `codigo_verificacion` (`Numero_Telefonico`, `Codigo`, `Fecha_Creacio
 ('55-9026-7777', '684-83', '2026-06-25 06:00:00', '2026-06-25 00:00:00', 1),
 ('55-9297-8935', '315-64', '2026-12-20 06:00:00', '2026-12-20 00:00:00', 1);
 
+--
+-- Disparadores `codigo_verificacion`
+--
+DROP TRIGGER IF EXISTS `tras_usar_otp`;
+DELIMITER $$
+CREATE TRIGGER `tras_usar_otp` BEFORE DELETE ON `codigo_verificacion` FOR EACH ROW BEGIN
+    INSERT INTO log_accesos_otp (telefono, accion)
+    VALUES (OLD.Numero_Telefonico, 'OTP_ELIMINADO');
+END
+$$
+DELIMITER ;
+
 -- --------------------------------------------------------
 
 --
 -- Estructura de tabla para la tabla `colaborador`
 --
 
+DROP TABLE IF EXISTS `colaborador`;
 CREATE TABLE `colaborador` (
   `ID_Colaborador` varchar(20) NOT NULL,
   `ID_Rol` varchar(20) NOT NULL,
@@ -448,6 +527,7 @@ CREATE TABLE `colaborador` (
 --
 
 INSERT INTO `colaborador` (`ID_Colaborador`, `ID_Rol`, `Nombre`, `Contraseña`) VALUES
+('A01712819', 'Colaborador', 'Carlos Delgado Contreras', 'Citybanamex16'),
 ('CL01474090', 'Colaborador', 'Dante Hernández Ramírez', 'CL033172!'),
 ('CL03142057', 'Colaborador', 'Benjamín Valdéz Aguirre', 'CL047938!'),
 ('CL04645360', 'Colaborador', 'Luis Eduardo Gutiérrez Chavarría', 'CL047182!'),
@@ -504,6 +584,7 @@ INSERT INTO `colaborador` (`ID_Colaborador`, `ID_Rol`, `Nombre`, `Contraseña`) 
 -- Estructura de tabla para la tabla `colaborador_tiene_turno`
 --
 
+DROP TABLE IF EXISTS `colaborador_tiene_turno`;
 CREATE TABLE `colaborador_tiene_turno` (
   `ID_Colaborador` varchar(20) NOT NULL,
   `ID_Turno` varchar(20) NOT NULL
@@ -570,6 +651,7 @@ INSERT INTO `colaborador_tiene_turno` (`ID_Colaborador`, `ID_Turno`) VALUES
 -- Estructura de tabla para la tabla `estado_royalty`
 --
 
+DROP TABLE IF EXISTS `estado_royalty`;
 CREATE TABLE `estado_royalty` (
   `Nombre_Royalty` varchar(50) NOT NULL,
   `Número_de_prioridad` int(11) NOT NULL,
@@ -593,6 +675,7 @@ INSERT INTO `estado_royalty` (`Nombre_Royalty`, `Número_de_prioridad`, `Descrip
 -- Estructura de tabla para la tabla `estado_royalty_da_eventos`
 --
 
+DROP TABLE IF EXISTS `estado_royalty_da_eventos`;
 CREATE TABLE `estado_royalty_da_eventos` (
   `Nombre_Royalty` varchar(50) NOT NULL,
   `ID_Evento` varchar(20) NOT NULL
@@ -604,6 +687,7 @@ CREATE TABLE `estado_royalty_da_eventos` (
 -- Estructura de tabla para la tabla `estado_royalty_da_promociones`
 --
 
+DROP TABLE IF EXISTS `estado_royalty_da_promociones`;
 CREATE TABLE `estado_royalty_da_promociones` (
   `Nombre_Royalty` varchar(50) NOT NULL,
   `ID_Promocion` varchar(20) NOT NULL
@@ -624,6 +708,7 @@ INSERT INTO `estado_royalty_da_promociones` (`Nombre_Royalty`, `ID_Promocion`) V
 -- Estructura de tabla para la tabla `evento`
 --
 
+DROP TABLE IF EXISTS `evento`;
 CREATE TABLE `evento` (
   `ID_Evento` varchar(20) NOT NULL,
   `Nombre` varchar(100) NOT NULL,
@@ -664,6 +749,7 @@ INSERT INTO `evento` (`ID_Evento`, `Nombre`, `Descripcion`, `Activo`, `Fecha_Ini
 -- Estructura de tabla para la tabla `evento_contiene_promocion`
 --
 
+DROP TABLE IF EXISTS `evento_contiene_promocion`;
 CREATE TABLE `evento_contiene_promocion` (
   `ID_Evento` varchar(20) NOT NULL,
   `ID_Promocion` varchar(20) NOT NULL
@@ -695,6 +781,7 @@ INSERT INTO `evento_contiene_promocion` (`ID_Evento`, `ID_Promocion`) VALUES
 -- Estructura de tabla para la tabla `insumo`
 --
 
+DROP TABLE IF EXISTS `insumo`;
 CREATE TABLE `insumo` (
   `ID_Insumo` varchar(10) NOT NULL,
   `Nombre` varchar(50) NOT NULL,
@@ -710,7 +797,7 @@ CREATE TABLE `insumo` (
 
 INSERT INTO `insumo` (`ID_Insumo`, `Nombre`, `Categoría`, `Precio`, `Activo`, `Imagen`) VALUES
 ('IN02201393', 'Leche de soya', 'Platillo', 14.00, 1, '15'),
-('IN02803814', 'Rajas de chile poblano', 'Platillo', 20.00, 1, '15'),
+('IN02803814', 'Rajas de chile poblano', 'Platillo', 0.00, 1, NULL),
 ('IN03374506', 'arugula', 'Platillo', 13.00, 1, '15'),
 ('IN04894004', 'Kinder Delice', 'Platillo', 19.00, 1, '15'),
 ('IN05269621', 'Cajeta de la casa', 'Platillo', 13.00, 1, '15'),
@@ -720,7 +807,7 @@ INSERT INTO `insumo` (`ID_Insumo`, `Nombre`, `Categoría`, `Precio`, `Activo`, `
 ('IN09130588', 'Mermelada de fresa', 'Platillo', 19.00, 0, '15'),
 ('IN09927406', 'Fresa ', 'Platillo', 18.00, 1, '15'),
 ('IN12080526', 'Miel de maple', 'Platillo', 13.00, 0, '15'),
-('IN13297648', 'Mocha', 'Platillo', 21.00, 1, '15'),
+('IN13297648', 'Mocha Chalry', 'Platillo', 25.50, 1, NULL),
 ('IN13442507', 'Coco Tostado', 'Platillo', 14.00, 1, '15'),
 ('IN15204720', 'Albahaca', 'Platillo', 12.00, 1, '15'),
 ('IN15500744', 'Zarzamora', 'Platillo', 24.00, 1, '15'),
@@ -754,6 +841,7 @@ INSERT INTO `insumo` (`ID_Insumo`, `Nombre`, `Categoría`, `Precio`, `Activo`, `
 ('IN51420289', 'Leche de coco', 'Platillo', 22.00, 1, '15'),
 ('IN51564559', 'Ferrero', 'Platillo', 20.00, 1, '15'),
 ('IN52715589', 'Caramelo', 'Platillo', 20.00, 1, '15'),
+('IN52938515', 'Pan Oroweat de 12 granos', 'Platillo', 50.00, 1, NULL),
 ('IN53190866', 'Avellana', 'Platillo', 17.00, 1, '15'),
 ('IN53235582', 'Caramelo', 'Platillo', 25.00, 1, '15'),
 ('IN53462867', 'Mora Azul', 'Platillo', 11.00, 1, '15'),
@@ -808,9 +896,24 @@ INSERT INTO `insumo` (`ID_Insumo`, `Nombre`, `Categoría`, `Precio`, `Activo`, `
 -- --------------------------------------------------------
 
 --
+-- Estructura de tabla para la tabla `log_accesos_otp`
+--
+
+DROP TABLE IF EXISTS `log_accesos_otp`;
+CREATE TABLE `log_accesos_otp` (
+  `id` int(11) NOT NULL,
+  `telefono` varchar(20) DEFAULT NULL,
+  `accion` varchar(20) DEFAULT NULL,
+  `fecha` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish2_ci;
+
+-- --------------------------------------------------------
+
+--
 -- Estructura de tabla para la tabla `mensaje`
 --
 
+DROP TABLE IF EXISTS `mensaje`;
 CREATE TABLE `mensaje` (
   `ID_Mensaje` varchar(20) NOT NULL,
   `Titulo` varchar(100) NOT NULL,
@@ -832,6 +935,7 @@ INSERT INTO `mensaje` (`ID_Mensaje`, `Titulo`, `Texto`) VALUES
 -- Estructura de tabla para la tabla `mensaje_notifica_cliente`
 --
 
+DROP TABLE IF EXISTS `mensaje_notifica_cliente`;
 CREATE TABLE `mensaje_notifica_cliente` (
   `Numero_Telefonico` varchar(20) NOT NULL,
   `ID_Mensaje` varchar(20) NOT NULL,
@@ -867,6 +971,7 @@ INSERT INTO `mensaje_notifica_cliente` (`Numero_Telefonico`, `ID_Mensaje`, `Fech
 -- Estructura de tabla para la tabla `orden`
 --
 
+DROP TABLE IF EXISTS `orden`;
 CREATE TABLE `orden` (
   `ID_Orden` varchar(10) NOT NULL,
   `ID_Turno` varchar(20) NOT NULL,
@@ -891,7 +996,7 @@ INSERT INTO `orden` (`ID_Orden`, `ID_Turno`, `Numero_Telefonico`, `Tipo_Orden`, 
 ('OD13125507', 'TN46937585', '55-9188-6863', 'Delivery', 'Iker Arnoldo Grajeda Campaña', 'Entregado', '2026-11-11 06:00:00'),
 ('OD13593992', 'TN47025996', '55-5824-6563', 'Sucursal', 'Suri Reyes Vega', 'Preparando', '2026-07-24 06:00:00'),
 ('OD15848927', 'TN47025996', '55-2435-6781', 'Pick-up', 'Brenda Vázquez Rodríguez', 'Listo', '2026-11-16 06:00:00'),
-('OD16211107', 'TN26496107', '55-8962-5930', 'Pick-up', 'Juan Pablo Juárez Ortiz', 'Preparando', '2026-12-11 06:00:00'),
+('OD16211107', 'TN26496107', '55-8962-5930', 'Pick-up', 'Juan Pablo Juárez Ortiz', 'Cancelado', '2026-12-11 06:00:00'),
 ('OD16481371', 'TN47025996', '55-9783-5924', 'Pick-up', 'Ricardo Antonio Gutiérrez García', 'Listo', '2026-11-01 06:00:00'),
 ('OD17661841', 'TN46937585', '55-4217-5522', 'Sucursal', 'Ilian Judith Castillo Beristain', 'Listo', '2026-03-02 06:00:00'),
 ('OD19367239', 'TN26496107', '55-7634-3304', 'Sucursal', 'Carlos Delgado Contreras', 'Entregado', '2026-07-11 06:00:00'),
@@ -899,13 +1004,15 @@ INSERT INTO `orden` (`ID_Orden`, `ID_Turno`, `Numero_Telefonico`, `Tipo_Orden`, 
 ('OD23043487', 'TN26496107', '55-9297-8935', 'Pick-up', 'Juan Pablo Domínguez Ángel', 'Listo', '2026-01-27 06:00:00'),
 ('OD33014213', 'TN47025996', '55-8034-2908', 'Pick-up', 'Sofía Alondra Reyes Gómez', 'Listo', '2026-10-15 06:00:00'),
 ('OD33655470', 'TN46937585', '55-7110-9468', 'Pick-up', 'Santiago Barjau Hernández', 'Entregado', '2026-02-17 06:00:00'),
-('OD33804496', 'TN46937585', '55-9583-1422', 'Pick-up', 'Galia Lucía Castro Aboytes', 'Preparando', '2026-12-17 06:00:00'),
+('OD33804496', 'TN46937585', '55-9583-1422', 'Pick-up', 'Galia Lucía Castro Aboytes', 'Cancelado', '2026-12-17 06:00:00'),
 ('OD33951115', 'TN47025996', '55-2006-6063', 'Sucursal', 'Isabela Ruiz Velasco Angeles', 'Listo', '2026-09-21 06:00:00'),
 ('OD34843825', 'TN46937585', '55-8069-3709', 'Pick-up', 'Jesús Osvaldo Ramos Pérez', 'Listo', '2026-07-04 06:00:00'),
+('OD36841880', 'TN26496107', '8131046812', 'Delivery', 'Cliente', 'Pendiente', '2026-04-22 03:22:29'),
 ('OD37616868', 'TN46937585', '55-6624-7720', 'Delivery', 'Mariangel Aguirre Magallanes', 'Entregado', '2026-12-22 06:00:00'),
 ('OD37925699', 'TN26496107', '55-4606-3624', 'Sucursal', 'Héctor Alejandro Barrón Tamayo', 'Entregado', '2026-05-22 06:00:00'),
 ('OD38730521', 'TN26496107', '55-4203-5221', 'Delivery', 'Ricardo Cortés Espinosa', 'Entregado', '2026-09-25 06:00:00'),
-('OD45723683', 'TN47025996', '55-5018-5507', 'Sucursal', 'Armando Montealegre Villagrán', 'Listo', '2026-12-02 06:00:00'),
+('OD39256016', 'TN26496107', '8131046812', 'Pick-up', 'Cliente', 'Pendiente', '2026-04-22 03:19:18'),
+('OD45723683', 'TN47025996', '55-5018-5507', 'Sucursal', 'Armando Montealegre Villagrán', 'Cancelado', '2026-12-02 06:00:00'),
 ('OD48634931', 'TN26496107', '55-3672-3148', 'Delivery', 'Alejandro Contreras Magallanes', 'Preparando', '2026-06-18 06:00:00'),
 ('OD51835069', 'TN46937585', '55-8616-1973', 'Pick-up', 'Alberto Barba Arroyo', 'Preparando', '2026-10-25 06:00:00'),
 ('OD52937565', 'TN26496107', '55-2884-7043', 'Sucursal', 'Eduardo Hernández Alonso', 'Listo', '2026-11-15 06:00:00'),
@@ -939,6 +1046,7 @@ INSERT INTO `orden` (`ID_Orden`, `ID_Turno`, `Numero_Telefonico`, `Tipo_Orden`, 
 -- Estructura de tabla para la tabla `orden_tiene_producto`
 --
 
+DROP TABLE IF EXISTS `orden_tiene_producto`;
 CREATE TABLE `orden_tiene_producto` (
   `ID_Orden` varchar(10) NOT NULL,
   `ID_Producto` varchar(10) NOT NULL,
@@ -968,9 +1076,13 @@ INSERT INTO `orden_tiene_producto` (`ID_Orden`, `ID_Producto`, `Cantidad`, `Prec
 ('OD33804496', 'PD68133903', 5, 775.00),
 ('OD33951115', 'PD72174317', 1, 60.00),
 ('OD34843825', 'PD81370959', 2, 310.00),
+('OD36841880', 'PD72174317', 1, 48.00),
 ('OD37616868', 'PD23031389', 1, 109.00),
 ('OD37925699', 'PD35805212', 3, 480.00),
 ('OD38730521', 'PD85252812', 2, 320.00),
+('OD39256016', 'PD12929845', 1, 79.20),
+('OD39256016', 'PD28020090', 1, 75.00),
+('OD39256016', 'PD44220776', 1, 72.00),
 ('OD45723683', 'PD28020090', 5, 375.00),
 ('OD48634931', 'PD62321669', 5, 800.00),
 ('OD51835069', 'PD88828639', 1, 145.00),
@@ -1004,6 +1116,7 @@ INSERT INTO `orden_tiene_producto` (`ID_Orden`, `ID_Producto`, `Cantidad`, `Prec
 -- Estructura de tabla para la tabla `pago`
 --
 
+DROP TABLE IF EXISTS `pago`;
 CREATE TABLE `pago` (
   `ID_Pago` varchar(10) NOT NULL,
   `ID_Orden` varchar(10) NOT NULL,
@@ -1075,6 +1188,7 @@ INSERT INTO `pago` (`ID_Pago`, `ID_Orden`, `Monto`, `Metodo_Pago`, `Fecha_Pago`,
 -- Estructura de tabla para la tabla `privilegio`
 --
 
+DROP TABLE IF EXISTS `privilegio`;
 CREATE TABLE `privilegio` (
   `Privilegio` varchar(30) NOT NULL,
   `Transferible` tinyint(1) DEFAULT 0
@@ -1155,6 +1269,7 @@ INSERT INTO `privilegio` (`Privilegio`, `Transferible`) VALUES
 -- Estructura de tabla para la tabla `producto`
 --
 
+DROP TABLE IF EXISTS `producto`;
 CREATE TABLE `producto` (
   `ID_Producto` varchar(10) NOT NULL,
   `Tamaño` varchar(50) NOT NULL,
@@ -1265,6 +1380,7 @@ INSERT INTO `producto` (`ID_Producto`, `Tamaño`, `Categoría`, `Nombre`, `Preci
 -- Estructura de tabla para la tabla `producto_pertenece_evento`
 --
 
+DROP TABLE IF EXISTS `producto_pertenece_evento`;
 CREATE TABLE `producto_pertenece_evento` (
   `ID_Evento` varchar(20) NOT NULL,
   `ID_Producto` varchar(10) NOT NULL
@@ -1302,6 +1418,7 @@ INSERT INTO `producto_pertenece_evento` (`ID_Evento`, `ID_Producto`) VALUES
 -- Estructura de tabla para la tabla `producto_tiene_insumo`
 --
 
+DROP TABLE IF EXISTS `producto_tiene_insumo`;
 CREATE TABLE `producto_tiene_insumo` (
   `ID_Producto` varchar(10) NOT NULL,
   `ID_Insumo` varchar(10) NOT NULL
@@ -1423,6 +1540,7 @@ INSERT INTO `producto_tiene_insumo` (`ID_Producto`, `ID_Insumo`) VALUES
 -- Estructura de tabla para la tabla `producto_tiene_promocion`
 --
 
+DROP TABLE IF EXISTS `producto_tiene_promocion`;
 CREATE TABLE `producto_tiene_promocion` (
   `ID_Producto` varchar(20) NOT NULL,
   `ID_Promocion` varchar(20) NOT NULL
@@ -1502,6 +1620,7 @@ INSERT INTO `producto_tiene_promocion` (`ID_Producto`, `ID_Promocion`) VALUES
 -- Estructura de tabla para la tabla `promocion`
 --
 
+DROP TABLE IF EXISTS `promocion`;
 CREATE TABLE `promocion` (
   `ID_Promocion` varchar(20) NOT NULL,
   `Nombre` varchar(100) NOT NULL,
@@ -1546,6 +1665,7 @@ INSERT INTO `promocion` (`ID_Promocion`, `Nombre`, `Descuento`, `Condiciones`, `
 -- Estructura de tabla para la tabla `review`
 --
 
+DROP TABLE IF EXISTS `review`;
 CREATE TABLE `review` (
   `ID_Review` varchar(10) NOT NULL,
   `ID_Orden` varchar(10) NOT NULL,
@@ -1617,6 +1737,7 @@ INSERT INTO `review` (`ID_Review`, `ID_Orden`, `Puntaje`, `Comentario`, `Fecha`)
 -- Estructura de tabla para la tabla `rol`
 --
 
+DROP TABLE IF EXISTS `rol`;
 CREATE TABLE `rol` (
   `Rol` varchar(15) NOT NULL,
   `Activo` tinyint(1) DEFAULT 1
@@ -1638,6 +1759,7 @@ INSERT INTO `rol` (`Rol`, `Activo`) VALUES
 -- Estructura de tabla para la tabla `rol_tiene_privilegio`
 --
 
+DROP TABLE IF EXISTS `rol_tiene_privilegio`;
 CREATE TABLE `rol_tiene_privilegio` (
   `ID_Rol` varchar(15) NOT NULL,
   `ID_Privilegio` varchar(30) NOT NULL
@@ -1717,6 +1839,7 @@ INSERT INTO `rol_tiene_privilegio` (`ID_Rol`, `ID_Privilegio`) VALUES
 -- Estructura de tabla para la tabla `sucursal`
 --
 
+DROP TABLE IF EXISTS `sucursal`;
 CREATE TABLE `sucursal` (
   `ID_Sucursal` varchar(10) NOT NULL,
   `Nombre` varchar(50) NOT NULL,
@@ -1742,6 +1865,7 @@ INSERT INTO `sucursal` (`ID_Sucursal`, `Nombre`, `Ciudad`, `Estado`, `País`, `M
 -- Estructura de tabla para la tabla `tamaño`
 --
 
+DROP TABLE IF EXISTS `tamaño`;
 CREATE TABLE `tamaño` (
   `Nombre` varchar(50) NOT NULL,
   `MultiplicadorPrecio` decimal(3,2) NOT NULL
@@ -1763,6 +1887,7 @@ INSERT INTO `tamaño` (`Nombre`, `MultiplicadorPrecio`) VALUES
 -- Estructura de tabla para la tabla `tipos`
 --
 
+DROP TABLE IF EXISTS `tipos`;
 CREATE TABLE `tipos` (
   `nombre` varchar(50) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish2_ci;
@@ -1786,6 +1911,7 @@ INSERT INTO `tipos` (`nombre`) VALUES
 -- Estructura de tabla para la tabla `turno`
 --
 
+DROP TABLE IF EXISTS `turno`;
 CREATE TABLE `turno` (
   `ID_Turno` varchar(20) NOT NULL,
   `Nombre_Turno` varchar(50) NOT NULL,
@@ -1807,6 +1933,7 @@ INSERT INTO `turno` (`ID_Turno`, `Nombre_Turno`, `Fecha`) VALUES
 -- Estructura de tabla para la tabla `turno_tiene_sucursal`
 --
 
+DROP TABLE IF EXISTS `turno_tiene_sucursal`;
 CREATE TABLE `turno_tiene_sucursal` (
   `ID_Turno` varchar(20) NOT NULL,
   `ID_Sucursal` varchar(10) NOT NULL
@@ -1918,6 +2045,12 @@ ALTER TABLE `evento_contiene_promocion`
 ALTER TABLE `insumo`
   ADD PRIMARY KEY (`ID_Insumo`),
   ADD KEY `Categoría` (`Categoría`);
+
+--
+-- Indices de la tabla `log_accesos_otp`
+--
+ALTER TABLE `log_accesos_otp`
+  ADD PRIMARY KEY (`id`);
 
 --
 -- Indices de la tabla `mensaje`
@@ -2046,6 +2179,16 @@ ALTER TABLE `turno`
 ALTER TABLE `turno_tiene_sucursal`
   ADD PRIMARY KEY (`ID_Turno`,`ID_Sucursal`),
   ADD KEY `ID_Sucursal` (`ID_Sucursal`);
+
+--
+-- AUTO_INCREMENT de las tablas volcadas
+--
+
+--
+-- AUTO_INCREMENT de la tabla `log_accesos_otp`
+--
+ALTER TABLE `log_accesos_otp`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
 -- Restricciones para tablas volcadas
