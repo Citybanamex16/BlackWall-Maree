@@ -14,7 +14,10 @@
                 <h1 class="greeting-title text-truncate">¡Hola, <%= cliente.Nombre %>!</h1>
                 <p class="loyalty-subtitle">Maree Royalty</p>
             </div>
-
+            <div class="text-center mt-4">
+                <strong id="cliente-nivel-badge" class="badge-nivel mx-auto mt-1"><%= cliente.nivel %></strong>
+            </div>
+            <br>
             <div class="qr-showcase-container mb-4 mx-auto text-center">
                 <div class="qr-placeholder">
                     <% if (typeof qrCode !== 'undefined' && qrCode) { %>
@@ -42,8 +45,35 @@
             <div class="text-center mt-4">
                 <strong id="cliente-nivel-badge" class="badge-nivel mx-auto mt-1"><%= cliente.nivel %></strong>
             </div>
+            
+            <div class="sellos-section px-2 mt-4 text-start">
+                <p class="sellos-title">Tus Sellos</p>
+                <div id="contenedor-sellos" data-visitas="<%= cliente.visitas %>"></div>
+            </div>
+            <div class="wallet-container">
+            <a id="btn-google-wallet" href="#" target="_blank">
+                <img src="https://help.ipswichtheatres.co.uk/hc/article_attachments/24188305565329" alt="Agregar a Google Wallet" style="height: 48px;">
+            </a>
+            <a id="btn-apple-wallet" href="#" target="_blank">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/3/30/Add_to_Apple_Wallet_badge.svg/3840px-Add_to_Apple_Wallet_badge.svg.png" alt="Agregar a Apple Wallet" style="height: 48px;">
+            </a>
+        </div>
         </div>
     </div>
+
+    
+
+    <script>
+  fetch('/royalty/royaltyUser/api/datos')
+    .then(r => r.json())
+    .then(data => {
+      console.log('Respuesta:', data) // para debuggear
+      if (data.walletLink) {
+        document.getElementById('btn-google-wallet').href = data.walletLink // ✅ nombre correcto
+      }
+    })
+    .catch(err => console.error('Error:', err))
+</script>
     
     <!--
     <section class="mb-4 ps-2 ps-md-0">

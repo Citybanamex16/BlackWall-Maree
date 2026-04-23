@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Escanear QR - Marée</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@1.0.4/css/bulma.min.css">
+  <link rel="stylesheet" href="/css/CSSglobales/global_theme.css">
+  <link rel="stylesheet" href="/css/CSSglobales/global_components.css">
+  <link rel="stylesheet" href="/css/CSSglobales/module-dashboard.css">
+  <link rel="stylesheet" href="/css/CSSglobales/adminstyle.css"> 
+  <link rel="stylesheet" href="/css/CSSglobales/adminstyle.css"> 
+  <link rel="stylesheet" href="/css/moduloAdminCSS/escaner.css">
+  
+</head>
+<body>
+  <nav class="navbar">
+    <div class="navbar-brand">
+      <div class="navbar-item" style="display:flex; flex-direction:column; align-items:flex-start;">
+        <div class="logo-text">MARÉE</div>
+        <div class="logo-sub">Admin</div>
+      </div>
+    </div>
+    <div class="navbar-end" style="display:flex;">
+      <a href="/admin" class="navbar-item">Dashboard</a>
+    </div>
+  </nav>
+<section class="section">
+  <div class="container">
+    <h1 class="title">Escanear QR del Cliente</h1>
+
+    <div id="video-container">
+      <video id="video" autoplay muted playsinline></video>
+    </div>
+
+    <div id="resultado" class="mt-4"></div>
+
+    <!-- Modal confirmación -->
+    <div class="modal" id="modal-confirmar">
+      <div class="modal-background"></div>
+      <div class="modal-content">
+        <div class="box has-text-centered">
+          <h3 class="title is-4" id="modal-titulo">Cliente encontrado</h3>
+          <p id="modal-info"></p>
+          <div class="buttons is-centered mt-4">
+            <button class="button is-success" id="btn-confirmar">✅ Registrar visita</button>
+            <button class="button" onclick="cerrarModal()">Cancelar</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal éxito -->
+    <div class="modal" id="modal-exito">
+      <div class="modal-background"></div>
+      <div class="modal-content">
+        <div class="box has-text-centered">
+          <h3 class="title is-4">✅ ¡Visita registrada!</h3>
+          <p id="exito-info"></p>
+          <button class="button is-primary mt-4" onclick="reiniciarEscaner()">Escanear otro</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal error -->
+    <div class="modal" id="modal-error">
+      <div class="modal-background"></div>
+      <div class="modal-content">
+        <div class="box has-text-centered">
+          <h3 class="title is-4 has-text-danger">❌ Error</h3>
+          <p id="error-info"></p>
+          <button class="button mt-4" onclick="reiniciarEscaner()">Intentar de nuevo</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
+<script src="/js/Royalty/escaner.js"></script>
+</body>
+</html>
