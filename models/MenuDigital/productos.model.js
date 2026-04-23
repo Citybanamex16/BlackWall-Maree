@@ -207,4 +207,9 @@ module.exports = class Producto {
     const [result] = await db.execute('UPDATE producto SET Disponible = 0 WHERE ID_Producto = ?', [id])
     return result
   }
+
+  static async getCrepaPersoPrecioBase(connection){
+    const [result] = await connection.execute('SELECT Precio as precioBaseCrepaPerso FROM `producto` WHERE ID_Producto = "PD_COMODIN";')
+    return result
+  }
 }

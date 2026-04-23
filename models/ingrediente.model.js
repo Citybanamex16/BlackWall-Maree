@@ -6,8 +6,8 @@ module.exports = class Ingrediente {
     return db.execute('SELECT ID_Insumo, Nombre, Categoría, Precio, Activo FROM insumo')
   }
 
-  static async fetchAllValid () {
-    return db.execute('SELECT * FROM insumo WHERE Activo = 1')
+  static async fetchAllValid (connection) {
+    return connection.execute('SELECT * FROM insumo WHERE Activo = 1')
   }
 
 
