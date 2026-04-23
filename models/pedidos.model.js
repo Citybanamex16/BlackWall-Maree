@@ -1,4 +1,5 @@
 const db = require('../util/database.js')
+const Royalty = require('../models/royalty.model.js')
 
 module.exports = class Pedido {
   static fetchOrders () {
@@ -65,6 +66,128 @@ module.exports = class Pedido {
     )
     return rows.map(r => r.ID_Producto)
   }
+
+  /* --- SECCIÓN DE POLICÍA DE PRECIOS 2.0 --- */
+
+/**
+ * Paso 3 & 4: Construye el mapa de descuentos permitidos para el usuario actual.
+ * Aplica lógica EFUL (Evento > Única > Royalty) por orden de inserción.
+ */
+static async obtenerCompendioPromociones(usuario) {
+    const compendio = {};
+    console.log("\n🛠️  [COMPENDIO] Iniciando construcción de promociones aplicables...");
+    console.log(`👤 [USER CONTEXT] Nivel: ${usuario.nivelRoyalty || 'General'} | EsRoyalty: ${usuario.esRoyalty}`);
+
+    try {
+        // 1. Promociones de Evento (PE)
+        const [pe] = await db.query("CALL obtener_promociones_por_tipo('PE')");
+        if (pe[0].length > 0) {
+            console.log(`📢 [PE] Encontradas ${pe[0].length} promociones de evento.`);
+            pe[0].forEach(p => {
+                compendio[p.ID_Producto] = { descuento: parseFloat(p.Descuento), tipo: 'PE' };
+            });
+        }
+
+        // 2. Promociones Únicas (PU)
+        const [pu] = await db.query("CALL obtener_promociones_por_tipo('PU')");
+        if (pu[0].length > 0) {
+            console.log(`🎯 [PU] Encontradas ${pu[0].length} promociones únicas.`);
+            pu[0].forEach(p => {
+                // El compendio se sobreescribe si ya existe (lógica de prioridad)
+                compendio[p.ID_Producto] = { descuento: parseFloat(p.Descuento), tipo: 'PU' };
+            });
+        }
+
+        // 3. Promociones Royalty (PR)
+        if (usuario.esRoyalty) {
+            const [pr] = await db.query("CALL obtener_promociones_por_tipo('PR')");
+            console.log(`👑 [PR] Evaluando ${pr[0].length} promociones de nivel para el usuario.`);
+            
+            pr[0].forEach(p => {
+                if (p.Nombre_Royalty === usuario.nivelRoyalty) {
+                    console.log(`✅ [PR MATCH] Producto ${p.ID_Producto} aplica para nivel ${usuario.nivelRoyalty}`);
+                    compendio[p.ID_Producto] = { descuento: parseFloat(p.Descuento), tipo: 'PR' };
+                }
+            });
+        } else {
+            console.log("⚪ [PR SKIP] Usuario no es Royalty, saltando promociones de nivel.");
+        }
+
+        console.log("📦 [COMPENDIO FINAL] Mapeo completo:", compendio);
+        return compendio;
+
+    } catch (error) {
+        console.error("❌ [COMPENDIO ERROR] Falla al armar el mapa de descuentos:", error);
+        return {}; 
+    }
+}
+
+/**
+ * Obtiene los precios base directos de la BD.
+ */
+static async obtenerListaDeOro(idsProductos, idsInsumos) {
+    console.log("\n📡 [LISTA ORO] Solicitando precios base a la DB...");
+    const [resultSets] = await db.query("CALL ObtenerPreciosBase(?, ?)", [
+        idsProductos.join(','),
+        idsInsumos.join(',')
+    ]);
+
+    const lista = { productos: {}, insumos: {} };
+    resultSets[0].forEach(p => lista.productos[p.id] = parseFloat(p.Precio));
+    resultSets[1].forEach(i => lista.insumos[i.id] = parseFloat(i.Precio));
+
+    console.log(`📥 [LISTA ORO] Cargados ${Object.keys(lista.productos).length} productos y ${Object.keys(lista.insumos).length} insumos.`);
+    return lista;
+}
+
+/**
+ * El "Cerebro" que aplica la matemática final item por item.
+ */
+static calcularPrecioRealItem(item, listaOro, compendio) {
+    let acumulado = 0;
+    const nombreItem = item.nombre || item.producto_base || item.id;
+
+    console.log(`\n🔍 [POLICIA ANALIZANDO] ${nombreItem}`);
+
+    // 1. Precio Base
+    let precioBase = listaOro.productos[item.id];
+    if (precioBase === undefined) {
+        console.error(`🚨 [ERROR] El producto ${item.id} no existe en el catálogo base.`);
+        throw new Error(`ID no encontrado: ${item.id}`);
+    }
+    console.log(`   💰 Precio Base: $${precioBase}`);
+
+    // 2. Aplicar Promoción del Compendio
+    if (compendio[item.id]) {
+        const promo = compendio[item.id];
+        const descuentoEfectivo = precioBase * promo.descuento;
+        precioBase = precioBase - descuentoEfectivo;
+
+        console.log(`   🎁 [PROMO DETECTADA] Tipo: ${promo.tipo} | Descuento: ${promo.descuento * 100}% (-$${descuentoEfectivo.toFixed(2)})`);
+        console.log(`   📉 Precio con Descuento: $${precioBase.toFixed(2)}`);
+    } else {
+        console.log(`   ⚪ [SIN PROMO] No se encontraron descuentos aplicables para este producto.`);
+    }
+    
+    acumulado += precioBase;
+
+    // 3. Sumar Insumos
+    const insumos = [...(item.ingredientes_adentro || []), ...(item.ingredientes_toppings || [])];
+    if (insumos.length > 0) {
+        console.log(`   ➕ Sumando ${insumos.length} insumos...`);
+        insumos.forEach(ins => {
+            const pInsumo = (listaOro.insumos[ins.id_insumo] || 0);
+            if (pInsumo > 0) {
+                console.log(`      • ${ins.id_insumo}: $${pInsumo}`);
+            }
+            acumulado += pInsumo;
+        });
+    }
+
+    console.log(`   ✅ [TOTAL ITEM] $${acumulado.toFixed(2)}`);
+    return acumulado;
+}
+
 
   static async guardarOrden (telefono, tipoOrden, nombreCliente, direccion = null) {
     const idOrden = Pedido.generarID()

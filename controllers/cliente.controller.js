@@ -79,6 +79,8 @@ exports.getProfile = async (req, res, next) => {
   }
 }
 
+
+
 exports.postUpdateProfile = async (req, res, next) => {
   try {
     const numeroTelefonico = req.session.cliente.telefono

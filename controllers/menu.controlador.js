@@ -153,74 +153,149 @@ exports.agregarItem = (request, response, next) => {
   response.status(200).json({ agregado: true, nombre, precio, desc })
 }
 
-exports.validarPedido = async (request, response, next) => {
-  const { items } = request.body;
-  console.log('Validando pedido:', items);
 
+/* ==== middleware de contexto de sesion ==== */
+// middlewares/contextoUsuario.middleware.js
+
+// middleware/contextoUsuario.js
+
+const Royalty = require('../models/royalty.model')
+
+exports.contextoUsuario = async (request, response, next) => {
+  const isLoggedIn = request.session?.isLoggedIn === true
+  const cliente = request.session?.cliente || null
+
+  let nivelRoyalty = 'CLIENTE_GENERAL'
+
+  try {
+    // Solo consultar si hay sesión de cliente
+    if (
+      isLoggedIn &&
+      request.session?.rol === 'Usuario' &&
+      cliente?.telefono
+    ) {
+      console.log("📡 [ROYALTY] Consultando nivel del cliente...")
+
+      const telefono = cliente.telefono
+
+      const [statusData] = await Royalty.fetchClientStatus(telefono)
+
+      const clienteInfo = statusData?.[0]
+
+      nivelRoyalty = clienteInfo?.nivel || 'CLIENTE_GENERAL'
+
+      console.log("👑 [ROYALTY] Nivel detectado:", nivelRoyalty)
+    }
+
+    request.usuario = {
+      autenticado: isLoggedIn,
+      rol: request.session?.rol || 'cliente_general',
+
+      datos: cliente,
+
+      nombre: cliente?.nombre || 'Invitado',
+      telefono: cliente?.telefono || null,
+      visitas: cliente?.visitas || 0,
+
+      nivelRoyalty,
+      esRoyalty: nivelRoyalty !== 'CLIENTE_GENERAL'
+    }
+
+    console.log("🔐 [MIDDLEWARE]");
+    console.log("   Usuario:", request.usuario.nombre);
+    console.log("   Nivel:", request.usuario.nivelRoyalty);
+
+    next()
+
+  } catch (error) {
+    console.error("❌ Error obteniendo contexto de usuario:", error)
+
+    // Fallback seguro
+    request.usuario = {
+      autenticado: false,
+      rol: 'cliente_general',
+      datos: null,
+      nombre: 'Invitado',
+      telefono: null,
+      visitas: 0,
+      nivelRoyalty: 'CLIENTE_GENERAL',
+      esRoyalty: false
+    }
+
+    next()
+  }
+}
+
+
+exports.validarPedido = async (request, response, next) => {
+  const usuario = request.usuario; // Trae: nombre, esRoyalty, nivelRoyalty, etc.
+
+  const { items } = request.body;
+
+  // ── Validación básica ──
   if (!Array.isArray(items) || items.length === 0) {
     return response.status(400).json({ pedidoValido: false, mensaje: 'El pedido está vacío' });
   }
 
-  for (const item of items) {
-    // CORRECCIÓN 1: Validar nombre o producto_base (Compatibilidad)
-    const nombreParaValidar = item.nombre || item.producto_base;
-
-    if (
-      typeof nombreParaValidar !== 'string' ||
-      nombreParaValidar.trim() === ''
-    ) {
-      return response.status(400).json({ pedidoValido: false, mensaje: 'Datos de producto inválidos' });
-    }
-  }
-
   try {
-    // 1. Extraer todos los IDs de productos (Caso A y Caso C)
-    const idsProductos = items.map(i => i.id);
+    // ── 1. Recolección de IDs ──
+    const idsProductos = [...new Set(items.map(i => i.id))];
+    const idsInsumos = [...new Set(items.flatMap(i => [
+        ...(i.ingredientes_adentro || []).map(ins => ins.id_insumo),
+        ...(i.ingredientes_toppings || []).map(ins => ins.id_insumo)
+    ]))];
+
+    // ── 2. Disponibilidad ──
+    const idsDisponibles = await Pedido.verificarDisponibilidadPorId(idsProductos);
+    if (!idsProductos.every(id => idsDisponibles.includes(id))) {
+      return response.status(200).json({ pedidoValido: false, mensaje: 'Algunos platillos ya no están disponibles.' });
+    }
+
+    // ── 3. Fase de Inteligencia: El Compendio ──
+    // Obtenemos precios base e ingredientes
+    const listaOro = await Pedido.obtenerListaDeOro(idsProductos, idsInsumos);
     
-    // 2. Extraer todos los IDs de INSUMOS si es una crepa personalizada (Caso C)
-    let idsInsumos = [];
-    items.forEach(item => {
-        if (item.id === 'PD_COMODIN') {
-            if (item.ingredientes_adentro) {
-                item.ingredientes_adentro.forEach(ins => idsInsumos.push(ins.id_insumo));
-            }
-            if (item.ingredientes_toppings) {
-                item.ingredientes_toppings.forEach(ins => idsInsumos.push(ins.id_insumo));
-            }
-        }
+    // Armamos el compendio de promociones filtrado por el contexto del usuario
+    const compendio = await Pedido.obtenerCompendioPromociones(usuario);
+
+    // ── 4. Inspección del Policía (Item por Item) ──
+    let granTotalOficial = 0;
+    const erroresPrecio = [];
+
+    items.forEach((item, index) => {
+      // Pasamos el compendio para que el cálculo sepa qué promo aplicar
+      const precioOficial = Pedido.calcularPrecioRealItem(item, listaOro, compendio);
+      
+      const precioRecibido = parseFloat(
+        String(item.precio_total ?? item.precio).replace(/[^0-9.]/g, '')
+      );
+
+      if (Math.abs(precioOficial - precioRecibido) > 0.01) {
+        erroresPrecio.push(`Item ${index + 1}: se esperaba $${precioOficial} pero se recibió $${precioRecibido}`);
+      }
+      granTotalOficial += precioOficial;
     });
 
-    // 3. Verificación en la Base de Datos
-    const idsDisponibles = await Pedido.verificarDisponibilidadPorId(idsProductos);
-    const todosProductosOk = idsProductos.every(id => idsDisponibles.includes(id));
-
-    if (!todosProductosOk) {
+    if (erroresPrecio.length > 0) {
       return response.status(200).json({
         pedidoValido: false,
-        mensaje: 'Algunos platillos ya no están disponibles.'
+        mensaje: 'Discrepancia de precios detectada.',
+        detalles: erroresPrecio
       });
     }
 
-    // 4. (OPCIONAL PERO RECOMENDADO) Validar disponibilidad de insumos
-    if (idsInsumos.length > 0) {
-        const insumosDisponibles = await ingrediente.verificarDisponibilidad(idsInsumos); // Necesitarías crear este método
-        const todosInsumosOk = idsInsumos.every(id => insumosDisponibles.includes(id));
-        
-        if (!todosInsumosOk) {
-            return response.status(200).json({
-                pedidoValido: false,
-                mensaje: 'Algunos ingredientes de tu crepa ya no están disponibles.'
-            });
-        }
-    }
-
-    response.status(200).json({ pedidoValido: true });
+    return response.status(200).json({
+      pedidoValido: true,
+      totalVerificado: granTotalOficial
+    });
 
   } catch (err) {
-    console.error('Error validando pedido:', err);
+    console.error('💥 Error en Policía:', err);
     next(err);
   }
-}
+};
+
+
 
 exports.confirmarPedido = async (request, response, next) => {
   const { items, forma, telefono: telefonoBody, nombre: nombreBody, direccion } = request.body
@@ -254,6 +329,7 @@ exports.confirmarPedido = async (request, response, next) => {
     response.status(500).json({ pedidoConfirmado: false, mensaje: 'Error al guardar el pedido' })
   }
 }
+
 
 /* CU 14 Visualizar Catalogo Productos */
 exports.getProducts = (req, res, next) => {
