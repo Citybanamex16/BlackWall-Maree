@@ -56,6 +56,27 @@
                 </button>
             </div>
 
+        <% if (datosCliente) { %>
+        <div style="margin-top:32px;display:flex;justify-content:flex-end;">
+            <a href="/cliente/historial"
+               style="padding:10px 22px;border:1px solid #b5956a;border-radius:6px;
+                      color:#b5956a;font-size:13px;text-decoration:none;font-family:'Jost',sans-serif;">
+                Historial de Pedidos →
+            </a>
+        </div>
+        <% } else { %>
+        <div style="margin-top:40px;padding:16px 20px;background:#faf7f3;border-radius:8px;
+                    border:1px solid #ede5d8;text-align:center;">
+            <p style="font-size:14px;color:#888;font-family:'Jost',sans-serif;margin-bottom:8px;">
+                ¿Quieres dar seguimiento a tu pedido?
+            </p>
+            <a href="/cliente/login"
+               style="color:#b5956a;font-size:14px;font-family:'Jost',sans-serif;font-weight:500;">
+                Inicia sesión para ver tu historial →
+            </a>
+        </div>
+        <% } %>
+
         </div>
     </section>
 

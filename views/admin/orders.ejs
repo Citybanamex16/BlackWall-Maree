@@ -235,5 +235,73 @@
   </div>
 
   <script src="/js/orders-cancel.js"></script>
+  <script>
+    const BADGE_CLASSES = { pendiente: 'badge-pendiente', entregado: 'badge-entregado', cancelado: 'badge-cancelado' }
+
+    function badgeClass (estado) {
+      return BADGE_CLASSES[(estado || '').toLowerCase()] || 'badge-pendiente'
+    }
+
+    function fechaStr (f) {
+      return f ? new Date(f).toLocaleString('es-MX', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : 'Sin fecha'
+    }
+
+    async function pollOrders () {
+      try {
+        const res = await fetch('/admin/api/orders')
+        const data = await res.json()
+        if (!data.ok) return
+
+        const tbody = document.querySelector('.orders-table tbody')
+        const ids = new Set(data.pedidos.map(p => p.id_orden))
+
+        // Eliminar filas que ya no están (canceladas/entregadas desde otro lado)
+        tbody.querySelectorAll('[data-order-row]').forEach(row => {
+          if (!ids.has(row.dataset.orderRow)) row.remove()
+        })
+
+        data.pedidos.forEach(p => {
+          const existing = tbody.querySelector(`[data-order-row="${p.id_orden}"]`)
+          if (existing) {
+            // Actualizar badge de estatus si cambió
+            const badge = existing.querySelector('.order-status-cell .order-badge')
+            if (badge && badge.textContent.trim() !== p.estado_orden) {
+              badge.textContent = p.estado_orden
+              badge.className = `order-badge ${badgeClass(p.estado_orden)}`
+              existing.dataset.estado = p.estado_orden
+            }
+          } else {
+            // Agregar fila nueva al inicio
+            const tr = document.createElement('tr')
+            tr.dataset.orderRow = p.id_orden
+            tr.dataset.nombre = p.nombre_cliente || 'Sin nombre'
+            tr.dataset.telefono = p.telefono || '—'
+            tr.dataset.tipo = p.tipo_orden || '—'
+            tr.dataset.fecha = fechaStr(p.fecha)
+            tr.dataset.direccion = p.direccion || ''
+            tr.dataset.estado = p.estado_orden
+            tr.style.cursor = 'pointer'
+            tr.innerHTML = `
+              <td><strong>${p.id_orden}</strong></td>
+              <td>${p.nombre_cliente || 'Sin nombre'}</td>
+              <td>${p.telefono || '—'}</td>
+              <td>${p.tipo_orden || '—'}</td>
+              <td>${p.direccion || '—'}</td>
+              <td class="order-status-cell"><span class="order-badge ${badgeClass(p.estado_orden)}">${p.estado_orden}</span></td>
+              <td style="white-space:nowrap;">${fechaStr(p.fecha)}</td>
+              <td class="order-actions"><button class="button is-danger is-light is-small btn-cancel-order" data-order-id="${p.id_orden}">Cancelar</button></td>`
+            tbody.insertBefore(tr, tbody.firstChild)
+            // Re-bind cancel button
+            tr.querySelector('.btn-cancel-order').addEventListener('click', (e) => {
+              e.stopPropagation()
+              window._openCancelModal(p.id_orden)
+            })
+          }
+        })
+      } catch { /* silencioso */ }
+    }
+
+    setInterval(pollOrders, 15000)
+  </script>
 </body>
 </html>

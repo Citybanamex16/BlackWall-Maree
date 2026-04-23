@@ -9,6 +9,7 @@ document.addEventListener('DOMContentLoaded', () => {
   let selectedOrderId = null
 
   const openCancelModal = () => cancelModal.classList.add('is-active')
+  window._openCancelModal = (id) => { selectedOrderId = id; openCancelModal() }
   const closeCancelModal = () => {
     cancelModal.classList.remove('is-active')
     selectedOrderId = null

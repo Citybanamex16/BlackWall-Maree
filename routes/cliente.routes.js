@@ -28,4 +28,10 @@ router.get('/eventosCliente', clienteControlador.getEventos)
 router.get('/promosClienteData', clienteControlador.getPRsData)
 router.get('/Sesion', loginControlador.getSesion)
 
+// Historial de pedidos del cliente
+router.get('/historial', isAuth, clienteControlador.getHistorial)
+router.get('/api/mis-ordenes', isAuth, clienteControlador.getClientOrders)
+router.post('/api/orders/:id/cancel', isAuth, clienteControlador.postCancelClientOrder)
+
+
 module.exports = router
