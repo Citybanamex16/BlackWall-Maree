@@ -569,19 +569,19 @@ html {
 /* La burbuja del contador */
 .fab-badge {
     position: absolute;
-    top: 0px;
-    right: 0px;
-    background: #1d2b11; /* Color oscuro para que resalte sobre el crema */
+    top: -6px;
+    right: -6px;
+    background: #b5956a;
     color: #fff;
     font-size: 10px;
-    font-weight: bold;
-    width: 20px;
-    height: 20px;
+    font-weight: 600;
+    width: 16px;
+    height: 16px;
     border-radius: 50%;
     display: flex;
     justify-content: center;
     align-items: center;
-    border: 2px solid #a8bc94; /* Borde del mismo color del botón para que se vea integrado */
+    border: none;
 }
 
 /* Efecto al tocar/pasar el mouse */
@@ -1223,4 +1223,16 @@ html {
 
 /* configuracion de movil */
 
+
+
+#search-input:focus {
+    border-color: #b5956a;
+    box-shadow: 0 0 0 0.125em rgba(181, 149, 106, 0.25);
+    outline: none;
+}
+
+#search-input:focus ~ .icon,
+.search-bar-wrapper.control.has-icons-left .icon {
+    color: #b5956a !important;
+}
 

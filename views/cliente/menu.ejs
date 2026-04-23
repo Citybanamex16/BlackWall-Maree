@@ -66,47 +66,43 @@
      TODO: poblar con buscador y accesos rápidos
 ════════════════════════════════════════ -->
 <div id="sticky-bottom" class="sticky-bottom-app">
-    <!-- Botón Promos -->
-    <a href="/cliente/promosCliente" class="btn btn-icon">
-        <i class="fas fa-ticket-alt is-size-4"></i>
-        <span class="is-size-7">Promos</span>
+
+    <a href="/menu/sucursales" class="btn btn-icon search-side-btn" aria-label="Mapa">
+        <i class="fas fa-map-marker-alt is-size-4"></i>
     </a>
 
-    <div class="search-bar-wrapper control has-icons-left is-expanded">
-        <input class="input is-rounded" type="text" placeholder="Buscar...">
+    <a href="/cliente/promosCliente" class="btn btn-icon search-side-btn" aria-label="Promos">
+        <i class="fas fa-tag is-size-4"></i>
+    </a>
+
+    <button id="btn-search-toggle" class="btn btn-icon" aria-label="Buscar">
+        <i class="fas fa-search is-size-4"></i>
+    </button>
+
+    <div class="search-bar-wrapper control has-icons-left" id="search-expanded" style="display:none;flex:1;">
+        <input id="search-input" class="input is-rounded" type="text" placeholder="Buscar...">
         <span class="icon is-left">
             <i class="fas fa-search"></i>
         </span>
     </div>
 
-    <!-- Botón Eventos -->
-    <a href="/cliente/eventosCliente" class="btn btn-icon">
+    <a href="/cliente/eventosCliente" class="btn btn-icon search-side-btn" aria-label="Eventos">
         <i class="fas fa-calendar-alt is-size-4"></i>
-        <span class="is-size-7">Eventos</span>
+    </a>
+
+    <a href="/menu/orden" class="btn btn-icon search-side-btn" aria-label="Carrito">
+        <span style="position:relative;display:inline-flex;">
+            <i class="fas fa-shopping-cart is-size-4"></i>
+            <span class="fab-badge">0</span>
+        </span>
     </a>
 </div>
 
-
-<!-- FAB — Mapa (ARRIBA) -->
-<!-- 85px (base) + 60px (botón) + 12px (margen) = 157px -->
-<a id="fab-mapa" class="fab-app" href="/menu/sucursales" aria-label="Ver mapa de sucursales" 
-   style="bottom: 157px; background-color: #ffffff; border: 2px solid #a8bc94;">
-    <span class="fab-icon">📍</span>
-</a>
-
-<!-- FAB — Carrito (ABAJO) -->
-<!-- Mantiene los 85px que ya tienes en tu CSS -->
-<a id="fab-carrito" class="fab-app" href="/menu/orden" aria-label="Ver carrito">
-    <span class="fab-icon">🛒</span> 
-    <span class="fab-badge">0</span>
-</a>
-
 <!-- FAB — Crepa Personalizada (Abajo Izquierda) -->
 <!-- Mantiene los 85px que ya tienes en tu CSS -->
-<button id="fab-personalizado" class="fab-app-der" aria-label="Producto Personalizado">
-    <span class="fab-icon">P</span>
+<button id="fab-personalizado" class="fab-app-der" aria-label="Armar tu Crepa">
+    <i class="fas fa-utensils" style="font-size:20px;color:#fff;"></i>
 </button>
-
 
 
 
