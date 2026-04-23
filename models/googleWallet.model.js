@@ -12,15 +12,107 @@ function limpiarTelefono (telefono) {
   // convierte de string a entero
 }
 
+function limpiarNombre (nombre) {
+  return String(nombre).replace(/[^a-zA-Z0-9_]/g, '_').toLowerCase()
+}
+
+function getClassId (nombreRoyalty) {
+  return `${ISSUER_ID}.royalty_${limpiarNombre(nombreRoyalty)}`
+}
+
+function generarStampInfos (puntosActuales, maxPuntos) {
+  const sellos = []
+  for (let i = 0; i < maxPuntos; i++) {
+    sellos.push({
+      stampIndex: i,
+      pinned: i < puntosActuales
+    })
+  }
+  return sellos
+}
+
+function generarSellos (visitasActuales, maxVisitas) {
+  const sellados = '✅'.repeat(Math.min(visitasActuales, maxVisitas))
+  const vacios = '⬜'.repeat(Math.max(maxVisitas - visitasActuales, 0))
+  return sellados + vacios
+}
+
+// Crear clases dinámicas
+async function crearLoyaltyClass (nombreRoyalty, maxVisitas) {
+  const classId = getClassId(nombreRoyalty)
+  try {
+    await walletClient.loyaltyclass.insert({
+      requestBody: {
+        id: classId,
+        issuerName: 'Marée',
+        programName: `Marée Rewards - ${nombreRoyalty}`,
+        reviewStatus: 'UNDER_REVIEW',
+        stampInfos: { stampCount: maxVisitas },
+        programLogo: {
+          sourceUri: { uri: 'https://images.rappi.com.mx/restaurants_logo/logo1-1670627103359.png?e=webp&d=10x10&q=10' },
+          contentDescription: { defaultValue: { language: 'es', value: 'Logo Marée' } }
+        }
+      }
+    })
+    console.log(`Clase creada: ${classId}`)
+  } catch (error) {
+    if (error.code === 409) {
+      console.log(`Clase ya existe: ${classId}`)
+    } else {
+      throw error
+    }
+  }
+}
+
+// Cuando se modifica un estado royalty:
+async function actualizarLoyaltyClass (nombreOriginal, nuevoNombre, maxVisitas) {
+  const classIdOriginal = getClassId(nombreOriginal)
+  const classIdNuevo = getClassId(nuevoNombre)
+
+  try {
+    // Si se cambio la clase se deben de migrar los datos
+    if (limpiarNombre(nombreOriginal) !== limpiarNombre(nuevoNombre)) {
+      await crearLoyaltyClass(nuevoNombre, maxVisitas)
+    } else {
+      // Solo actualizar el conteo de estampas
+      await walletClient.loyaltyclass.patch({
+        resourceId: classIdOriginal,
+        requestBody: {
+          stampInfos: { stampCount: maxVisitas },
+          programName: `Marée Rewards - ${nuevoNombre}`
+        }
+      })
+      console.log(`Clase actualizada: ${classIdOriginal}`)
+    }
+  } catch (error) {
+    console.log('Error al actualizar clase:', error.message)
+    throw error
+  }
+}
+
+// Si se elimina un estado royalty
+async function eliminarLoyaltyClass (nombreRoyalty) {
+  const classId = getClassId(nombreRoyalty)
+  try {
+    await walletClient.loyaltyclass.patch({
+      resourceId: classId,
+      requestBody: { reviewStatus: 'REJECTED' } // Google no permite borrar clases, se desactivan
+    })
+    console.log(`Clase desactivada: ${classId}`)
+  } catch (error) {
+    console.log('Error al desactivar clase:', error.message)
+  }
+}
+
 // Crea la tarjeta de un cliente nuevo
 async function crearLoyaltyObject (telefono, nombreRoyalty, puntosActuales, maxPuntos) {
+  const classId = getClassId(nombreRoyalty)
   const objectId = `${ISSUER_ID}.cliente_${limpiarTelefono(telefono)}`
-
   try {
     await walletClient.loyaltyobject.insert({
       requestBody: {
         id: objectId,
-        classId: CLASS_ID,
+        classId,
         state: 'ACTIVE',
         barcode: {
           type: 'QR_CODE',
@@ -35,6 +127,7 @@ async function crearLoyaltyObject (telefono, nombreRoyalty, puntosActuales, maxP
           balance: { int: maxPuntos ?? 0 },
           label: 'Meta de visitas'
         },
+        stampInfos: generarStampInfos(puntosActuales ?? 0, maxPuntos ?? 0),
         textModulesData: [
           {
             id: 'nivel',
@@ -42,16 +135,9 @@ async function crearLoyaltyObject (telefono, nombreRoyalty, puntosActuales, maxP
             body: nombreRoyalty || 'Sin nivel'
           },
           {
-            id: 'visitas_info',
-            header: 'Progreso'
-            // body: `${puntoActuales ?? 0} de ${maxPuntos ?? 0} visitas`
-          }
-        ],
-        message: [
-          {
-            header: ` Nivel ${nombreRoyalty}`,
-            body: `Llevas ${puntosActuales ?? 0} visitas de ${maxPuntos ?? 0} para el siguiente nivel`,
-            id: 'progreso'
+            id: 'progreso',
+            header: 'Progreso',
+            body: `${puntosActuales ?? 0} de ${maxPuntos ?? 0} visitas`
           }
         ]
       }
@@ -69,11 +155,18 @@ async function crearLoyaltyObject (telefono, nombreRoyalty, puntosActuales, maxP
 
 // Actualiza la tarjeta cuandoo cambia el nivel del cliente
 async function actualizarLoyaltyObject (telefono, nombreRoyalty, puntosActuales, maxPuntos) {
+  const classId = getClassId(nombreRoyalty)
   const objectId = `${ISSUER_ID}.cliente_${limpiarTelefono(telefono)}`
 
   await walletClient.loyaltyobject.patch({
     resourceId: objectId,
     requestBody: {
+      classId,
+      barcode: {
+        type: 'QR_CODE',
+        value: String(telefono),
+        alternateText: String(telefono)
+      },
       loyaltyPoints: {
         balance: { int: puntosActuales },
         label: 'Visitas'
@@ -82,11 +175,17 @@ async function actualizarLoyaltyObject (telefono, nombreRoyalty, puntosActuales,
         balance: { int: maxPuntos },
         label: 'Meta'
       },
+      stampInfos: generarStampInfos(puntosActuales ?? 0, maxPuntos ?? 0),
       textModulesData: [
         {
           id: 'nivel',
           header: 'Nivel Actual',
-          body: nombreRoyalty
+          body: nombreRoyalty || 'Sin nivel'
+        },
+        {
+          id: 'progreso',
+          header: 'Progreso',
+          body: `${puntosActuales ?? 0} de ${maxPuntos ?? 0} visitas`
         }
       ]
     }
@@ -95,6 +194,7 @@ async function actualizarLoyaltyObject (telefono, nombreRoyalty, puntosActuales,
 }
 
 // Actualiza todos los clientes de un nivel cuando el admin modifica ese estado royalty
+// Query a la base de datos
 async function actualizarTarjetaPorNivel (nombreRoyalty, nuevoNombre, nuevoDescripcion) {
   const [clientes] = await db.execute(
     'SELECT telefono, Visitas FROM cliente WHERE Nombre_Royalty = ?',
@@ -110,6 +210,7 @@ async function actualizarTarjetaPorNivel (nombreRoyalty, nuevoNombre, nuevoDescr
 }
 
 async function generarLinkWallet (telefono, nombreRoyalty, puntosActuales, maxPuntos) {
+  await crearLoyaltyClass(nombreRoyalty, maxPuntos)
   await crearLoyaltyObject(telefono, nombreRoyalty, puntosActuales, maxPuntos)
   const objectId = `${ISSUER_ID}.cliente_${limpiarTelefono(telefono)}`
   const claims = {

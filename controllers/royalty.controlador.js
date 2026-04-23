@@ -71,6 +71,7 @@ exports.updateRoyalty = async (request, response, next) => {
     await Royalty.updateEstadoRoyalty(nombreOriginal, nombre, prioridad, descripcion, minVisitas, maxVisitas)
     await Royalty.updatePromocionesRoyalty(nombre, promociones)
     await Royalty.updateEventosRoyalty(nombre, eventos)
+    await WalletModel.actualizarTarjetaPorNivel(nombreOriginal, nombre, maxVisitas)
     response.status(200).json({
       success: true,
       message: 'Se han modificado los datos correctamente'
