@@ -1,0 +1,12 @@
+/* We create a stored procedure to save promotions for each royalty */
+
+DELIMITER //
+CREATE PROCEDURE sp_GuardarRoyaltyPromocion(
+  IN p_NombreRoyalty VARCHAR(100),
+  IN p_IDPromocion INT
+)
+BEGIN
+  INSERT INTO estado_royalty_da_promociones (Nombre_Royalty, ID_Promocion)
+  VALUES (p_NombreRoyalty, p_IDPromocion);
+END //
+DELIMITER ;

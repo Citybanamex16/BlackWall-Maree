@@ -63,6 +63,48 @@ async function modificarRoyalty (nombre) {
   document.getElementById('modal-modificarRoyalty').classList.add('is-active')
 }
 
+const RegistroGuardarRoyalty = () => {
+  const datos = {
+    nombre: document.getElementById('add-input-nombre').value.trim(),
+    prioridad: document.getElementById('add-input-prioridad').value.trim(),
+    descripcion: document.getElementById('add-input-descripcion').value.trim(),
+    minVisitas: document.getElementById('add-input-minVisitas').value.trim(),
+    maxVisitas: document.getElementById('add-input-maxVisitas').value.trim(),
+    promociones: Array.from(document.querySelectorAll('.checkbox-promociones:checked')).map(cb => ({
+      id: cb.value,
+      nombre: cb.dataset.nombre
+    })),
+    eventos: Array.from(document.querySelectorAll('.checkbox-eventos:checked')).map(cb => ({
+      id: cb.value,
+      nombre: cb.dataset.nombre
+    }))
+  }
+
+  if (!agregarValidarFormulario(datos)) return
+
+  const btnGuardar = document.querySelector('#modalAgregarRoyalty .button.is-primary')
+  btnGuardar.classList.add('is-loading')
+
+  console.log('Datos enviados:', JSON.stringify(datos))
+  fetch('/royalty/promociones', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(datos)
+  })
+    .then(response => response.json())
+    .then(data => {
+      if (data.success) {
+        cerrarModal()
+        document.getElementById('modal-exito').classList.add('is-active')
+        cargarEstadosRoyalty() // Recargar la lista sin refrescar página
+      } else {
+        alert('Error: ' + data.message)
+      }
+    })
+    .catch(err => console.error('Error:', err))
+    .finally(() => btnGuardar.classList.remove('is-loading'))
+}
+
 async function guardarRoyalty () {
   const promociones = Array.from(document.querySelectorAll('.checkbox-promo:checked'))
     .map(cb => cb.value)
@@ -101,6 +143,156 @@ async function guardarRoyalty () {
 
 const abrirModal = () => {
   document.getElementById('modal-modificarRoyalty').classList.add('is-active')
+}
+
+// Después:
+const abrirModalNuevoEstadoRoyalty = async () => {
+  // Limpiamos el formulario primero
+  document.getElementById('add-input-nombre').value = ''
+  document.getElementById('add-input-prioridad').value = ''
+  document.getElementById('add-input-descripcion').value = ''
+  document.getElementById('add-input-minVisitas').value = ''
+  document.getElementById('add-input-maxVisitas').value = ''
+
+  // Cargamos todas las promociones disponibles
+  const resPromos = await fetch('/royalty/royaltyAdmin/todas/promociones-disponibles')
+  const dataPromos = await resPromos.json()
+
+  const contenedorPromos = document.getElementById('contenedor-promociones-nuevo')
+  contenedorPromos.innerHTML = ''
+  dataPromos.data.forEach(promo => {
+    const label = document.createElement('label')
+    label.className = 'checkbox'
+    label.style.display = 'block'
+    const input = document.createElement('input')
+    input.type = 'checkbox'
+    input.value = promo.ID_promocion
+    input.className = 'checkbox-promociones mr-2'
+    input.dataset.nombre = promo.Nombre
+    label.appendChild(input)
+    label.appendChild(document.createTextNode(' ' + promo.Nombre))
+    contenedorPromos.appendChild(label)
+  })
+
+  // Cargamos todos los eventos disponibles
+  const resEventos = await fetch('/royalty/royaltyAdmin/todas/eventos-disponibles')
+  const dataEventos = await resEventos.json()
+
+  const contenedorEventos = document.getElementById('contenedor-eventos-nuevo')
+  contenedorEventos.innerHTML = ''
+  dataEventos.data.forEach(evento => {
+    const label = document.createElement('label')
+    label.className = 'checkbox'
+    label.style.display = 'block'
+    const input = document.createElement('input')
+    input.type = 'checkbox'
+    input.value = evento.ID_Evento
+    input.className = 'checkbox-eventos mr-2'
+    input.dataset.nombre = evento.Nombre
+    label.appendChild(input)
+    label.appendChild(document.createTextNode(' ' + evento.Nombre))
+    contenedorEventos.appendChild(label)
+  })
+
+  document.getElementById('modalAgregarRoyalty').classList.add('is-active')
+}
+
+const cargarEstadosRoyalty = async () => {
+  const spinner = document.getElementById('loading-spinner')
+  if (spinner) spinner.classList.remove('is-hidden')
+
+  try {
+    const response = await fetch('/royalty/royaltyAdmin/api')
+    const result = await response.json()
+
+    if (result.success) {
+      royaltiesData = result.data
+    }
+  } catch (error) {
+    console.error('Error al cargar promos:', error)
+  } finally {
+    if (spinner) spinner.classList.add('is-hidden')
+  }
+}
+
+const actualizarProductos = async () => {
+  const promociones = document.querySelector('select[name="promociones"')
+  const eventos = document.querySelector('select[name="eventos"]')
+
+  const params = new URLSearchParams()
+  if (promociones) params.append('promociones', promociones)
+  if (eventos) params.append('eventos', eventos)
+
+  try {
+    const res = await fetch(`/royalty/royaltyAdmin/promocion-evento-filtro?${params.toString()}`)
+    const data = await res.json()
+    const selectProductos = document.getElementById('select-productos')
+    selectProductos.innerHTML = ''
+
+    if (!data.success || data.data.length === 0) {
+      selectProductos.innerHTML = '<option value="">Sin resultados</option>'
+      return
+    }
+
+    data.data.forEach(producto => {
+      const label = document.createElement('label')
+      label.className = 'checkbox'
+      label.style.display = 'block'
+      label.innerHTML = `
+                <input type="checkbox" value="${producto.ID_Producto}" 
+                       data-nombre="${producto.Nombre}" class="checkbox-producto mr-2">
+                ${producto.Nombre}
+            `
+      selectProductos.appendChild(label)
+    })
+  } catch (error) {
+    console.error('Error al filtrar productos:', error)
+  }
+}
+
+// Validar formulario para agregar royalties
+function agregarValidarFormulario (datos) {
+  document.querySelectorAll('.input, .select').forEach(el => el.classList.remove('is-danger'))
+  document.querySelectorAll('.help.is-danger').forEach(el => el.remove())
+
+  let esValido = true
+  if (!datos.nombre.trim()) { marcarError('add-input-nombre', 'Obligatorio'); esValido = false }
+  if (!datos.prioridad.trim()) { marcarError('add-input-prioridad', 'Obligatorio'); esValido = false }
+  if (!datos.descripcion.trim()) { marcarError('add-input-descripcion', 'Requerido'); esValido = false }
+  if (!datos.minVisitas) { marcarError('add-input-minVisitas', 'Requerido'); esValido = false }
+  if (!datos.maxVisitas) { marcarError('add-input-maxVisitas', 'Requerido'); esValido = false }
+  // Validamos que sea menor y mayor al numero de visitas
+  if (Number(datos.minVisitas) > Number(datos.maxVisitas)) {
+    marcarError('add-input-minVisitas', 'Debe ser menor que max Visitas')
+    esValido = false
+  }
+  if (Number(datos.maxVisitas) < Number(datos.minVisitas)) {
+    marcarError('add-input-maxVisitas', 'Debe ser mayor que min Visitas')
+    esValido = false
+  }
+  // Validamos que sea entero
+  if (Number(datos.prioridad) < 0) {
+    marcarError('add-input-prioridad', 'Debe ser mayor que cero')
+    esValido = false
+  }
+  if (Number(datos.minVisitas) < 0) {
+    marcarError('add-input-minVisitas', 'Debe ser mayor que cero')
+    esValido = false
+  }
+  if (Number(datos.maxVisitas) < 0) {
+    marcarError('add-input-maxVisitas', 'Debe ser mayor que cero')
+    esValido = false
+  }
+  if (datos.promociones.length === 0) {
+    marcarError('contenedor-promociones-nuevo', 'Debes de registrar una promocion')
+    esValido = false
+  }
+  if (datos.eventos.length === 0) {
+    marcarError('contenedor-eventos-nuevo', 'Debes de registrar un evento')
+    esValido = false
+  }
+
+  return esValido
 }
 
 function validarFormulario (datos) {
@@ -147,7 +339,12 @@ function marcarError (id, mensaje) {
   const help = document.createElement('p')
   help.className = 'help is-danger'
   help.textContent = mensaje
-  elemento.closest('.control').appendChild(help)
+  const control = elemento.closest('.control')
+  if (control) {
+    control.appendChild(help)
+  } else {
+    elemento.insertAdjacentElement('afterend', help)
+  }
 }
 
 const limpiarFormulario = () => {
@@ -156,10 +353,6 @@ const limpiarFormulario = () => {
 
 const cerrarModalSoloConfirmacion = () => {
   document.getElementById('modal-confirmarModificarRoyalty').classList.remove('is-active')
-}
-
-const cerrarModalError = () => {
-  document.getElementById('ModalError').classList.remove('is-active')
 }
 
 const cerrarModalConfirmacion = () => {
@@ -174,6 +367,11 @@ const cerrarModal = () => {
   limpiarFormulario()
 }
 
+const cerrarModalGuardarRoyalty = () => {
+  document.getElementById('modalAgregarRoyalty').classList.remove('is-active')
+  limpiarFormulario()
+}
+
 let royaltyABorrar = ''
 function borrarRoyalty (NombreRoyalty) {
   royaltyABorrar = NombreRoyalty
@@ -182,6 +380,7 @@ function borrarRoyalty (NombreRoyalty) {
 }
 
 function confirmarBorrado () {
+  console.log('Borrando:', royaltyABorrar)
   fetch('/royalty/borrar/' + royaltyABorrar, { method: 'DELETE' })
     .then(() => {
       document.getElementById('ModalEliminar').classList.remove('is-active')

@@ -1,0 +1,138 @@
+<%- include('../partials/header_cliente', { pageTitle: 'Mis Pedidos - Marée' }) %>
+
+<div id="sticky-top" class="sticky-top-app">
+    <div class="logo-area">
+        <span class="logo-text">MARÉE</span>
+        <span class="logo-sub">Mis Pedidos</span>
+    </div>
+    <a href="/menu/orden"
+       style="font-size:13px;color:#b5956a;text-decoration:none;font-family:'Jost',sans-serif;">
+        ← Resumen
+    </a>
+</div>
+
+<section class="section">
+    <div class="container" style="max-width:680px;">
+
+        <p style="font-size:11px;color:#aaa;font-family:'Jost',sans-serif;
+                  text-transform:uppercase;letter-spacing:0.06em;margin-bottom:4px;">
+            Bienvenido, <%= datosCliente.nombre %>
+        </p>
+        <h1 style="font-family:'Cormorant Garamond',serif;font-size:32px;margin-bottom:4px;">
+            Mis Pedidos
+        </h1>
+        <p style="font-size:13px;color:#888;font-family:'Jost',sans-serif;margin-bottom:28px;">
+            Tienes <strong>3 minutos</strong> para cancelar un pedido desde que lo confirmas.
+        </p>
+
+        <div id="alert-historial"></div>
+
+        <% if (!ordenes || ordenes.length === 0) { %>
+            <div style="text-align:center;padding:48px 0;color:#aaa;font-family:'Jost',sans-serif;">
+                No tienes pedidos activos.
+            </div>
+        <% } else { %>
+            <% ordenes.forEach(orden => { %>
+                <%
+                    const estadoColor = orden.estado_orden === 'Entregado' ? '#3a7d52'
+                                     : orden.estado_orden === 'Cancelado'  ? '#c0392b'
+                                     : '#b5956a'
+                    const fechaStr = orden.fecha
+                        ? new Date(orden.fecha).toLocaleString('es-MX', {day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'})
+                        : '—'
+                %>
+                <div class="orden-card" data-id="<%= orden.id_orden %>" data-fecha="<%= orden.fecha %>">
+                    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px;">
+                        <div>
+                            <p style="font-family:'Cormorant Garamond',serif;font-size:20px;color:#333;margin:0;">
+                                <%= orden.id_orden %>
+                            </p>
+                            <p style="font-size:12px;color:#aaa;font-family:'Jost',sans-serif;margin:2px 0 0;">
+                                <%= fechaStr %> · <%= orden.tipo_orden %>
+                                <% if (orden.direccion) { %> · <%= orden.direccion %><% } %>
+                            </p>
+                        </div>
+                        <span class="estado-badge" style="background:<%= estadoColor %>15;color:<%= estadoColor %>;
+                              padding:3px 12px;border-radius:20px;font-size:12px;font-family:'Jost',sans-serif;font-weight:500;">
+                            <%= orden.estado_orden %>
+                        </span>
+                    </div>
+
+                    <% if (orden.items && orden.items.length > 0) { %>
+                        <table style="width:100%;border-collapse:collapse;margin-bottom:12px;">
+                            <thead>
+                                <tr>
+                                    <th style="font-size:11px;color:#aaa;font-family:'Jost',sans-serif;
+                                               text-transform:uppercase;letter-spacing:0.04em;
+                                               padding:4px 0;border-bottom:1px solid #eee;text-align:left;">Producto</th>
+                                    <th style="font-size:11px;color:#aaa;font-family:'Jost',sans-serif;
+                                               text-transform:uppercase;letter-spacing:0.04em;
+                                               padding:4px 0;border-bottom:1px solid #eee;text-align:center;">Cant.</th>
+                                    <th style="font-size:11px;color:#aaa;font-family:'Jost',sans-serif;
+                                               text-transform:uppercase;letter-spacing:0.04em;
+                                               padding:4px 0;border-bottom:1px solid #eee;text-align:right;">Subtotal</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <% let total = 0 %>
+                                <% orden.items.forEach(item => { %>
+                                    <% const sub = item.cantidad * item.precio; total += sub %>
+                                    <tr>
+                                        <td style="padding:7px 0;font-size:14px;font-family:'Jost',sans-serif;color:#444;border-bottom:1px solid #f5f5f5;"><%= item.nombre %></td>
+                                        <td style="padding:7px 0;font-size:14px;font-family:'Jost',sans-serif;color:#444;border-bottom:1px solid #f5f5f5;text-align:center;"><%= item.cantidad %></td>
+                                        <td style="padding:7px 0;font-size:14px;font-family:'Jost',sans-serif;color:#444;border-bottom:1px solid #f5f5f5;text-align:right;">$<%= sub.toFixed(2) %></td>
+                                    </tr>
+                                <% }) %>
+                            </tbody>
+                        </table>
+                        <p style="text-align:right;font-size:14px;font-weight:600;color:#b5956a;font-family:'Jost',sans-serif;">
+                            Total: $<%= orden.items.reduce((s,i) => s + i.cantidad*i.precio, 0).toFixed(2) %>
+                        </p>
+                    <% } else { %>
+                        <p style="font-size:13px;color:#aaa;font-family:'Jost',sans-serif;">Sin productos registrados.</p>
+                    <% } %>
+
+                    <div class="cancel-area" style="margin-top:12px;min-height:32px;"></div>
+                </div>
+            <% }) %>
+        <% } %>
+
+    </div>
+</section>
+
+<style>
+    .orden-card {
+        background: #fff;
+        border: 1px solid #ede5d8;
+        border-radius: 12px;
+        padding: 20px;
+        margin-bottom: 16px;
+    }
+</style>
+
+<!-- Modal — Confirmar cancelación -->
+<div class="modal" id="cancel-confirm-modal">
+    <div class="modal-background"></div>
+    <div class="modal-card" style="max-width:420px;width:90%;">
+        <header class="modal-card-head" style="background:#fff;border-bottom:1px solid #eee;">
+            <p class="modal-card-title" style="font-family:'Cormorant Garamond',serif;font-size:20px;">Cancelar pedido</p>
+            <button class="delete" id="close-cancel-confirm"></button>
+        </header>
+        <section class="modal-card-body" style="background:#fff;">
+            <p style="font-family:'Jost',sans-serif;font-size:14px;color:#555;">
+                ¿Estás seguro de que deseas cancelar este pedido? Esta acción no se puede deshacer.
+            </p>
+        </section>
+        <footer class="modal-card-foot" style="background:#fff;border-top:1px solid #eee;justify-content:flex-end;gap:10px;">
+            <button class="button" id="btn-no-cancelar" style="font-family:'Jost',sans-serif;">Volver</button>
+            <button class="button is-danger" id="btn-si-cancelar" style="font-family:'Jost',sans-serif;">Sí, cancelar</button>
+        </footer>
+    </div>
+</div>
+
+<script>
+    const ORDENES_INIT = <%- JSON.stringify(ordenes.map(o => ({ id: o.id_orden, fecha: o.fecha, estado: o.estado_orden }))) %>;
+</script>
+<script src="/js/menudigital/historial.js"></script>
+</body>
+</html>

@@ -346,6 +346,26 @@ exports.getOrders = async (req, res, next) => {
   }
 }
 
+exports.getOrdersJson = async (req, res) => {
+  try {
+    const [pedidos] = await Pedido.fetchOrders()
+    return res.json({ ok: true, pedidos })
+  } catch {
+    return res.status(500).json({ ok: false })
+  }
+}
+
+exports.getOrderItems = async (req, res) => {
+  const { id } = req.params
+  try {
+    const [items] = await Pedido.fetchItems(id)
+    return res.status(200).json({ ok: true, items })
+  } catch (error) {
+    console.error('ERROR getOrderItems:', error)
+    return res.status(500).json({ ok: false, message: 'Error al obtener los items.' })
+  }
+}
+
 exports.getPromotions = (req, res, next) => {
   res.render('admin/promotions')
 }

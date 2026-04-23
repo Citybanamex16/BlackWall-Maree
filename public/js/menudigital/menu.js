@@ -5,7 +5,7 @@
 const platillobotones = document.getElementsByClassName('platillo-btn')
 const modalOverlay = document.getElementById('modal-overlay')
 const modalContent = document.getElementById('modal-content')
-const pedido = []
+let pedido = JSON.parse(localStorage.getItem('pedido')) || [];
 
 // MODAL
 const cerrarModal = () => {
@@ -88,21 +88,34 @@ function generarHTMLModal (platillo, dataExtra, promoDisplay, promoPrecio) {
   `
 }
 
-async function agregarAlCarrito (item) {
-  pedido.push(item)
-  localStorage.setItem('pedido', JSON.stringify(pedido))
+async function agregarAlCarrito(item) {
+  console.log("Recibiendo producto: ", item)
+  // 1. Aseguramos que el pedido local esté actualizado antes de empujar
+  pedido = JSON.parse(localStorage.getItem('pedido')) || [];
+
+  // 2. Empujamos el item (que ya trae su 'desc' y sus arreglos de ingredientes)
+  pedido.push(item);
+
+  // 3. Guardamos el estado COMPLETO en el LocalStorage
+  localStorage.setItem('pedido', JSON.stringify(pedido));
 
   try {
-    await fetch('/menu/agregaritem', {
+    // 4. Sincronizamos con el servidor mandando el item individual
+    const response = await fetch('/menu/agregaritem', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(item)
-    })
-    console.log('Sincronizado con servidor')
-    cerrarModal()
-    actualizarBotonResumen()
+      body: JSON.stringify(item) 
+    });
+
+    if (response.ok) {
+      console.log('✅ Item sincronizado con el servidor');
+      actualizarBotonResumen(); // Para que el número del carrito suba
+    }
   } catch (err) {
-    console.error('Error al guardar:', err)
+    console.error('❌ Error al sincronizar:', err);
+    // Nota: El item se quedó en LocalStorage, así que el usuario no pierde su progreso
+  } finally{
+    cerrarModal()
   }
 }
 
@@ -143,6 +156,33 @@ async function verDetalleProducto (id) {
     console.error('Error al abrir detalle:', err)
   }
 }
+
+
+//funciones globales 
+
+/* == Conf y Show de Error Modal == */
+// Error elements references
+const ErrorModal = document.getElementById('ErrorModal')
+const ErrorTitle = document.getElementById('ErrorTitle')
+const ErrorContent = document.getElementById('ErrorMessage')
+const ErrorCloseBtn = document.getElementById('closeInvalidData')
+
+function ShowErrorModal (title, content) {
+  ErrorTitle.innerText = title
+  ErrorContent.innerText = content
+  ErrorCloseBtn.addEventListener('click',
+    (event) => {
+      ErrorModal.close()
+    }, { once: true })
+  ErrorModal.showModal()
+}
+
+
+
+
+// fin de funciones globales
+
+
 
 /* CU11 Visualizar Menu Digital */
 let globalProducts = [] // Variable global de productos
@@ -225,37 +265,41 @@ function cleanSesionPromos (rawSesionPromos, AcceptedPromos) {
 }
 
 //
-async function getSesionPRs (SesionData, AcceptedPromos) {
-  // Validamos que tengamos la lista maestra antes de empezar
-  const masterList = AcceptedPromos?.allPRs[0] || []
-  console.log('Iniciando validación con Accepted promos:', masterList)
+function getSesionPRs(SesionData, AllPromos) {
+    console.log("🛠️ [FRONT-FILTRO] Iniciando selección local de PRs...");
+    
+    // 1. Extraemos el nivel de la sesión (ej: 'Mega Fan', 'Fan', etc.)
+    const nivelUsuario = SesionData.nivelRoyalty;
+    
+    // 2. Extraemos la lista maestra de PRs que ya bajaste de la DB
+    const masterList = AllPromos?.allPRs?.[0] || [];
 
-  try {
-    const res = await fetch('/cliente/promosClienteData')
+    console.log(`👤 Usuario: ${SesionData.usuario?.nombre || 'Invitado'} | Nivel: ${nivelUsuario}`);
 
-    // La validación .ok va sobre la respuesta del fetch, no sobre el JSON
-    if (!res.ok) {
-      throw new Error(`Error de red: ${res.status}`)
+    // REGLA DE ORO 1: Si no hay nivel o es "General", no hay PRs que buscar.
+    if (!nivelUsuario || nivelUsuario === 'General' || nivelUsuario === 'Cliente general') {
+        console.log("⚪ [SKIP] Usuario sin nivel Royalty. Devolviendo lista vacía.");
+        return [];
     }
 
-    const responseData = await res.json()
+    // 3. FILTRADO LOCAL (Sin fetch, sin esperas)
+    // Buscamos en la lista maestra solo las que coincidan con el nivel del cliente
+    try {
+        const autorizadas = masterList.filter(promo => {
+            return promo.Nombre_Royalty === nivelUsuario;
+        });
 
-    // Aquí extraemos las promos que el servidor dice que el usuario tiene
-    // Si el servidor no manda nada, usamos el SesionData que pasaste por parámetro
-    const rawPromos = responseData.PRs || []
+        console.log(`✅ [EXITO] Se encontraron ${autorizadas.length} promos para el nivel ${nivelUsuario}`);
+        
+        // Opcional: Aquí puedes seguir usando tu función cleanSesionPromos si hace limpiezas extra
+        // return cleanSesionPromos(autorizadas, masterList);
+        
+        return autorizadas;
 
-    console.log('PRs obtenidos del servidor con éxito', rawPromos)
-
-    // Aplicamos el filtro de seguridad (Regla de EFUL)
-    const SesionAcceptedPromos = cleanSesionPromos(rawPromos, masterList)
-
-    console.log(`Resultado final: ${SesionAcceptedPromos.length} promociones autorizadas.`)
-    return SesionAcceptedPromos
-  } catch (err) {
-    console.error('Error fetching Sesion Promos:', err)
-    // En caso de error, devolvemos un array vacío para no romper el resto de la app
-    return []
-  }
+    } catch (err) {
+        console.error('💥 Error filtrando promociones en local:', err);
+        return [];
+    }
 }
 
 // Funcion para obtener los datos del Menu
@@ -283,7 +327,7 @@ async function obtenerMenu (SesionData) {
     let SesionPromos
     if (SesionData !== null && PromosData !== undefined) {
       // == Llamado de PRs == //
-      SesionPromos = await getSesionPRs(SesionData, PromosData)
+      SesionPromos = getSesionPRs(SesionData, PromosData)
       SesionData.PRs = SesionPromos
     } else {
       SesionPromos = null
@@ -299,6 +343,8 @@ async function obtenerMenu (SesionData) {
     ShowMenuErrorModal()
   }
 }
+
+
 
 async function getSesionInfo () {
   // Datos de la sesión:
@@ -321,7 +367,7 @@ getSesionInfo()
 
 /* ==== SISTEMA DE PROMOCIONES ==== */
 
-function getPromosFromProduct (nombre, promosData, PRs) {
+function getPromosFromProduct (idProd, promosData, PRs) {
   const promosArray = []
 
   // 1. Aseguramos que PRs sea un array. Si es null o undefined, usamos []
@@ -333,9 +379,9 @@ function getPromosFromProduct (nombre, promosData, PRs) {
 
   // 2. Filtramos usando los arrays seguros
   // filter no fallará si el array está vacío, simplemente devolverá otro []
-  const promosEvento = PEs.filter(promo => promo?.Producto === nombre)
-  const promosUnicas = PUs.filter(promo => promo?.Producto === nombre)
-  const promosRoyalty = safePRs.filter(promo => promo?.Producto === nombre)
+  const promosEvento = PEs.filter(promo => promo?.ID_Producto === idProd)
+  const promosUnicas = PUs.filter(promo => promo?.ID_Producto === idProd)
+  const promosRoyalty = safePRs.filter(promo => promo?.ID_Producto === idProd)
 
   // 3. Unimos todo. Si alguno es [], push no agregará nada al array final
   promosArray.push(...promosEvento, ...promosUnicas, ...promosRoyalty)
@@ -412,7 +458,7 @@ function menuPromosAgent (cardHTML, finalPromos) {
       labelOrigen = 'Royalty'
       claseTab = 'tab-pr'
       // Plus de vistosidad: sombra azul armonizada con el tono pastel
-      card.style.boxShadow = '0 4px 15px rgba(52, 152, 219, 0.3)';
+      card.style.boxShadow = '0 4px 15px rgba(52, 152, 219, 0.3)'
       break
     case 'Evento':
       colorPromo = '#b5956a' // Dorado
@@ -468,14 +514,15 @@ function menuPromosAgent (cardHTML, finalPromos) {
 }
 
 // Sistema de Promos
-function promosMaster (cardHTML, promosData, productName, dataSesion) {
+function promosMaster (cardHTML, promosData, productId, dataSesion) {
   // 1. Extraer promos
   let PRs = []
   if (dataSesion != null) {
+    //console.log("Data sesion PRs en promosMaster: ", dataSesion)
     PRs = dataSesion.PRs
   }
 
-  const arrayPromosProducto = getPromosFromProduct(productName, promosData, PRs)
+  const arrayPromosProducto = getPromosFromProduct(productId, promosData, PRs)
 
   // Si el producto no tiene promos, cortamos la ejecución para ahorrar recursos
   if (arrayPromosProducto.length === 0) return cardHTML
@@ -530,7 +577,7 @@ function construirFichaProductos (productosFiltrados, PromosData, gridDestino, D
             </div>`
 
     // El Promos Master recibe el string, lo pinta y lo devuelve listo para insertarse
-    const completedCardHTML = promosMaster(cardHTML, PromosData, prod.nombre, DatosSesion)
+    const completedCardHTML = promosMaster(cardHTML, PromosData, prod.id, DatosSesion)
     gridDestino.insertAdjacentHTML('beforeend', completedCardHTML)
   })
 }
@@ -731,37 +778,59 @@ function renderizarVistaCategoria (categoriaObj, productos, allTypes, allPromos,
   }
 }
 
-/*
-window.agregarAlCarrito = function (btn) {
-  const nombre = btn.dataset.nombre
-  const precio = btn.dataset.precio
-  const desc = btn.closest('.card-content')?.querySelector('.product-desc')?.textContent?.trim() || ''
 
-  // Abrir modal con descripción y botón de confirmar
-  abrirModal(`
-    <h2 style="font-family:'Cormorant Garamond',serif;font-size:26px;margin-bottom:4px;">
-      ${nombre}
-    </h2>
-    <p style="color:#b5956a;font-size:15px;font-weight:500;margin-bottom:12px;">
-      $${precio}
-    </p>
-    <p style="color:#777;font-size:13px;margin-bottom:20px;">${desc || 'Sin descripción disponible'}</p>
 
-    <button id="btn-confirmar-agregar"
-      style="width:100%;padding:12px;background:#eac9c1;color:#fff;
-             border:none;border-radius:6px;font-size:14px;cursor:pointer;
-             font-family:'Jost',sans-serif;">
-      + Confirmar y agregar al pedido
-    </button>
-  `)
+// ── BÚSQUEDA ──
+const btnSearchToggle = document.getElementById('btn-search-toggle')
+const searchExpanded = document.getElementById('search-expanded')
+const searchSideBtns = document.querySelectorAll('.search-side-btn')
+const searchInput = document.getElementById('search-input')
 
-  document.getElementById('btn-confirmar-agregar').addEventListener('click', () => {
-    const item = { nombre, precio: `$${precio}`, desc }
-    const pedidoActual = JSON.parse(localStorage.getItem('pedido') || '[]')
-    pedidoActual.push(item)
-    localStorage.setItem('pedido', JSON.stringify(pedidoActual))
-    cerrarModal()
-    console.log('Item agregado:', item)
+if (btnSearchToggle) {
+  btnSearchToggle.addEventListener('click', (e) => {
+    e.stopPropagation()
+    btnSearchToggle.style.display = 'none'
+    searchExpanded.style.display = 'flex'
+    searchSideBtns.forEach(b => b.style.display = 'none')
+    searchInput.focus()
+  })
+
+  document.addEventListener('click', (e) => {
+    if (searchExpanded.style.display === 'none') return
+    if (!searchExpanded.contains(e.target)) {
+      btnSearchToggle.style.display = ''
+      searchExpanded.style.display = 'none'
+      searchSideBtns.forEach(b => b.style.display = '')
+      searchInput.value = ''
+    }
+  })
+
+  let debounceTimer
+  searchInput.addEventListener('input', (e) => {
+    clearTimeout(debounceTimer)
+    debounceTimer = setTimeout(() => {
+      const q = e.target.value.trim().toLowerCase()
+      if (!q) return
+      const match = globalProducts.find(p => p.nombre.toLowerCase().includes(q))
+      if (!match) return
+      const scrollToCard = () => {
+        const btn = document.querySelector(`.add-btn-app[data-id="${match.id}"]`)
+        btn?.closest('.product-card-app')?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+      }
+      const btnEnDOM = document.querySelector(`.add-btn-app[data-id="${match.id}"]`)
+      if (btnEnDOM) { scrollToCard(); return }
+      const tabs = document.querySelectorAll('#lista-tabs li a')
+      tabs.forEach(tab => {
+        if (tab.querySelector('span')?.textContent === match.categoria) {
+          tab.click()
+          setTimeout(scrollToCard, 150)
+        }
+      })
+    }, 300)
   })
 }
-*/
+
+
+//funciones finales
+actualizarBotonResumen()
+

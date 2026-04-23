@@ -284,12 +284,13 @@ html {
     max-width: 90%;
     position: relative;
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+    position: relative;
 }
 
 .modal-close-btn {
-    position: absolute;
-    top: 14px;
-    right: 16px;
+    display: block;
+    margin-left: auto;
+    margin-bottom: 8px;
     background: none;
     border: none;
     font-size: 18px;

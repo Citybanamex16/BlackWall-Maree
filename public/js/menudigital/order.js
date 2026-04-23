@@ -1,10 +1,46 @@
-/* global localStorage */
+/* global localStorage, sesionCliente */
 
 const listaPedido = document.getElementById('lista-pedido')
 const pedidoVacio = document.getElementById('pedido-vacio')
 const seccionCheckout = document.getElementById('seccion-checkout')
 
 let pedido = JSON.parse(localStorage.getItem('pedido') || '[]')
+
+console.log("Pedido guardado: ",pedido)
+
+
+// Helpers
+
+// ── Helper: detecta si un item es personalizado ──
+const esPersonalizado = (item) => Boolean(item.producto_base)
+
+// ── Helper: extrae precio numérico sin importar el formato ──
+const precioNumerico = (item) => {
+  if (esPersonalizado(item)) return item.precio_total ?? 0
+  const raw = typeof item.precio === 'number'
+    ? item.precio
+    : parseFloat(String(item.precio || '').replace(/[^0-9.,]/g, '').replace(',', '.'))
+  return isNaN(raw) ? 0 : raw
+}
+
+// ── Helper: construye el HTML de ingredientes para un item personalizado ──
+const htmlIngredientes = (item) => {
+  const lineas = []
+  if (item.ingredientes_adentro?.length) {
+    const nombres = item.ingredientes_adentro.map(i => i.nombre).join(', ')
+    lineas.push(`<span style="font-size:12px;color:#999;">Adentro: ${nombres}</span>`)
+  }
+  if (item.ingredientes_toppings?.length) {
+    const nombres = item.ingredientes_toppings.map(i => i.nombre).join(', ')
+    lineas.push(`<span style="font-size:12px;color:#999;">Toppings: ${nombres}</span>`)
+  }
+  return lineas.length
+    ? `<div style="display:flex;flex-direction:column;gap:2px;margin-top:4px;">${lineas.join('')}</div>`
+    : ''
+}
+
+
+// fin de helpers 
 
 // MODAL de orden
 const crearOverlay = () => {
@@ -26,6 +62,27 @@ const cerrarModal = () => {
 // MODAL checkout
 const abrirModalCheckout = () => {
   const overlay = crearOverlay()
+  const conSesion = !!sesionCliente
+
+  const camposIdentidad = conSesion
+    ? `<div style="background:#faf8f5;border-radius:8px;padding:12px 16px;margin-bottom:20px;">
+        <p style="font-size:13px;color:#aaa;margin:0 0 2px 0;">Hola,</p>
+        <p style="font-size:16px;font-weight:600;color:#333;margin:0;">${sesionCliente.nombre}</p>
+       </div>`
+    : `<p style="font-size:13px;font-weight:600;color:#444;margin-bottom:6px;">Nombre</p>
+       <input id="input-nombre" type="text" placeholder="Tu nombre"
+         style="width:100%;padding:10px 14px;border:1px solid #ddd;border-radius:6px;
+                font-size:14px;font-family:'Jost',sans-serif;margin-bottom:16px;
+                box-sizing:border-box;outline:none;">
+
+       <p style="font-size:13px;font-weight:600;color:#444;margin-bottom:6px;">Número telefónico</p>
+       <input id="input-telefono" type="tel" placeholder="Ej. 442 123 4567"
+         style="width:100%;padding:10px 14px;border:1px solid #ddd;border-radius:6px;
+                font-size:14px;font-family:'Jost',sans-serif;margin-bottom:8px;
+                box-sizing:border-box;outline:none;">
+       <p id="error-telefono" style="display:none;color:#e74c3c;font-size:12px;margin-bottom:12px;">
+         Ingresa solo números (7-15 dígitos).
+       </p>`
 
   overlay.innerHTML = `
     <div style="background:#fff;border-radius:12px;padding:32px;width:480px;
@@ -42,25 +99,27 @@ const abrirModalCheckout = () => {
         Completa los detalles para finalizar tu orden
       </p>
 
+      ${camposIdentidad}
+
       <p style="font-size:13px;font-weight:600;color:#444;margin-bottom:10px;">
         Forma de comer
       </p>
       <div style="display:flex;gap:10px;margin-bottom:24px;">
-        <label id="opt-pickup" class="forma-opt forma-opt--active"
+        <label class="forma-opt"
           style="flex:1;border:2px solid #b5956a;border-radius:8px;padding:12px;
                  text-align:center;cursor:pointer;font-size:13px;color:#b5956a;
                  font-family:'Jost',sans-serif;transition:all 0.2s;">
           <input type="radio" name="forma" value="Pick-Up" checked style="display:none;">
           Pick-Up
         </label>
-        <label id="opt-onsite" class="forma-opt"
+        <label class="forma-opt"
           style="flex:1;border:2px solid #eee;border-radius:8px;padding:12px;
                  text-align:center;cursor:pointer;font-size:13px;color:#777;
                  font-family:'Jost',sans-serif;transition:all 0.2s;">
-          <input type="radio" name="forma" value="On Site" style="display:none;">
+          <input type="radio" name="forma" value="Sucursal" style="display:none;">
           On Site
         </label>
-        <label id="opt-delivery" class="forma-opt"
+        <label class="forma-opt"
           style="flex:1;border:2px solid #eee;border-radius:8px;padding:12px;
                  text-align:center;cursor:pointer;font-size:13px;color:#777;
                  font-family:'Jost',sans-serif;transition:all 0.2s;">
@@ -69,7 +128,6 @@ const abrirModalCheckout = () => {
         </label>
       </div>
 
-      <!-- Campo dirección (solo visible en Delivery) -->
       <div id="campo-direccion" style="display:none;margin-bottom:16px;">
         <p style="font-size:13px;font-weight:600;color:#444;margin-bottom:6px;">Dirección de entrega</p>
         <input id="input-direccion" type="text" placeholder="Calle, número, colonia, ciudad"
@@ -79,19 +137,6 @@ const abrirModalCheckout = () => {
           Ingresa una dirección válida.
         </p>
       </div>
-
-      <p style="font-size:13px;font-weight:600;color:#444;margin-bottom:6px;">
-        Número telefónico
-      </p>
-      <input id="input-telefono" type="tel" placeholder="Ej. 442 123 4567"
-        style="width:100%;padding:10px 14px;border:1px solid #ddd;border-radius:6px;
-               font-size:14px;font-family:'Jost',sans-serif;margin-bottom:8px;
-               box-sizing:border-box;outline:none;">
-
-      <p id="error-telefono"
-        style="display:none;color:#e74c3c;font-size:12px;margin-bottom:12px;">
-        Por favor ingresa un número telefónico válido.
-      </p>
 
       <p id="error-servidor"
         style="display:none;color:#e74c3c;font-size:12px;margin-bottom:12px;">
@@ -124,29 +169,33 @@ const abrirModalCheckout = () => {
       opt.style.borderColor = '#b5956a'
       opt.style.color = '#b5956a'
 
-      // Mostrar/ocultar campo address (solo delivery lo enseña)
       const valor = opt.querySelector('input[name="forma"]').value
       document.getElementById('campo-direccion').style.display = valor === 'Delivery' ? 'block' : 'none'
     })
   })
 
   document.getElementById('btn-confirmar-orden').addEventListener('click', () => {
-    const telefono = document.getElementById('input-telefono').value.trim()
     const formaSeleccionada = document.querySelector('input[name="forma"]:checked').value
     const direccion = document.getElementById('input-direccion')?.value.trim() || ''
-    const errorTel = document.getElementById('error-telefono')
     const errorServ = document.getElementById('error-servidor')
     const errorDir = document.getElementById('error-direccion')
 
-    const soloDigitos = telefono.replace(/[\s-]/g, '')
-    const telefonoValido = /^\d{7,15}$/.test(soloDigitos)
+    let telefono, nombre
 
-    if (!telefonoValido) {
-      errorTel.style.display = 'block'
-      errorTel.textContent = 'Ingresa solo números (7-15 dígitos).'
-      return
+    if (conSesion) {
+      telefono = sesionCliente.telefono
+      nombre = sesionCliente.nombre
+    } else {
+      telefono = document.getElementById('input-telefono').value.trim()
+      nombre = document.getElementById('input-nombre').value.trim()
+      const errorTel = document.getElementById('error-telefono')
+      const soloDigitos = telefono.replace(/[\s-]/g, '')
+      if (!/^\d{7,15}$/.test(soloDigitos)) {
+        errorTel.style.display = 'block'
+        return
+      }
+      errorTel.style.display = 'none'
     }
-    errorTel.style.display = 'none'
 
     if (formaSeleccionada === 'Delivery' && direccion.length < 5) {
       errorDir.style.display = 'block'
@@ -154,7 +203,6 @@ const abrirModalCheckout = () => {
     }
     if (errorDir) errorDir.style.display = 'none'
 
-    // Valida pedido
     fetch('/menu/pedidos/validar', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -168,7 +216,6 @@ const abrirModalCheckout = () => {
           return
         }
 
-        // Confirma y registra
         fetch('/menu/pedidos/confirmar', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -176,6 +223,7 @@ const abrirModalCheckout = () => {
             items: pedido,
             forma: formaSeleccionada,
             telefono,
+            nombre,
             direccion: formaSeleccionada === 'Delivery' ? direccion : null
           })
         })
@@ -199,21 +247,23 @@ const abrirModalCheckout = () => {
 const abrirModalConfirmacion = (forma, telefono, direccion) => {
   const overlay = crearOverlay()
 
-  const resumenItems = pedido
-    .map(item => `
-      <div style="display:flex;justify-content:space-between;
-                  padding:10px 0;border-bottom:1px solid #f0f0f0;">
-        <span style="font-size:14px;color:#333;">${item.nombre}</span>
-        <span style="font-size:14px;color:#b5956a;font-weight:500;">${typeof item.precio === 'number' ? '$' + item.precio.toFixed(2) : item.precio}</span>
-      </div>
-    `).join('')
+  const resumenItems = pedido.map(item => {
+  const nombre     = esPersonalizado(item) ? item.producto_base : item.nombre
+  const precioText = '$' + precioNumerico(item).toFixed(2)
+  const detalle    = esPersonalizado(item) ? htmlIngredientes(item) : ''
 
-  const totalConfirm = pedido.reduce((sum, item) => {
-    const raw = typeof item.precio === 'number'
-      ? item.precio
-      : parseFloat(String(item.precio || '').replace(/[^0-9.,]/g, '').replace(',', '.'))
-    return sum + (isNaN(raw) ? 0 : raw)
-  }, 0)
+  return `
+    <div style="padding:10px 0;border-bottom:1px solid #f0f0f0;">
+      <div style="display:flex;justify-content:space-between;">
+        <span style="font-size:14px;color:#333;">${nombre}</span>
+        <span style="font-size:14px;color:#b5956a;font-weight:500;">${precioText}</span>
+      </div>
+      ${detalle}
+    </div>
+  `
+}).join('')
+
+  const totalConfirm = pedido.reduce((sum, item) => sum + precioNumerico(item), 0)
 
   overlay.innerHTML = `
     <div style="background:#fff;border-radius:12px;padding:32px;width:480px;
@@ -286,38 +336,48 @@ const renderPedido = () => {
   pedido.forEach((item, index) => {
     const div = document.createElement('div')
     div.style.cssText = `
-      display:flex;justify-content:space-between;align-items:center;
+      display:flex;justify-content:space-between;align-items:flex-start;
       border:1px solid #eee;border-radius:10px;padding:16px 20px;
       margin-bottom:12px;background:#fff;
     `
-    const descTexto = item.desc && item.desc.trim() !== '' ? item.desc : ''
-    const precioTexto = typeof item.precio === 'number'
-      ? '$' + item.precio.toFixed(2)
+
+    // ── Nombre y descripción según tipo ──
+    const nombre = esPersonalizado(item) ? item.producto_base : (item.nombre || '—')
+    const desc   = esPersonalizado(item)
+      ? htmlIngredientes(item)
+      : (item.desc?.trim() ? `<p style="font-size:13px;color:#777;margin:4px 0 0 0;">${item.desc}</p>` : '')
+
+    // ── Badge para personalizados ──
+    const badge = esPersonalizado(item)
+      ? `<span style="font-size:10px;background:#f5f0ea;color:#b5956a;
+                      border:1px solid #e0d0bb;border-radius:4px;
+                      padding:1px 6px;margin-left:8px;font-weight:500;">
+           Personalizado
+         </span>`
+      : ''
+
+    const precioTexto = esPersonalizado(item)
+      ? '$' + item.precio_total.toFixed(2)
       : String(item.precio || '')
+
     div.innerHTML = `
-      <div>
-        <p style="font-weight:500;font-size:15px;color:#222;margin:0;">${item.nombre || '—'}</p>
-        ${descTexto ? `<p style="font-size:13px;color:#777;margin:4px 0 0 0;">${descTexto}</p>` : ''}
+      <div style="flex:1;min-width:0;">
+        <p style="font-weight:500;font-size:15px;color:#222;margin:0;display:flex;align-items:center;">
+          ${nombre}${badge}
+        </p>
+        ${desc}
       </div>
-      <div style="display:flex;align-items:center;gap:16px;">
+      <div style="display:flex;align-items:center;gap:16px;flex-shrink:0;margin-left:12px;">
         <span style="color:#b5956a;font-weight:500;">${precioTexto}</span>
         <button data-index="${index}" class="btn-eliminar"
-          style="background:none;border:none;color:#aaa;font-size:18px;cursor:pointer;">
-          ✕
-        </button>
+          style="background:none;border:none;color:#aaa;font-size:18px;cursor:pointer;">✕</button>
       </div>
     `
     listaPedido.appendChild(div)
   })
 
-  // Total
-  const total = pedido.reduce((sum, item) => {
-    const raw = typeof item.precio === 'number'
-      ? item.precio
-      : parseFloat(String(item.precio || '').replace(/[^0-9.,]/g, '').replace(',', '.'))
-    return sum + (isNaN(raw) ? 0 : raw)
-  }, 0)
-
+  // ── Total ──
+  const total = pedido.reduce((sum, item) => sum + precioNumerico(item), 0)
   const divTotal = document.createElement('div')
   divTotal.style.cssText = `
     display:flex;justify-content:flex-end;align-items:center;
@@ -326,7 +386,7 @@ const renderPedido = () => {
   `
   divTotal.innerHTML = `
     <span style="font-size:14px;color:#777;">Total:</span>
-    <span style="font-size:18px;font-weight:600;color:#b5956a;">$${total}</span>
+    <span style="font-size:18px;font-weight:600;color:#b5956a;">$${total.toFixed(2)}</span>
   `
   listaPedido.appendChild(divTotal)
 
@@ -347,7 +407,6 @@ document.getElementById('btn-checkout').addEventListener('click', () => {
 
 renderPedido()
 
-// Count de platillos y bebidas en orden
 const navCount = document.getElementById('nav-item-count')
 if (navCount && pedido.length > 0) {
   navCount.textContent = `${pedido.length} ${pedido.length === 1 ? 'artículo' : 'artículos'}`

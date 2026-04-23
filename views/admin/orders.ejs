@@ -3,56 +3,97 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Órdenes</title>
+  <title>Órdenes — Marée Admin</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@1.0.4/css/bulma.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
   <link rel="stylesheet" href="/css/CSSglobales/global_theme.css">
   <link rel="stylesheet" href="/css/CSSglobales/global_components.css">
-  <link rel="stylesheet" href="/css/CSSglobales/module-dashboard.css">
   <link rel="stylesheet" href="/css/moduloMenuCSS/moduloMenuAdminCSS.css">
-  <link rel="stylesheet" href="/css/moduloAdminCSS/moduloAdmincss.css">
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=Jost:wght@300;400;500&display=swap" rel="stylesheet">
+  <style>
+    .orders-table tr[data-order-row] { cursor: pointer; transition: background 0.15s; }
+    .orders-table tr[data-order-row]:hover { background: #faf7f3 !important; }
+
+    .order-badge {
+      display: inline-block;
+      padding: 3px 10px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-family: 'Jost', sans-serif;
+      font-weight: 500;
+    }
+    .badge-pendiente  { background: #fef3e2; color: #b5956a; }
+    .badge-entregado  { background: #eaf4ee; color: #3a7d52; }
+    .badge-cancelado  { background: #fdecea; color: #c0392b; }
+
+    .detail-label {
+      font-size: 11px;
+      font-family: 'Jost', sans-serif;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: #aaa;
+      margin-bottom: 2px;
+    }
+    .detail-value {
+      font-size: 15px;
+      font-family: 'Jost', sans-serif;
+      color: #333;
+      margin-bottom: 14px;
+    }
+    .detail-items-table { width: 100%; border-collapse: collapse; margin-top: 8px; }
+    .detail-items-table th {
+      font-size: 11px;
+      font-family: 'Jost', sans-serif;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: #aaa;
+      border-bottom: 1px solid #eee;
+      padding: 6px 4px;
+    }
+    .detail-items-table td { border-bottom: 1px solid #f5f5f5; font-family: 'Jost', sans-serif; font-size: 14px; color: #444; }
+    .detail-total-row { font-weight: 600; color: #b5956a; font-family: 'Jost', sans-serif; font-size: 15px; margin-top: 12px; text-align: right; }
+  </style>
 </head>
 
 <body>
-  <nav class="navbar">
+  <nav class="navbar" role="navigation">
     <div class="navbar-brand">
-      <div class="navbar-item" style="display:flex; flex-direction:column; align-items:flex-start;">
-        <div class="logo-text">MARÉE</div>
-        <div class="logo-sub">Admin</div>
+      <div class="navbar-item">
+        <div class="logo-area">
+          <span class="logo-text">MARÉE</span>
+          <span class="logo-sub">Love at First Crêpe</span>
+        </div>
       </div>
-    </div>
-    <div class="navbar-end" style="display:flex;">
-      <a href="/admin" class="navbar-item">Dashboard</a>
-      <a href="/admin/ordenes" class="navbar-item" style="color: var(--gold);">Órdenes</a>
     </div>
   </nav>
 
   <section class="section">
     <div class="container">
-      <h1 class="title">Catálogo de Órdenes</h1>
-      <p class="subtitle">órdenes registradas y cancelar las que sigan activas.</p>
 
-    <div id="statusBox" class="status-box"></div>
+      <a href="/admin" class="back-link">← Admin Dashboard</a>
 
-    <div class="container">
-      <% if (error) { %>
-        <article class="message is-danger">
-          <div class="message-body">
-            <%= error %>
-          </div>
-        </article>
-      <% } %>
+      <div class="ing-header">
+        <div>
+          <h1 class="page-title">Órdenes</h1>
+          <p class="page-sub">Órdenes activas — más reciente primero</p>
+        </div>
+      </div>
 
       <div id="alert-container"></div>
 
+      <% if (error) { %>
+        <article class="message is-danger"><div class="message-body"><%= error %></div></article>
+      <% } %>
+
       <div class="table-container">
-        <table class="table is-fullwidth is-hoverable is-striped">
+        <table class="table is-fullwidth orders-table">
           <thead>
             <tr>
               <th>ID Orden</th>
               <th>Cliente</th>
               <th>Teléfono</th>
               <th>Tipo</th>
+              <th>Dirección</th>
               <th>Estatus</th>
               <th>Fecha</th>
               <th>Acciones</th>
@@ -61,39 +102,121 @@
           <tbody>
             <% if (pedidos && pedidos.length > 0) { %>
               <% pedidos.forEach((pedido) => { %>
-                <tr data-order-row="<%= pedido.id_orden %>">
-                  <td><%= pedido.id_orden %></td>
+                <%
+                  const fechaStr = pedido.fecha
+                    ? new Date(pedido.fecha).toLocaleString('es-MX', { day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit' })
+                    : 'Sin fecha'
+                  const estadoLower = (pedido.estado_orden || '').toLowerCase()
+                  const badgeClass = estadoLower === 'entregado' ? 'badge-entregado'
+                                   : estadoLower === 'cancelado' ? 'badge-cancelado'
+                                   : 'badge-pendiente'
+                %>
+                <tr
+                  data-order-row="<%= pedido.id_orden %>"
+                  data-nombre="<%= pedido.nombre_cliente || 'Sin nombre' %>"
+                  data-telefono="<%= pedido.telefono || '—' %>"
+                  data-tipo="<%= pedido.tipo_orden || '—' %>"
+                  data-fecha="<%= fechaStr %>"
+                  data-direccion="<%= pedido.direccion || '' %>"
+                  data-estado="<%= pedido.estado_orden %>">
+                  <td><strong><%= pedido.id_orden %></strong></td>
                   <td><%= pedido.nombre_cliente || 'Sin nombre' %></td>
-                  <td><%= pedido.telefono || 'Sin teléfono' %></td>
-                  <td><%= pedido.tipo_orden || 'Sin tipo' %></td>
+                  <td><%= pedido.telefono || '—' %></td>
+                  <td><%= pedido.tipo_orden || '—' %></td>
+                  <td><%= pedido.direccion || '—' %></td>
                   <td class="order-status-cell">
-                    <span class="tag is-light order-status-text"><%= pedido.estado_orden %></span>
+                    <span class="order-badge <%= badgeClass %>"><%= pedido.estado_orden %></span>
                   </td>
-                  <td><%= pedido.fecha || 'Sin fecha' %></td>
+                  <td style="white-space:nowrap;"><%= fechaStr %></td>
                   <td class="order-actions">
                     <% if (pedido.estado_orden !== 'Cancelado' && pedido.estado_orden !== 'Entregado') { %>
                       <button
-                        class="button is-danger is-light btn-cancel-order"
+                        class="button is-danger is-light is-small btn-cancel-order"
                         data-order-id="<%= pedido.id_orden %>">
-                        Cancelar pedido
+                        Cancelar
                       </button>
                     <% } else { %>
-                      <span class="tag is-light">No disponible</span>
+                      <span style="color:#aaa;font-size:13px;">—</span>
                     <% } %>
                   </td>
                 </tr>
               <% }) %>
             <% } else { %>
               <tr>
-                <td colspan="7" class="has-text-centered">No hay órdenes registradas.</td>
+                <td colspan="8" style="text-align:center;padding:32px;color:#aaa;">
+                  No hay órdenes registradas.
+                </td>
               </tr>
             <% } %>
           </tbody>
         </table>
       </div>
+
     </div>
   </section>
 
+  <!-- Modal — Detalle de orden -->
+  <div class="modal" id="detail-order-modal">
+    <div class="modal-background"></div>
+    <div class="modal-card" style="max-width:560px;width:90%;">
+      <header class="modal-card-head" style="border-bottom:1px solid #eee;background:#fff;">
+        <div style="flex:1;">
+          <p style="font-size:11px;font-family:'Jost',sans-serif;text-transform:uppercase;letter-spacing:0.06em;color:#aaa;margin-bottom:2px;">Detalle de orden</p>
+          <p id="detail-id" style="font-family:'Cormorant Garamond',serif;font-size:22px;color:#333;margin:0;"></p>
+        </div>
+        <button class="delete" aria-label="close" id="close-detail-modal" style="align-self:flex-start;"></button>
+      </header>
+      <section class="modal-card-body" style="background:#fff;">
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:0 24px;">
+          <div>
+            <p class="detail-label">Cliente</p>
+            <p class="detail-value" id="detail-nombre"></p>
+          </div>
+          <div>
+            <p class="detail-label">Teléfono</p>
+            <p class="detail-value" id="detail-telefono"></p>
+          </div>
+          <div>
+            <p class="detail-label">Tipo</p>
+            <p class="detail-value" id="detail-tipo"></p>
+          </div>
+          <div>
+            <p class="detail-label">Estatus</p>
+            <p class="detail-value" id="detail-estado"></p>
+          </div>
+          <div>
+            <p class="detail-label">Fecha</p>
+            <p class="detail-value" id="detail-fecha"></p>
+          </div>
+          <div>
+            <p class="detail-label">Dirección</p>
+            <p class="detail-value" id="detail-direccion"></p>
+          </div>
+        </div>
+
+        <hr style="margin:8px 0 16px;border:none;border-top:1px solid #eee;">
+
+        <p style="font-size:13px;font-family:'Jost',sans-serif;font-weight:500;color:#555;margin-bottom:8px;text-transform:uppercase;letter-spacing:0.05em;">
+          Productos
+        </p>
+        <table class="detail-items-table">
+          <thead>
+            <tr>
+              <th style="text-align:left;">Producto</th>
+              <th style="text-align:center;">Cant.</th>
+              <th style="text-align:right;">Subtotal</th>
+            </tr>
+          </thead>
+          <tbody id="detail-items"></tbody>
+        </table>
+        <p class="detail-total-row">Total: <span id="detail-total"></span></p>
+
+      </section>
+    </div>
+  </div>
+
+  <!-- Modal — Cancelar orden -->
   <div class="modal" id="cancel-order-modal">
     <div class="modal-background"></div>
     <div class="modal-card">
@@ -112,5 +235,73 @@
   </div>
 
   <script src="/js/orders-cancel.js"></script>
+  <script>
+    const BADGE_CLASSES = { pendiente: 'badge-pendiente', entregado: 'badge-entregado', cancelado: 'badge-cancelado' }
+
+    function badgeClass (estado) {
+      return BADGE_CLASSES[(estado || '').toLowerCase()] || 'badge-pendiente'
+    }
+
+    function fechaStr (f) {
+      return f ? new Date(f).toLocaleString('es-MX', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : 'Sin fecha'
+    }
+
+    async function pollOrders () {
+      try {
+        const res = await fetch('/admin/api/orders')
+        const data = await res.json()
+        if (!data.ok) return
+
+        const tbody = document.querySelector('.orders-table tbody')
+        const ids = new Set(data.pedidos.map(p => p.id_orden))
+
+        // Eliminar filas que ya no están (canceladas/entregadas desde otro lado)
+        tbody.querySelectorAll('[data-order-row]').forEach(row => {
+          if (!ids.has(row.dataset.orderRow)) row.remove()
+        })
+
+        data.pedidos.forEach(p => {
+          const existing = tbody.querySelector(`[data-order-row="${p.id_orden}"]`)
+          if (existing) {
+            // Actualizar badge de estatus si cambió
+            const badge = existing.querySelector('.order-status-cell .order-badge')
+            if (badge && badge.textContent.trim() !== p.estado_orden) {
+              badge.textContent = p.estado_orden
+              badge.className = `order-badge ${badgeClass(p.estado_orden)}`
+              existing.dataset.estado = p.estado_orden
+            }
+          } else {
+            // Agregar fila nueva al inicio
+            const tr = document.createElement('tr')
+            tr.dataset.orderRow = p.id_orden
+            tr.dataset.nombre = p.nombre_cliente || 'Sin nombre'
+            tr.dataset.telefono = p.telefono || '—'
+            tr.dataset.tipo = p.tipo_orden || '—'
+            tr.dataset.fecha = fechaStr(p.fecha)
+            tr.dataset.direccion = p.direccion || ''
+            tr.dataset.estado = p.estado_orden
+            tr.style.cursor = 'pointer'
+            tr.innerHTML = `
+              <td><strong>${p.id_orden}</strong></td>
+              <td>${p.nombre_cliente || 'Sin nombre'}</td>
+              <td>${p.telefono || '—'}</td>
+              <td>${p.tipo_orden || '—'}</td>
+              <td>${p.direccion || '—'}</td>
+              <td class="order-status-cell"><span class="order-badge ${badgeClass(p.estado_orden)}">${p.estado_orden}</span></td>
+              <td style="white-space:nowrap;">${fechaStr(p.fecha)}</td>
+              <td class="order-actions"><button class="button is-danger is-light is-small btn-cancel-order" data-order-id="${p.id_orden}">Cancelar</button></td>`
+            tbody.insertBefore(tr, tbody.firstChild)
+            // Re-bind cancel button
+            tr.querySelector('.btn-cancel-order').addEventListener('click', (e) => {
+              e.stopPropagation()
+              window._openCancelModal(p.id_orden)
+            })
+          }
+        })
+      } catch { /* silencioso */ }
+    }
+
+    setInterval(pollOrders, 15000)
+  </script>
 </body>
 </html>

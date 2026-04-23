@@ -356,3 +356,9 @@ body {
 .badge-instruction i {
     color: var(--c-primary, #b5956a);
 }
+
+.wallet-container {
+        display: flex;       /* Activa el modo flexible */
+        gap: 10px;           /* Crea un espacio de 10px entre los botones */
+        align-items: center; /* Los alinea verticalmente por si tienen alturas distintas */
+    }
