@@ -108,6 +108,46 @@ module.exports = class Royalty {
     )
   }
 
+  // Registro de visitas
+  static async fetchClienteParaEscaneo (idCliente) {
+    return db.execute(`
+        SELECT Numero_Telefonico, Nombre, Visitas_Actuales, tokens_gastados, Nombre_Royalty
+        FROM cliente
+        WHERE Numero_Telefonico = ?`, [idCliente])
+  }
+
+  static async registrarVisita (idCliente) {
+    return db.execute(`
+        UPDATE cliente
+        SET Visitas_Actuales = Visitas_Actuales + 1
+        WHERE Numero_Telefonico = ?`, [idCliente])
+  }
+
+  static async registrarCanje (idCliente, idPromocion) {
+    const connection = await db.getConnection()
+    try {
+      await connection.beginTransaction()
+
+      await connection.execute(
+        'UPDATE cliente SET tokens_gastados = tokens_gastados + 1 WHERE Numero_Telefonico = ?',
+        [idCliente]
+      )
+
+      await connection.execute(
+        'INSERT INTO historial_canjes_royalty (Numero_Telefonico, ID_Promocion) VALUES (?, ?)',
+        [idCliente, idPromocion]
+      )
+
+      await connection.commit()
+      return { success: true }
+    } catch (error) {
+      await connection.rollback()
+      throw error
+    } finally {
+      connection.release()
+    }
+  }
+
   // Cliente
   static async fetchClientStatus (telefono) {
     const [rows] = await db.execute('CALL sp_EstadoCliente(?)', [telefono])

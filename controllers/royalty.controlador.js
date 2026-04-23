@@ -127,6 +127,62 @@ exports.getRoyaltyMetrics = (req, res, next) => {
   res.render('/royalty/royaltyAdmin')
 }
 
+// Registrar Visitas
+exports.postProcesarEscaneo = async (request, response) => {
+  const { idCliente } = request.body
+
+  try {
+    const [rows] = await Royalty.fetchClienteParaEscaneo(idCliente)
+    if (rows.length === 0) return response.status(404).json({ message: 'Cliente no encontrado' })
+
+    const cliente = rows[0]
+
+    // Matemática de los tokens
+    const tokensGanados = Math.floor(cliente.visitas_totales / 10)
+    const tokensDisponibles = tokensGanados - cliente.tokens_gastados
+    const sellosActuales = cliente.visitas_totales % 10
+
+    const [promocionesDisponibles] = await Royalty.fetchPromociones_royalties(cliente.nivel)
+
+    return response.status(200).json({
+      cliente: {
+        id: cliente.ID,
+        nombre: cliente.Nombre,
+        nivel: cliente.nivel,
+        visitas: cliente.visitas_totales,
+        sellosActuales,
+        tokensDisponibles
+      },
+      premiosDisponibles: promocionesDisponibles
+    })
+  } catch (error) {
+    console.log(error)
+    response.status(500).json({ message: 'Error al procesar el escaneo' })
+  }
+}
+
+exports.postRegistrarVisitaAdmin = async (request, response) => {
+  const { idCliente } = request.body
+  try {
+    await Royalty.registrarVisita(idCliente)
+    response.status(200).json({ success: true, message: 'Visita registrada con éxito' })
+  } catch (error) {
+    response.status(500).json({ success: false, message: 'Error al registrar visita' })
+  }
+}
+
+exports.postCanjearPremio = async (request, response) => {
+  const { idCliente, idPromocion } = request.body
+
+  try {
+    await Royalty.registrarCanje(idCliente, idPromocion)
+    response.status(200).json({ success: true, message: 'Premio entregado correctamente' })
+  } catch (error) {
+    console.log(error)
+    response.status(500).json({ success: false, message: 'Error al procesar el canje' })
+  }
+}
+
 // Cliente
 exports.getRoyaltyCli = async (request, response, next) => {
   if (!request.session.isLoggedIn) {
