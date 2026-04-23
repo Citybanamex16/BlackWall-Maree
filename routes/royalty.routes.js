@@ -16,6 +16,15 @@ router.put('/royaltyAdmin/:nombre', isAuth, isAdmin, royaltyControlador.updateRo
 router.get('/royaltyMetrics', isAuth, isAdmin, royaltyControlador.getRoyaltyMetrics)
 router.get('/royaltyAdmin/:nombre/promociones', isAuth, isAdmin, royaltyControlador.getPromocionesParaModal)
 router.get('/royaltyAdmin/:nombre/eventos', isAuth, isAdmin, royaltyControlador.getEventosParaModal)
+router.post('/registrar-visita', isAuth, isAdmin, royaltyControlador.postRegistrarVisita)
+router.get('/escanear', isAuth, isAdmin, (req, res) => res.render('admin/escaner'))
+
+// Metodos post
+router.post('/promociones', royaltyControlador.postRegistrarEstadoRoyalty)
+router.get('/royaltyAdmin/promocion-evento-filtro', royaltyControlador.getFilterPromocionesEventos)
+// Agrega estas dos rutas (antes de las rutas de cliente)
+router.get('/royaltyAdmin/todas/promociones-disponibles', isAuth, isAdmin, royaltyControlador.getTodasPromociones)
+router.get('/royaltyAdmin/todas/eventos-disponibles', isAuth, isAdmin, royaltyControlador.getTodosEventos)
 
 router.delete('/borrar/:nombre', isAuth, isAdmin, royaltyControlador.deleteRoyalty)
 
