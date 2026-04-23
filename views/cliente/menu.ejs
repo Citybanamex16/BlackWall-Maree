@@ -179,6 +179,55 @@
 
 
 
+<!-- Dialogo Summary de Receta Personalizada -->
+<dialog id="modal-resumen-crepa" class="maree-dialog is-large">
+    <div class="dialog-container">
+        
+        <header class="dialog-header header-success">
+            <h2>Tu Obra Maestra</h2>
+            <p>Revisa tu receta antes de enviarla a la cocina.</p>
+        </header>
+
+        <section class="dialog-content flex-center">
+            <div class="tarjeta-receta">
+                
+                <div class="capa-receta">
+                    <h4 class="capa-titulo">
+                        <span class="icono-capa">✨</span> Cobertura y Toppings
+                    </h4>
+                    <ul id="resumen-lista-toppings" class="lista-ingredientes-final">
+                        </ul>
+                </div>
+
+                <hr class="separador-crepa">
+
+                <div class="capa-receta">
+                    <h4 class="capa-titulo">
+                        <span class="icono-capa">🥞</span> Corazón de la Crepa
+                    </h4>
+                    <ul id="resumen-lista-adentro" class="lista-ingredientes-final">
+                        </ul>
+                </div>
+
+            </div>
+        </section>
+
+        <footer class="dialog-footer">
+            <div class="precio-dinamico-wrapper">
+                <span class="label-total">Total de tu creación:</span>
+                <span id="resumen-precio-total" class="precio-monto">$0.00</span>
+            </div>
+
+            <div class="botones-container">
+                <button id="btn-editar-receta" class="btn-cancelar">Volver a Editar</button>
+                <button id="btn-agregar-carrito" class="btn-crear-final">¡Añadir al Carrito!</button>
+            </div>
+        </footer>
+    </div>
+</dialog>
+
+
+
 
 
 <!-- Dialogo de error -->

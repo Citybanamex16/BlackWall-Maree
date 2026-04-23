@@ -71,7 +71,8 @@ btnCancelarCreacion.addEventListener('click', () => {
 // --- LÓGICA DE CONFIRMACIÓN ---
 btnConfirmarCreacion.addEventListener("click", () => {
     const miCrepaCustom = RecolectarDatosDeCampos();
-    console.log("¡Lista para el carrito!", miCrepaCustom);
+    //console.log("¡Lista para el carrito!", miCrepaCustom);
+    construirPersoSummary(miCrepaCustom)
     // Aquí mandarías miCrepaCustom a tu lógica de carrito
 });
 
@@ -183,7 +184,7 @@ function crearFilaIngrediente(contenedor, dataInsumos, isFirst = false) {
 function calcularPrecioEnVivo() {
 	console.log("Calculando precio en vivo a partir de precio base: ", PrecioBase)
     let total = PrecioBase;
-    
+
     // Buscamos TODOS los selects dentro del modal
     const todosLosSelects = modalCreacionCrepa.querySelectorAll('.ingrediente-select');
 
@@ -242,6 +243,112 @@ function RecolectarDatosDeCampos() {
 
     return recetaFinal;
 }
+
+
+// --- Elementos del Modal de Resumen ---
+const modalResumenCrepa = document.getElementById('modal-resumen-crepa');
+const listaResumenToppings = document.getElementById('resumen-lista-toppings');
+const listaResumenAdentro = document.getElementById('resumen-lista-adentro');
+const resumenPrecioTotal = document.getElementById('resumen-precio-total');
+
+const btnEditarReceta = document.getElementById('btn-editar-receta');
+const btnAgregarCarrito = document.getElementById('btn-agregar-carrito');
+
+// Variable global para guardar la receta final en espera
+let recetaFinalPendiente = null;
+
+// Constructor de Summary
+function construirPersoSummary(receta) {
+    console.log("Construyendo tu receta Final:", receta);
+    recetaFinalPendiente = receta; // Guardamos en memoria
+
+    // 1. Limpiar listas
+    listaResumenToppings.innerHTML = '';
+    listaResumenAdentro.innerHTML = '';
+
+    // 2. Llenar Toppings (¡Hasta arriba!)
+    if (receta.ingredientes_toppings.length > 0) {
+        receta.ingredientes_toppings.forEach(ing => {
+            listaResumenToppings.appendChild(crearElementoListaResumen(ing));
+        });
+    } else {
+        listaResumenToppings.innerHTML = '<li class="mensaje-vacio">Sin toppings extra.</li>';
+    }
+
+    // 3. Llenar Adentro (El corazón)
+    if (receta.ingredientes_adentro.length > 0) {
+        receta.ingredientes_adentro.forEach(ing => {
+            listaResumenAdentro.appendChild(crearElementoListaResumen(ing));
+        });
+    } else {
+        listaResumenAdentro.innerHTML = '<li class="mensaje-vacio">Sin ingredientes extra en el interior.</li>';
+    }
+
+    // 4. Actualizar Precio
+    resumenPrecioTotal.innerText = `$${receta.precio_total.toFixed(2)}`;
+
+    // 5. Transición de modales
+    // Cerramos el de creación sin animación de error, solo lo cerramos
+    document.getElementById('modal-creacion-crepa').close();
+
+    //6. conexion de boton
+    // Si el usuario confirma su creación
+	btnAgregarCarrito.addEventListener('click', () => {
+
+	/* formato
+
+	 const itemParaCarrito = {
+      id,
+      nombre: data.nombre,
+      precio: '$' + precioFinal.toFixed(2),
+      desc: [data.base, producto?.tipo].filter(Boolean).join(' · ')
+    }
+	*/
+
+    
+    agregarAlCarrito(receta);
+    
+    // Cerramos el modal
+    modalResumenCrepa.close();
+		}, {once:true});
+    
+    // Abrimos el de resumen
+    modalResumenCrepa.showModal();
+}
+
+// Función auxiliar para crear los <li> de la receta
+function crearElementoListaResumen(ingrediente) {
+    const li = document.createElement('li');
+    
+    // Si el ingrediente cuesta 0 (incluido), mostramos "Incluido", si no, el precio extra.
+    const textoPrecio = ingrediente.precio > 0 ? `+$${ingrediente.precio.toFixed(2)}` : 'Incluido';
+    
+    li.innerHTML = `
+        <span class="ingrediente-nombre">• ${ingrediente.nombre}</span>
+        <span class="ingrediente-precio">${textoPrecio}</span>
+    `;
+    return li;
+}
+
+
+// --- ACCIONES DEL MODAL DE RESUMEN ---
+
+// Si el usuario quiere regresar a editar
+btnEditarReceta.addEventListener('click', () => {
+    modalResumenCrepa.close();
+    document.getElementById('modal-creacion-crepa').showModal();
+});
+
+
+
+
+
+   
+
+
+ 
+
+
 
 
 

@@ -758,40 +758,7 @@ function renderizarVistaCategoria (categoriaObj, productos, allTypes, allPromos,
   }
 }
 
-/*
-window.agregarAlCarrito = function (btn) {
-  const nombre = btn.dataset.nombre
-  const precio = btn.dataset.precio
-  const desc = btn.closest('.card-content')?.querySelector('.product-desc')?.textContent?.trim() || ''
 
-  // Abrir modal con descripción y botón de confirmar
-  abrirModal(`
-    <h2 style="font-family:'Cormorant Garamond',serif;font-size:26px;margin-bottom:4px;">
-      ${nombre}
-    </h2>
-    <p style="color:#b5956a;font-size:15px;font-weight:500;margin-bottom:12px;">
-      $${precio}
-    </p>
-    <p style="color:#777;font-size:13px;margin-bottom:20px;">${desc || 'Sin descripción disponible'}</p>
-
-    <button id="btn-confirmar-agregar"
-      style="width:100%;padding:12px;background:#eac9c1;color:#fff;
-             border:none;border-radius:6px;font-size:14px;cursor:pointer;
-             font-family:'Jost',sans-serif;">
-      + Confirmar y agregar al pedido
-    </button>
-  `)
-
-  document.getElementById('btn-confirmar-agregar').addEventListener('click', () => {
-    const item = { nombre, precio: `$${precio}`, desc }
-    const pedidoActual = JSON.parse(localStorage.getItem('pedido') || '[]')
-    pedidoActual.push(item)
-    localStorage.setItem('pedido', JSON.stringify(pedidoActual))
-    cerrarModal()
-    console.log('Item agregado:', item)
-  })
-}
-*/
 
 // ── BÚSQUEDA ──
 const btnSearchToggle = document.getElementById('btn-search-toggle')
