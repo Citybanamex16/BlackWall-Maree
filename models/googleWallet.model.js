@@ -47,18 +47,41 @@ async function crearLoyaltyClass (nombreRoyalty, maxVisitas) {
         issuerName: 'Marée',
         programName: `Marée Rewards - ${nombreRoyalty}`,
         reviewStatus: 'UNDER_REVIEW',
-        stampInfos: { stampCount: maxVisitas },
         hexBackgroundColor: '#fcebeb',
+        // ✅ Imagen global que aparece en todas las tarjetas de este nivel
+        heroImage: {
+          sourceUri: {
+            uri: 'https://dynamic-media-cdn.tripadvisor.com/media/photo-o/2c/cc/06/f3/crepa-manzane-cajeta.jpg?w=900&h=500&s=1'
+          },
+          contentDescription: {
+            defaultValue: { language: 'es', value: 'Marée Rewards' }
+          }
+        },
         programLogo: {
           sourceUri: { uri: 'https://images.rappi.com.mx/restaurants_logo/logo1-1670627103359.png?e=webp&d=10x10&q=10' },
           contentDescription: { defaultValue: { language: 'es', value: 'Logo Marée' } }
         }
       }
     })
-    console.log(`Clase creada: ${classId}`)
+    console.log(`✅ Clase creada: ${classId}`)
   } catch (error) {
     if (error.code === 409) {
-      console.log(`Clase ya existe: ${classId}`)
+      await walletClient.loyaltyclass.patch({
+        resourceId: classId,
+        requestBody: {
+          reviewStatus: 'UNDER_REVIEW',
+          heroImage: {
+            sourceUri: {
+              uri: 'https://dynamic-media-cdn.tripadvisor.com/media/photo-o/2c/cc/06/f3/crepa-manzane-cajeta.jpg?w=900&h=500&s=1'
+            },
+            contentDescription: {
+              defaultValue: { language: 'es', value: 'Marée Rewards' }
+            }
+          },
+          hexBackgroundColor: '#fcebeb'
+        }
+      })
+      console.log(`Clase ya existía, imagen actualizada: ${classId}`)
     } else {
       throw error
     }
@@ -196,14 +219,14 @@ async function actualizarLoyaltyObject (telefono, nombreRoyalty, puntosActuales,
 
 // Actualiza todos los clientes de un nivel cuando el admin modifica ese estado royalty
 // Query a la base de datos
-async function actualizarTarjetaPorNivel (nombreRoyalty, nuevoNombre, nuevoDescripcion) {
+async function actualizarTarjetaPorNivel (nombreRoyalty, nuevoNombre, nuevoDescripcion, maxVisitas) {
   const [clientes] = await db.execute(
     'SELECT telefono, Visitas FROM cliente WHERE Nombre_Royalty = ?',
     [nombreRoyalty]
   )
 
   const promesas = clientes.map(cliente =>
-    actualizarLoyaltyObject(cliente.telefono, nuevoNombre || nombreRoyalty, cliente.Visitas, 0)
+    actualizarLoyaltyObject(cliente.telefono, nuevoNombre || nombreRoyalty, cliente.Visitas, maxVisitas)
   )
 
   await Promise.all(promesas)
@@ -240,6 +263,9 @@ async function generarLinkWallet (telefono, nombreRoyalty, puntosActuales, maxPu
 }
 
 module.exports = {
+  crearLoyaltyClass,
+  actualizarLoyaltyClass,
+  eliminarLoyaltyClass,
   crearLoyaltyObject,
   actualizarLoyaltyObject,
   actualizarTarjetaPorNivel,
