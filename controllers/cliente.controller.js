@@ -5,6 +5,7 @@
 const nav = require('../models/breadcrumbs.model.js')
 const promos = require('../models/promociones.model.js')
 const Cliente = require('../models/cliente.model.js')
+const Pedido = require('../models/pedidos.model.js')
 
 // Recuerden que automaticamente cuando haces render Express busca en Views
 // Si esta dentro de una subcarpeta de Views hay que decirle en cual
@@ -181,5 +182,43 @@ exports.postUpdateProfile = async (req, res, next) => {
       error: 'No fue posible actualizar los datos.',
       success: null
     })
+  }
+}
+
+exports.getHistorial = async (request, response, next) => {
+  if (!request.session.cliente) return response.redirect('/cliente/login')
+  const telefono = request.session.cliente.telefono
+  try {
+    const [ordenes] = await Pedido.fetchClientOrders(telefono)
+    const ordenesConItems = await Promise.all(ordenes.map(async (o) => {
+      const [items] = await Pedido.fetchItems(o.id_orden)
+      return { ...o, items }
+    }))
+    response.render('cliente/historial', { ordenes: ordenesConItems, datosCliente: request.session.cliente })
+  } catch (err) {
+    next(err)
+  }
+}
+
+exports.getClientOrders = async (request, response) => {
+  if (!request.session.cliente) return response.status(401).json({ ok: false })
+  const telefono = request.session.cliente.telefono
+  try {
+    const [ordenes] = await Pedido.fetchClientOrders(telefono)
+    return response.json({ ok: true, ordenes })
+  } catch {
+    return response.status(500).json({ ok: false })
+  }
+}
+
+exports.postCancelClientOrder = async (request, response) => {
+  if (!request.session.cliente) return response.status(401).json({ ok: false, message: 'No autenticado.' })
+  const telefono = request.session.cliente.telefono
+  const { id } = request.params
+  try {
+    const result = await Pedido.cancelClientOrder(id, telefono)
+    return response.json(result)
+  } catch {
+    return response.status(500).json({ ok: false, message: 'Error del servidor.' })
   }
 }

@@ -346,6 +346,15 @@ exports.getOrders = async (req, res, next) => {
   }
 }
 
+exports.getOrdersJson = async (req, res) => {
+  try {
+    const [pedidos] = await Pedido.fetchOrders()
+    return res.json({ ok: true, pedidos })
+  } catch {
+    return res.status(500).json({ ok: false })
+  }
+}
+
 exports.getOrderItems = async (req, res) => {
   const { id } = req.params
   try {

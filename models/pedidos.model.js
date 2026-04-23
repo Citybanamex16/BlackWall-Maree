@@ -153,6 +153,39 @@ static async guardarItems(idOrden, items) {
     return db.execute(query, [idOrden])
   }
 
+  static fetchClientOrders (telefono) {
+  const query = `
+    SELECT
+      o.ID_Orden AS id_orden,
+      o.Tipo_Orden AS tipo_orden,
+      o.Estado_Orden AS estado_orden,
+      o.Fecha AS fecha,
+      o.Direccion AS direccion
+    FROM orden o
+    WHERE REPLACE(o.Numero_Telefonico, '-', '') = REPLACE(?, '-', '')
+      AND o.Estado_Orden != 'Cancelado'
+    ORDER BY o.Fecha DESC
+  `
+  return db.execute(query, [telefono])
+}
+
+static async cancelClientOrder (idOrden, telefono) {
+  const [rows] = await db.execute(
+    `SELECT Fecha, Estado_Orden, Numero_Telefonico FROM orden WHERE ID_Orden = ? LIMIT 1`,
+    [idOrden]
+  )
+  if (!rows[0]) return { ok: false, message: 'Orden no encontrada.' }
+  if (rows[0].Numero_Telefonico.replace(/-/g, '') !== String(telefono).replace(/-/g, '')) return { ok: false, message: 'No autorizado.' }
+  if (rows[0].Estado_Orden === 'Cancelado') return { ok: false, message: 'Ya estaba cancelada.' }
+
+  const diffMs = Date.now() - new Date(rows[0].Fecha).getTime()
+  if (diffMs > 3 * 60 * 1000) return { ok: false, message: 'El tiempo límite de cancelación (3 min) ha expirado.' }
+
+  await db.execute(`UPDATE orden SET Estado_Orden = 'Cancelado' WHERE ID_Orden = ?`, [idOrden])
+  return { ok: true }
+}
+
+
   static cancelActiveOrder (idOrden) {
     const query = `
       UPDATE orden
