@@ -5,7 +5,7 @@
 const platillobotones = document.getElementsByClassName('platillo-btn')
 const modalOverlay = document.getElementById('modal-overlay')
 const modalContent = document.getElementById('modal-content')
-const pedido = []
+let pedido = JSON.parse(localStorage.getItem('pedido')) || [];
 
 // MODAL
 const cerrarModal = () => {
@@ -88,21 +88,34 @@ function generarHTMLModal (platillo, dataExtra, promoDisplay, promoPrecio) {
   `
 }
 
-async function agregarAlCarrito (item) {
-  pedido.push(item)
-  localStorage.setItem('pedido', JSON.stringify(pedido))
+async function agregarAlCarrito(item) {
+  console.log("Recibiendo producto: ", item)
+  // 1. Aseguramos que el pedido local esté actualizado antes de empujar
+  pedido = JSON.parse(localStorage.getItem('pedido')) || [];
+
+  // 2. Empujamos el item (que ya trae su 'desc' y sus arreglos de ingredientes)
+  pedido.push(item);
+
+  // 3. Guardamos el estado COMPLETO en el LocalStorage
+  localStorage.setItem('pedido', JSON.stringify(pedido));
 
   try {
-    await fetch('/menu/agregaritem', {
+    // 4. Sincronizamos con el servidor mandando el item individual
+    const response = await fetch('/menu/agregaritem', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(item)
-    })
-    console.log('Sincronizado con servidor')
-    cerrarModal()
-    actualizarBotonResumen()
+      body: JSON.stringify(item) 
+    });
+
+    if (response.ok) {
+      console.log('✅ Item sincronizado con el servidor');
+      actualizarBotonResumen(); // Para que el número del carrito suba
+    }
   } catch (err) {
-    console.error('Error al guardar:', err)
+    console.error('❌ Error al sincronizar:', err);
+    // Nota: El item se quedó en LocalStorage, así que el usuario no pierde su progreso
+  } finally{
+    cerrarModal()
   }
 }
 
@@ -809,4 +822,8 @@ if (btnSearchToggle) {
     }, 300)
   })
 }
+
+
+//funciones finales
+actualizarBotonResumen()
 
