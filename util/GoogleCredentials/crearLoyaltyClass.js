@@ -8,7 +8,12 @@ async function crearClase () {
         id: CLASS_ID,
         issuerName: 'Maree Crepe',
         programName: 'Royalty Maree',
-        reviewStatus: 'UNDER_REVIEW'
+        reviewStatus: 'UNDER_REVIEW',
+        hexBackgroundColor: '#fcebeb',
+        programLogo: {
+          sourceUri: { uri: 'https://images.rappi.com.mx/restaurants_logo/logo1-1670627103359.png?e=webp&d=10x10&q=10' },
+          contentDescription: { defaultValue: { language: 'es', value: 'Logo Marée' } }
+        }
       }
     })
     console.log('Clase actualizada correctamente:', CLASS_ID)
@@ -21,6 +26,7 @@ async function crearClase () {
             id: CLASS_ID,
             issuerName: 'Maree Crepe',
             programName: 'Royalty Maree',
+            hexBackgroundColor: '#fcebeb',
             programLogo: {
               sourceUri: { uri: 'https://images.rappi.com.mx/restaurants_logo/logo1-1670627103359.png?e=webp&d=10x10&q=10' },
               contentDescription: { defaultValue: { language: 'es', value: 'Logo Maree' } }

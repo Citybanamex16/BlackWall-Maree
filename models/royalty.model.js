@@ -130,6 +130,45 @@ module.exports = class Royalty {
     )
   }
 
+  static async agregarVisita (telefono) {
+  // Suma una visita al cliente
+    await db.execute(
+      'UPDATE cliente SET Visitas = Visitas + 1 WHERE Telefono = ?',
+      [telefono]
+    )
+    // Retorna los datos actualizados del cliente
+    const [rows] = await db.execute(
+    `SELECT c.Telefono, c.Visitas, c.Nombre_Royalty, 
+            er.Max_Visitas, er.Número_de_prioridad
+     FROM cliente c
+     JOIN estado_royalty er ON er.Nombre_Royalty = c.Nombre_Royalty
+     WHERE c.Telefono = ?`,
+    [telefono]
+    )
+    return rows[0]
+  }
+
+  static async actualizarNivelSiCorresponde (telefono) {
+  // Busca el nivel de acuerdo a las visitas que tenga
+    const [rows] = await db.execute(
+    `SELECT c.Visitas_Actuales, er.Nombre_Royalty, er.Max_Visitas
+     FROM cliente c
+     JOIN estado_royalty er 
+       ON c.Visitas_Actuales >= er.Min_Visitas AND c.Visitas <= er.Max_Visitas
+     WHERE c.Numero_Telefonico = ?
+     ORDER BY er.Número_de_prioridad DESC
+     LIMIT 1`,
+    [telefono]
+    )
+    if (rows.length > 0) {
+      await db.execute(
+        'UPDATE cliente SET Nombre_Royalty = ? WHERE Numero_Telefonico = ?',
+        [rows[0].Nombre_Royalty, telefono]
+      )
+    }
+    return rows[0]
+  }
+
   // Cliente
   static async fetchClientStatus (telefono) {
     const [rows] = await db.execute('CALL sp_EstadoCliente(?)', [telefono])

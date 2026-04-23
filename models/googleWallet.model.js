@@ -1,7 +1,7 @@
 /* eslint-env browser */
 /* eslint-disable no-unused-vars */
 
-const { walletClient, ISSUER_ID, CLASS_ID } = require('../util/GoogleCredentials/googleWallet')
+const { walletClient, ISSUER_ID } = require('../util/GoogleCredentials/googleWallet')
 const { GoogleAuth } = require('google-auth-library')
 const db = require('../util/database')
 const jwt = require('jsonwebtoken')
@@ -48,6 +48,7 @@ async function crearLoyaltyClass (nombreRoyalty, maxVisitas) {
         programName: `Marée Rewards - ${nombreRoyalty}`,
         reviewStatus: 'UNDER_REVIEW',
         stampInfos: { stampCount: maxVisitas },
+        hexBackgroundColor: '#fcebeb',
         programLogo: {
           sourceUri: { uri: 'https://images.rappi.com.mx/restaurants_logo/logo1-1670627103359.png?e=webp&d=10x10&q=10' },
           contentDescription: { defaultValue: { language: 'es', value: 'Logo Marée' } }

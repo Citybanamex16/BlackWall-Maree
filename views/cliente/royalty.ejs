@@ -56,13 +56,16 @@
     
 
     <script>
-        fetch('/royalty/royaltyUser/api/datos')
-        .then(r => r.json()).then(data => {
-            if (data.walletLink) {
-                document.getElementById('btn-wallet').href = data.walletLink
-            }
-            })
-            </script>
+  fetch('/royalty/royaltyUser/api/datos')
+    .then(r => r.json())
+    .then(data => {
+      console.log('Respuesta:', data) // para debuggear
+      if (data.walletLink) {
+        document.getElementById('btn-google-wallet').href = data.walletLink // ✅ nombre correcto
+      }
+    })
+    .catch(err => console.error('Error:', err))
+</script>
     
     <!--
     <section class="mb-4 ps-2 ps-md-0">
