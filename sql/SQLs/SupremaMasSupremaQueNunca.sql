@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Servidor: localhost
--- Tiempo de generación: 23-04-2026 a las 16:30:07
+-- Tiempo de generación: 24-04-2026 a las 00:36:39
 -- Versión del servidor: 10.4.28-MariaDB
 -- Versión de PHP: 8.2.4
 
@@ -20,13 +20,12 @@ SET time_zone = "+00:00";
 --
 -- Base de datos: `mareebd`
 --
-CREATE DATABASE IF NOT EXISTS `mareebd` DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish2_ci;
-USE `mareebd`;
 
 DELIMITER $$
 --
 -- Procedimientos
 --
+DROP PROCEDURE IF EXISTS `ActualizarCategoria`$$
 CREATE DEFINER=`root`@`localhost` PROCEDURE `ActualizarCategoria` (IN `oldNombre` VARCHAR(50) CHARSET utf8mb4 COLLATE utf8mb4_spanish2_ci, IN `newNombre` VARCHAR(50) CHARSET utf8mb4 COLLATE utf8mb4_spanish2_ci)   BEGIN
     DECLARE EXIT HANDLER FOR SQLEXCEPTION
     BEGIN
@@ -44,6 +43,7 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `ActualizarCategoria` (IN `oldNombre
     COMMIT;
 END$$
 
+DROP PROCEDURE IF EXISTS `ActualizarIngrediente`$$
 CREATE DEFINER=`root`@`localhost` PROCEDURE `ActualizarIngrediente` (IN `p_idInsumo` VARCHAR(10) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish2_ci, IN `p_nombre` VARCHAR(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish2_ci, IN `p_categoria` VARCHAR(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish2_ci, IN `p_precio` DECIMAL(10,2), IN `p_activo` TINYINT(1), IN `p_imagen` TEXT CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish2_ci)   BEGIN
     DECLARE v_error_msg VARCHAR(500);
     DECLARE EXIT HANDLER FOR SQLEXCEPTION
@@ -64,6 +64,7 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `ActualizarIngrediente` (IN `p_idIns
     COMMIT;
 END$$
 
+DROP PROCEDURE IF EXISTS `ActualizarTipo`$$
 CREATE DEFINER=`root`@`localhost` PROCEDURE `ActualizarTipo` (IN `oldNombre` VARCHAR(50) CHARSET utf8mb4 COLLATE utf8mb4_spanish2_ci, IN `newNombre` VARCHAR(50) CHARSET utf8mb4 COLLATE utf8mb4_spanish2_ci)   BEGIN
     DECLARE EXIT HANDLER FOR SQLEXCEPTION
     BEGIN
@@ -80,6 +81,7 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `ActualizarTipo` (IN `oldNombre` VAR
     COMMIT;
 END$$
 
+DROP PROCEDURE IF EXISTS `EliminarIngrediente`$$
 CREATE DEFINER=`root`@`localhost` PROCEDURE `EliminarIngrediente` (IN `p_idInsumo` VARCHAR(10) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish2_ci)   BEGIN
     DECLARE v_error_msg VARCHAR(500);
     -- Manejador de errores para la transacción
@@ -98,6 +100,7 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `EliminarIngrediente` (IN `p_idInsum
     COMMIT;
 END$$
 
+DROP PROCEDURE IF EXISTS `eliminarProducto`$$
 CREATE DEFINER=`root`@`localhost` PROCEDURE `eliminarProducto` (IN `idProducto` VARCHAR(12) CHARSET utf8mb4)  DETERMINISTIC BEGIN
 
 
@@ -138,21 +141,40 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `eliminarProducto` (IN `idProducto` 
     SELECT 'Éxito' AS Estado, 'Producto eliminado correctamente' AS Error_Mensaje;
 END$$
 
+DROP PROCEDURE IF EXISTS `ObtenerPreciosBase`$$
+CREATE DEFINER=`root`@`localhost` PROCEDURE `ObtenerPreciosBase` (IN `p_idsProductos` TEXT, IN `p_idsInsumos` TEXT)   BEGIN
+    -- 1. Selección de Productos (Precio de Lista puro)
+    -- Eliminamos JOINs y cálculos. Solo traemos lo que dice la tabla.
+    SELECT 
+        ID_Producto AS id, 
+        Precio AS Precio
+    FROM producto 
+    WHERE FIND_IN_SET(ID_Producto, p_idsProductos);
+
+    -- 2. Selección de Insumos (Precio de Lista puro)
+    SELECT 
+        ID_Insumo AS id, 
+        Precio AS Precio 
+    FROM insumo 
+    WHERE FIND_IN_SET(ID_Insumo, p_idsInsumos);
+END$$
+
+DROP PROCEDURE IF EXISTS `obtener_promociones_por_tipo`$$
 CREATE DEFINER=`root`@`localhost` PROCEDURE `obtener_promociones_por_tipo` (IN `tipo_promo` VARCHAR(2))   BEGIN 
     -- Lógica de Jerarquía EFRL (Event First, Royalty Last) 
     IF tipo_promo = 'PE' THEN 
-        -- 1. EVENTO: Mandan sobre todas. 
-        SELECT p.Nombre AS Producto, promo.Nombre AS Plantilla_Promo, promo.Descuento, 
-        'Evento' AS Origen 
+        -- 1. EVENTO: Devuelve 5 columnas
+        SELECT p.ID_Producto, p.Nombre AS Producto, promo.Nombre AS Plantilla_Promo, 
+        promo.Descuento, 'Evento' AS Origen 
         FROM evento_contiene_promocion ecp 
         JOIN producto_tiene_promocion ptp ON ecp.ID_Promocion = ptp.ID_Promocion 
         JOIN producto p ON ptp.ID_Producto = p.ID_Producto 
         JOIN promocion promo ON ptp.ID_Promocion = promo.ID_Promocion; 
 
     ELSEIF tipo_promo = 'PU' THEN 
-        -- 2. ÚNICA: Solo si NO es Evento y NO es Royalty 
-        SELECT p.Nombre AS Producto, promo.Nombre AS Plantilla_Promo, promo.Descuento, 
-        'Única' AS Origen 
+        -- 2. ÚNICA: Devuelve 5 columnas
+        SELECT p.ID_Producto, p.Nombre AS Producto, promo.Nombre AS Plantilla_Promo, 
+        promo.Descuento, 'Única' AS Origen 
         FROM producto_tiene_promocion ptp 
         JOIN producto p ON p.ID_Producto = ptp.ID_Producto 
         JOIN promocion promo ON promo.ID_Promocion = ptp.ID_Promocion 
@@ -160,9 +182,9 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `obtener_promociones_por_tipo` (IN `
         AND ptp.ID_Promocion NOT IN (SELECT ID_Promocion FROM estado_royalty_da_promociones); 
 
     ELSEIF tipo_promo = 'PR' THEN 
-        -- 3. ROYALTY: El remanente (Si es Royalty pero NO es Evento) 
-        SELECT p.Nombre AS Producto, promo.Nombre AS Plantilla_Promo, promo.Descuento, 
-        'Royalty' AS Origen 
+        -- 3. ROYALTY: Devuelve 6 columnas (incluyendo Nombre_Royalty)
+        SELECT p.ID_Producto, p.Nombre AS Producto, promo.Nombre AS Plantilla_Promo, 
+        promo.Descuento, erp.Nombre_Royalty, 'Royalty' AS Origen 
         FROM estado_royalty_da_promociones erp 
         JOIN producto_tiene_promocion ptp ON erp.ID_Promocion = ptp.ID_Promocion 
         JOIN producto p ON ptp.ID_Producto = p.ID_Producto 
@@ -170,11 +192,11 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `obtener_promociones_por_tipo` (IN `
         WHERE erp.ID_Promocion NOT IN (SELECT ID_Promocion FROM evento_contiene_promocion); 
 
     ELSE 
-        -- Mensaje de error si el parámetro no es válido 
         SELECT 'Error: El parámetro debe ser PU, PE o PR' AS Mensaje; 
     END IF; 
 END$$
 
+DROP PROCEDURE IF EXISTS `sp_EstadoCliente`$$
 CREATE DEFINER=`root`@`localhost` PROCEDURE `sp_EstadoCliente` (IN `p_telefono` VARCHAR(20))   BEGIN
     SELECT 
         c.Nombre, 
@@ -185,6 +207,7 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `sp_EstadoCliente` (IN `p_telefono` 
      WHERE c.Numero_Telefonico = p_telefono COLLATE utf8mb4_spanish2_ci;
 END$$
 
+DROP PROCEDURE IF EXISTS `sp_fetchEventos`$$
 CREATE DEFINER=`root`@`localhost` PROCEDURE `sp_fetchEventos` (IN `p_Nombre_Royalty` VARCHAR(50))   BEGIN
     SELECT E.Nombre AS Nombre_Evento, E.Fecha_Inicio, E.Fecha_final, E.Descripcion, ER.Nombre_Royalty
     FROM evento E
@@ -198,6 +221,7 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `sp_fetchEventos` (IN `p_Nombre_Roya
     ORDER BY ER.Número_de_prioridad DESC;
 END$$
 
+DROP PROCEDURE IF EXISTS `sp_fetchFavCliente`$$
 CREATE DEFINER=`root`@`localhost` PROCEDURE `sp_fetchFavCliente` (IN `p_Numero_Telefonico` VARCHAR(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish2_ci, IN `p_Categoría` VARCHAR(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish2_ci)   BEGIN
     SELECT O.Numero_Telefonico, P.Nombre, COUNT(OP.ID_Producto) AS Total
     FROM orden_tiene_producto OP
@@ -211,6 +235,7 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `sp_fetchFavCliente` (IN `p_Numero_T
 
 END$$
 
+DROP PROCEDURE IF EXISTS `sp_fetchPromociones`$$
 CREATE DEFINER=`root`@`localhost` PROCEDURE `sp_fetchPromociones` (IN `p_Nombre_Royalty` VARCHAR(50))   BEGIN
     SELECT P.Nombre, P.Descuento, P.Fecha_inicio, P.Fecha_final, E.Nombre_Royalty
     FROM estado_royalty E 
@@ -224,6 +249,7 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `sp_fetchPromociones` (IN `p_Nombre_
     ORDER BY E.Número_de_prioridad DESC;
 END$$
 
+DROP PROCEDURE IF EXISTS `sp_fetchTopGlobal`$$
 CREATE DEFINER=`root`@`localhost` PROCEDURE `sp_fetchTopGlobal` (IN `p_Categoría` VARCHAR(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish2_ci)   BEGIN
     SELECT P.Nombre, COUNT(OP.ID_Producto) AS Total
     FROM orden_tiene_producto OP
@@ -234,6 +260,7 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `sp_fetchTopGlobal` (IN `p_Categorí
     LIMIT 3;
 END$$
 
+DROP PROCEDURE IF EXISTS `SP_GuardarItemHibrido`$$
 CREATE DEFINER=`root`@`localhost` PROCEDURE `SP_GuardarItemHibrido` (IN `p_idOrden` VARCHAR(10) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci, IN `p_idProducto` VARCHAR(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci, IN `p_precioVenta` DECIMAL(10,2), IN `p_jsonExtras` TEXT CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci)   BEGIN
     DECLARE v_id_orden_producto INT;
     DECLARE v_json_length INT DEFAULT 0;
@@ -272,6 +299,7 @@ DELIMITER ;
 -- Estructura de tabla para la tabla `calendario`
 --
 
+DROP TABLE IF EXISTS `calendario`;
 CREATE TABLE `calendario` (
   `ID_Calendario` varchar(10) NOT NULL,
   `ID_Sucursal` varchar(10) NOT NULL,
@@ -304,6 +332,7 @@ INSERT INTO `calendario` (`ID_Calendario`, `ID_Sucursal`, `Fecha`, `Es_Laboral`,
 -- Estructura de tabla para la tabla `categoría`
 --
 
+DROP TABLE IF EXISTS `categoría`;
 CREATE TABLE `categoría` (
   `Nombre` varchar(50) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish2_ci;
@@ -326,6 +355,7 @@ INSERT INTO `categoría` (`Nombre`) VALUES
 -- Estructura de tabla para la tabla `cliente`
 --
 
+DROP TABLE IF EXISTS `cliente`;
 CREATE TABLE `cliente` (
   `Numero_Telefonico` varchar(20) NOT NULL,
   `Nombre_Royalty` varchar(50) DEFAULT NULL,
@@ -394,14 +424,18 @@ INSERT INTO `cliente` (`Numero_Telefonico`, `Nombre_Royalty`, `Nombre`, `Correo`
 ('55-9783-5924', 'Fan', 'Ricardo Antonio Gutiérrez García', 'rgutierrez@gmail.com', 'm', '1980-05-28', 13, 'Usuario'),
 ('55-9862-4951', 'Super Fan', 'Ramón Eliezer De Santos García', 'rgarcia@gmail.com', 'm', '1962-01-17', 6, 'Usuario'),
 ('55-9956-8802', 'Super Fan', 'Rodrigo Alejandro Hurtado Cortés', 'rhurtado@gmail.com', 'm', '1983-02-25', 2, 'Usuario'),
+('5511569800', NULL, 'Andrea Iliana Cantú Mayorga', NULL, NULL, NULL, 0, 'Usuario'),
 ('81-3104-6812', 'Fan', 'Carlos Delgado Contreras', 'A01712819@tec.mx', 'Masculino', '2005-08-16', 0, 'Usuario'),
 ('8131046812', NULL, 'Cliente', NULL, NULL, NULL, 0, 'Usuario'),
 ('8131046813', NULL, 'Cliente', NULL, NULL, NULL, 0, 'Usuario'),
+('813108999', NULL, 'Santi el formal', NULL, NULL, NULL, 0, 'Usuario'),
+('813455680', NULL, 'Santi el Hacker', NULL, NULL, NULL, 0, 'Usuario'),
 ('8134556800', NULL, 'Juan Pablo Juarez', NULL, NULL, NULL, 0, 'Usuario');
 
 --
 -- Disparadores `cliente`
 --
+DROP TRIGGER IF EXISTS `actualizar_nivel_por_visitas`;
 DELIMITER $$
 CREATE TRIGGER `actualizar_nivel_por_visitas` AFTER UPDATE ON `cliente` FOR EACH ROW BEGIN
     -- Solo actuamos si el número de visitas cambió
@@ -427,6 +461,7 @@ DELIMITER ;
 -- Estructura de tabla para la tabla `cliente_canjea_promociones`
 --
 
+DROP TABLE IF EXISTS `cliente_canjea_promociones`;
 CREATE TABLE `cliente_canjea_promociones` (
   `Numero_Telefonico` varchar(20) NOT NULL,
   `ID_Promocion` varchar(20) NOT NULL,
@@ -485,6 +520,7 @@ INSERT INTO `cliente_canjea_promociones` (`Numero_Telefonico`, `ID_Promocion`, `
 -- Estructura de tabla para la tabla `codigo_verificacion`
 --
 
+DROP TABLE IF EXISTS `codigo_verificacion`;
 CREATE TABLE `codigo_verificacion` (
   `Numero_Telefonico` varchar(20) NOT NULL,
   `Codigo` varchar(6) NOT NULL,
@@ -510,6 +546,7 @@ INSERT INTO `codigo_verificacion` (`Numero_Telefonico`, `Codigo`, `Fecha_Creacio
 --
 -- Disparadores `codigo_verificacion`
 --
+DROP TRIGGER IF EXISTS `tras_usar_otp`;
 DELIMITER $$
 CREATE TRIGGER `tras_usar_otp` BEFORE DELETE ON `codigo_verificacion` FOR EACH ROW BEGIN
     INSERT INTO log_accesos_otp (telefono, accion)
@@ -524,6 +561,7 @@ DELIMITER ;
 -- Estructura de tabla para la tabla `colaborador`
 --
 
+DROP TABLE IF EXISTS `colaborador`;
 CREATE TABLE `colaborador` (
   `ID_Colaborador` varchar(20) NOT NULL,
   `ID_Rol` varchar(20) NOT NULL,
@@ -593,6 +631,7 @@ INSERT INTO `colaborador` (`ID_Colaborador`, `ID_Rol`, `Nombre`, `Contraseña`) 
 -- Estructura de tabla para la tabla `colaborador_tiene_turno`
 --
 
+DROP TABLE IF EXISTS `colaborador_tiene_turno`;
 CREATE TABLE `colaborador_tiene_turno` (
   `ID_Colaborador` varchar(20) NOT NULL,
   `ID_Turno` varchar(20) NOT NULL
@@ -659,6 +698,7 @@ INSERT INTO `colaborador_tiene_turno` (`ID_Colaborador`, `ID_Turno`) VALUES
 -- Estructura de tabla para la tabla `detalle_orden_insumos`
 --
 
+DROP TABLE IF EXISTS `detalle_orden_insumos`;
 CREATE TABLE `detalle_orden_insumos` (
   `id` int(11) NOT NULL,
   `id_orden_producto` int(11) NOT NULL,
@@ -676,7 +716,15 @@ INSERT INTO `detalle_orden_insumos` (`id`, `id_orden_producto`, `ID_Insumo`, `ID
 (1, 63, 'IN18602747', 'OD27810441', 'base', 10.00),
 (2, 63, 'IN18602747', 'OD27810441', 'base', 10.00),
 (3, 64, 'IN02201393', 'OD73961888', 'base', 14.00),
-(4, 64, 'IN16420525', 'OD73961888', 'base', 17.00);
+(4, 64, 'IN16420525', 'OD73961888', 'base', 17.00),
+(5, 77, 'IN18968294', 'OD53860885', 'base', 12.00),
+(6, 77, 'IN21585929', 'OD53860885', 'base', 10.00),
+(7, 98, 'IN13297648', 'OD58628800', 'base', 25.50),
+(8, 98, 'IN05269621', 'OD58628800', 'base', 13.00),
+(9, 104, 'IN15500744', 'OD34926140', 'base', 24.00),
+(10, 104, 'IN09927406', 'OD34926140', 'base', 18.00),
+(11, 104, 'IN15204720', 'OD34926140', 'base', 12.00),
+(12, 104, 'IN16420525', 'OD34926140', 'base', 17.00);
 
 -- --------------------------------------------------------
 
@@ -684,6 +732,7 @@ INSERT INTO `detalle_orden_insumos` (`id`, `id_orden_producto`, `ID_Insumo`, `ID
 -- Estructura de tabla para la tabla `estado_royalty`
 --
 
+DROP TABLE IF EXISTS `estado_royalty`;
 CREATE TABLE `estado_royalty` (
   `Nombre_Royalty` varchar(50) NOT NULL,
   `Número_de_prioridad` int(11) NOT NULL,
@@ -698,7 +747,7 @@ CREATE TABLE `estado_royalty` (
 
 INSERT INTO `estado_royalty` (`Nombre_Royalty`, `Número_de_prioridad`, `Descripción`, `Max_Visitas`, `Min_Visitas`) VALUES
 ('Fan', 1, '\"En este nivel normalmente se ofrecen beneficios exclusivos: acceso anticipado a contenido, mercancía especial, descuentos mayores, eventos privados, interacción más directa con el creador o la marca, e incluso reconocimiento público dentro de la comunidad. La idea es premiar la lealtad y el compromiso constante.\"', 10, 5),
-('Mega Fan', 3, '\"El nivel mega fan va un paso más allá. Está pensado para quienes demuestran un compromiso más fuerte y continuo. En este nivel pueden ofrecerse ventajas más destacadas como experiencias más personalizadas, eventos exclusivos, productos especiales o menciones directas. Se convierte en un espacio más selecto dentro de la comunidad, donde el vínculo con la marca o creador es más cercano y visible.\nEs una especie de escalera de compromiso: cada nivel no solo ofrece beneficios, sino también mayor pertenencia y conexión.\"', 20, 16),
+('Mega Fan', 3, '\"El nivel mega fan va un paso más allá. Está pensado para quienes demuestran un compromiso más fuerte y continuo. En este nivel pueden ofrecerse ventajas más destacadas como experiencias más personalizadas, eventos exclusivos, productos especiales o menciones directas. Se convierte en un espacio más selecto dentro de la comunidad, donde el vínculo con la marca o creador es más cercano y visible.Es una especie de escalera de compromiso: cada nivel no solo ofrece beneficios, sino también mayor pertenencia y conexión.\"', 20, 16),
 ('Super Fan', 2, '\"Un nivel super fan representa a quienes ya no solo siguen el contenido, sino que participan activamente en la comunidad. Aquí suele haber beneficios atractivos como acceso anticipado a publicaciones, contenido exclusivo adicional, descuentos especiales o dinámicas privadas. También puede incluir interacción más cercana con el creador o reconocimiento dentro del grupo. La intención es recompensar la constancia y el entusiasmo.\"', 15, 11);
 
 -- --------------------------------------------------------
@@ -707,6 +756,7 @@ INSERT INTO `estado_royalty` (`Nombre_Royalty`, `Número_de_prioridad`, `Descrip
 -- Estructura de tabla para la tabla `estado_royalty_da_eventos`
 --
 
+DROP TABLE IF EXISTS `estado_royalty_da_eventos`;
 CREATE TABLE `estado_royalty_da_eventos` (
   `Nombre_Royalty` varchar(50) NOT NULL,
   `ID_Evento` varchar(20) NOT NULL
@@ -718,6 +768,7 @@ CREATE TABLE `estado_royalty_da_eventos` (
 -- Estructura de tabla para la tabla `estado_royalty_da_promociones`
 --
 
+DROP TABLE IF EXISTS `estado_royalty_da_promociones`;
 CREATE TABLE `estado_royalty_da_promociones` (
   `Nombre_Royalty` varchar(50) NOT NULL,
   `ID_Promocion` varchar(20) NOT NULL
@@ -729,6 +780,7 @@ CREATE TABLE `estado_royalty_da_promociones` (
 
 INSERT INTO `estado_royalty_da_promociones` (`Nombre_Royalty`, `ID_Promocion`) VALUES
 ('Fan', 'PR44805876'),
+('Mega Fan', 'PR26640244'),
 ('Mega Fan', 'PR33274771'),
 ('Super Fan', 'PR19912809'),
 ('Super Fan', 'PR67763277');
@@ -739,6 +791,7 @@ INSERT INTO `estado_royalty_da_promociones` (`Nombre_Royalty`, `ID_Promocion`) V
 -- Estructura de tabla para la tabla `evento`
 --
 
+DROP TABLE IF EXISTS `evento`;
 CREATE TABLE `evento` (
   `ID_Evento` varchar(20) NOT NULL,
   `Nombre` varchar(100) NOT NULL,
@@ -780,6 +833,7 @@ INSERT INTO `evento` (`ID_Evento`, `Nombre`, `Descripcion`, `Activo`, `Fecha_Ini
 -- Estructura de tabla para la tabla `evento_contiene_promocion`
 --
 
+DROP TABLE IF EXISTS `evento_contiene_promocion`;
 CREATE TABLE `evento_contiene_promocion` (
   `ID_Evento` varchar(20) NOT NULL,
   `ID_Promocion` varchar(20) NOT NULL
@@ -812,6 +866,7 @@ INSERT INTO `evento_contiene_promocion` (`ID_Evento`, `ID_Promocion`) VALUES
 -- Estructura de tabla para la tabla `insumo`
 --
 
+DROP TABLE IF EXISTS `insumo`;
 CREATE TABLE `insumo` (
   `ID_Insumo` varchar(10) NOT NULL,
   `Nombre` varchar(50) NOT NULL,
@@ -929,6 +984,7 @@ INSERT INTO `insumo` (`ID_Insumo`, `Nombre`, `Categoría`, `Precio`, `Activo`, `
 -- Estructura de tabla para la tabla `log_accesos_otp`
 --
 
+DROP TABLE IF EXISTS `log_accesos_otp`;
 CREATE TABLE `log_accesos_otp` (
   `id` int(11) NOT NULL,
   `telefono` varchar(20) DEFAULT NULL,
@@ -948,7 +1004,21 @@ INSERT INTO `log_accesos_otp` (`id`, `telefono`, `accion`, `fecha`) VALUES
 (5, '55-1156-9800', 'OTP_ELIMINADO', '2026-04-22 14:58:27'),
 (6, '55-1156-9800', 'OTP_ELIMINADO', '2026-04-22 18:08:02'),
 (7, '55-1156-9800', 'OTP_ELIMINADO', '2026-04-22 18:14:40'),
-(8, '55-1156-9800', 'OTP_ELIMINADO', '2026-04-22 18:25:29');
+(8, '55-1156-9800', 'OTP_ELIMINADO', '2026-04-22 18:25:29'),
+(9, '81-3104-6812', 'OTP_ELIMINADO', '2026-04-23 15:13:04'),
+(10, '81-3104-6812', 'OTP_ELIMINADO', '2026-04-23 18:44:03'),
+(11, '81-3104-6812', 'OTP_ELIMINADO', '2026-04-23 18:45:39'),
+(12, '81-3104-6812', 'OTP_ELIMINADO', '2026-04-23 18:48:26'),
+(13, '55-1156-9800', 'OTP_ELIMINADO', '2026-04-23 19:03:21'),
+(14, '55-1156-9800', 'OTP_ELIMINADO', '2026-04-23 19:06:43'),
+(15, '55-1156-9800', 'OTP_ELIMINADO', '2026-04-23 19:14:07'),
+(16, '55-1156-9800', 'OTP_ELIMINADO', '2026-04-23 19:23:03'),
+(17, '55-1156-9800', 'OTP_ELIMINADO', '2026-04-23 19:24:19'),
+(18, '55-1156-9800', 'OTP_ELIMINADO', '2026-04-23 21:19:15'),
+(19, '55-1156-9800', 'OTP_ELIMINADO', '2026-04-23 21:30:31'),
+(20, '55-1156-9800', 'OTP_ELIMINADO', '2026-04-23 21:53:14'),
+(21, '55-1156-9800', 'OTP_ELIMINADO', '2026-04-23 21:58:26'),
+(22, '55-1156-9800', 'OTP_ELIMINADO', '2026-04-23 22:13:50');
 
 -- --------------------------------------------------------
 
@@ -956,6 +1026,7 @@ INSERT INTO `log_accesos_otp` (`id`, `telefono`, `accion`, `fecha`) VALUES
 -- Estructura de tabla para la tabla `mensaje`
 --
 
+DROP TABLE IF EXISTS `mensaje`;
 CREATE TABLE `mensaje` (
   `ID_Mensaje` varchar(20) NOT NULL,
   `Titulo` varchar(100) NOT NULL,
@@ -977,6 +1048,7 @@ INSERT INTO `mensaje` (`ID_Mensaje`, `Titulo`, `Texto`) VALUES
 -- Estructura de tabla para la tabla `mensaje_notifica_cliente`
 --
 
+DROP TABLE IF EXISTS `mensaje_notifica_cliente`;
 CREATE TABLE `mensaje_notifica_cliente` (
   `Numero_Telefonico` varchar(20) NOT NULL,
   `ID_Mensaje` varchar(20) NOT NULL,
@@ -1012,6 +1084,7 @@ INSERT INTO `mensaje_notifica_cliente` (`Numero_Telefonico`, `ID_Mensaje`, `Fech
 -- Estructura de tabla para la tabla `orden`
 --
 
+DROP TABLE IF EXISTS `orden`;
 CREATE TABLE `orden` (
   `ID_Orden` varchar(10) NOT NULL,
   `ID_Turno` varchar(20) NOT NULL,
@@ -1036,13 +1109,17 @@ INSERT INTO `orden` (`ID_Orden`, `ID_Turno`, `Numero_Telefonico`, `Tipo_Orden`, 
 ('OD07290680', 'TN26496107', '55-8634-4784', 'Sucursal', 'Francisco Rafael Arreola Corona', 'Preparando', '2026-04-07 06:00:00', NULL),
 ('OD13125507', 'TN46937585', '55-9188-6863', 'Delivery', 'Iker Arnoldo Grajeda Campaña', 'Entregado', '2026-11-11 06:00:00', NULL),
 ('OD13593992', 'TN47025996', '55-5824-6563', 'Sucursal', 'Suri Reyes Vega', 'Preparando', '2026-07-24 06:00:00', NULL),
+('OD13859595', 'TN26496107', '5511569800', 'Pick-up', 'Andrea Iliana Cantú Mayorga', 'Pendiente', '2026-04-23 19:03:49', NULL),
 ('OD15848927', 'TN47025996', '55-2435-6781', 'Pick-up', 'Brenda Vázquez Rodríguez', 'Listo', '2026-11-16 06:00:00', NULL),
 ('OD16211107', 'TN26496107', '55-8962-5930', 'Pick-up', 'Juan Pablo Juárez Ortiz', 'Cancelado', '2026-12-11 06:00:00', NULL),
 ('OD16481371', 'TN47025996', '55-9783-5924', 'Pick-up', 'Ricardo Antonio Gutiérrez García', 'Listo', '2026-11-01 06:00:00', NULL),
 ('OD17661841', 'TN46937585', '55-4217-5522', 'Sucursal', 'Ilian Judith Castillo Beristain', 'Listo', '2026-03-02 06:00:00', NULL),
+('OD17995696', 'TN26496107', '8131046812', 'Pick-up', 'Carlos Delgado Contreras', 'Pendiente', '2026-04-23 18:45:48', NULL),
 ('OD19367239', 'TN26496107', '55-7634-3304', 'Sucursal', 'Carlos Delgado Contreras', 'Entregado', '2026-07-11 06:00:00', NULL),
 ('OD20045010', 'TN26496107', '55-3885-6878', 'Sucursal', 'Mariana Frías Olguín', 'Entregado', '2026-09-15 06:00:00', NULL),
 ('OD23043487', 'TN26496107', '55-9297-8935', 'Pick-up', 'Juan Pablo Domínguez Ángel', 'Listo', '2026-01-27 06:00:00', NULL),
+('OD26472747', 'TN26496107', '8131046813', 'Pick-up', 'Santi el Formal', 'Pendiente', '2026-04-23 17:09:13', NULL),
+('OD26576558', 'TN26496107', '8131046812', 'Pick-up', 'Fan', 'Pendiente', '2026-04-23 18:14:09', NULL),
 ('OD27810441', 'TN26496107', '8131046813', 'Pick-up', 'Juan Pablo Juarez', 'Pendiente', '2026-04-23 05:00:46', NULL),
 ('OD33014213', 'TN47025996', '55-8034-2908', 'Pick-up', 'Sofía Alondra Reyes Gómez', 'Listo', '2026-10-15 06:00:00', NULL),
 ('OD33655470', 'TN46937585', '55-7110-9468', 'Pick-up', 'Santiago Barjau Hernández', 'Entregado', '2026-02-17 06:00:00', NULL),
@@ -1050,44 +1127,66 @@ INSERT INTO `orden` (`ID_Orden`, `ID_Turno`, `Numero_Telefonico`, `Tipo_Orden`, 
 ('OD33834225', 'TN26496107', '8131046813', 'Pick-up', 'Pepe', 'Pendiente', '2026-04-23 04:51:50', NULL),
 ('OD33951115', 'TN47025996', '55-2006-6063', 'Sucursal', 'Isabela Ruiz Velasco Angeles', 'Listo', '2026-09-21 06:00:00', NULL),
 ('OD34843825', 'TN46937585', '55-8069-3709', 'Pick-up', 'Jesús Osvaldo Ramos Pérez', 'Listo', '2026-07-04 06:00:00', NULL),
+('OD34926140', 'TN26496107', '5511569800', 'Pick-up', 'Andrea Iliana Cantú Mayorga', 'Pendiente', '2026-04-23 22:18:06', NULL),
 ('OD36841880', 'TN26496107', '8131046812', 'Delivery', 'Cliente', 'Pendiente', '2026-04-22 03:22:29', NULL),
 ('OD37616868', 'TN46937585', '55-6624-7720', 'Delivery', 'Mariangel Aguirre Magallanes', 'Entregado', '2026-12-22 06:00:00', NULL),
 ('OD37925699', 'TN26496107', '55-4606-3624', 'Sucursal', 'Héctor Alejandro Barrón Tamayo', 'Entregado', '2026-05-22 06:00:00', NULL),
+('OD38390819', 'TN26496107', '8131046812', 'Pick-up', 'Pepe', 'Pendiente', '2026-04-23 17:06:03', NULL),
 ('OD38730521', 'TN26496107', '55-4203-5221', 'Delivery', 'Ricardo Cortés Espinosa', 'Entregado', '2026-09-25 06:00:00', NULL),
 ('OD39256016', 'TN26496107', '8131046812', 'Pick-up', 'Cliente', 'Pendiente', '2026-04-22 03:19:18', NULL),
 ('OD41009687', 'TN26496107', '8134556800', 'Pick-up', 'Juan Pablo Juarez', 'Pendiente', '2026-04-23 04:53:41', NULL),
+('OD43105566', 'TN26496107', '8131046813', 'Pick-up', 'Fan', 'Pendiente', '2026-04-23 21:52:21', NULL),
 ('OD45723683', 'TN47025996', '55-5018-5507', 'Sucursal', 'Armando Montealegre Villagrán', 'Cancelado', '2026-12-02 06:00:00', NULL),
 ('OD45999906', 'TN26496107', '4428199000', 'Pick-up', 'Juan Pablo Juarez', 'Pendiente', '2026-04-23 04:56:04', NULL),
 ('OD46400505', 'TN26496107', '8131046813', 'Pick-up', 'Cliente', 'Pendiente', '2026-04-22 14:58:48', NULL),
+('OD47257108', 'TN26496107', '8131046813', 'Pick-up', 'Juan Pablo Juarez', 'Pendiente', '2026-04-23 22:32:04', NULL),
 ('OD48634931', 'TN26496107', '55-3672-3148', 'Delivery', 'Alejandro Contreras Magallanes', 'Preparando', '2026-06-18 06:00:00', NULL),
 ('OD51835069', 'TN46937585', '55-8616-1973', 'Pick-up', 'Alberto Barba Arroyo', 'Preparando', '2026-10-25 06:00:00', NULL),
 ('OD52937565', 'TN26496107', '55-2884-7043', 'Sucursal', 'Eduardo Hernández Alonso', 'Listo', '2026-11-15 06:00:00', NULL),
+('OD53860885', 'TN26496107', '8131046812', 'Pick-up', 'Fan', 'Pendiente', '2026-04-23 18:28:23', NULL),
 ('OD54215310', 'TN47025996', '55-8361-8067', 'Delivery', 'Katya Jiménez Antonio', 'Listo', '2026-01-07 06:00:00', NULL),
 ('OD54491099', 'TN26496107', '55-6788-4484', 'Sucursal', 'Víctor Hugo Esquivel Feregrino', 'Preparando', '2026-05-22 06:00:00', NULL),
 ('OD55639966', 'TN47025996', '55-7731-4202', 'Delivery', 'Renata Martínez Ozumbilla', 'Entregado', '2026-07-08 06:00:00', NULL),
+('OD56048680', 'TN26496107', '813455680', 'Pick-up', 'Santi el Hacker', 'Pendiente', '2026-04-23 17:07:33', NULL),
 ('OD58196492', 'TN47025996', '55-3938-1454', 'Pick-up', 'Hannah Carolina Hernández Reyes', 'Preparando', '2026-08-15 06:00:00', NULL),
+('OD58628800', 'TN26496107', '5511569800', 'Pick-up', 'Andrea Iliana Cantú Mayorga', 'Pendiente', '2026-04-23 22:16:50', NULL),
 ('OD59250531', 'TN47025996', '55-3647-8536', 'Pick-up', 'Dana Izel Martínez García', 'Preparando', '2026-05-13 06:00:00', NULL),
+('OD59345432', 'TN26496107', '8131046813', 'Pick-up', 'Juan Pablo Juarez', 'Pendiente', '2026-04-23 18:22:07', NULL),
+('OD60800594', 'TN26496107', '8131046812', 'Sucursal', 'Pepe', 'Pendiente', '2026-04-23 17:39:53', NULL),
+('OD61043955', 'TN26496107', '8131046812', 'Pick-up', 'Carlos Delgado Contreras', 'Pendiente', '2026-04-23 18:48:45', NULL),
+('OD62032456', 'TN26496107', '8131046813', 'Pick-up', 'Juan Pablo Juarez', 'Pendiente', '2026-04-23 16:41:35', NULL),
 ('OD62481224', 'TN26496107', '55-1156-9800', 'Pick-up', 'Andrea Iliana Cantú Mayorga', 'Preparando', '2026-08-06 06:00:00', NULL),
 ('OD62573621', 'TN47025996', '55-7869-6124', 'Sucursal', 'Emiliano Murillo Ruiz', 'Preparando', '2026-06-10 06:00:00', NULL),
+('OD64416919', 'TN26496107', '5511569800', 'Pick-up', 'Andrea Iliana Cantú Mayorga', 'Pendiente', '2026-04-23 19:24:24', NULL),
 ('OD66638248', 'TN46937585', '55-8913-8427', 'Sucursal', 'Fernanda Curiel Perez', 'Listo', '2026-08-26 06:00:00', NULL),
+('OD67194499', 'TN26496107', '8131046812', 'Pick-up', 'Juan Pablo Juarez', 'Pendiente', '2026-04-23 21:40:34', NULL),
 ('OD67602512', 'TN26496107', '8131046812', 'Pick-up', 'Pepe', 'Pendiente', '2026-04-23 04:58:22', NULL),
+('OD67962400', 'TN26496107', '8131046813', 'Pick-up', 'Lalo', 'Pendiente', '2026-04-23 21:35:38', NULL),
 ('OD68164439', 'TN26496107', '55-6026-1598', 'Pick-up', 'Maria Fernanda Padme Lakshmi Martínez Jara', 'Preparando', '2026-06-08 06:00:00', NULL),
 ('OD68369798', 'TN26496107', '55-3225-9858', 'Delivery', 'Alexis Yaocalli Berthou Haas', 'Listo', '2026-08-19 06:00:00', NULL),
 ('OD68555825', 'TN47025996', '55-7260-4596', 'Delivery', 'Fernanda Rosales Herrera', 'Entregado', '2026-07-21 06:00:00', NULL),
+('OD69068699', 'TN26496107', '8131046813', 'Pick-up', 'Pepe', 'Pendiente', '2026-04-23 21:52:52', NULL),
 ('OD69891418', 'TN46937585', '55-8317-4862', 'Pick-up', 'Oscar Alexander Vilchis Soto', 'Preparando', '2026-02-18 06:00:00', NULL),
 ('OD70011240', 'TN47025996', '55-9661-9093', 'Delivery', 'Diego Serrano Pardo', 'Listo', '2026-01-27 06:00:00', NULL),
+('OD72574664', 'TN26496107', '5511569800', 'Pick-up', 'Andrea Iliana Cantú Mayorga', 'Pendiente', '2026-04-23 19:23:09', NULL),
 ('OD73450134', 'TN46937585', '55-7095-1397', 'Delivery', 'Gabriela Frías Quiroz', 'Listo', '2026-05-16 06:00:00', NULL),
 ('OD73961888', 'TN26496107', '443789097', 'Pick-up', 'Lalo', 'Pendiente', '2026-04-23 05:01:55', NULL),
+('OD74140212', 'TN26496107', '5511569800', 'Pick-up', 'Andrea Iliana Cantú Mayorga', 'Pendiente', '2026-04-23 19:14:15', NULL),
+('OD75840036', 'TN26496107', '8131046812', 'Pick-up', 'Carlos Delgado Contreras', 'Pendiente', '2026-04-23 18:44:17', NULL),
 ('OD77070485', 'TN26496107', '8131046812', 'Pick-up', 'Pepe', 'Pendiente', '2026-04-23 03:18:28', NULL),
+('OD77183902', 'TN26496107', '8131046812', 'Pick-up', 'Juan Pablo Juarez', 'Pendiente', '2026-04-23 21:34:51', NULL),
+('OD77561838', 'TN26496107', '8131046813', 'Pick-up', 'Fan', 'Pendiente', '2026-04-23 18:39:51', NULL),
 ('OD81178473', 'TN46937585', '55-7378-3019', 'Delivery', 'Jonathan de Jesús Anaya Correa', 'Listo', '2026-06-23 06:00:00', NULL),
 ('OD81537460', 'TN26496107', '55-2669-1307', 'Pick-up', 'Ana Camila Cuevas González', 'Listo', '2026-04-06 06:00:00', NULL),
 ('OD82644084', 'TN26496107', '55-1579-6753', 'Pick-up', 'Eduardo Daniel Juárez Pineda', 'Entregado', '2026-07-26 06:00:00', NULL),
 ('OD94187424', 'TN26496107', '55-1827-6651', 'Sucursal', 'David Antonio Gandara Ruiz', 'Entregado', '2026-05-17 06:00:00', NULL),
+('OD95166238', 'TN26496107', '5511569800', 'Pick-up', 'Andrea Iliana Cantú Mayorga', 'Pendiente', '2026-04-23 19:06:48', NULL),
 ('OD96155417', 'TN46937585', '55-3251-9266', 'Pick-up', 'Ximena Guadalupe Córdoba Ángeles', 'Entregado', '2026-05-21 06:00:00', NULL),
 ('OD96250697', 'TN26496107', '55-9221-5175', 'Pick-up', 'Ana Valeria Machuca Miranda', 'Listo', '2026-02-19 06:00:00', NULL),
 ('OD96747780', 'TN26496107', '55-9026-7777', 'Sucursal', 'Sebastián Mansilla Cots', 'Listo', '2026-04-22 06:00:00', NULL),
 ('OD97056014', 'TN46937585', '55-9862-4951', 'Delivery', 'Ramón Eliezer De Santos García', 'Entregado', '2026-12-27 06:00:00', NULL),
-('OD97294540', 'TN47025996', '55-4768-9613', 'Sucursal', 'Jessica Hernández Tejeda', 'Entregado', '2026-07-21 06:00:00', NULL);
+('OD97294540', 'TN47025996', '55-4768-9613', 'Sucursal', 'Jessica Hernández Tejeda', 'Entregado', '2026-07-21 06:00:00', NULL),
+('OD99338526', 'TN26496107', '813108999', 'Pick-up', 'Santi el formal', 'Pendiente', '2026-04-23 17:08:35', NULL);
 
 -- --------------------------------------------------------
 
@@ -1095,6 +1194,7 @@ INSERT INTO `orden` (`ID_Orden`, `ID_Turno`, `Numero_Telefonico`, `Tipo_Orden`, 
 -- Estructura de tabla para la tabla `orden_tiene_producto`
 --
 
+DROP TABLE IF EXISTS `orden_tiene_producto`;
 CREATE TABLE `orden_tiene_producto` (
   `id_orden_producto` int(11) NOT NULL,
   `ID_Orden` varchar(10) NOT NULL,
@@ -1165,7 +1265,48 @@ INSERT INTO `orden_tiene_producto` (`id_orden_producto`, `ID_Orden`, `ID_Product
 (55, 'OD33834225', 'PD28020090', 1, 75.00),
 (62, 'OD27810441', 'PD12662761', 1, 70.00),
 (63, 'OD27810441', 'PD_COMODIN', 1, 70.00),
-(64, 'OD73961888', 'PD_COMODIN', 1, 81.00);
+(64, 'OD73961888', 'PD_COMODIN', 1, 81.00),
+(65, 'OD62032456', 'PD12662761', 1, 17.50),
+(66, 'OD62032456', 'PD43258149', 1, 58.50),
+(67, 'OD62032456', 'PD44220776', 1, 72.00),
+(68, 'OD38390819', 'PD12662761', 1, 1.00),
+(69, 'OD38390819', 'PD43258149', 1, 58.50),
+(70, 'OD56048680', 'PD12662761', 1, 1.00),
+(71, 'OD99338526', 'PD28020090', 1, 75.00),
+(72, 'OD26472747', 'PD28020090', 1, 75.00),
+(73, 'OD60800594', 'PD12662761', 1, 70.00),
+(74, 'OD60800594', 'PD43258149', 1, 58.50),
+(75, 'OD26576558', 'PD28020090', 1, 75.00),
+(76, 'OD59345432', 'PD30843175', 1, 64.00),
+(77, 'OD53860885', 'PD_COMODIN', 1, 72.00),
+(78, 'OD77561838', 'PD66451976', 1, 89.00),
+(79, 'OD75840036', 'PD12662761', 1, 17.50),
+(80, 'OD17995696', 'PD12662761', 1, 17.50),
+(81, 'OD17995696', 'PD12662761', 1, 17.50),
+(82, 'OD61043955', 'PD12662761', 1, 17.50),
+(83, 'OD61043955', 'PD43258149', 1, 58.50),
+(84, 'OD13859595', 'PD28020090', 1, 75.00),
+(85, 'OD13859595', 'PD30843175', 1, 64.00),
+(86, 'OD95166238', 'PD44220776', 1, 72.00),
+(87, 'OD95166238', 'PD69673358', 1, 45.00),
+(88, 'OD74140212', 'PD44220776', 1, 72.00),
+(89, 'OD74140212', 'PD69673358', 1, 45.00),
+(90, 'OD74140212', 'PD28020090', 1, 75.00),
+(91, 'OD72574664', 'PD12662761', 1, 17.50),
+(92, 'OD64416919', 'PD12662761', 1, 17.50),
+(93, 'OD77183902', 'PD12662761', 1, 70.00),
+(94, 'OD67962400', 'PD12662761', 1, 70.00),
+(95, 'OD67194499', 'PD12662761', 1, 70.00),
+(96, 'OD43105566', 'PD30843175', 1, 64.00),
+(97, 'OD69068699', 'PD69673358', 1, 45.00),
+(98, 'OD58628800', 'PD_COMODIN', 1, 88.50),
+(99, 'OD58628800', 'PD12662761', 1, 35.00),
+(100, 'OD34926140', 'PD12662761', 1, 35.00),
+(101, 'OD34926140', 'PD28020090', 1, 75.00),
+(102, 'OD34926140', 'PD30843175', 1, 64.00),
+(103, 'OD34926140', 'PD69673358', 1, 45.00),
+(104, 'OD34926140', 'PD_COMODIN', 1, 121.00),
+(105, 'OD47257108', 'PD00387421', 1, 155.00);
 
 -- --------------------------------------------------------
 
@@ -1173,6 +1314,7 @@ INSERT INTO `orden_tiene_producto` (`id_orden_producto`, `ID_Orden`, `ID_Product
 -- Estructura de tabla para la tabla `pago`
 --
 
+DROP TABLE IF EXISTS `pago`;
 CREATE TABLE `pago` (
   `ID_Pago` varchar(10) NOT NULL,
   `ID_Orden` varchar(10) NOT NULL,
@@ -1244,6 +1386,7 @@ INSERT INTO `pago` (`ID_Pago`, `ID_Orden`, `Monto`, `Metodo_Pago`, `Fecha_Pago`,
 -- Estructura de tabla para la tabla `privilegio`
 --
 
+DROP TABLE IF EXISTS `privilegio`;
 CREATE TABLE `privilegio` (
   `Privilegio` varchar(30) NOT NULL,
   `Transferible` tinyint(1) DEFAULT 0
@@ -1324,6 +1467,7 @@ INSERT INTO `privilegio` (`Privilegio`, `Transferible`) VALUES
 -- Estructura de tabla para la tabla `producto`
 --
 
+DROP TABLE IF EXISTS `producto`;
 CREATE TABLE `producto` (
   `ID_Producto` varchar(10) NOT NULL,
   `Tamaño` varchar(50) NOT NULL,
@@ -1435,6 +1579,7 @@ INSERT INTO `producto` (`ID_Producto`, `Tamaño`, `Categoría`, `Nombre`, `Preci
 -- Estructura de tabla para la tabla `producto_pertenece_evento`
 --
 
+DROP TABLE IF EXISTS `producto_pertenece_evento`;
 CREATE TABLE `producto_pertenece_evento` (
   `ID_Evento` varchar(20) NOT NULL,
   `ID_Producto` varchar(10) NOT NULL
@@ -1473,6 +1618,7 @@ INSERT INTO `producto_pertenece_evento` (`ID_Evento`, `ID_Producto`) VALUES
 -- Estructura de tabla para la tabla `producto_tiene_insumo`
 --
 
+DROP TABLE IF EXISTS `producto_tiene_insumo`;
 CREATE TABLE `producto_tiene_insumo` (
   `ID_Producto` varchar(10) NOT NULL,
   `ID_Insumo` varchar(10) NOT NULL
@@ -1594,6 +1740,7 @@ INSERT INTO `producto_tiene_insumo` (`ID_Producto`, `ID_Insumo`) VALUES
 -- Estructura de tabla para la tabla `producto_tiene_promocion`
 --
 
+DROP TABLE IF EXISTS `producto_tiene_promocion`;
 CREATE TABLE `producto_tiene_promocion` (
   `ID_Producto` varchar(20) NOT NULL,
   `ID_Promocion` varchar(20) NOT NULL
@@ -1610,6 +1757,7 @@ INSERT INTO `producto_tiene_promocion` (`ID_Producto`, `ID_Promocion`) VALUES
 ('PD02624644', 'PR98448306'),
 ('PD09374303', 'PR76785851'),
 ('PD10782835', 'PR32616125'),
+('PD12662761', 'PR26640244'),
 ('PD12662761', 'PR67763277'),
 ('PD12929845', 'PR19912809'),
 ('PD13048411', 'PR78222949'),
@@ -1677,6 +1825,7 @@ INSERT INTO `producto_tiene_promocion` (`ID_Producto`, `ID_Promocion`) VALUES
 -- Estructura de tabla para la tabla `promocion`
 --
 
+DROP TABLE IF EXISTS `promocion`;
 CREATE TABLE `promocion` (
   `ID_Promocion` varchar(20) NOT NULL,
   `Nombre` varchar(100) NOT NULL,
@@ -1694,6 +1843,7 @@ CREATE TABLE `promocion` (
 INSERT INTO `promocion` (`ID_Promocion`, `Nombre`, `Descuento`, `Condiciones`, `Activo`, `Fecha_inicio`, `Fecha_final`) VALUES
 ('PR19912809', 'Promoción Navidad 2025', 0.20, '25 de diciembre y con INE vigente', 0, '2025-12-10', '2026-04-05'),
 ('PR21011143', 'Promoción Cumpleaños', 0.50, 'el dia de tu cumpleaños', 1, '0004-06-26', '2029-08-26'),
+('PR26640244', 'Mega Fan 50%', 0.50, 'Ser Mega Fan', 1, '2026-04-22', '2026-04-30'),
 ('PR27804270', 'Sábado de Sartenes', 0.25, 'Evento', 1, '0009-03-26', '0006-09-26'),
 ('PR32105836', '%50 en Productos Seleccionados', 0.50, 'Reclamar en caja', 1, '2026-04-08', '2026-04-29'),
 ('PR32616125', 'Cumbre del Relleno Secreto', 0.10, 'Evento', 1, '0006-04-26', '0009-07-26'),
@@ -1723,6 +1873,7 @@ INSERT INTO `promocion` (`ID_Promocion`, `Nombre`, `Descuento`, `Condiciones`, `
 -- Estructura de tabla para la tabla `review`
 --
 
+DROP TABLE IF EXISTS `review`;
 CREATE TABLE `review` (
   `ID_Review` varchar(10) NOT NULL,
   `ID_Orden` varchar(10) NOT NULL,
@@ -1794,6 +1945,7 @@ INSERT INTO `review` (`ID_Review`, `ID_Orden`, `Puntaje`, `Comentario`, `Fecha`)
 -- Estructura de tabla para la tabla `rol`
 --
 
+DROP TABLE IF EXISTS `rol`;
 CREATE TABLE `rol` (
   `Rol` varchar(15) NOT NULL,
   `Activo` tinyint(1) DEFAULT 1
@@ -1815,6 +1967,7 @@ INSERT INTO `rol` (`Rol`, `Activo`) VALUES
 -- Estructura de tabla para la tabla `rol_tiene_privilegio`
 --
 
+DROP TABLE IF EXISTS `rol_tiene_privilegio`;
 CREATE TABLE `rol_tiene_privilegio` (
   `ID_Rol` varchar(15) NOT NULL,
   `ID_Privilegio` varchar(30) NOT NULL
@@ -1894,6 +2047,7 @@ INSERT INTO `rol_tiene_privilegio` (`ID_Rol`, `ID_Privilegio`) VALUES
 -- Estructura de tabla para la tabla `sucursal`
 --
 
+DROP TABLE IF EXISTS `sucursal`;
 CREATE TABLE `sucursal` (
   `ID_Sucursal` varchar(10) NOT NULL,
   `Nombre` varchar(50) NOT NULL,
@@ -1919,6 +2073,7 @@ INSERT INTO `sucursal` (`ID_Sucursal`, `Nombre`, `Ciudad`, `Estado`, `País`, `M
 -- Estructura de tabla para la tabla `tamaño`
 --
 
+DROP TABLE IF EXISTS `tamaño`;
 CREATE TABLE `tamaño` (
   `Nombre` varchar(50) NOT NULL,
   `MultiplicadorPrecio` decimal(3,2) NOT NULL
@@ -1940,6 +2095,7 @@ INSERT INTO `tamaño` (`Nombre`, `MultiplicadorPrecio`) VALUES
 -- Estructura de tabla para la tabla `tipos`
 --
 
+DROP TABLE IF EXISTS `tipos`;
 CREATE TABLE `tipos` (
   `nombre` varchar(50) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish2_ci;
@@ -1963,6 +2119,7 @@ INSERT INTO `tipos` (`nombre`) VALUES
 -- Estructura de tabla para la tabla `turno`
 --
 
+DROP TABLE IF EXISTS `turno`;
 CREATE TABLE `turno` (
   `ID_Turno` varchar(20) NOT NULL,
   `Nombre_Turno` varchar(50) NOT NULL,
@@ -1984,6 +2141,7 @@ INSERT INTO `turno` (`ID_Turno`, `Nombre_Turno`, `Fecha`) VALUES
 -- Estructura de tabla para la tabla `turno_tiene_sucursal`
 --
 
+DROP TABLE IF EXISTS `turno_tiene_sucursal`;
 CREATE TABLE `turno_tiene_sucursal` (
   `ID_Turno` varchar(20) NOT NULL,
   `ID_Sucursal` varchar(10) NOT NULL
@@ -2248,19 +2406,19 @@ ALTER TABLE `turno_tiene_sucursal`
 -- AUTO_INCREMENT de la tabla `detalle_orden_insumos`
 --
 ALTER TABLE `detalle_orden_insumos`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=13;
 
 --
 -- AUTO_INCREMENT de la tabla `log_accesos_otp`
 --
 ALTER TABLE `log_accesos_otp`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=23;
 
 --
 -- AUTO_INCREMENT de la tabla `orden_tiene_producto`
 --
 ALTER TABLE `orden_tiene_producto`
-  MODIFY `id_orden_producto` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=65;
+  MODIFY `id_orden_producto` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=106;
 
 --
 -- Restricciones para tablas volcadas
