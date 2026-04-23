@@ -190,7 +190,7 @@ static async ValidarDatosRegistro(data) {
 
 static async sistemaValidarprecio(arrayDeErrores, ordenData) {
     console.log("🕵️ Policia de precios inspeccionando la orden...");
-
+  
     try {
         // A. Recolectar todos los IDs únicos (Productos e Insumos) para la consulta masiva
         const idsProductos = [...new Set(ordenData.items.map(i => i.id))];
@@ -223,12 +223,8 @@ static async sistemaValidarprecio(arrayDeErrores, ordenData) {
 // Función auxiliar: Consulta masiva a la BD
 static async obtenerListaDeOro(idsProductos, idsInsumos) {
     try {
-        /**
-         * [PLACEHOLDER: Invocación de Stored Procedure]
-         * Recomendación: Un solo SP que reciba los IDs (pueden ser strings separados por comas)
-         * y ejecute dos SELECTs internos.
-         */
-        const [resultSets] = await db.query("CALL SP_ObtenerCatalogosPrecios(?, ?)", [
+
+        const [resultSets] = await db.query("CALL ObtenerPreciosPoli(?, ?)", [
             idsProductos.join(','), 
             idsInsumos.join(',')
         ]);
@@ -271,7 +267,10 @@ static calcularPrecioRealItem(item, listaOro) {
     let acumulado = 0;
 
     // 1. Sumar precio base del producto
-    const precioBase = listaOro.productos[item.id] || 0;
+    const precioBase = listaOro.productos[item.id];
+    if (precioBase === undefined) {
+        throw new Error(`Producto no reconocido o inactivo: ${item.id}`);
+    }
     acumulado += precioBase;
 
     // 2. Sumar ingredientes (adentro y toppings)
@@ -288,6 +287,7 @@ static calcularPrecioRealItem(item, listaOro) {
     return acumulado;
 }
 
+/* fin de funciones polis */
   
   static async getAllIngredientes () {
     return db.execute('SELECT Nombre as nombre, ID_Insumo as id, Precio as precio FROM INSUMO')
