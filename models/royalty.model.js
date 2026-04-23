@@ -109,33 +109,33 @@ module.exports = class Royalty {
   }
 
   // Registro de visitas
-  static async fetchClienteParaEscaneo (idCliente) {
+  static async fetchClienteParaEscaneo (telefono) {
     return db.execute(`
         SELECT Numero_Telefonico, Nombre, Visitas_Actuales, tokens_gastados, Nombre_Royalty
         FROM cliente
-        WHERE Numero_Telefonico = ?`, [idCliente])
+        WHERE Numero_Telefonico = ?`, [telefono])
   }
 
-  static async registrarVisita (idCliente) {
+  static async registrarVisita (telefono) {
     return db.execute(`
         UPDATE cliente
         SET Visitas_Actuales = Visitas_Actuales + 1
-        WHERE Numero_Telefonico = ?`, [idCliente])
+        WHERE Numero_Telefonico = ?`, [telefono])
   }
 
-  static async registrarCanje (idCliente, idPromocion) {
+  static async registrarCanje (telefono, idPromocion) {
     const connection = await db.getConnection()
     try {
       await connection.beginTransaction()
 
       await connection.execute(
         'UPDATE cliente SET tokens_gastados = tokens_gastados + 1 WHERE Numero_Telefonico = ?',
-        [idCliente]
+        [telefono]
       )
 
       await connection.execute(
         'INSERT INTO historial_canjes_royalty (Numero_Telefonico, ID_Promocion) VALUES (?, ?)',
-        [idCliente, idPromocion]
+        [telefono, idPromocion]
       )
 
       await connection.commit()

@@ -12,12 +12,16 @@
 </nav>
 
 <%- include('../partials/breadcrumbs') %>
-
 <main class="page-wrap">
 
     <header style="margin-bottom: 32px;">
         <h1 class="page-title">Admin Dashboard</h1>
         <p class="page-sub">Manage your cafeteria operations</p>
+        
+        <button onclick="iniciarEscaneo()" class="btn-scanner-top" title="Registrar Visita">
+        <i class="fas fa-camera"></i>
+        <span>Escanear Royalty</span>
+        </button>
     </header>
 
     <div class="dashboard-grid">
@@ -87,9 +91,23 @@
         </a>
 
     </div>
+    <div id="seccion-scanner-royalty" class="scanner-modal-overlay">
+        <div class="scanner-modal-content">
+            <div id="contenedor-dinamico-cliente">
+                </div>
+            
+            <div class="text-center mt-4">
+                <button onclick="cerrarPanelScanner()" class="btn-base" style="background: var(--c-bg-body); color: var(--c-text-muted);">
+                    Cerrar
+                </button>
+            </div>
+        </div>
+    </div>
 
 </main>
 
+<script src="https://unpkg.com/html5-qrcode"></script>
+<script src="/js/Royalty/scannerHandler.js"></script>
 <script src="/js/admin.js"></script>
 </body>
 </html>

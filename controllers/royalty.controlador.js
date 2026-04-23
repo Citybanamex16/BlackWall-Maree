@@ -129,10 +129,17 @@ exports.getRoyaltyMetrics = (req, res, next) => {
 
 // Registrar Visitas
 exports.postProcesarEscaneo = async (request, response) => {
-  const { idCliente } = request.body
+  const telefono = request.body.telefono
+
+  if (!telefono) {
+    return response.status(400).json({
+      success: false,
+      message: 'No se recibió el número telefónico'
+    })
+  }
 
   try {
-    const [rows] = await Royalty.fetchClienteParaEscaneo(idCliente)
+    const [rows] = await Royalty.fetchClienteParaEscaneo(telefono)
     if (rows.length === 0) return response.status(404).json({ message: 'Cliente no encontrado' })
 
     const cliente = rows[0]
@@ -142,14 +149,17 @@ exports.postProcesarEscaneo = async (request, response) => {
     const tokensDisponibles = tokensGanados - cliente.tokens_gastados
     const sellosActuales = cliente.visitas_totales % 10
 
-    const [promocionesDisponibles] = await Royalty.fetchPromociones_royalties(cliente.nivel)
+    const visitasTotales = cliente.Visitas_Actuales || 0
+
+    const [promocionesDisponibles] = await Royalty.fetchPromociones_royalties(cliente.Nombre_Royalty)
 
     return response.status(200).json({
+      success: true,
       cliente: {
-        id: cliente.ID,
-        nombre: cliente.Nombre,
-        nivel: cliente.nivel,
-        visitas: cliente.visitas_totales,
+        id: cliente.Numero_Telefonico,
+        nombre: cliente.Nombre || 'Cliente Marée',
+        nivel: cliente.Nombre_Royalty,
+        visitas: visitasTotales,
         sellosActuales,
         tokensDisponibles
       },
@@ -162,9 +172,10 @@ exports.postProcesarEscaneo = async (request, response) => {
 }
 
 exports.postRegistrarVisitaAdmin = async (request, response) => {
-  const { idCliente } = request.body
+  const telefono = request.body.telefono
+
   try {
-    await Royalty.registrarVisita(idCliente)
+    await Royalty.registrarVisita(telefono)
     response.status(200).json({ success: true, message: 'Visita registrada con éxito' })
   } catch (error) {
     response.status(500).json({ success: false, message: 'Error al registrar visita' })
@@ -172,10 +183,10 @@ exports.postRegistrarVisitaAdmin = async (request, response) => {
 }
 
 exports.postCanjearPremio = async (request, response) => {
-  const { idCliente, idPromocion } = request.body
+  const { telefono, idPromocion } = request.body
 
   try {
-    await Royalty.registrarCanje(idCliente, idPromocion)
+    await Royalty.registrarCanje(telefono, idPromocion)
     response.status(200).json({ success: true, message: 'Premio entregado correctamente' })
   } catch (error) {
     console.log(error)
