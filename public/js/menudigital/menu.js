@@ -344,6 +344,8 @@ async function obtenerMenu (SesionData) {
   }
 }
 
+
+
 async function getSesionInfo () {
   // Datos de la sesión:
   let SesionData
@@ -365,7 +367,7 @@ getSesionInfo()
 
 /* ==== SISTEMA DE PROMOCIONES ==== */
 
-function getPromosFromProduct (nombre, promosData, PRs) {
+function getPromosFromProduct (idProd, promosData, PRs) {
   const promosArray = []
 
   // 1. Aseguramos que PRs sea un array. Si es null o undefined, usamos []
@@ -377,9 +379,9 @@ function getPromosFromProduct (nombre, promosData, PRs) {
 
   // 2. Filtramos usando los arrays seguros
   // filter no fallará si el array está vacío, simplemente devolverá otro []
-  const promosEvento = PEs.filter(promo => promo?.Producto === nombre)
-  const promosUnicas = PUs.filter(promo => promo?.Producto === nombre)
-  const promosRoyalty = safePRs.filter(promo => promo?.Producto === nombre)
+  const promosEvento = PEs.filter(promo => promo?.ID_Producto === idProd)
+  const promosUnicas = PUs.filter(promo => promo?.ID_Producto === idProd)
+  const promosRoyalty = safePRs.filter(promo => promo?.ID_Producto === idProd)
 
   // 3. Unimos todo. Si alguno es [], push no agregará nada al array final
   promosArray.push(...promosEvento, ...promosUnicas, ...promosRoyalty)
@@ -512,7 +514,7 @@ function menuPromosAgent (cardHTML, finalPromos) {
 }
 
 // Sistema de Promos
-function promosMaster (cardHTML, promosData, productName, dataSesion) {
+function promosMaster (cardHTML, promosData, productId, dataSesion) {
   // 1. Extraer promos
   let PRs = []
   if (dataSesion != null) {
@@ -520,7 +522,7 @@ function promosMaster (cardHTML, promosData, productName, dataSesion) {
     PRs = dataSesion.PRs
   }
 
-  const arrayPromosProducto = getPromosFromProduct(productName, promosData, PRs)
+  const arrayPromosProducto = getPromosFromProduct(productId, promosData, PRs)
 
   // Si el producto no tiene promos, cortamos la ejecución para ahorrar recursos
   if (arrayPromosProducto.length === 0) return cardHTML
@@ -575,7 +577,7 @@ function construirFichaProductos (productosFiltrados, PromosData, gridDestino, D
             </div>`
 
     // El Promos Master recibe el string, lo pinta y lo devuelve listo para insertarse
-    const completedCardHTML = promosMaster(cardHTML, PromosData, prod.nombre, DatosSesion)
+    const completedCardHTML = promosMaster(cardHTML, PromosData, prod.id, DatosSesion)
     gridDestino.insertAdjacentHTML('beforeend', completedCardHTML)
   })
 }
