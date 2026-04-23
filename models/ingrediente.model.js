@@ -124,4 +124,30 @@ module.exports = class Ingrediente {
 
     return { resumen, masUsados, porCategoria, afectados, sinUso }
   }
+
+ // En tu archivo models/Insumo.js (o similar)
+
+static async verificarDisponibilidad(ids) {
+    // 1. Si no mandaron IDs, regresamos un array vacío de inmediato
+    if (!ids || ids.length === 0) return [];
+
+    try {
+        // 2. Ejecutamos la consulta
+        // Usamos '?' para evitar Inyecciones SQL (Seguridad ante todo)
+        const [rows] = await db.execute(
+            `SELECT ID_Insumo FROM insumo 
+             WHERE ID_Insumo IN (${ids.map(() => '?').join(',')}) 
+             AND Activo = 1`, 
+            ids
+        );
+
+        // 3. Mapeamos el resultado para devolver solo un array de strings ['ID1', 'ID2']
+        // Esto es vital para que el '.includes()' de la validación funcione
+        return rows.map(row => row.ID_Insumo);
+
+    } catch (error) {
+        console.error("Error en verificarDisponibilidad de Insumos:", error);
+        throw error; // Dejamos que el controlador lo atrape
+    }
+  }
 }

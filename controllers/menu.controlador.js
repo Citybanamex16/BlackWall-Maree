@@ -154,37 +154,71 @@ exports.agregarItem = (request, response, next) => {
 }
 
 exports.validarPedido = async (request, response, next) => {
-  const { items } = request.body
-  console.log('Validando pedido:', items)
+  const { items } = request.body;
+  console.log('Validando pedido:', items);
 
   if (!Array.isArray(items) || items.length === 0) {
-    return response.status(400).json({ pedidoValido: false, mensaje: 'El pedido está vacío' })
+    return response.status(400).json({ pedidoValido: false, mensaje: 'El pedido está vacío' });
   }
 
   for (const item of items) {
+    // CORRECCIÓN 1: Validar nombre o producto_base (Compatibilidad)
+    const nombreParaValidar = item.nombre || item.producto_base;
+
     if (
-      typeof item.nombre !== 'string' ||
-      item.nombre.trim() === '' ||
-      item.nombre.length > 100
+      typeof nombreParaValidar !== 'string' ||
+      nombreParaValidar.trim() === ''
     ) {
-      return response.status(400).json({ pedidoValido: false, mensaje: 'Datos de pedido inválidos' })
+      return response.status(400).json({ pedidoValido: false, mensaje: 'Datos de producto inválidos' });
     }
   }
 
   try {
-    const ids = items.map(i => i.id)
-    const idsDisponibles = await Pedido.verificarDisponibilidadPorId(ids)
-    const todosDisponibles = ids.every(id => idsDisponibles.includes(id))
-    if (!todosDisponibles) {
+    // 1. Extraer todos los IDs de productos (Caso A y Caso C)
+    const idsProductos = items.map(i => i.id);
+    
+    // 2. Extraer todos los IDs de INSUMOS si es una crepa personalizada (Caso C)
+    let idsInsumos = [];
+    items.forEach(item => {
+        if (item.id === 'PD_COMODIN') {
+            if (item.ingredientes_adentro) {
+                item.ingredientes_adentro.forEach(ins => idsInsumos.push(ins.id_insumo));
+            }
+            if (item.ingredientes_toppings) {
+                item.ingredientes_toppings.forEach(ins => idsInsumos.push(ins.id_insumo));
+            }
+        }
+    });
+
+    // 3. Verificación en la Base de Datos
+    const idsDisponibles = await Pedido.verificarDisponibilidadPorId(idsProductos);
+    const todosProductosOk = idsProductos.every(id => idsDisponibles.includes(id));
+
+    if (!todosProductosOk) {
       return response.status(200).json({
         pedidoValido: false,
-        mensaje: 'Algunos platillos de tu pedido ya no están disponibles.'
-      })
+        mensaje: 'Algunos platillos ya no están disponibles.'
+      });
     }
-    response.status(200).json({ pedidoValido: true })
+
+    // 4. (OPCIONAL PERO RECOMENDADO) Validar disponibilidad de insumos
+    if (idsInsumos.length > 0) {
+        const insumosDisponibles = await ingrediente.verificarDisponibilidad(idsInsumos); // Necesitarías crear este método
+        const todosInsumosOk = idsInsumos.every(id => insumosDisponibles.includes(id));
+        
+        if (!todosInsumosOk) {
+            return response.status(200).json({
+                pedidoValido: false,
+                mensaje: 'Algunos ingredientes de tu crepa ya no están disponibles.'
+            });
+        }
+    }
+
+    response.status(200).json({ pedidoValido: true });
+
   } catch (err) {
-    console.error('Error validando pedido:', err)
-    next(err)
+    console.error('Error validando pedido:', err);
+    next(err);
   }
 }
 

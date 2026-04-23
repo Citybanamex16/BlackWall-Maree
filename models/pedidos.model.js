@@ -95,32 +95,50 @@ module.exports = class Pedido {
     }
   }
 
-  static async guardarItems (idOrden, items) {
-    for (const item of items) {
-      const [rows] = await db.execute(
-        `SELECT ID_Producto, Precio
-         FROM producto
-         WHERE Nombre = ? AND Disponible = 1
-         LIMIT 1`,
-        [item.nombre]
-      )
+static async guardarItems(idOrden, items) {
+    // 1. Obtenemos una conexión dedicada para esta transacción
+    const connection = await db.getConnection(); 
+    
+    // 2. INICIAMOS LA TRANSACCIÓN: "A partir de aquí, o todo o nada"
+    await connection.beginTransaction();
 
-      if (rows.length > 0) {
-        const producto = rows[0]
+    try {
+        for (const item of items) {
+            // A. Extraemos el ID real (¡Es más seguro que buscar por nombre!)
+            const idProductoFinal = item.id || 'PD_COMODIN';
+            
+            // B. Limpiamos el precio
+            const precioNum = parseFloat(String(item.precio_total || item.precio || '0').replace(/[^0-9.]/g, ''));
+            
+            // C. Juntamos los ingredientes y los convertimos en STRING (JSON)
+            const extras = [
+                ...(item.ingredientes_adentro || []),
+                ...(item.ingredientes_toppings || [])
+            ];
+            const jsonExtras = JSON.stringify(extras); // Ej: '[{"id_insumo":"IN01", "precio":15}]' o '[]'
 
-        const precioNum = parseFloat(
-          String(item.precio || '').replace(/[^0-9.]/g, '')
-        )
+            // D. LLAMAMOS AL STORED PROCEDURE (Uno solo que sea híbrido)
+            // Le pasamos todo: ID, Precio, Cantidad y el JSON de ingredientes
+            await connection.execute(
+                `CALL SP_GuardarItemHibrido(?, ?, ?, ?)`,
+                [idOrden, idProductoFinal, precioNum, jsonExtras]
+            );
+        }
 
-        await db.execute(
-          `INSERT INTO orden_tiene_producto
-           (ID_Orden, ID_Producto, Cantidad, Precio_Venta)
-           VALUES (?, ?, ?, ?)`,
-          [idOrden, producto.ID_Producto, item.cantidad || 1, precioNum || producto.Precio]
-        )
-      }
+        // 3. SI TODO SALIÓ BIEN: Confirmamos todos los items de golpe
+        await connection.commit();
+        console.log(`¡Orden ${idOrden} guardada con éxito junto con sus ingredientes!`);
+
+    } catch (error) {
+        // 4. SI ALGO FALLÓ: Revertimos absolutamente toda la orden
+        await connection.rollback();
+        console.error(`Error guardando la orden ${idOrden}. Se ha revertido por completo.`, error);
+        throw error; 
+    } finally {
+        // 5. Siempre liberamos la conexión de vuelta al "pool"
+        connection.release();
     }
-  }
+}
 
   static fetchItems (idOrden) {
     const query = `

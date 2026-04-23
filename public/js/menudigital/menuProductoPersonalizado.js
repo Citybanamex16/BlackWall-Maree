@@ -209,6 +209,7 @@ function RecolectarDatosDeCampos() {
     console.log("Recolectando receta...");
     
     const recetaFinal = {
+    	id: "PD_COMODIN",
         producto_base: "Crepa Personalizada",
         precio_total: parseFloat(placeholderPrecioTotal.innerText.replace('$', '')),
         ingredientes_adentro: [],
