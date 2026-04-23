@@ -621,24 +621,43 @@ exports.getCategorías = async (req, res, nex) =>{
 }
 
 
-exports.getIngredientesActivos = async (req, res, nex) =>{
-  console.log("Obteniendo los ingredientes activos")
-  try{
-    const result = await ingrediente.fetchAllValid()
+exports.getIngredientesActivos = async (req, res, nex) => {
+    console.log("Obteniendo los ingredientes activos con transacción");
+    
+    // PLACEHOLDER: Obtener el objeto de conexión/pool de tu configuración de BD
+    const connection = await db.getConnection(); 
 
-    res.status(200).json({
-      ok: true,
-      message: 'Catalogo de Ingredientes Activos Obtenido',
-      ingActiveCatalog: result
-    })
+    try {
+        // Iniciamos la transacción
+        await connection.beginTransaction();
 
-  } catch (err){
-    res.status(500).json({
-      ok: false,
-      message: err
-    })
+        // Ejecutamos ambas consultas usando la misma conexión
+        const result = await ingrediente.fetchAllValid(connection);
+        const resultPrecioBase = await productos.getCrepaPersoPrecioBase(connection);
 
-  }
+        // Si todo sale bien, confirmamos (commit)
+        await connection.commit();
 
-}
+        res.status(200).json({
+            ok: true,
+            message: 'Catalogo de Ingredientes Activos Obtenido',
+            ingActiveCatalog: result,
+            precioBasePerso: resultPrecioBase
+        });
+
+    } catch (err) {
+        // Si algo falla, revertimos cualquier cambio (rollback)
+        if (connection) await connection.rollback();
+        
+        res.status(500).json({
+            ok: false,
+            message: 'Error en la transacción',
+            error: err.message || err
+        });
+    } finally {
+        // Siempre liberamos la conexión al terminar
+        if (connection) connection.release();
+    }
+};
+
 

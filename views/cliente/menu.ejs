@@ -142,6 +142,44 @@
 <!-- ═══════════════════════════════════════
      Seccion — Modal Producto personalizado
 ════════════════════════════════════════ -->
+<dialog id="modal-creacion-crepa" class="maree-dialog is-large">
+    <div class="dialog-container">
+        
+        <header class="dialog-header">
+            <h2 id="modal-titulo-personalizacion">Crea tu Obra Maestra</h2>
+            <p id="modal-instrucciones-personalizacion">Paso a paso: elige el corazón de tu crepa y su decoración exterior.</p>
+        </header>
+
+        <section class="dialog-content">
+            <div class="personalization-section">
+                <h3 class="section-subtitle">1. Ingredientes Adentro</h3>
+                <div id="contenedor-ingredientes-adentro" class="ingredientes-grid">
+                    </div>
+            </div>
+
+            <div class="personalization-section">
+                <h3 class="section-subtitle">2. Toppings (Toque Final)</h3>
+                <div id="contenedor-toppings" class="ingredientes-grid">
+                    </div>
+            </div>
+        </section>
+
+        <footer class="dialog-footer">
+            <div class="precio-dinamico-wrapper">
+                <div class="total-label-group">
+                    <span class="label-total">Precio Estimado</span>
+                    <small>Sujeto a cambios según ingredientes extra</small>
+                </div>
+                <span id="placeholder-precio-total" class="precio-monto">$0.00</span>
+            </div>
+
+            <div class="botones-container">
+                <button id="btn-cancelar-creacion" class="btn-cancelar">Volver al Menú</button>
+                <button id="btn-confirmar-creacion" class="btn-crear-final">Agregar al Pedido</button>
+            </div>
+        </footer>
+    </div>
+</dialog>
 
 
 

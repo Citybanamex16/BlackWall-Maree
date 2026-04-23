@@ -962,3 +962,265 @@ html {
     from { opacity: 0; transform: translateY(10px); }
     to   { opacity: 1; transform: translateY(0); }
 }
+
+
+
+
+
+
+/* --- ESTILOS DEL MODAL DE PERSONALIZACIÓN --- */
+
+.maree-dialog.is-large {
+    border: none;
+    border-radius: 24px; /* radius-lg */
+    padding: 0;
+    width: 95vw;
+    max-width: 1000px;
+    height: 90vh;
+    max-height: 900px;
+    box-shadow: 0 24px 50px rgba(0,0,0,0.2);
+    background-color: #fcfaf7; /* c-bg-body */
+    transition: all 0.3s ease;
+}
+
+/* Animación de apertura */
+.maree-dialog[open] {
+    animation: slideUp 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+
+/* Cerrado de Modal */
+/* 1. Define la animación de salida */
+@keyframes slideDown {
+    from { transform: translateY(0); opacity: 1; }
+    to { transform: translateY(100%); opacity: 0; }
+}
+
+/* 2. Aplica la animación al cerrar */
+.maree-dialog {
+    /* Esto permite que la animación ocurra antes de que desaparezca */
+    transition: display 0.4s allow-discrete, overlay 0.4s allow-discrete, opacity 0.4s;
+    opacity: 0;
+}
+
+/* 3. El estado cuando está abierto */
+.maree-dialog[open] {
+    opacity: 1;
+    animation: slideUp 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* 4. El equivalente de "cerrado" (cuando se quita el atributo [open]) */
+@starting-style {
+    .maree-dialog[open] {
+        opacity: 0;
+    }
+}
+
+/* portabilidad */
+.maree-dialog.is-closing {
+    animation: slideDown 0.4s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+
+
+/* fin cerrado */
+
+.maree-dialog::backdrop {
+    background: rgba(34, 34, 34, 0.6);
+    backdrop-filter: blur(4px);
+}
+
+.dialog-container {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    max-height: 85vh;
+}
+
+.dialog-header {
+    padding: 24px;
+    border-bottom: 1px solid #ede8e0;
+    text-align: center;
+}
+
+.dialog-header h2 {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 32px;
+    color: #222;
+    margin: 0;
+}
+
+.dialog-header p {
+    font-family: 'Jost', sans-serif;
+    font-size: 14px;
+    color: #7a7a7a;
+    margin-top: 8px;
+}
+
+.dialog-content {
+    padding: 20px;
+    overflow-y: auto; /* Permite scroll si hay muchos ingredientes */
+    flex-grow: 1;
+}
+
+/* Footer pegado abajo */
+.dialog-footer {
+    padding: 20px 24px;
+    background: #ffffff;
+    border-top: 1px solid #ede8e0;
+}
+
+.precio-dinamico-wrapper {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.precio-monto {
+    font-family: 'Jost', sans-serif;
+    font-size: 24px;
+    font-weight: 700;
+    color: #b5956a;
+}
+
+.personalization-section {
+    margin-bottom: 30px;
+}
+
+/* Grid de ingredientes (puedes ajustarlo a 3 o 4 columnas según el tamaño) */
+.ingredientes-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 12px; /* Espacio entre cada ingrediente */
+    padding: 10px 0;
+}
+.ingrediente-row {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    width: 100%;
+    /* 2: ANIMACIÓN DE AGREGADO SÚPER FLUIDA */
+    animation: slideInRow 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+    transform-origin: top center;
+    opacity: 0; 
+}
+
+/* --- ESTILOS DE LOS BOTONES DE ACCIÓN (+ y -) --- */
+.btn-action-ing {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 44px; /* Un tamaño perfecto para el dedo en móviles */
+    height: 44px;
+    border: none;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: transform 0.1s, background 0.2s;
+    flex-shrink: 0; /* Evita que el botón se aplaste */
+}
+
+.btn-action-ing:active {
+    transform: scale(0.9); /* Sensación de que se aprieta físicamente */
+}
+
+.btn-add-ingrediente { background: #9ab87a; color: white; }
+.btn-remove-ingrediente { background: #e74c3c; color: white; }
+
+/* Keyframe para el efecto "Pop" al agregar */
+@keyframes slideInRow {
+    0% { 
+        opacity: 0; 
+        transform: translateY(-15px) scale(0.95); 
+    }
+    100% { 
+        opacity: 1; 
+        transform: translateY(0) scale(1); 
+    }
+}
+
+/* El Select más grande para que sea el foco */
+.ingrediente-select {
+    flex-grow: 1;
+    height: 44px;
+    border-radius: 12px;
+    border: 1px solid var(--c-border);
+    padding: 0 12px;
+    font-family: var(--font-body);
+    font-size: 15px;
+    background-color: var(--c-surface);
+}
+
+/* fin seccion ingredientes */
+
+/* Pequeña mejora al Footer para que siempre se vea el precio */
+.total-label-group {
+    display: flex;
+    flex-direction: column;
+}
+
+.total-label-group small {
+    font-size: 11px;
+    color: var(--c-text-muted);
+}
+
+/* Subtítulos de sección (Ingredientes Adentro / Toppings) */
+.section-subtitle {
+    font-family: var(--font-body); /* Jost */
+    font-size: 16px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--c-primary); /* #b5956a */
+    margin: 20px 0 15px 0;
+    padding-bottom: 8px;
+    border-bottom: 1px dashed var(--c-border);
+}
+
+
+.botones-container {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+}
+
+/* Estilo Botón Crear (Confirmar) */
+.btn-crear-final {
+    background: #222;
+    color: #fff;
+    border: none;
+    padding: 14px;
+    border-radius: 12px;
+    font-family: 'Jost', sans-serif;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    cursor: pointer;
+    transition: background 0.3s;
+}
+
+.btn-crear-final:hover {
+    background: #444;
+}
+
+/* Estilo Botón Cancelar */
+.btn-cancelar {
+    background: transparent;
+    border: 1px solid #ede8e0;
+    color: #7a7a7a;
+    padding: 14px;
+    border-radius: 12px;
+    font-family: 'Jost', sans-serif;
+    font-weight: 500;
+    cursor: pointer;
+}
+
+@keyframes slideUp {
+    from { opacity: 0; transform: translateY(50px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+
+/* configuracion de movil */
+
+
