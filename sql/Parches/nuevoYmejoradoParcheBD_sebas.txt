@@ -1,6 +1,7 @@
 -- Ya es el último parche que pongo, en este caso es sumar un dato al cliente para registrar sus premios y una tabla de historial de precios
 
 ALTER TABLE cliente ADD COLUMN tokens_gastados INT DEFAULT 0;
+ALTER TABLE cliente ADD COLUMN username VARCHAR(20);
 
 -- Historial de canjes de premios
 CREATE TABLE historial_canjes_royalty (
