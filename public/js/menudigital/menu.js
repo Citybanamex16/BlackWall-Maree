@@ -265,37 +265,41 @@ function cleanSesionPromos (rawSesionPromos, AcceptedPromos) {
 }
 
 //
-async function getSesionPRs (SesionData, AcceptedPromos) {
-  // Validamos que tengamos la lista maestra antes de empezar
-  const masterList = AcceptedPromos?.allPRs[0] || []
-  console.log('Iniciando validación con Accepted promos:', masterList)
+function getSesionPRs(SesionData, AllPromos) {
+    console.log("🛠️ [FRONT-FILTRO] Iniciando selección local de PRs...");
+    
+    // 1. Extraemos el nivel de la sesión (ej: 'Mega Fan', 'Fan', etc.)
+    const nivelUsuario = SesionData.nivelRoyalty;
+    
+    // 2. Extraemos la lista maestra de PRs que ya bajaste de la DB
+    const masterList = AllPromos?.allPRs?.[0] || [];
 
-  try {
-    const res = await fetch('/cliente/promosClienteData')
+    console.log(`👤 Usuario: ${SesionData.usuario?.nombre || 'Invitado'} | Nivel: ${nivelUsuario}`);
 
-    // La validación .ok va sobre la respuesta del fetch, no sobre el JSON
-    if (!res.ok) {
-      throw new Error(`Error de red: ${res.status}`)
+    // REGLA DE ORO 1: Si no hay nivel o es "General", no hay PRs que buscar.
+    if (!nivelUsuario || nivelUsuario === 'General' || nivelUsuario === 'Cliente general') {
+        console.log("⚪ [SKIP] Usuario sin nivel Royalty. Devolviendo lista vacía.");
+        return [];
     }
 
-    const responseData = await res.json()
+    // 3. FILTRADO LOCAL (Sin fetch, sin esperas)
+    // Buscamos en la lista maestra solo las que coincidan con el nivel del cliente
+    try {
+        const autorizadas = masterList.filter(promo => {
+            return promo.Nombre_Royalty === nivelUsuario;
+        });
 
-    // Aquí extraemos las promos que el servidor dice que el usuario tiene
-    // Si el servidor no manda nada, usamos el SesionData que pasaste por parámetro
-    const rawPromos = responseData.PRs || []
+        console.log(`✅ [EXITO] Se encontraron ${autorizadas.length} promos para el nivel ${nivelUsuario}`);
+        
+        // Opcional: Aquí puedes seguir usando tu función cleanSesionPromos si hace limpiezas extra
+        // return cleanSesionPromos(autorizadas, masterList);
+        
+        return autorizadas;
 
-    console.log('PRs obtenidos del servidor con éxito', rawPromos)
-
-    // Aplicamos el filtro de seguridad (Regla de EFUL)
-    const SesionAcceptedPromos = cleanSesionPromos(rawPromos, masterList)
-
-    console.log(`Resultado final: ${SesionAcceptedPromos.length} promociones autorizadas.`)
-    return SesionAcceptedPromos
-  } catch (err) {
-    console.error('Error fetching Sesion Promos:', err)
-    // En caso de error, devolvemos un array vacío para no romper el resto de la app
-    return []
-  }
+    } catch (err) {
+        console.error('💥 Error filtrando promociones en local:', err);
+        return [];
+    }
 }
 
 // Funcion para obtener los datos del Menu
@@ -323,7 +327,7 @@ async function obtenerMenu (SesionData) {
     let SesionPromos
     if (SesionData !== null && PromosData !== undefined) {
       // == Llamado de PRs == //
-      SesionPromos = await getSesionPRs(SesionData, PromosData)
+      SesionPromos = getSesionPRs(SesionData, PromosData)
       SesionData.PRs = SesionPromos
     } else {
       SesionPromos = null
@@ -512,6 +516,7 @@ function promosMaster (cardHTML, promosData, productName, dataSesion) {
   // 1. Extraer promos
   let PRs = []
   if (dataSesion != null) {
+    //console.log("Data sesion PRs en promosMaster: ", dataSesion)
     PRs = dataSesion.PRs
   }
 
