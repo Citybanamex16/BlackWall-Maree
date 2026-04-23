@@ -14,6 +14,7 @@ module.exports = class Pedido {
       FROM orden o
       LEFT JOIN cliente c
         ON o.Numero_Telefonico = c.Numero_Telefonico
+      WHERE o.Estado_Orden NOT IN ('Cancelado', 'Entregado')
       ORDER BY o.Fecha DESC
     `
     return db.execute(query)
@@ -119,6 +120,19 @@ module.exports = class Pedido {
         )
       }
     }
+  }
+
+  static fetchItems (idOrden) {
+    const query = `
+      SELECT
+        p.Nombre AS nombre,
+        otp.Cantidad AS cantidad,
+        otp.Precio_Venta AS precio
+      FROM orden_tiene_producto otp
+      JOIN producto p ON otp.ID_Producto = p.ID_Producto
+      WHERE otp.ID_Orden = ?
+    `
+    return db.execute(query, [idOrden])
   }
 
   static cancelActiveOrder (idOrden) {
