@@ -1,19 +1,18 @@
 <%- include('../partials/header_cliente', { pageTitle: 'Menu - Maree' }) %>
-    <link rel="stylesheet" href="/css/moduloRoyaltyCSS/royalty-cliente.css">
+<link rel="stylesheet" href="/css/moduloRoyaltyCSS/royalty-cliente.css">
 <body>
-<%- include('../partials/breadcrumbs') %>
+    <div class="container-fluid bg-white border-bottom">
+        <%- include('../partials/breadcrumbs') %>
+    </div>
     
-<main class="container-fluid container-md my-3 my-md-5 royalty-dashboard">
-    
-    <div class="row mb-4">
-        <div class="col-12 col-md-8 mx-auto px-2 px-md-3">
-            <div class="premium-card text-center p-4">
-        <div class="premium-card p-4">
-    
-            <div class="greeting-section mb-4 text-start">
-                <h1 class="greeting-title text-truncate">¡Hola, <%= cliente.Nombre %>!</h1>
-                <p class="loyalty-subtitle">Maree Royalty</p>
-            </div>
+    <main class="container-fluid container-md my-3 my-md-5 royalty-dashboard">
+        <div class="row mb-4">
+            <div class="col-12 col-md-8 mx-auto px-2 px-md-3">
+                <div class="premium-card p-4">
+                    <div class="greeting-section mb-4 text-start">
+                        <h1 class="greeting-title text-truncate">¡Hola, <%= cliente.Nombre %>!</h1>
+                        <p class="loyalty-subtitle">Maree Rewards</p>
+                    </div>
             <div class="text-center mt-4">
                 <strong id="cliente-nivel-badge" class="badge-nivel mx-auto mt-1"><%= cliente.nivel %></strong>
             </div>
@@ -42,14 +41,19 @@
                 <p class="sellos-title">Tus Sellos</p>
                 <div id="contenedor-sellos" data-visitas="<%= cliente.visitas %>"></div>
             </div>
-            <div class="wallet-container">
-            <a id="btn-google-wallet" href="#" target="_blank">
-                <img src="https://help.ipswichtheatres.co.uk/hc/article_attachments/24188305565329" alt="Agregar a Google Wallet" style="height: 48px;">
-            </a>
-            <a id="btn-apple-wallet" href="#" target="_blank">
-                <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/3/30/Add_to_Apple_Wallet_badge.svg/3840px-Add_to_Apple_Wallet_badge.svg.png" alt="Agregar a Apple Wallet" style="height: 48px;">
-            </a>
-        </div>
+            <div class="is-flex is-justify-content-center is-align-items-center mt-5 mb-4">
+    <div class="buttons is-centered"> <a id="btn-google-wallet" href="#" target="_blank" class="mx-2">
+            <img src="https://help.ipswichtheatres.co.uk/hc/article_attachments/24188305565329" 
+                 alt="Agregar a Google Wallet" 
+                 style="height: 44px; width: auto;">
+        </a>
+        <a id="btn-apple-wallet" href="#" target="_blank" class="mx-2">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/3/30/Add_to_Apple_Wallet_badge.svg/3840px-Add_to_Apple_Wallet_badge.svg.png" 
+                 alt="Agregar a Apple Wallet" 
+                 style="height: 44px; width: auto;">
+        </a>
+    </div>
+</div>
         </div>
     </div>
 
