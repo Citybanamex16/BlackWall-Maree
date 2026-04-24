@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Servidor: localhost
--- Tiempo de generación: 24-04-2026 a las 06:12:16
+-- Tiempo de generación: 24-04-2026 a las 06:41:53
 -- Versión del servidor: 10.4.28-MariaDB
 -- Versión de PHP: 8.2.4
 
@@ -382,91 +382,88 @@ CREATE TABLE `cliente` (
   `Genero` varchar(15) DEFAULT NULL,
   `Fecha_Nacimiento` date DEFAULT NULL,
   `Visitas_Actuales` int(11) DEFAULT 0,
-  `ID_Rol` varchar(15) NOT NULL
+  `ID_Rol` varchar(15) NOT NULL,
+  `tokens_gastados` int(11) DEFAULT 0,
+  `username` varchar(20) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish2_ci;
 
 --
 -- Volcado de datos para la tabla `cliente`
 --
 
-INSERT INTO `cliente` (`Numero_Telefonico`, `Nombre_Royalty`, `Nombre`, `Correo`, `Genero`, `Fecha_Nacimiento`, `Visitas_Actuales`, `ID_Rol`) VALUES
-('442134789', NULL, 'Lalo', NULL, NULL, NULL, 0, 'Usuario'),
-('4428199000', NULL, 'Juan Pablo Juarez', NULL, NULL, NULL, 0, 'Usuario'),
-('443789097', NULL, 'Lalo', NULL, NULL, NULL, 0, 'Usuario'),
-('55-1156-9800', 'Mega Fan', 'Andrea Iliana Cantú Mayorga', 'ailiana@gmail.com', 'f', '1977-04-01', 2, 'Usuario'),
-('55-1579-6753', 'Super Fan', 'Eduardo Daniel Juárez Pineda', 'ejuarez@gmail.com', 'm', '1967-06-07', 16, 'Usuario'),
-('55-1827-6651', 'Super Fan', 'David Antonio Gandara Ruiz', 'dgandara@gmail.com', 'm', '1975-07-03', 18, 'Usuario'),
-('55-2006-6063', 'Fan', 'Isabela Ruiz Velasco Angeles', 'ivelasco@gmail.com', 'f', '1957-07-18', 16, 'Usuario'),
-('55-2435-6781', 'Fan', 'Brenda Vázquez Rodríguez', 'bvazquez@gmail.com', 'f', '1971-06-10', 14, 'Usuario'),
-('55-2669-1307', 'Fan', 'Ana Camila Cuevas González', 'acuevas@gmail.com', 'f', '1987-02-18', 14, 'Usuario'),
-('55-2884-7043', 'Super Fan', 'Eduardo Hernández Alonso', 'ehernandez@gmail.com', 'm', '1995-04-19', 1, 'Usuario'),
-('55-3225-9858', 'Super Fan', 'Alexis Yaocalli Berthou Haas', 'aberthou@gmail.com', 'm', '1958-09-24', 18, 'Usuario'),
-('55-3251-9266', 'Fan', 'Ximena Guadalupe Córdoba Ángeles', 'xcordoba@gmail.com', 'f', '1965-02-10', 16, 'Usuario'),
-('55-3647-8536', 'Fan', 'Dana Izel Martínez García', 'dmartinez@gmail.com', 'f', '1995-05-24', 7, 'Usuario'),
-('55-3672-3148', 'Fan', 'Alejandro Contreras Magallanes', 'acontreras@gmail.com', 'm', '1956-12-27', 11, 'Usuario'),
-('55-3885-6878', 'Fan', 'Mariana Frías Olguín', 'mfrias@gmail.com', 'f', '1991-09-12', 14, 'Usuario'),
-('55-3938-1454', 'Super Fan', 'Hannah Carolina Hernández Reyes', 'hhernandez@gmail.com', 'f', '1976-10-27', 11, 'Usuario'),
-('55-3975-4081', 'Mega Fan', 'Samantha García Cárdenas', 'sgarcia@gmail.com', 'f', '1992-03-07', 1, 'Usuario'),
-('55-4203-5221', 'Super Fan', 'Ricardo Cortés Espinosa', 'rcortes@gmail.com', 'm', '1992-03-18', 18, 'Usuario'),
-('55-4217-5522', 'Super Fan', 'Ilian Judith Castillo Beristain', 'icastillo@gmail.com', 'f', '1979-08-01', 6, 'Usuario'),
-('55-4606-3624', 'Fan', 'Héctor Alejandro Barrón Tamayo', 'hbarron@gmail.com', 'm', '1956-03-04', 12, 'Usuario'),
-('55-4768-9613', 'Mega Fan', 'Jessica Hernández Tejeda', 'jhernandez@gmail.com', 'f', '1961-02-07', 7, 'Usuario'),
-('55-5018-5507', 'Mega Fan', 'Armando Montealegre Villagrán', 'amontealegre@gmail.com', 'm', '1952-10-08', 9, 'Usuario'),
-('55-5824-6563', 'Super Fan', 'Suri Reyes Vega', 'sureyes@gmail.com', 'f', '1957-12-21', 7, 'Usuario'),
-('55-6026-1598', 'Fan', 'Maria Fernanda Padme Lakshmi Martínez Jara', 'mlakshmi@gmail.com', 'f', '1999-01-06', 12, 'Usuario'),
-('55-6624-7720', 'Mega Fan', 'Mariangel Aguirre Magallanes', 'maguirre@gmail.com', 'f', '1980-02-08', 17, 'Usuario'),
-('55-6788-4484', 'Fan', 'Víctor Hugo Esquivel Feregrino', 'vesquivel@gmail.com', 'm', '1992-11-06', 1, 'Usuario'),
-('55-7095-1397', 'Fan', 'Gabriela Frías Quiroz', 'gfrias@gmail.com', 'f', '1981-07-03', 19, 'Usuario'),
-('55-7110-9468', 'Fan', 'Santiago Barjau Hernández', 'sbarjau@gmail.com', 'm', '1982-05-15', 5, 'Usuario'),
-('55-7260-4596', 'Mega Fan', 'Fernanda Rosales Herrera', 'frosales@gmail.com', 'f', '1980-01-14', 5, 'Usuario'),
-('55-7378-3019', 'Super Fan', 'Jonathan de Jesús Anaya Correa', 'janaya@gmail.com', 'm', '1952-12-21', 6, 'Usuario'),
-('55-7564-5136', 'Mega Fan', 'Diego Alberto Pasaye González', 'dpasaye@gmail.com', 'm', '1994-10-08', 10, 'Usuario'),
-('55-7634-3304', 'Fan', 'Carlos Delgado Contreras', 'cdelgado@gmail.com', 'm', '1995-08-20', 9, 'Usuario'),
-('55-7731-4202', 'Fan', 'Renata Martínez Ozumbilla', 'rmartinez@gmail.com', 'f', '1994-07-09', 2, 'Usuario'),
-('55-7869-6124', 'Fan', 'Emiliano Murillo Ruiz', 'emurillo@gmail.com', 'm', '1988-10-19', 20, 'Usuario'),
-('55-7877-5755', 'Fan', 'Yamine Dávila Bejos', 'ydavila@gmail.com', 'f', '1997-09-08', 5, 'Usuario'),
-('55-8034-2908', 'Mega Fan', 'Sofía Alondra Reyes Gómez', 'sreyes@gmail.com', 'f', '1968-02-18', 9, 'Usuario'),
-('55-8069-3709', 'Mega Fan', 'Jesús Osvaldo Ramos Pérez', 'jramos@gmail.com', 'm', '1989-12-08', 5, 'Usuario'),
-('55-8317-4862', 'Super Fan', 'Oscar Alexander Vilchis Soto', 'ovilchis@gmail.com', 'm', '1960-03-06', 20, 'Usuario'),
-('55-8361-8067', 'Fan', 'Katya Jiménez Antonio', 'kjimenez@gmail.com', 'f', '1987-01-11', 13, 'Usuario'),
-('55-8616-1973', 'Super Fan', 'Alberto Barba Arroyo', 'abarba@gmail.com', 'm', '2003-03-09', 5, 'Usuario'),
-('55-8634-4784', 'Fan', 'Francisco Rafael Arreola Corona', 'farreola@gmail.com', 'm', '1973-07-12', 18, 'Usuario'),
-('55-8842-2908', 'Super Fan', 'Ana Sofía Moreno Hernández', 'amoreno@gmail.com', 'f', '1975-05-12', 14, 'Usuario'),
-('55-8913-8427', 'Super Fan', 'Fernanda Curiel Perez', 'fcuriel@gmail.com', 'f', '1997-11-18', 7, 'Usuario'),
-('55-8962-5930', 'Fan', 'Juan Pablo Juárez Ortiz', 'jjuarez@@gmail.com', 'm', '1956-08-16', 4, 'Usuario'),
-('55-9026-7777', 'Fan', 'Sebastián Mansilla Cots', 'smansilla@gmail.com', 'm', '1976-06-20', 9, 'Usuario'),
-('55-9188-6863', 'Mega Fan', 'Iker Arnoldo Grajeda Campaña', 'igrajeda@gmail.com', 'm', '2000-01-01', 5, 'Usuario'),
-('55-9221-5175', 'Mega Fan', 'Ana Valeria Machuca Miranda', 'amachuca@gmail.com', 'f', '1957-07-06', 6, 'Usuario'),
-('55-9297-8935', 'Super Fan', 'Juan Pablo Domínguez Ángel', 'jdominguez@gmail.com', 'm', '1966-09-12', 9, 'Usuario'),
-('55-9583-1422', 'Fan', 'Galia Lucía Castro Aboytes', 'gcastro@gmail.com', 'f', '1959-08-03', 1, 'Usuario'),
-('55-9661-9093', 'Fan', 'Diego Serrano Pardo', 'dserrano@gmail.com', 'm', '2004-05-23', 8, 'Usuario'),
-('55-9783-5924', 'Fan', 'Ricardo Antonio Gutiérrez García', 'rgutierrez@gmail.com', 'm', '1980-05-28', 13, 'Usuario'),
-('55-9862-4951', 'Super Fan', 'Ramón Eliezer De Santos García', 'rgarcia@gmail.com', 'm', '1962-01-17', 6, 'Usuario'),
-('55-9956-8802', 'Super Fan', 'Rodrigo Alejandro Hurtado Cortés', 'rhurtado@gmail.com', 'm', '1983-02-25', 2, 'Usuario'),
-('5511569800', NULL, 'Andrea Iliana Cantú Mayorga', NULL, NULL, NULL, 0, 'Usuario'),
-('81-3104-6812', 'Fan', 'Carlos Delgado Contreras', 'A01712819@tec.mx', 'Masculino', '2005-08-16', 0, 'Usuario'),
-('8131046812', NULL, 'Cliente', NULL, NULL, NULL, 0, 'Usuario'),
-('8131046813', NULL, 'Cliente', NULL, NULL, NULL, 0, 'Usuario'),
-('8134556800', NULL, 'Juan Pablo Juarez', NULL, NULL, NULL, 0, 'Usuario');
+INSERT INTO `cliente` (`Numero_Telefonico`, `Nombre_Royalty`, `Nombre`, `Correo`, `Genero`, `Fecha_Nacimiento`, `Visitas_Actuales`, `ID_Rol`, `tokens_gastados`, `username`) VALUES
+('442134789', NULL, 'Lalo', NULL, NULL, NULL, 0, 'Usuario', 0, NULL),
+('4428199000', NULL, 'Juan Pablo Juarez', NULL, NULL, NULL, 0, 'Usuario', 0, NULL),
+('443789097', NULL, 'Lalo', NULL, NULL, NULL, 0, 'Usuario', 0, NULL),
+('55-1156-9800', 'Mega Fan', 'Andrea Iliana Cantú Mayorga', 'ailiana@gmail.com', 'f', '1977-04-01', 2, 'Usuario', 0, NULL),
+('55-1579-6753', 'Super Fan', 'Eduardo Daniel Juárez Pineda', 'ejuarez@gmail.com', 'm', '1967-06-07', 16, 'Usuario', 0, NULL),
+('55-1827-6651', 'Super Fan', 'David Antonio Gandara Ruiz', 'dgandara@gmail.com', 'm', '1975-07-03', 18, 'Usuario', 0, NULL),
+('55-2006-6063', 'Fan', 'Isabela Ruiz Velasco Angeles', 'ivelasco@gmail.com', 'f', '1957-07-18', 16, 'Usuario', 0, NULL),
+('55-2435-6781', 'Fan', 'Brenda Vázquez Rodríguez', 'bvazquez@gmail.com', 'f', '1971-06-10', 14, 'Usuario', 0, NULL),
+('55-2669-1307', 'Fan', 'Ana Camila Cuevas González', 'acuevas@gmail.com', 'f', '1987-02-18', 14, 'Usuario', 0, NULL),
+('55-2884-7043', 'Super Fan', 'Eduardo Hernández Alonso', 'ehernandez@gmail.com', 'm', '1995-04-19', 1, 'Usuario', 0, NULL),
+('55-3225-9858', 'Super Fan', 'Alexis Yaocalli Berthou Haas', 'aberthou@gmail.com', 'm', '1958-09-24', 18, 'Usuario', 0, NULL),
+('55-3251-9266', 'Fan', 'Ximena Guadalupe Córdoba Ángeles', 'xcordoba@gmail.com', 'f', '1965-02-10', 16, 'Usuario', 0, NULL),
+('55-3647-8536', 'Fan', 'Dana Izel Martínez García', 'dmartinez@gmail.com', 'f', '1995-05-24', 7, 'Usuario', 0, NULL),
+('55-3672-3148', 'Fan', 'Alejandro Contreras Magallanes', 'acontreras@gmail.com', 'm', '1956-12-27', 11, 'Usuario', 0, NULL),
+('55-3885-6878', 'Fan', 'Mariana Frías Olguín', 'mfrias@gmail.com', 'f', '1991-09-12', 14, 'Usuario', 0, NULL),
+('55-3938-1454', 'Super Fan', 'Hannah Carolina Hernández Reyes', 'hhernandez@gmail.com', 'f', '1976-10-27', 11, 'Usuario', 0, NULL),
+('55-3975-4081', 'Mega Fan', 'Samantha García Cárdenas', 'sgarcia@gmail.com', 'f', '1992-03-07', 1, 'Usuario', 0, NULL),
+('55-4203-5221', 'Super Fan', 'Ricardo Cortés Espinosa', 'rcortes@gmail.com', 'm', '1992-03-18', 18, 'Usuario', 0, NULL),
+('55-4217-5522', 'Super Fan', 'Ilian Judith Castillo Beristain', 'icastillo@gmail.com', 'f', '1979-08-01', 6, 'Usuario', 0, NULL),
+('55-4606-3624', 'Fan', 'Héctor Alejandro Barrón Tamayo', 'hbarron@gmail.com', 'm', '1956-03-04', 12, 'Usuario', 0, NULL),
+('55-4768-9613', 'Mega Fan', 'Jessica Hernández Tejeda', 'jhernandez@gmail.com', 'f', '1961-02-07', 7, 'Usuario', 0, NULL),
+('55-5018-5507', 'Mega Fan', 'Armando Montealegre Villagrán', 'amontealegre@gmail.com', 'm', '1952-10-08', 9, 'Usuario', 0, NULL),
+('55-5824-6563', 'Super Fan', 'Suri Reyes Vega', 'sureyes@gmail.com', 'f', '1957-12-21', 7, 'Usuario', 0, NULL),
+('55-6026-1598', 'Fan', 'Maria Fernanda Padme Lakshmi Martínez Jara', 'mlakshmi@gmail.com', 'f', '1999-01-06', 12, 'Usuario', 0, NULL),
+('55-6624-7720', 'Mega Fan', 'Mariangel Aguirre Magallanes', 'maguirre@gmail.com', 'f', '1980-02-08', 17, 'Usuario', 0, NULL),
+('55-6788-4484', 'Fan', 'Víctor Hugo Esquivel Feregrino', 'vesquivel@gmail.com', 'm', '1992-11-06', 1, 'Usuario', 0, NULL),
+('55-7095-1397', 'Fan', 'Gabriela Frías Quiroz', 'gfrias@gmail.com', 'f', '1981-07-03', 19, 'Usuario', 0, NULL),
+('55-7110-9468', 'Fan', 'Santiago Barjau Hernández', 'sbarjau@gmail.com', 'm', '1982-05-15', 5, 'Usuario', 0, NULL),
+('55-7260-4596', 'Mega Fan', 'Fernanda Rosales Herrera', 'frosales@gmail.com', 'f', '1980-01-14', 5, 'Usuario', 0, NULL),
+('55-7378-3019', 'Super Fan', 'Jonathan de Jesús Anaya Correa', 'janaya@gmail.com', 'm', '1952-12-21', 6, 'Usuario', 0, NULL),
+('55-7564-5136', 'Mega Fan', 'Diego Alberto Pasaye González', 'dpasaye@gmail.com', 'm', '1994-10-08', 10, 'Usuario', 0, NULL),
+('55-7634-3304', 'Fan', 'Carlos Delgado Contreras', 'cdelgado@gmail.com', 'm', '1995-08-20', 9, 'Usuario', 0, NULL),
+('55-7731-4202', 'Fan', 'Renata Martínez Ozumbilla', 'rmartinez@gmail.com', 'f', '1994-07-09', 2, 'Usuario', 0, NULL),
+('55-7869-6124', 'Fan', 'Emiliano Murillo Ruiz', 'emurillo@gmail.com', 'm', '1988-10-19', 20, 'Usuario', 0, NULL),
+('55-7877-5755', 'Fan', 'Yamine Dávila Bejos', 'ydavila@gmail.com', 'f', '1997-09-08', 5, 'Usuario', 0, NULL),
+('55-8034-2908', 'Mega Fan', 'Sofía Alondra Reyes Gómez', 'sreyes@gmail.com', 'f', '1968-02-18', 9, 'Usuario', 0, NULL),
+('55-8069-3709', 'Mega Fan', 'Jesús Osvaldo Ramos Pérez', 'jramos@gmail.com', 'm', '1989-12-08', 5, 'Usuario', 0, NULL),
+('55-8317-4862', 'Super Fan', 'Oscar Alexander Vilchis Soto', 'ovilchis@gmail.com', 'm', '1960-03-06', 20, 'Usuario', 0, NULL),
+('55-8361-8067', 'Fan', 'Katya Jiménez Antonio', 'kjimenez@gmail.com', 'f', '1987-01-11', 13, 'Usuario', 0, NULL),
+('55-8616-1973', 'Super Fan', 'Alberto Barba Arroyo', 'abarba@gmail.com', 'm', '2003-03-09', 5, 'Usuario', 0, NULL),
+('55-8634-4784', 'Fan', 'Francisco Rafael Arreola Corona', 'farreola@gmail.com', 'm', '1973-07-12', 18, 'Usuario', 0, NULL),
+('55-8842-2908', 'Super Fan', 'Ana Sofía Moreno Hernández', 'amoreno@gmail.com', 'f', '1975-05-12', 14, 'Usuario', 0, NULL),
+('55-8913-8427', 'Super Fan', 'Fernanda Curiel Perez', 'fcuriel@gmail.com', 'f', '1997-11-18', 7, 'Usuario', 0, NULL),
+('55-8962-5930', 'Fan', 'Juan Pablo Juárez Ortiz', 'jjuarez@@gmail.com', 'm', '1956-08-16', 4, 'Usuario', 0, NULL),
+('55-9026-7777', 'Fan', 'Sebastián Mansilla Cots', 'smansilla@gmail.com', 'm', '1976-06-20', 9, 'Usuario', 0, NULL),
+('55-9188-6863', 'Mega Fan', 'Iker Arnoldo Grajeda Campaña', 'igrajeda@gmail.com', 'm', '2000-01-01', 5, 'Usuario', 0, NULL),
+('55-9221-5175', 'Mega Fan', 'Ana Valeria Machuca Miranda', 'amachuca@gmail.com', 'f', '1957-07-06', 6, 'Usuario', 0, NULL),
+('55-9297-8935', 'Super Fan', 'Juan Pablo Domínguez Ángel', 'jdominguez@gmail.com', 'm', '1966-09-12', 9, 'Usuario', 0, NULL),
+('55-9583-1422', 'Fan', 'Galia Lucía Castro Aboytes', 'gcastro@gmail.com', 'f', '1959-08-03', 1, 'Usuario', 0, NULL),
+('55-9661-9093', 'Fan', 'Diego Serrano Pardo', 'dserrano@gmail.com', 'm', '2004-05-23', 8, 'Usuario', 0, NULL),
+('55-9783-5924', 'Fan', 'Ricardo Antonio Gutiérrez García', 'rgutierrez@gmail.com', 'm', '1980-05-28', 13, 'Usuario', 0, NULL),
+('55-9862-4951', 'Super Fan', 'Ramón Eliezer De Santos García', 'rgarcia@gmail.com', 'm', '1962-01-17', 6, 'Usuario', 0, NULL),
+('55-9956-8802', 'Super Fan', 'Rodrigo Alejandro Hurtado Cortés', 'rhurtado@gmail.com', 'm', '1983-02-25', 2, 'Usuario', 0, NULL),
+('5511569800', NULL, 'Andrea Iliana Cantú Mayorga', NULL, NULL, NULL, 0, 'Usuario', 0, NULL),
+('81-3104-6812', 'Fan', 'Carlos Delgado Contreras', 'A01712819@tec.mx', 'Masculino', '2005-08-16', 0, 'Usuario', 0, NULL),
+('8131046812', NULL, 'Cliente', NULL, NULL, NULL, 0, 'Usuario', 0, NULL),
+('8131046813', NULL, 'Cliente', NULL, NULL, NULL, 0, 'Usuario', 0, NULL),
+('8134556800', NULL, 'Juan Pablo Juarez', NULL, NULL, NULL, 0, 'Usuario', 0, NULL);
 
 --
 -- Disparadores `cliente`
 --
 DROP TRIGGER IF EXISTS `actualizar_nivel_por_visitas`;
 DELIMITER $$
-CREATE TRIGGER `actualizar_nivel_por_visitas` AFTER UPDATE ON `cliente` FOR EACH ROW BEGIN
-    -- Solo actuamos si el número de visitas cambió
+CREATE TRIGGER `actualizar_nivel_por_visitas` BEFORE UPDATE ON `cliente` FOR EACH ROW BEGIN
     IF OLD.Visitas_Actuales <> NEW.Visitas_Actuales THEN
-        -- Buscamos el nombre del nivel que le corresponde
-        -- y lo actualizamos en la columna FK del cliente
-        UPDATE cliente
-        SET Nombre_Royalty = (
+        SET NEW.Nombre_Royalty = (
             SELECT Nombre_Royalty
             FROM estado_royalty
             WHERE NEW.Visitas_Actuales BETWEEN Min_Visitas AND Max_Visitas
             LIMIT 1
-        )
-        WHERE Numero_Telefonico = NEW.Numero_Telefonico;
+        );
     END IF;
 END
 $$
@@ -758,7 +755,14 @@ INSERT INTO `detalle_orden_insumos` (`id`, `id_orden_producto`, `ID_Insumo`, `ID
 (26, 80, 'IN97359153', 'OD70559254', 'extra', 13.00),
 (27, 80, 'IN63629622', 'OD70559254', 'base', 0.00),
 (28, 81, 'IN76382864', 'OD70559254', 'extra', 11.00),
-(29, 81, 'IN58759482', 'OD70559254', 'base', 0.00);
+(29, 81, 'IN58759482', 'OD70559254', 'base', 0.00),
+(30, 82, 'IN80392027', 'OD18014207', 'extra', 16.00),
+(31, 82, 'IN63629622', 'OD18014207', 'base', 0.00),
+(32, 83, 'IN09927406', 'OD18014207', 'base', 0.00),
+(33, 84, 'IN15500744', 'OD18014207', 'extra', 24.00),
+(34, 84, 'IN07275176', 'OD18014207', 'extra', 11.00),
+(35, 84, 'IN13442507', 'OD18014207', 'extra', 14.00),
+(36, 84, 'IN18602747', 'OD18014207', 'extra', 10.00);
 
 -- --------------------------------------------------------
 
@@ -895,6 +899,20 @@ INSERT INTO `evento_contiene_promocion` (`ID_Evento`, `ID_Promocion`) VALUES
 ('EV91369328', 'PR48403051'),
 ('EV94074382', 'PR97688224'),
 ('EV98982381', 'PR87134462');
+
+-- --------------------------------------------------------
+
+--
+-- Estructura de tabla para la tabla `historial_canjes_royalty`
+--
+
+DROP TABLE IF EXISTS `historial_canjes_royalty`;
+CREATE TABLE `historial_canjes_royalty` (
+  `ID_canje` int(11) NOT NULL,
+  `Numero_Telefonico` varchar(20) DEFAULT NULL,
+  `ID_Promocion` varchar(20) DEFAULT NULL,
+  `Fecha_canje` datetime DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish2_ci;
 
 -- --------------------------------------------------------
 
@@ -1050,7 +1068,8 @@ INSERT INTO `log_accesos_otp` (`id`, `telefono`, `accion`, `fecha`) VALUES
 (15, '55-1156-9800', 'OTP_ELIMINADO', '2026-04-24 03:30:59'),
 (16, '55-1156-9800', 'OTP_ELIMINADO', '2026-04-24 03:35:01'),
 (17, '55-1156-9800', 'OTP_ELIMINADO', '2026-04-24 03:39:45'),
-(18, '55-1156-9800', 'OTP_ELIMINADO', '2026-04-24 04:10:24');
+(18, '55-1156-9800', 'OTP_ELIMINADO', '2026-04-24 04:10:24'),
+(19, '55-1156-9800', 'OTP_ELIMINADO', '2026-04-24 04:21:22');
 
 -- --------------------------------------------------------
 
@@ -1145,6 +1164,7 @@ INSERT INTO `orden` (`ID_Orden`, `ID_Turno`, `Numero_Telefonico`, `Tipo_Orden`, 
 ('OD16211107', 'TN26496107', '55-8962-5930', 'Pick-up', 'Juan Pablo Juárez Ortiz', 'Cancelado', '2026-12-11 06:00:00', NULL),
 ('OD16481371', 'TN47025996', '55-9783-5924', 'Pick-up', 'Ricardo Antonio Gutiérrez García', 'Listo', '2026-11-01 06:00:00', NULL),
 ('OD17661841', 'TN46937585', '55-4217-5522', 'Sucursal', 'Ilian Judith Castillo Beristain', 'Listo', '2026-03-02 06:00:00', NULL),
+('OD18014207', 'TN26496107', '5511569800', 'Pick-up', 'Andrea Iliana Cantú Mayorga', 'Pendiente', '2026-04-24 04:22:23', NULL),
 ('OD19367239', 'TN26496107', '55-7634-3304', 'Sucursal', 'Carlos Delgado Contreras', 'Entregado', '2026-07-11 06:00:00', NULL),
 ('OD20045010', 'TN26496107', '55-3885-6878', 'Sucursal', 'Mariana Frías Olguín', 'Entregado', '2026-09-15 06:00:00', NULL),
 ('OD23043487', 'TN26496107', '55-9297-8935', 'Pick-up', 'Juan Pablo Domínguez Ángel', 'Listo', '2026-01-27 06:00:00', NULL),
@@ -1293,7 +1313,10 @@ INSERT INTO `orden_tiene_producto` (`id_orden_producto`, `ID_Orden`, `ID_Product
 (78, 'OD96262689', 'PD22069675', 1, 112.20),
 (79, 'OD96262689', 'PD_COMODIN', 1, 123.00),
 (80, 'OD70559254', 'PD12662761', 1, 48.00),
-(81, 'OD70559254', 'PD68787354', 1, 19.90);
+(81, 'OD70559254', 'PD68787354', 1, 19.90),
+(82, 'OD18014207', 'PD12662761', 1, 51.00),
+(83, 'OD18014207', 'PD28020090', 1, 75.00),
+(84, 'OD18014207', 'PD_COMODIN', 1, 109.00);
 
 -- --------------------------------------------------------
 
@@ -2249,6 +2272,14 @@ ALTER TABLE `evento_contiene_promocion`
   ADD KEY `ID_Promocion` (`ID_Promocion`);
 
 --
+-- Indices de la tabla `historial_canjes_royalty`
+--
+ALTER TABLE `historial_canjes_royalty`
+  ADD PRIMARY KEY (`ID_canje`),
+  ADD KEY `Numero_Telefonico` (`Numero_Telefonico`),
+  ADD KEY `ID_Promocion` (`ID_Promocion`);
+
+--
 -- Indices de la tabla `insumo`
 --
 ALTER TABLE `insumo`
@@ -2398,19 +2429,25 @@ ALTER TABLE `turno_tiene_sucursal`
 -- AUTO_INCREMENT de la tabla `detalle_orden_insumos`
 --
 ALTER TABLE `detalle_orden_insumos`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=30;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=37;
+
+--
+-- AUTO_INCREMENT de la tabla `historial_canjes_royalty`
+--
+ALTER TABLE `historial_canjes_royalty`
+  MODIFY `ID_canje` int(11) NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT de la tabla `log_accesos_otp`
 --
 ALTER TABLE `log_accesos_otp`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=19;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=20;
 
 --
 -- AUTO_INCREMENT de la tabla `orden_tiene_producto`
 --
 ALTER TABLE `orden_tiene_producto`
-  MODIFY `id_orden_producto` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=82;
+  MODIFY `id_orden_producto` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=85;
 
 --
 -- Restricciones para tablas volcadas
@@ -2483,6 +2520,13 @@ ALTER TABLE `estado_royalty_da_promociones`
 ALTER TABLE `evento_contiene_promocion`
   ADD CONSTRAINT `evento_contiene_promocion_ibfk_1` FOREIGN KEY (`ID_Evento`) REFERENCES `evento` (`ID_Evento`) ON DELETE CASCADE,
   ADD CONSTRAINT `evento_contiene_promocion_ibfk_2` FOREIGN KEY (`ID_Promocion`) REFERENCES `promocion` (`ID_Promocion`) ON DELETE CASCADE;
+
+--
+-- Filtros para la tabla `historial_canjes_royalty`
+--
+ALTER TABLE `historial_canjes_royalty`
+  ADD CONSTRAINT `historial_canjes_royalty_ibfk_1` FOREIGN KEY (`Numero_Telefonico`) REFERENCES `cliente` (`Numero_Telefonico`),
+  ADD CONSTRAINT `historial_canjes_royalty_ibfk_2` FOREIGN KEY (`ID_Promocion`) REFERENCES `promocion` (`ID_Promocion`);
 
 --
 -- Filtros para la tabla `insumo`
