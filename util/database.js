@@ -18,13 +18,29 @@ const pool = mysql.createPool({
 Usuario: CL85565990
 Pass: CL006901! 
 
-*/
+/*
 
 // Charly
 
 // Pool de conexiones
 const pool = mysql.createPool({
   host: 'localhost',
+  user: 'root',
+  database: 'mareebd',
+  password: '',
+  waitForConnection: true,
+  connectionLimit: 10
+
+})
+*/
+
+
+//Doppler conf
+// Charly
+
+ //Pool de conexiones
+const pool = mysql.createPool({
+  host: 'mariadb',
   user: 'root',
   database: 'mareebd',
   password: '',
