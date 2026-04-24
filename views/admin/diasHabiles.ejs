@@ -1,107 +1,131 @@
-<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title><%= pageTitle %> - Marée</title>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@1.0.4/css/bulma.min.css">
-  <link rel="stylesheet" href="/css/adminstyle.css">
-</head>
-<body>
+<%- include('../partials/header_admin', { pageTitle: 'Días hábiles - Marée' }) %>
+<%- include('../partials/breadcrumbs') %>
 
-<nav class="navbar" role="navigation">
-  <div class="navbar-brand">
-    <span class="navbar-item logo">MARÉE</span>
-  </div>
-</nav>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@1.0.4/css/bulma.min.css">
+<link rel="preconnect" href="https://fonts.googleapis.com"> 
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;600&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/css/CSSglobales/global_theme.css">
+<link rel="stylesheet" href="/css/CSSglobales/global_components.css">
+<link rel="stylesheet" href="/css/CSSglobales/adminstyle.css"> 
 
-<section class="section">
-  <div class="container">
-    <h1 class="title">Gestión de días hábiles</h1>
-    <p class="subtitle">Registrar y consultar días hábiles</p>
+<main class="page-wrap">
+  <header style="margin-bottom: 32px;">
+    <h1 class="page-title">Gestión de días hábiles</h1>
+    <p style="color: var(--c-text-muted); font-size: 16px; margin-top: 8px;">
+      Registrar y consultar días hábiles de atención.
+    </p>
+  </header>
 
-    <% if (error) { %>
-      <div class="notification is-danger"><%= error %></div>
-    <% } %>
+  <% if (typeof error !== 'undefined' && error) { %>
+    <div class="notification status-pill is-danger" style="border-radius: var(--radius-md); padding: 16px; width: 100%; margin-bottom: 24px;">
+      <%= error %>
+    </div>
+  <% } %>
 
-    <% if (mensaje) { %>
-      <div class="notification is-success"><%= mensaje %></div>
-    <% } %>
+  <% if (typeof mensaje !== 'undefined' && mensaje) { %>
+    <div class="notification status-pill is-active" style="border-radius: var(--radius-md); padding: 16px; width: 100%; margin-bottom: 24px;">
+      <%= mensaje %>
+    </div>
+  <% } %>
 
-    <div class="box">
-      <h2 class="title is-5">Registrar día hábil</h2>
+  <div class="card-base" style="max-width: 760px; margin-bottom: 32px;">
+    <h2 style="font-family: var(--font-heading); color: var(--c-primary-deep); font-size: 28px; margin-bottom: 24px;">
+      Registrar día hábil
+    </h2>
 
-      <form action="/admin/dias-habiles" method="POST">
-        <div class="field">
-          <label class="label">Sucursal</label>
-          <div class="control">
-            <div class="select is-fullwidth">
-              <select name="id_sucursal" required>
-                <option value="">Selecciona una sucursal</option>
-                <% sucursales.forEach(sucursal => { %>
-                  <option value="<%= sucursal.id_sucursal %>" <%= oldInput.id_sucursal === String(sucursal.id_sucursal) ? 'selected' : '' %>>
-                    <%= sucursal.nombre %>
-                  </option>
-                <% }) %>
-              </select>
-            </div>
-          </div>
-        </div>
-
-        <div class="field">
-          <label class="label">Fecha</label>
-          <div class="control">
-            <input
-              class="input"
-              type="date"
-              name="fecha"
-              value="<%= oldInput.fecha %>"
-              required>
-          </div>
-        </div>
-
-        <div class="field">
-          <label class="label">¿Es laboral?</label>
-          <div class="control">
-            <div class="select is-fullwidth">
-              <select name="es_laboral" required>
-                <option value="1" <%= oldInput.es_laboral === '1' ? 'selected' : '' %>>Sí</option>
-                <option value="0" <%= oldInput.es_laboral === '0' ? 'selected' : '' %>>No</option>
-              </select>
-            </div>
-          </div>
-        </div>
-
-        <div class="field">
-          <label class="label">Descripción</label>
-          <div class="control">
-            <textarea
-              class="textarea"
-              name="descripcion"
-              placeholder="Ej. Día festivo, operación especial, cierre, etc."><%= oldInput.descripcion %></textarea>
-          </div>
-        </div>
-
-        <div class="field is-grouped mt-5">
-          <div class="control">
-            <button class="button is-primary" type="submit">Guardar configuración</button>
-          </div>
-          <div class="control">
-            <a href="/admin" class="button is-light">Volver</a>
-          </div>
-        </div>
-      </form>
+    <div>
+      <label style="color: var(--c-text-muted); text-transform: uppercase; font-size: 11px; letter-spacing: 1px;">
+        ID Calendario
+      </label>
+      <input
+        class="input"
+        style="margin-top: 6px;"
+        type="text"
+        name="id_calendario"
+        value="<%= oldInput.id_calendario %>"
+        readonly
+        required>
     </div>
 
-    <div class="box">
-      <h2 class="title is-5">Días registrados</h2>
+    <form action="/admin/dias-habiles" method="POST">
+      <div style="display: flex; flex-direction: column; gap: 18px; margin-bottom: 28px;">
 
-      <% if (!diasHabiles || diasHabiles.length === 0) { %>
-        <div class="notification is-warning">
-          No existen días hábiles configurados.
+        <div>
+          <label style="color: var(--c-text-muted); text-transform: uppercase; font-size: 11px; letter-spacing: 1px;">
+            Sucursal
+          </label>
+          <div class="select is-fullwidth" style="margin-top: 6px;">
+            <select name="id_sucursal" required>
+              <option value="">Selecciona una sucursal</option>
+              <% sucursales.forEach(sucursal => { %>
+                <option value="<%= sucursal.id_sucursal %>" <%= oldInput.id_sucursal === String(sucursal.id_sucursal) ? 'selected' : '' %>>
+                  <%= sucursal.nombre %>
+                </option>
+              <% }) %>
+            </select>
+          </div>
         </div>
-      <% } else { %>
-        <table class="table is-fullwidth is-striped is-hoverable">
+
+        <div>
+          <label style="color: var(--c-text-muted); text-transform: uppercase; font-size: 11px; letter-spacing: 1px;">
+            Fecha
+          </label>
+          <input
+            class="input"
+            style="margin-top: 6px;"
+            type="date"
+            name="fecha"
+            value="<%= oldInput.fecha %>"
+            required>
+        </div>
+
+        <div>
+          <label style="color: var(--c-text-muted); text-transform: uppercase; font-size: 11px; letter-spacing: 1px;">
+            ¿Es laboral?
+          </label>
+          <div class="select is-fullwidth" style="margin-top: 6px;">
+            <select name="es_laboral" required>
+              <option value="1" <%= oldInput.es_laboral === '1' ? 'selected' : '' %>>Sí</option>
+              <option value="0" <%= oldInput.es_laboral === '0' ? 'selected' : '' %>>No</option>
+            </select>
+          </div>
+        </div>
+
+        <div>
+          <label style="color: var(--c-text-muted); text-transform: uppercase; font-size: 11px; letter-spacing: 1px;">
+            Descripción
+          </label>
+          <textarea
+            class="textarea"
+            style="margin-top: 6px;"
+            name="descripcion"
+            placeholder="Ej. Día festivo, operación especial, cierre, etc."><%= oldInput.descripcion %></textarea>
+        </div>
+      </div>
+
+      <div style="display: flex; gap: 12px; border-top: 1px solid var(--c-border); padding-top: 24px;">
+        <button class="btn-danger" type="submit">
+          Guardar configuración
+        </button>
+        <a href="/admin" class="btn-ghost">Volver al dashboard</a>
+      </div>
+    </form>
+  </div>
+
+  <div class="card-base" style="width: 100%;">
+    <h2 style="font-family: var(--font-heading); color: var(--c-primary-deep); font-size: 28px; margin-bottom: 24px;">
+      Días registrados
+    </h2>
+
+    <% if (!diasHabiles || diasHabiles.length === 0) { %>
+      <div class="notification status-pill" style="border-radius: var(--radius-md); padding: 16px; width: 100%;">
+        No existen días hábiles configurados.
+      </div>
+    <% } else { %>
+      <div style="overflow-x: auto;">
+        <table class="table is-fullwidth is-striped is-hoverable" style="background: transparent;">
           <thead>
             <tr>
               <th>ID</th>
@@ -117,16 +141,22 @@
                 <td><%= dia.id_calendario %></td>
                 <td><%= dia.nombre_sucursal || dia.id_sucursal %></td>
                 <td><%= dia.fecha ? String(dia.fecha).slice(0, 10) : '' %></td>
-                <td><%= dia.es_laboral ? 'Sí' : 'No' %></td>
+                <td>
+                  <% if (dia.es_laboral) { %>
+                    <span class="status-pill is-active">Sí</span>
+                  <% } else { %>
+                    <span class="status-pill is-danger">No</span>
+                  <% } %>
+                </td>
                 <td><%= dia.descripcion || '' %></td>
               </tr>
             <% }) %>
           </tbody>
         </table>
-      <% } %>
-    </div>
+      </div>
+    <% } %>
   </div>
-</section>
+</main>
 
 </body>
 </html>
