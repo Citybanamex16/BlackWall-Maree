@@ -25,7 +25,10 @@ body {
 }
 
 .promos-section.premium-card {
-    padding: 24px 16px 20px;
+    background-color: #faecec !important; /* El color rosado suave de la parte superior */
+    border-radius: 24px !important;
+    border: 1px solid #f2dfdf !important;
+    box-shadow: 0 10px 30px rgba(86, 61, 35, 0.08) !important
 }
 
 .premium-card h1 {
@@ -382,6 +385,9 @@ body {
         display: flex;       /* Activa el modo flexible */
         gap: 10px;           /* Crea un espacio de 10px entre los botones */
         align-items: center; /* Los alinea verticalmente por si tienen alturas distintas */
+        justify-content: center; 
+        margin-top: 20px;        
+        margin-bottom: 20px;
     }
 
 
@@ -487,6 +493,33 @@ body {
     width: fit-content;
 }
 
+  .breadcrumb {
+    padding: 1rem 0; /* Da espacio arriba y abajo */
+    margin-bottom: 0;
+    background-color: transparent;
+    font-family: 'Jost', sans-serif;
+    font-size: 0.85rem;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+}
+
+.breadcrumb-item a {
+    color: var(--text-muted);
+    text-decoration: none;
+    transition: color 0.3s;
+}
+
+.breadcrumb-item a:hover {
+    color: var(--maree-gold);
+}
+
+/* Evita que el body empuje la barra de navegación de forma extraña */
+body {
+    background-color: var(--maree-light-bg);
+    overflow-x: hidden;
+    margin: 0;
+    padding: 0;
+}
 
     .breadcrumb {
     padding: 1rem 0; /* Da espacio arriba y abajo */
