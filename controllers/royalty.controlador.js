@@ -203,42 +203,70 @@ exports.getRoyaltyMetrics = (req, res, next) => {
   res.render('/royalty/royaltyAdmin')
 }
 
-// Para escanear el QR en la wallet
-exports.postRegistrarVisita = async (request, response, next) => {
+// Registrar Visitas
+exports.postProcesarEscaneo = async (request, response) => {
+  const telefono = request.body.telefono
+
+  if (!telefono) {
+    return response.status(400).json({
+      success: false,
+      message: 'No se recibió el número telefónico'
+    })
+  }
+
   try {
-    const { telefono } = request.body
+    const [rows] = await Royalty.fetchClienteParaEscaneo(telefono)
+    if (rows.length === 0) return response.status(404).json({ message: 'Cliente no encontrado' })
 
-    if (!telefono) {
-      return response.status(400).json({ success: false, message: 'Teléfono requerido' })
-    }
+    const cliente = rows[0]
 
-    const clienteActualizado = await Royalty.agregarVisita(telefono)
+    // Matemática de los tokens
+    const tokensGanados = Math.floor(cliente.visitas_totales / 10)
+    const tokensDisponibles = tokensGanados - cliente.tokens_gastados
+    const sellosActuales = cliente.visitas_totales % 10
 
-    if (!clienteActualizado) {
-      return response.status(404).json({ success: false, message: 'Cliente no encontrado' })
-    }
+    const visitasTotales = cliente.Visitas_Actuales || 0
 
-    const nivelActualizado = await Royalty.actualizarNivelSiCorresponde(telefono)
-
-    await WalletModel.actualizarLoyaltyObject(
-      telefono,
-      nivelActualizado?.Nombre_Royalty || clienteActualizado.Nombre_Royalty,
-      clienteActualizado.Visitas,
-      nivelActualizado?.Max_Visitas || clienteActualizado.Max_Visitas
-    )
+    const [promocionesDisponibles] = await Royalty.fetchPromociones_royalties(cliente.Nombre_Royalty)
 
     return response.status(200).json({
       success: true,
-      message: 'Visita registrada correctamente',
-      data: {
-        telefono,
-        visitas: clienteActualizado.Visitas,
-        nivel: nivelActualizado?.Nombre_Royalty || clienteActualizado.Nombre_Royalty
-      }
+      cliente: {
+        id: cliente.Numero_Telefonico,
+        nombre: cliente.Nombre || 'Cliente Marée',
+        nivel: cliente.Nombre_Royalty,
+        visitas: visitasTotales,
+        sellosActuales,
+        tokensDisponibles
+      },
+      premiosDisponibles: promocionesDisponibles
     })
   } catch (error) {
-    console.error('Error al registrar visita:', error)
-    return response.status(500).json({ success: false, message: 'Error al registrar visita' })
+    console.log(error)
+    response.status(500).json({ message: 'Error al procesar el escaneo' })
+  }
+}
+
+exports.postRegistrarVisitaAdmin = async (request, response) => {
+  const telefono = request.body.telefono
+
+  try {
+    await Royalty.registrarVisita(telefono)
+    response.status(200).json({ success: true, message: 'Visita registrada con éxito' })
+  } catch (error) {
+    response.status(500).json({ success: false, message: 'Error al registrar visita' })
+  }
+}
+
+exports.postCanjearPremio = async (request, response) => {
+  const { telefono, idPromocion } = request.body
+
+  try {
+    await Royalty.registrarCanje(telefono, idPromocion)
+    response.status(200).json({ success: true, message: 'Premio entregado correctamente' })
+  } catch (error) {
+    console.log(error)
+    response.status(500).json({ success: false, message: 'Error al procesar el canje' })
   }
 }
 
@@ -285,6 +313,7 @@ exports.getRoyaltyCli = async (request, response, next) => {
 
 exports.getRoyaltyDataAPI = async (request, response, next) => {
   console.log('getRoyaltyDataAPI llamado')
+
   if (!request.session.isLoggedIn || request.session.rol !== 'Usuario') {
     return response.status(401).json({ redirectUrl: '/cliente/login' })
   }
@@ -293,9 +322,11 @@ exports.getRoyaltyDataAPI = async (request, response, next) => {
 
   try {
     const [statusData] = await Royalty.fetchClientStatus(telefono)
+    const [[statusDataGoogle]] = await Royalty.fetchClienteStatusGoogle(telefono)
     const clienteInfo = statusData[0]
     const nivelId = clienteInfo.nivel
-
+    console.log(clienteInfo.Nombre)
+    console.log(clienteInfo.Max_Visitas)
     const [
       [promotionsData],
       [eventsData],
@@ -314,9 +345,10 @@ exports.getRoyaltyDataAPI = async (request, response, next) => {
 
     const walletLink = await WalletModel.generarLinkWallet(
       telefono,
-      clienteInfo.nivel,
-      clienteInfo.visitas,
-      clienteInfo.Max_Visitas
+      statusDataGoogle.Nombre,
+      statusDataGoogle.nivel,
+      statusDataGoogle.Visitas,
+      statusDataGoogle.Max_Visitas
     )
 
     console.log('Wallet link generado:', walletLink)
