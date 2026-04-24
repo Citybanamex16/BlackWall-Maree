@@ -175,15 +175,48 @@ static calcularPrecioRealItem(item, listaOro, compendio) {
     let acumulado = 0;
     const nombreItem = item.nombre || item.producto_base || item.id;
 
-    console.log(`\n🔍 [POLICIA ANALIZANDO] ${nombreItem}`);
+    console.log(`\n🔍 [POLICIA ANALIZANDO] ${nombreItem} (ID: ${item.id})`);
 
+    // ==========================================
+    // RAMA A: CREPA DE AUTOR / PERSONALIZADA
+    // ==========================================
+    if (item.id === 'PD_COMODIN') {
+        console.log(`   🎨 [MODO AUTOR DETECTADO] Cambiando a lógica de "Precio por Cantidad".`);
+        
+        const insumos = [...(item.ingredientes_adentro || []), ...(item.ingredientes_toppings || [])];
+        const n = insumos.length;
+        
+        console.log(`   📋 Total de ingredientes contabilizados: ${n}`);
+        
+        if (n === 0) {
+            console.log(`   ⚠️ Sin ingredientes elegidos. Precio: $0.00`);
+            return 0;
+        } else if (n <= 3) {
+            // Lógica: 1=99, 2=109, 3=119
+            acumulado = 89 + (n * 10);
+            console.log(`   💸 Aplicando Tarifa Paquete Esencial: $${acumulado.toFixed(2)}`);
+        } else {
+            // Lógica: Más de 3 -> 119 Base + 15 por cada extra
+            const extras = n - 3;
+            acumulado = 119 + (extras * 15);
+            console.log(`   💸 Aplicando Tarifa Paquete Pro (Base 3 ing.): $119.00`);
+            console.log(`   📈 Sumando Excedente (${extras} extras x $15.00): $${(extras * 15).toFixed(2)}`);
+        }
+        
+        console.log(`   ✅ [TOTAL CREPA AUTOR] $${acumulado.toFixed(2)}`);
+        return acumulado;
+    }
+
+    // ==========================================
+    // RAMA B: PRODUCTO DE CATÁLOGO (ESTÁNDAR)
+    // ==========================================
     // 1. Precio Base
     let precioBase = listaOro.productos[item.id];
     if (precioBase === undefined) {
         console.error(`🚨 [ERROR] El producto ${item.id} no existe en el catálogo base.`);
         throw new Error(`ID no encontrado: ${item.id}`);
     }
-    console.log(`   💰 Precio Base: $${precioBase}`);
+    console.log(`   💰 Precio Base Unitario: $${precioBase}`);
 
     // 2. Aplicar Promoción del Compendio
     if (compendio[item.id]) {
@@ -199,14 +232,15 @@ static calcularPrecioRealItem(item, listaOro, compendio) {
     
     acumulado += precioBase;
 
-    // 3. Sumar Insumos
+    // 3. Sumar Insumos (Por precio individual)
     const insumos = [...(item.ingredientes_adentro || []), ...(item.ingredientes_toppings || [])];
     if (insumos.length > 0) {
-        console.log(`   ➕ Sumando ${insumos.length} insumos...`);
+        console.log(`   ➕ Sumando ${insumos.length} insumos a precio de lista...`);
         insumos.forEach(ins => {
             const pInsumo = (listaOro.insumos[ins.id_insumo] || 0);
             if (pInsumo > 0) {
-                console.log(`      • ${ins.id_insumo}: $${pInsumo}`);
+                // Usamos el nombre si viene del frontend, si no, mostramos el ID
+                console.log(`      • ${ins.nombre || ins.id_insumo}: $${pInsumo}`);
             }
             acumulado += pInsumo;
         });
