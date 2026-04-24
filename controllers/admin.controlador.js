@@ -621,16 +621,23 @@ exports.getMetricasIngredientesData = async (req, res, next) => {
 }
 
 // Fuchi, collaborator things
-exports.getNewCollaborator = (req, res, next) => {
-  res.render('admin/newCollaborator', {
-    pageTitle: 'Registrar colaborador',
-    error: null,
-    oldInput: {
-      id_colaborador: '',
-      nombre: '',
-      rol: 'Colaborador'
-    }
-  })
+exports.getNewCollaborator = async (req, res, next) => {
+  try {
+    const idGenerado = await Colaborador.generateUniqueId()
+
+    res.render('admin/newCollaborator', {
+      pageTitle: 'Registrar colaborador',
+      error: null,
+      oldInput: {
+        id_colaborador: idGenerado,
+        nombre: '',
+        rol: 'Colaborador'
+      }
+    })
+  } catch (error) {
+    console.log(error)
+    res.redirect('/admin/colaboradores')
+  }
 }
 
 exports.postNewCollaborator = async (req, res, next) => {
