@@ -21,7 +21,7 @@ Pass: CL006901!
 */
 
 // Charly
-
+/*
 // Pool de conexiones
 const pool = mysql.createPool({
   host: 'localhost',
@@ -32,19 +32,19 @@ const pool = mysql.createPool({
   connectionLimit: 10
 
 })
-
-/* Santi
+*/
+// Santi
 // Pool de conexiones
 
 const pool = mysql.createPool({
   host: 'mysql-maree2.alwaysdata.net',
   user: 'maree2',
-  database: 'maree2_final',
+  database: 'maree2_suprema',
   password: 'maree123',
-  waitForConnection: true,
+  waitForConnections: true,
   connectionLimit: 10
 
 })
-*/
+
 
 module.exports = pool.promise() // Habilitamos poder usar .then() & .catch() yuhhhh
