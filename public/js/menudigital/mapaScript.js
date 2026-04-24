@@ -2,7 +2,7 @@ let mapa = null
 let marcadorCliente = null
 let sucursalSeleccionada = null
 
-const marcadores = []
+const marcadoresPorClave = new Map()
 const mexicoCentro = [23.6345, -102.5528]
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -39,10 +39,12 @@ async function cargarSucursales () {
     const sucursales = data.allSucursales || []
 
     construirListaSucursales(sucursales)
-    await colocarMarcadores(sucursales)
+    const totalConUbicacion = await colocarMarcadores(sucursales)
 
     if (sucursales.length === 0) {
       mostrarMensaje('No hay sucursales registradas.')
+    } else if (totalConUbicacion === 0) {
+      mostrarMensaje('No se pudo ubicar ninguna sucursal en el mapa.')
     } else {
       mostrarMensaje('Selecciona una sucursal para verla en el mapa.')
     }
@@ -69,10 +71,12 @@ function construirListaSucursales (sucursales) {
   }
 
   sucursales.forEach((sucursal, index) => {
+    const clave = obtenerClaveSucursal(sucursal, index)
+
     const card = document.createElement('button')
     card.type = 'button'
     card.className = 'sucursal-card sucursal-card-btn'
-    card.dataset.index = index
+    card.dataset.clave = clave
 
     card.innerHTML = `
       <p class="sucursal-nombre">${escaparHTML(sucursal.Nombre)}</p>
@@ -95,7 +99,7 @@ function construirListaSucursales (sucursales) {
       <span class="sucursal-accion">Ver en mapa</span>
     `
 
-    card.addEventListener('click', () => seleccionarSucursal(index))
+    card.addEventListener('click', () => seleccionarSucursal(clave))
 
     contenedor.appendChild(card)
   })
@@ -103,12 +107,22 @@ function construirListaSucursales (sucursales) {
 
 async function colocarMarcadores (sucursales) {
   const grupo = L.featureGroup()
+  let primeraClaveDisponible = null
+  let totalConUbicacion = 0
+
+  marcadoresPorClave.clear()
 
   for (let i = 0; i < sucursales.length; i++) {
     const sucursal = sucursales[i]
+    const clave = obtenerClaveSucursal(sucursal, i)
     const coordenadas = await geocodificarSucursal(sucursal)
 
     if (!coordenadas) {
+      marcadoresPorClave.set(clave, {
+        marker: null,
+        sucursal,
+        coordenadas: null
+      })
       console.warn('No se pudo geocodificar:', sucursal)
       continue
     }
@@ -119,21 +133,32 @@ async function colocarMarcadores (sucursales) {
     marker.addTo(mapa)
     marker.addTo(grupo)
 
-    marcadores.push({
+    if (!primeraClaveDisponible) {
+      primeraClaveDisponible = clave
+    }
+
+    const item = {
       marker,
       sucursal,
       coordenadas
-    })
+    }
+
+    marker.on('click', () => seleccionarSucursal(clave))
+
+    marcadoresPorClave.set(clave, item)
+    totalConUbicacion += 1
   }
 
-  if (marcadores.length > 0) {
+  if (totalConUbicacion > 0) {
     grupo.addTo(mapa)
     mapa.fitBounds(grupo.getBounds(), {
       padding: [40, 40]
     })
 
-    seleccionarSucursal(0)
+    seleccionarSucursal(primeraClaveDisponible)
   }
+
+  return totalConUbicacion
 }
 
 async function geocodificarSucursal (sucursal) {
@@ -164,18 +189,29 @@ async function geocodificarSucursal (sucursal) {
   }
 }
 
-function seleccionarSucursal (index) {
-  const item = marcadores[index]
+function seleccionarSucursal (clave) {
+  const item = marcadoresPorClave.get(clave)
 
-  if (!item) return
+  resaltarCard(clave)
+
+  if (!item) {
+    mostrarMensaje('No se pudo ubicar esta sucursal en el mapa. Intenta con otra.')
+    return
+  }
 
   sucursalSeleccionada = item
+
+  actualizarBotonRuta(item.sucursal)
+
+  if (!item.coordenadas || !item.marker) {
+    mostrarMensaje('Sucursal seleccionada, pero no se pudo centrar en el mapa.')
+    return
+  }
 
   mapa.setView([item.coordenadas.lat, item.coordenadas.lon], 16)
   item.marker.openPopup()
 
-  actualizarBotonRuta(item.sucursal)
-  resaltarCard(index)
+  mostrarMensaje('Sucursal seleccionada.')
 }
 
 function obtenerUbicacionCliente () {
@@ -243,16 +279,26 @@ function construirDireccionCompleta (sucursal) {
     .join(', ')
 }
 
-function resaltarCard (index) {
+function resaltarCard (clave) {
   const cards = document.querySelectorAll('.sucursal-card-btn')
 
   cards.forEach(card => card.classList.remove('sucursal-card-activa'))
 
-  const cardActiva = document.querySelector(`.sucursal-card-btn[data-index="${index}"]`)
+  const cardActiva = document.querySelector(`.sucursal-card-btn[data-clave="${clave}"]`)
 
   if (cardActiva) {
     cardActiva.classList.add('sucursal-card-activa')
   }
+}
+
+function obtenerClaveSucursal (sucursal, index) {
+  const id = sucursal && sucursal.ID_Sucursal
+
+  if (id !== null && id !== undefined && String(id).trim() !== '') {
+    return `id:${id}`
+  }
+
+  return `idx:${index}`
 }
 
 function mostrarMensaje (mensaje) {
