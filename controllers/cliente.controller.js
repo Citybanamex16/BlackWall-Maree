@@ -3,6 +3,7 @@
 
 // Llamar al model
 const nav = require('../models/breadcrumbs.model.js')
+const Eventos = require('../models/eventos.model.js')
 const promos = require('../models/promociones.model.js')
 const Cliente = require('../models/cliente.model.js')
 const Pedido = require('../models/pedidos.model.js')
@@ -20,9 +21,24 @@ exports.getPromosView = (req, res, nex) => {
   res.render('cliente/promotions', { breadcrumbs })
 }
 
-exports.getEventos = (req, res, nex) => {
-  const breadcrumbs = nav.getBreadcrumbs('Menu')
-  res.render('cliente/eventos', { breadcrumbs })
+exports.getEventos = async (req, res, nex) => {
+  try {
+    const [eventos] = await Eventos.fetchActiveForClient()
+
+    res.render('cliente/eventos', {
+      datosCliente: req.session.cliente || null,
+      eventos,
+      errorCarga: null
+    })
+  } catch (error) {
+    console.error('Error al cargar eventos para cliente:', error)
+
+    res.status(500).render('cliente/eventos', {
+      datosCliente: req.session.cliente || null,
+      eventos: [],
+      errorCarga: 'No fue posible cargar los eventos activos por el momento.'
+    })
+  }
 }
 
 exports.getPRsData = async (req, res, nex) => {
@@ -79,8 +95,6 @@ exports.getProfile = async (req, res, next) => {
     })
   }
 }
-
-
 
 exports.postUpdateProfile = async (req, res, next) => {
   try {

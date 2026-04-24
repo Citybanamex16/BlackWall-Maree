@@ -178,6 +178,39 @@ module.exports = class Evento {
     `)
   }
 
+  static fetchActiveForClient () {
+    return db.execute(`
+      SELECT
+        e.ID_Evento,
+        e.Nombre,
+        e.Descripcion,
+        e.Imagen,
+        DATE_FORMAT(e.Fecha_Inicio, '%Y-%m-%d') AS Fecha_Inicio,
+        DATE_FORMAT(e.Fecha_Final, '%Y-%m-%d') AS Fecha_Final,
+        COUNT(DISTINCT ecp.ID_Promocion) AS TotalPromociones,
+        COUNT(DISTINCT ppe.ID_Producto) AS TotalProductos,
+        CASE
+          WHEN CURDATE() BETWEEN e.Fecha_Inicio AND COALESCE(e.Fecha_Final, e.Fecha_Inicio) THEN 'live'
+          ELSE 'soon'
+        END AS estatus
+      FROM evento e
+      LEFT JOIN evento_contiene_promocion ecp
+        ON ecp.ID_Evento = e.ID_Evento
+      LEFT JOIN producto_pertenece_evento ppe
+        ON ppe.ID_Evento = e.ID_Evento
+      WHERE e.Activo = 1
+        AND COALESCE(e.Fecha_Final, e.Fecha_Inicio) >= CURDATE()
+      GROUP BY e.ID_Evento, e.Nombre, e.Descripcion, e.Imagen, e.Fecha_Inicio, e.Fecha_Final
+      ORDER BY
+        CASE
+          WHEN CURDATE() BETWEEN e.Fecha_Inicio AND COALESCE(e.Fecha_Final, e.Fecha_Inicio) THEN 0
+          ELSE 1
+        END,
+        e.Fecha_Inicio ASC,
+        e.Nombre ASC
+    `)
+  }
+
   static async fetchById (idEvento) {
     const [[eventos], [promociones], [productos]] = await Promise.all([
       db.execute(`
