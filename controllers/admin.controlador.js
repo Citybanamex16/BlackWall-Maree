@@ -669,16 +669,23 @@ exports.getMetricasIngredientesData = async (req, res, next) => {
 }
 
 // Fuchi, collaborator things
-exports.getNewCollaborator = (req, res, next) => {
-  res.render('admin/newCollaborator', {
-    pageTitle: 'Registrar colaborador',
-    error: null,
-    oldInput: {
-      id_colaborador: '',
-      nombre: '',
-      rol: 'Colaborador'
-    }
-  })
+exports.getNewCollaborator = async (req, res, next) => {
+  try {
+    const idGenerado = await Colaborador.generateUniqueId()
+
+    res.render('admin/newCollaborator', {
+      pageTitle: 'Registrar colaborador',
+      error: null,
+      oldInput: {
+        id_colaborador: idGenerado,
+        nombre: '',
+        rol: 'Colaborador'
+      }
+    })
+  } catch (error) {
+    console.log(error)
+    res.redirect('/admin/colaboradores')
+  }
 }
 
 exports.postNewCollaborator = async (req, res, next) => {
@@ -756,6 +763,7 @@ exports.getDiasHabiles = async (req, res, next) => {
   try {
     const diasHabiles = await Calendario.fetchDiasHabiles()
     const sucursales = await Calendario.fetchSucursales()
+    const idCalendario = await Calendario.generateUniqueId()
 
     return res.render('admin/diasHabiles', {
       pageTitle: 'Días hábiles',
@@ -764,6 +772,7 @@ exports.getDiasHabiles = async (req, res, next) => {
       error: null,
       mensaje: null,
       oldInput: {
+        id_calendario: idCalendario,
         id_sucursal: '',
         fecha: '',
         es_laboral: '1',
@@ -780,6 +789,7 @@ exports.getDiasHabiles = async (req, res, next) => {
       error: 'No se pudo recuperar la configuración de días hábiles.',
       mensaje: null,
       oldInput: {
+        id_calendario: '',
         id_sucursal: '',
         fecha: '',
         es_laboral: '1',
@@ -791,6 +801,7 @@ exports.getDiasHabiles = async (req, res, next) => {
 
 exports.postDiasHabiles = async (req, res, next) => {
   try {
+    const idCalendario = String(req.body.id_calendario || '').trim()
     const idSucursal = String(req.body.id_sucursal || '').trim()
     const fecha = String(req.body.fecha || '').trim()
     const esLaboral = String(req.body.es_laboral || '').trim()
@@ -799,7 +810,7 @@ exports.postDiasHabiles = async (req, res, next) => {
     const sucursales = await Calendario.fetchSucursales()
     const diasHabiles = await Calendario.fetchDiasHabiles()
 
-    if (!idSucursal || !fecha || (esLaboral !== '0' && esLaboral !== '1')) {
+    if (!idCalendario || !idSucursal || !fecha || (esLaboral !== '0' && esLaboral !== '1')) {
       return res.status(400).render('admin/diasHabiles', {
         pageTitle: 'Días hábiles',
         diasHabiles,
@@ -816,6 +827,7 @@ exports.postDiasHabiles = async (req, res, next) => {
     }
 
     await Calendario.createDiaHabil(
+      idCalendario,
       idSucursal,
       fecha,
       Number(esLaboral),
@@ -823,6 +835,7 @@ exports.postDiasHabiles = async (req, res, next) => {
     )
 
     const diasHabilesActualizados = await Calendario.fetchDiasHabiles()
+    const nuevoIdCalendario = await Calendario.generateUniqueId()
 
     return res.render('admin/diasHabiles', {
       pageTitle: 'Días hábiles',
@@ -831,6 +844,7 @@ exports.postDiasHabiles = async (req, res, next) => {
       error: null,
       mensaje: 'Configuración guardada exitosamente.',
       oldInput: {
+        id_calendario: nuevoIdCalendario,
         id_sucursal: '',
         fecha: '',
         es_laboral: '1',

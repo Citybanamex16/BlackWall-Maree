@@ -17,31 +17,25 @@
     <section class="section">
         <div class="container">
             <h1 class="title">Catálogo de Royalty System</h1>
-            <p class="subtitle">Aquí va el catálogo del sistema de lealtad</p>
             <!-- onclick = abrirModal()-->
+             <br>
+             <div class="button is-primary is-rounded">
+                    <!-- Agregar la funcionalidad de abrirModal-->
+                        <button class="button is-primary" onclick="abrirModalNuevoEstadoRoyalty()">Nuevo Estado Royalty</button>
+                        
+                </div>
+                <br>
+            <section class="section">
             <div class = "columns is-multiline" id = "royaltyContainer"></div>
+            </section>
         </div>
+        
     </section>
 
     <section class = " box ">
         <form action="/royalty/royaltyAdmin/metricsRoyalty" method="GET">
             <input class="button" type="submit" value="View Metrics" />
         </form>
-    </section>
-
-   <section class="section">
-        <div class="container">
-            <h1 class="title">Agregar estados Royalty</h1>
-            <p class="subtitle">Aquí se agregan estados royalty</p>
-            <div class="level-right">
-            <div class="level-item">
-                <div class="button is-primary is-rounded">
-                    <!-- Agregar la funcionalidad de abrirModal-->
-                        <button class="button is-primary" onclick="abrirModalNuevoEstadoRoyalty()">Nuevo Estado Royalty</button>
-                </div>
-            </div> 
-        </div>
-        </div>
     </section>
 
     <!-- Pop- up  Modificar estado royalty -->
