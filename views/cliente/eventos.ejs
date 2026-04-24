@@ -1,20 +1,84 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Promotion - Marée</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@1.0.4/css/bulma.min.css">
-    <link rel="stylesheet" href="/css/moduloMenuCSS/menustyle.css">
-    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=Jost:wght@300;400;500&display=swap" rel="stylesheet">
-</head>
-<body>
-    <section class="section">
-        <div class="container">
-            <h1 class="page-title">Promociones</h1>
-                <%- include('../partials/breadcrumbs') %>
-            <p class="page-subtitle">Aquí van las promociones que pueden ver los clientes</p>
+<%- include('../partials/header_cliente', { pageTitle: 'Eventos - Maree' }) %>
+<link rel="stylesheet" href="/css/moduloMenuCSS/eventosCliente.css">
+<%
+const listaEventos = Array.isArray(eventos) ? eventos : []
+const eventoPrincipal = listaEventos[0] || null
+const restoEventos = eventoPrincipal ? listaEventos.slice(1) : []
+const formatearFecha = (fecha) => {
+  if (!fecha) return 'Sin fecha'
+  const [anio, mes, dia] = String(fecha).split('T')[0].split('-')
+  return `${dia}/${mes}/${anio}`
+}
+const formatearRango = (inicio, fin) => !fin || inicio === fin ? formatearFecha(inicio) : `${formatearFecha(inicio)} - ${formatearFecha(fin)}`
+const claseEstado = (evento) => evento.estatus === 'live' ? 'is-live' : 'is-soon'
+const textoEstado = (evento) => evento.estatus === 'live' ? 'Activo ahora' : 'Muy pronto'
+%>
+<body class="eventos-cliente-page">
+  <div id="sticky-top" class="sticky-top-app">
+    <% if (!datosCliente) { %>
+      <button type="button" class="user-profile events-logo-button" onclick="location.href='/menu/menu';" aria-label="Volver al menu"><div class="logo-area"><span class="logo-text">MAREE</span><span class="logo-sub">Eventos activos</span></div></button>
+      <button type="button" class="royalty-badge" onclick="location.href='/cliente/login';" aria-label="Iniciar sesion"><i class="fas fa-crown"></i><span>Iniciar sesion</span></button>
+    <% } else { %>
+      <div class="user-profile"><div class="logo-area"><span class="logo-text">MAREE</span><span class="logo-sub">Bienvenido, <%= datosCliente.nombre %></span></div></div>
+      <div class="royalty-actions"><button type="button" class="btn-royalty-active" onclick="location.href='/royalty/royaltyUser'"><i class="fas fa-crown"></i> Rewards</button><button type="button" class="btn-logout" onclick="location.href='/cliente/logout';" aria-label="Cerrar sesion">Logout</button></div>
+    <% } %>
+  </div>
+
+  <section class="events-sticky-nav" style="position:fixed;top:60px;left:0;width:100%;z-index:95;">
+    <div class="events-nav-shell">
+      <span class="events-page-kicker"><i class="fas fa-calendar-alt"></i> agenda Maree</span>
+      <h1 class="events-page-title">Eventos para clientes</h1>
+      <div class="events-summary-pills">
+        <span class="events-summary-pill"><i class="fas fa-star"></i> <%= listaEventos.length %> <%= listaEventos.length === 1 ? 'evento activo' : 'eventos activos' %></span>
+        <span class="events-summary-pill is-soft"><i class="fas fa-eye"></i> Solo visualizacion</span>
+      </div>
+    </div>
+  </section>
+
+  <main class="events-main">
+    <% if (errorCarga) { %><section class="events-callout"><span class="events-label"><i class="fas fa-circle-exclamation"></i> carga</span><p class="events-copy"><%= errorCarga %></p></section><% } %>
+
+    <% if (eventoPrincipal) { %>
+      <article class="events-highlight">
+        <div class="events-hero-media"><span class="events-status-pill <%= claseEstado(eventoPrincipal) %>"><%= textoEstado(eventoPrincipal) %></span><% if (eventoPrincipal.Imagen) { %><img src="<%= eventoPrincipal.Imagen %>" alt="Imagen del evento <%= eventoPrincipal.Nombre %>"><% } else { %><div class="events-image-placeholder"><div><i class="fas fa-calendar-days"></i><span>Evento Maree</span></div></div><% } %><div class="events-hero-overlay"></div></div>
+        <div class="events-hero-body">
+          <span class="events-label"><i class="fas fa-star"></i> destacado</span>
+          <h2 class="events-title"><%= eventoPrincipal.Nombre %></h2>
+          <p class="events-copy"><%= eventoPrincipal.Descripcion || 'Descubre la experiencia especial que Maree tiene activa para ti.' %></p>
+          <div class="events-chip-row">
+            <span class="events-chip"><i class="fas fa-calendar-days"></i> <%= formatearRango(eventoPrincipal.Fecha_Inicio, eventoPrincipal.Fecha_Final) %></span>
+            <span class="events-chip secondary"><i class="fas fa-tags"></i> <%= eventoPrincipal.TotalPromociones %> promos</span>
+            <span class="events-chip secondary"><i class="fas fa-utensils"></i> <%= eventoPrincipal.TotalProductos %> productos</span>
+          </div>
         </div>
-    </section>
+      </article>
+    <% } %>
+
+    <% if (restoEventos.length > 0) { %>
+      <section class="events-list">
+        <div class="events-section-head"><h2 class="events-section-title">Mas eventos activos</h2><span class="events-counter"><%= restoEventos.length %></span></div>
+        <% restoEventos.forEach(evento => { %>
+          <article class="events-card">
+            <div class="events-card-thumb"><span class="events-mini-pill <%= claseEstado(evento) %>"><%= textoEstado(evento) %></span><% if (evento.Imagen) { %><img src="<%= evento.Imagen %>" alt="Imagen del evento <%= evento.Nombre %>"><% } else { %><div class="events-card-placeholder"><i class="fas fa-calendar-day"></i></div><% } %></div>
+            <div class="events-card-body"><h3 class="events-card-title"><%= evento.Nombre %></h3><p class="events-card-copy"><%= evento.Descripcion || 'Evento activo disponible para consulta.' %></p><div class="events-chip-row compact"><span class="events-chip"><i class="fas fa-calendar-days"></i> <%= formatearRango(evento.Fecha_Inicio, evento.Fecha_Final) %></span><span class="events-chip secondary"><i class="fas fa-tags"></i> <%= evento.TotalPromociones %></span><span class="events-chip secondary"><i class="fas fa-utensils"></i> <%= evento.TotalProductos %></span></div></div>
+          </article>
+        <% }) %>
+      </section>
+    <% } %>
+
+    <% if (!listaEventos.length) { %>
+      <section class="events-empty"><div class="events-empty-icon"><i class="fas fa-calendar-xmark"></i></div><h2 class="events-section-title">No hay eventos activos</h2><p class="events-copy">Cuando exista un evento vigente y marcado como activo, aparecera aqui para consulta del cliente.</p></section>
+    <% } %>
+
+    <section class="events-callout"><span class="events-label"><i class="fas fa-compass"></i> accesos</span><p class="events-copy">Puedes volver al menu o revisar promociones sin salir del flujo actual del cliente.</p><div class="events-actions"><a href="/menu/menu" class="events-link is-primary">Volver al menu</a><a href="/cliente/promosCliente" class="events-link">Ver promociones</a></div></section>
+  </main>
+
+  <div id="sticky-bottom" class="sticky-bottom-app">
+    <a href="/menu/sucursales" class="btn btn-icon search-side-btn" aria-label="Mapa"><i class="fas fa-map-marker-alt is-size-4"></i></a>
+    <a href="/cliente/promosCliente" class="btn btn-icon search-side-btn" aria-label="Promos"><i class="fas fa-gift is-size-4"></i></a>
+    <a href="/menu/menu" class="btn btn-icon search-side-btn events-home-btn" aria-label="Menu"><i class="fas fa-house is-size-4"></i></a>
+    <a href="/cliente/eventosCliente" class="btn btn-icon search-side-btn is-current" aria-label="Eventos"><i class="fas fa-calendar-alt is-size-4"></i></a>
+    <a href="/menu/orden" class="btn btn-icon search-side-btn" aria-label="Carrito"><i class="fas fa-shopping-cart is-size-4"></i></a>
+  </div>
 </body>
 </html>
