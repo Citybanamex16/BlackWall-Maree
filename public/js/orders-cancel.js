@@ -156,8 +156,26 @@ document.addEventListener('DOMContentLoaded', () => {
         itemsList.innerHTML = data.items.map(item => {
           const subtotal = item.cantidad * item.precio
           total += subtotal
+
+          const base    = item.ings_base    ? item.ings_base.split('||')    : []
+          const extras  = item.ings_extra   ? item.ings_extra.split('||')   : []
+          const quitados= item.ings_quitado ? item.ings_quitado.split('||') : []
+
+          const ingsHTML = (() => {
+            const partes = []
+            if (base.length)     partes.push(`<span style="font-size:11px;color:#888;">${base.join(', ')}</span>`)
+            if (extras.length)   partes.push(`<span style="font-size:11px;color:#3a7d52;">+ ${extras.join(', ')}</span>`)
+            if (quitados.length) partes.push(`<span style="font-size:11px;color:#c0392b;text-decoration:line-through;">Sin: ${quitados.join(', ')}</span>`)
+            return partes.length
+              ? `<div style="display:flex;flex-direction:column;gap:1px;margin-top:2px;">${partes.join('')}</div>`
+              : ''
+          })()
+
           return `<tr>
-            <td style="padding:8px 4px;">${item.nombre}</td>
+            <td style="padding:8px 4px;">
+              <span style="font-size:14px;">${item.nombre}</span>
+              ${ingsHTML}
+            </td>
             <td style="text-align:center;padding:8px 4px;">${item.cantidad}</td>
             <td style="text-align:right;padding:8px 4px;">$${subtotal.toFixed(2)}</td>
           </tr>`
