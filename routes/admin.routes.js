@@ -4,6 +4,7 @@ const router = express.Router()
 // Llamada a controlador de Admin
 const adminControlador = require('../controllers/admin.controlador.js')
 const feedBackControlador = require('../controllers/feedback.controlador.js')
+const royaltyControlador = require('../controllers/royalty.controlador.js')
 const isAuth = require('../middleware/isAuth.js')
 const isAdmin = require('../middleware/isAdmin.js')
 // Dashboard principal
@@ -76,5 +77,9 @@ router.post('/api/sucursales/crear', isAuth, isAdmin, adminControlador.crearSucu
 router.put('/api/sucursales/:id/actualizar', isAuth, isAdmin, adminControlador.actualizarSucursal)
 router.get('/api/sucursales/:id/verificarEliminable', isAuth, isAdmin, adminControlador.verificarSucursalEliminable)
 router.delete('/api/sucursales/:id/eliminar', isAuth, isAdmin, adminControlador.eliminarSucursal)
+
+// Registrar Visitas
+router.post('/procesar-escaneo', isAuth, isAdmin, royaltyControlador.postProcesarEscaneo)
+router.post('/registrar-visita', isAuth, isAdmin, royaltyControlador.postRegistrarVisitaAdmin)
 
 module.exports = router

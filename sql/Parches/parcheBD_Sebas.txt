@@ -119,7 +119,7 @@ CREATE PROCEDURE sp_fetchEventos(
 BEGIN
     SELECT E.Nombre AS Nombre_Evento, E.Fecha_Inicio, E.Fecha_final, E.Descripcion, ER.Nombre_Royalty
     FROM evento E
-    INNER JOIN estado_royalty_da_eventos RE ON e.ID_Evento = RE.ID_Evento
+    INNER JOIN estado_royalty_da_eventos RE ON E.ID_Evento = RE.ID_Evento
     INNER JOIN estado_royalty ER ON ER.Nombre_Royalty = RE.Nombre_Royalty
     WHERE ER.Número_de_prioridad <= (
         SELECT Número_de_prioridad FROM estado_royalty WHERE Nombre_Royalty = p_Nombre_Royalty
