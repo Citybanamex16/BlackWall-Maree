@@ -176,6 +176,21 @@ module.exports = class Royalty {
     return [rows[0]]
   }
 
+  static async fetchClienteStatusGoogle (telefono) {
+    return db.execute(`
+    SELECT 
+      c.Numero_Telefonico,
+      c.Nombre,
+      c.Visitas_Actuales,
+      c.Nombre_Royalty AS nivel,
+      e.Max_Visitas,
+      e.Min_Visitas
+    FROM cliente c
+    LEFT JOIN estado_royalty e ON c.Nombre_Royalty = e.Nombre_Royalty
+    WHERE c.Numero_Telefonico = ?
+  `, [telefono])
+  }
+
   static async fetchPromotions (nivel) {
     return db.execute('CALL sp_fetchPromociones(?)', [nivel])
       .then(resultado => {

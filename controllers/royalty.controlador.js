@@ -285,6 +285,7 @@ exports.getRoyaltyCli = async (request, response, next) => {
 
 exports.getRoyaltyDataAPI = async (request, response, next) => {
   console.log('getRoyaltyDataAPI llamado')
+
   if (!request.session.isLoggedIn || request.session.rol !== 'Usuario') {
     return response.status(401).json({ redirectUrl: '/cliente/login' })
   }
@@ -293,9 +294,11 @@ exports.getRoyaltyDataAPI = async (request, response, next) => {
 
   try {
     const [statusData] = await Royalty.fetchClientStatus(telefono)
+    const [[statusDataGoogle]] = await Royalty.fetchClienteStatusGoogle(telefono)
     const clienteInfo = statusData[0]
     const nivelId = clienteInfo.nivel
-
+    console.log(clienteInfo.Nombre)
+    console.log(clienteInfo.Max_Visitas)
     const [
       [promotionsData],
       [eventsData],
@@ -314,9 +317,10 @@ exports.getRoyaltyDataAPI = async (request, response, next) => {
 
     const walletLink = await WalletModel.generarLinkWallet(
       telefono,
-      clienteInfo.nivel,
-      clienteInfo.visitas,
-      clienteInfo.Max_Visitas
+      statusDataGoogle.Nombre,
+      statusDataGoogle.nivel,
+      statusDataGoogle.Visitas,
+      statusDataGoogle.Max_Visitas
     )
 
     console.log('Wallet link generado:', walletLink)
