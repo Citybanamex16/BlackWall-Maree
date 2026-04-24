@@ -261,12 +261,14 @@ static async guardarItems(idOrden, items) {
             // B. Limpiamos el precio
             const precioNum = parseFloat(String(item.precio_total || item.precio || '0').replace(/[^0-9.]/g, ''));
             
-            // C. Juntamos los ingredientes y los convertimos en STRING (JSON)
+            // C. Construimos el JSON con tipo_cambio para cada ingrediente
             const extras = [
-                ...(item.ingredientes_adentro || []),
-                ...(item.ingredientes_toppings || [])
+                ...(item.ingredientes_adentro  || []).map(i => ({ ...i, tipo_cambio: 'extra'   })),
+                ...(item.ingredientes_toppings || []).map(i => ({ ...i, tipo_cambio: 'extra'   })),
+                ...(item.ingredientes_base     || []).map(i => ({ ...i, precio: 0, tipo_cambio: 'base'   })),
+                ...(item.ingredientes_eliminados || []).map(i => ({ ...i, precio: 0, tipo_cambio: 'quitado' }))
             ];
-            const jsonExtras = JSON.stringify(extras); // Ej: '[{"id_insumo":"IN01", "precio":15}]' o '[]'
+            const jsonExtras = JSON.stringify(extras);
 
             // D. LLAMAMOS AL STORED PROCEDURE (Uno solo que sea híbrido)
             // Le pasamos todo: ID, Precio, Cantidad y el JSON de ingredientes
@@ -296,10 +298,16 @@ static async guardarItems(idOrden, items) {
       SELECT
         p.Nombre AS nombre,
         otp.Cantidad AS cantidad,
-        otp.Precio_Venta AS precio
+        otp.Precio_Venta AS precio,
+        GROUP_CONCAT(CASE WHEN doi.tipo_cambio = 'base'    THEN i.Nombre END ORDER BY i.Nombre SEPARATOR '||') AS ings_base,
+        GROUP_CONCAT(CASE WHEN doi.tipo_cambio = 'extra'   THEN i.Nombre END ORDER BY i.Nombre SEPARATOR '||') AS ings_extra,
+        GROUP_CONCAT(CASE WHEN doi.tipo_cambio = 'quitado' THEN i.Nombre END ORDER BY i.Nombre SEPARATOR '||') AS ings_quitado
       FROM orden_tiene_producto otp
       JOIN producto p ON otp.ID_Producto = p.ID_Producto
+      LEFT JOIN detalle_orden_insumos doi ON otp.id_orden_producto = doi.id_orden_producto
+      LEFT JOIN insumo i ON doi.ID_Insumo = i.ID_Insumo
       WHERE otp.ID_Orden = ?
+      GROUP BY otp.id_orden_producto, p.Nombre, otp.Cantidad, otp.Precio_Venta
     `
     return db.execute(query, [idOrden])
   }

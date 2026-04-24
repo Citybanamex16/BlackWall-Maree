@@ -16,7 +16,7 @@ const esPersonalizado = (item) => Boolean(item.producto_base)
 
 // ── Helper: extrae precio numérico sin importar el formato ──
 const precioNumerico = (item) => {
-  if (esPersonalizado(item)) return item.precio_total ?? 0
+  if (item.precio_total != null) return Number(item.precio_total) || 0
   const raw = typeof item.precio === 'number'
     ? item.precio
     : parseFloat(String(item.precio || '').replace(/[^0-9.,]/g, '').replace(',', '.'))
@@ -250,7 +250,7 @@ const abrirModalConfirmacion = (forma, telefono, direccion) => {
   const resumenItems = pedido.map(item => {
   const nombre     = esPersonalizado(item) ? item.producto_base : item.nombre
   const precioText = '$' + precioNumerico(item).toFixed(2)
-  const detalle    = esPersonalizado(item) ? htmlIngredientes(item) : ''
+  const detalle    = htmlIngredientes(item)
 
   return `
     <div style="padding:10px 0;border-bottom:1px solid #f0f0f0;">
@@ -356,9 +356,7 @@ const renderPedido = () => {
          </span>`
       : ''
 
-    const precioTexto = esPersonalizado(item)
-      ? '$' + item.precio_total.toFixed(2)
-      : String(item.precio || '')
+    const precioTexto = '$' + precioNumerico(item).toFixed(2)
 
     div.innerHTML = `
       <div style="flex:1;min-width:0;">
