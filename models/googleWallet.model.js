@@ -5,7 +5,7 @@ const { walletClient, ISSUER_ID } = require('../util/GoogleCredentials/googleWal
 const { GoogleAuth } = require('google-auth-library')
 const db = require('../util/database')
 const jwt = require('jsonwebtoken')
-const credentials = require('../util/GoogleCredentials/google-wallet.json')
+const credentials = require('../util/GoogleCredentials/Google-Wallet.json')
 
 function limpiarTelefono (telefono) {
   return String(telefono).replace(/[^a-zA-Z0-9_]/g, '_')
@@ -239,7 +239,7 @@ async function generarLinkWallet (telefono, nombreCliente, nombreRoyalty, puntos
   }
 
   const auth = new GoogleAuth({
-    keyFile: './util/GoogleCredentials/google-wallet.json',
+    keyFile: './util/GoogleCredentials/Google-Wallet.json',
     scopes: ['https://www.googleapis.com/auth/wallet_object.issuer']
   })
 
