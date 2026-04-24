@@ -260,11 +260,21 @@ html {
 /* end logo CSS */
 
 .royalty-badge {
+    background: #b5956a;
+    color: #fff;
+    padding: 6px 14px;
+    border-radius: 20px;
+}
+/* end logo CSS */
+
+.royalty-badge {
     background: #7da6baff;
     color: #fff;
     padding: 6px 14px;
     border-radius: 20px;
 }
+
+/* ───────────── CATEGORÍAS ───────────── */
 
 /* ───────────── CATEGORÍAS ───────────── */
 
@@ -618,18 +628,18 @@ html {
 }
 
 .product-name-app {
-    /* ESTO ES LO NUEVO: Forzamos a que todos midan lo mismo */
-    height: 34px;           /* Altura fija para que siempre ocupen 2 líneas */
-    max-height: 34px;       /* Evita que crezca si el texto es muy largo */
+/* Forzamos altura fija para alinear las tarjetas */
+    height: 34px;           
+    max-height: 34px;       
     
     font-size: 14px;
     font-weight: 600;
-    line-height: 1.2;       /* 14px * 1.2 = ~17px por línea. 17x2 = 34px de altura total */
+    line-height: 1.2;       /* 14px * 1.2 = ~17px por línea. 17x2 = 34px total */
     margin: 0;
 
-    /* EL TRUCO QUE YA TENÍAS: Corta el texto con "..." */
+    /* Truco para puntos suspensivos en la segunda línea */
     display: -webkit-box;
-    -webkit-line-clamp: 2;  /* Corta exactamente en la línea 2 */
+    -webkit-line-clamp: 2;  
     -webkit-box-orient: vertical;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -637,21 +647,20 @@ html {
 
 /* Estilo del texto del precio con fondo */
 .product-price-app {
-    font-size: 10px;           /* 1. Reduce esto (ej. 14px a 12px o 11px) */
+    font-size: 10px;
     color: #3d3935ff;
     font-weight: 700;
     background-color: #f8f5f2;
-    padding: 2px 8px;          /* 2. Reduce esto (ej. 4px 12px a 2px 8px) para hacerlo más compacto */
+    padding: 2px 8px;
     border: 1px solid rgba(0,0,0,0.06);
     border-radius: 6px;
     display: inline-block;
     transition: all 0.3s ease;
     
-    /* 3. AÑADE ESTO para separar el precio de los títulos */
-    margin-bottom: 8px;        /* Añade espacio debajo del precio */
-    margin-top: 6px;           /* Añade un poco de espacio arriba si es necesario */
+    /* Espaciado para mejorar la lectura */
+    margin-bottom: 8px;
+    margin-top: 6px;
 }
-
 
 /* Ajuste de Acción para eliminar el "aire" sobrante */
 .product-action-wrapper {
