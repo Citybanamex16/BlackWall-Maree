@@ -1,19 +1,18 @@
 <%- include('../partials/header_cliente', { pageTitle: 'Menu - Maree' }) %>
     <link rel="stylesheet" href="/css/moduloRoyaltyCSS/royalty-cliente.css">
 <body>
-<%- include('../partials/breadcrumbs') %>
-    
+
+<div class="container-fluid bg-white border-bottom">
+        <%- include('../partials/breadcrumbs') %>
+</div>  
 <main class="container-fluid container-md my-3 my-md-5 royalty-dashboard">
-    
-    <div class="row mb-4">
-        <div class="col-12 col-md-8 mx-auto px-2 px-md-3">
-            <div class="premium-card text-center p-4">
-        <div class="premium-card p-4">
-    
-            <div class="greeting-section mb-4 text-start">
-                <h1 class="greeting-title text-truncate">¡Hola, <%= cliente.Nombre %>!</h1>
-                <p class="loyalty-subtitle">Maree Royalty</p>
-            </div>
+        <div class="row mb-4">
+            <div class="col-12 col-md-8 mx-auto px-2 px-md-3">
+                <div class="premium-card p-4">
+                    <div class="greeting-section mb-4 text-start">
+                        <h1 class="greeting-title text-truncate">¡Hola, <%= cliente.Nombre %>!</h1>
+                        <p class="loyalty-subtitle">Maree Rewards</p>
+                    </div>
             <div class="text-center mt-4">
                 <strong id="cliente-nivel-badge" class="badge-nivel mx-auto mt-1"><%= cliente.nivel %></strong>
             </div>
@@ -61,12 +60,15 @@
      CARRUSEL DE PROMOCIONES ROYALTY
      Se inyectan las tarjetas desde JS con construirCarruselPromos()
 ════════════════════════════════════════════ -->
-<section class="promos-section premium-card mb-5 ps-2 ps-md-0" style="margin-top: 32px;">
+
 
   <!-- Encabezado -->
-  <div class="promos-header mb-3 px-1">
-    <h2 class="section-title fs-5">Tus Promociones</h2>
-    <p class="loyalty-subtitle mb-0">Beneficios exclusivos de tu nivel</p>
+   <div class="row">
+      <div class="col-12 col-md-8 mx-auto px-2 px-md-3">
+  <section class="promos-section premium-card mb-5 p-4" style="margin-top: 32px;">
+    <div class="promos-header mb-4 text-start">
+    <h2 class="section-title fs-4">Tus Promociones</h2>
+    <p class="loyalty-subtitle mb-1">Beneficios exclusivos de tu nivel</p>
   </div>
 
   <!-- Estado de carga -->
@@ -88,6 +90,8 @@
   </div>
 
 </section>
+</div>
+</div>
 
 
 
@@ -113,7 +117,7 @@
   window.clienteData = {
     nombre:  "<%= cliente.Nombre %>",
     nivel:   "<%= cliente.nivel %>",
-    visitas: <%= cliente.visitas %>
+    visitas: "<%= cliente.visitas %>"
   }
 </script>
 
