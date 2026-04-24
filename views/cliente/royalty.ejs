@@ -53,6 +53,44 @@
         </div>
     </div>
 
+
+
+
+
+    <!-- ═══════════════════════════════════════════
+     CARRUSEL DE PROMOCIONES ROYALTY
+     Se inyectan las tarjetas desde JS con construirCarruselPromos()
+════════════════════════════════════════════ -->
+<section class="promos-section premium-card mb-5 ps-2 ps-md-0" style="margin-top: 32px;">
+
+  <!-- Encabezado -->
+  <div class="promos-header mb-3 px-1">
+    <h2 class="section-title fs-5">Tus Promociones</h2>
+    <p class="loyalty-subtitle mb-0">Beneficios exclusivos de tu nivel</p>
+  </div>
+
+  <!-- Estado de carga -->
+  <div id="promos-loading" class="w-100 text-center py-4">
+    <div class="spinner-border spinner-border-sm text-gold" role="status"></div>
+    <span class="ms-2 small text-muted">Cargando promociones...</span>
+  </div>
+
+  <!-- Estado vacío (oculto por defecto) -->
+  <div id="promos-empty" class="alert alert-light border mx-3 w-100 text-center" style="display:none;">
+    No hay promociones disponibles para tu nivel en este momento.
+  </div>
+
+  <!-- Carrusel (oculto hasta que JS inyecte tarjetas) -->
+  <div id="contenedor-promos-carrusel"
+       class="scroll-horizontal pb-3"
+       style="display:none;">
+    <!-- Las .promo-img-card se inyectan aquí desde construirCarruselPromos() -->
+  </div>
+
+</section>
+
+
+
     
 
     <script>
@@ -67,36 +105,17 @@
     .catch(err => console.error('Error:', err))
 </script>
     
-    <!--
-    <section class="mb-4 ps-2 ps-md-0">
-        <h2 class="section-title mb-3 fs-4">Tus Promociones</h2>
-        <div class="scroll-horizontal pb-3" id="contenedor-promociones">
-            <div class="w-100 text-center py-4 loading-state">
-                <div class="spinner-border text-gold spinner-border-sm" role="status"></div> 
-                <span class="ms-2 small">Cargando promociones...</span>
-            </div>
-        </div>
-    </section>
     
-    <section class="mb-4 ps-2 ps-md-0">
-        <h2 class="section-title mb-3 fs-4">Tus Eventos</h2>
-        <div class="scroll-horizontal pb-3" id="contenedor-eventos">
-            <div class="w-100 text-center py-4 loading-state">
-                <div class="spinner-border text-gold spinner-border-sm" role="status"></div> 
-                <span class="ms-2 small">Cargando eventos...</span>
-            </div>
-        </div>
-    </section>
-
-    <section id="contenedor-metricas" class="container-fluid px-2 px-md-0 mb-4">
-    <div class="w-100 text-center py-4">
-        <div class="spinner-border text-gold spinner-border-sm" role="status"></div>
-        <span class="ms-2 small text-muted">Calculando tus estadísticas...</span>
-    </div>
-    </section>
-    -->
 
 </main>
+
+<script>
+  window.clienteData = {
+    nombre:  "<%= cliente.Nombre %>",
+    nivel:   "<%= cliente.nivel %>",
+    visitas: <%= cliente.visitas %>
+  }
+</script>
 
 <script src="/js/Royalty/royalty.cliente.js"></script>
 </body>
