@@ -62,3 +62,74 @@
 .bg-red    { background-color: #f8d7da; }
 .bg-pink   { background-color: #f8d7eb; }
 .bg-teal   { background-color: #d1ecf1; }
+
+/* --- Estilos para el Escáner de Visitas (Modal y FAB) --- */
+
+/* Botón Flotante Izquierdo (FAB) */
+/* Botón de Escáner en la parte superior derecha */
+.btn-scanner-top {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background-color: var(--c-primary, #b5956a); /* Dorado Marée */
+    color: #ffffff;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 50px; /* Forma de píldora */
+    font-family: 'Jost', sans-serif;
+    font-size: 15px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    cursor: pointer;
+    box-shadow: 0 4px 15px rgba(181, 149, 106, 0.3);
+    transition: all 0.3s ease;
+}
+
+.btn-scanner-top:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(181, 149, 106, 0.4);
+    background-color: var(--c-primary-deep, #a67f4f);
+}
+
+.btn-scanner-top i {
+    font-size: 18px;
+}
+
+/* Modal Overlay */
+.scanner-modal-overlay {
+    display: none;
+    position: fixed;
+    top: 0; 
+    left: 0;
+    width: 100%; 
+    height: 100%;
+    background: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(5px);
+    z-index: 1000;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+}
+
+.scanner-modal-content {
+    background: var(--c-surface);
+    width: 100%;
+    max-width: 500px;
+    padding: 32px;
+    border-radius: var(--radius-lg);
+    position: relative;
+    box-shadow: var(--shadow-lg);
+    border: 1px solid var(--c-border);
+}
+
+@keyframes modalFadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+#reader {
+    width: 100% !important;
+    border: 2px solid var(--c-primary-light) !important;
+    border-radius: var(--radius-md);
+    overflow: hidden;
+}

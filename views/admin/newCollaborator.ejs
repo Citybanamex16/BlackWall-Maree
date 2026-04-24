@@ -18,7 +18,13 @@
       <div class="field mb-4">
         <label class="label" style="color: var(--c-text-muted); text-transform: uppercase; font-size: 11px; letter-spacing: 1px;">ID del colaborador</label>
         <div class="control">
-          <input class="input input-base" type="text" name="id_colaborador" value="<%= oldInput ? oldInput.id_colaborador : '' %>" required>
+          <input
+            class="input"
+            type="text"
+            name="id_colaborador"
+            value="<%= oldInput.id_colaborador %>"
+            readonly
+            required>
         </div>
       </div>
 

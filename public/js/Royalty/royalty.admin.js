@@ -362,6 +362,10 @@ const cerrarModalConfirmacion = () => {
   window.location.reload()
 }
 
+function cerrarModalError () {
+  document.getElementById('ModalError').classList.remove('is-active')
+}
+
 const cerrarModal = () => {
   document.getElementById('modal-modificarRoyalty').classList.remove('is-active')
   limpiarFormulario()

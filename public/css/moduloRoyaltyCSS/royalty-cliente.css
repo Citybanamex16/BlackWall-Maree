@@ -521,3 +521,30 @@ body {
     padding: 0;
 }
 
+    .breadcrumb {
+    padding: 1rem 0; /* Da espacio arriba y abajo */
+    margin-bottom: 0;
+    background-color: transparent;
+    font-family: 'Jost', sans-serif;
+    font-size: 0.85rem;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+}
+
+.breadcrumb-item a {
+    color: var(--text-muted);
+    text-decoration: none;
+    transition: color 0.3s;
+}
+
+.breadcrumb-item a:hover {
+    color: var(--maree-gold);
+}
+
+/* Evita que el body empuje la barra de navegación de forma extraña */
+body {
+    background-color: var(--maree-light-bg);
+    overflow-x: hidden;
+    margin: 0;
+    padding: 0;
+}

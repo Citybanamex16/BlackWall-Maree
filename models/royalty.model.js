@@ -130,43 +130,44 @@ module.exports = class Royalty {
     )
   }
 
-  static async agregarVisita (telefono) {
-  // Suma una visita al cliente
-    await db.execute(
-      'UPDATE cliente SET Visitas = Visitas + 1 WHERE Telefono = ?',
-      [telefono]
-    )
-    // Retorna los datos actualizados del cliente
-    const [rows] = await db.execute(
-    `SELECT c.Telefono, c.Visitas, c.Nombre_Royalty, 
-            er.Max_Visitas, er.Número_de_prioridad
-     FROM cliente c
-     JOIN estado_royalty er ON er.Nombre_Royalty = c.Nombre_Royalty
-     WHERE c.Telefono = ?`,
-    [telefono]
-    )
-    return rows[0]
+  // Registro de visitas
+  static async fetchClienteParaEscaneo (telefono) {
+    return db.execute(`
+        SELECT Numero_Telefonico, Nombre, Visitas_Actuales, tokens_gastados, Nombre_Royalty
+        FROM cliente
+        WHERE Numero_Telefonico = ?`, [telefono])
   }
 
-  static async actualizarNivelSiCorresponde (telefono) {
-  // Busca el nivel de acuerdo a las visitas que tenga
-    const [rows] = await db.execute(
-    `SELECT c.Visitas_Actuales, er.Nombre_Royalty, er.Max_Visitas
-     FROM cliente c
-     JOIN estado_royalty er 
-       ON c.Visitas_Actuales >= er.Min_Visitas AND c.Visitas <= er.Max_Visitas
-     WHERE c.Numero_Telefonico = ?
-     ORDER BY er.Número_de_prioridad DESC
-     LIMIT 1`,
-    [telefono]
-    )
-    if (rows.length > 0) {
-      await db.execute(
-        'UPDATE cliente SET Nombre_Royalty = ? WHERE Numero_Telefonico = ?',
-        [rows[0].Nombre_Royalty, telefono]
+  static async registrarVisita (telefono) {
+    return db.execute(`
+        UPDATE cliente
+        SET Visitas_Actuales = Visitas_Actuales + 1
+        WHERE Numero_Telefonico = ?`, [telefono])
+  }
+
+  static async registrarCanje (telefono, idPromocion) {
+    const connection = await db.getConnection()
+    try {
+      await connection.beginTransaction()
+
+      await connection.execute(
+        'UPDATE cliente SET tokens_gastados = tokens_gastados + 1 WHERE Numero_Telefonico = ?',
+        [telefono]
       )
+
+      await connection.execute(
+        'INSERT INTO historial_canjes_royalty (Numero_Telefonico, ID_Promocion) VALUES (?, ?)',
+        [telefono, idPromocion]
+      )
+
+      await connection.commit()
+      return { success: true }
+    } catch (error) {
+      await connection.rollback()
+      throw error
+    } finally {
+      connection.release()
     }
-    return rows[0]
   }
 
   // Cliente
@@ -174,6 +175,21 @@ module.exports = class Royalty {
     const [rows] = await db.execute('CALL sp_EstadoCliente(?)', [telefono])
 
     return [rows[0]]
+  }
+
+  static async fetchClienteStatusGoogle (telefono) {
+    return db.execute(`
+    SELECT 
+      c.Numero_Telefonico,
+      c.Nombre,
+      c.Visitas_Actuales,
+      c.Nombre_Royalty AS nivel,
+      e.Max_Visitas,
+      e.Min_Visitas
+    FROM cliente c
+    LEFT JOIN estado_royalty e ON c.Nombre_Royalty = e.Nombre_Royalty
+    WHERE c.Numero_Telefonico = ?
+  `, [telefono])
   }
 
   static async fetchPromotions (nivel) {

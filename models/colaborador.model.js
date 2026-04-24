@@ -74,6 +74,17 @@ class Colaborador {
       connection.release()
     }
   }
+
+  static async generateUniqueId () {
+    let id
+    let exists = true
+    while (exists) {
+      const randomNum = Math.floor(10000000 + Math.random() * 90000000)
+      id = `CL${randomNum}`
+      exists = await this.existsById(id)
+    }
+    return id
+  }
 }
 
 module.exports = Colaborador
