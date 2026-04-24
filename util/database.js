@@ -11,14 +11,14 @@ const pool = mysql.createPool({
   database: 'mareedb',
   password: '280904',
   waitForConnection: true,
-  connectionLimit: 10
+  connectionLimit: 10 
 
 })
 */
 
 /* ==Contraseñas y usuario ==
 Usuario: CL85565990
-Pass: CL006901!
+Pass: CL006901! 
 
 */
 

@@ -1,101 +1,110 @@
-<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title><%= pageTitle %> - Marée</title>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@1.0.4/css/bulma.min.css">
-</head>
+<%- include('../partials/header_cliente', { pageTitle: 'Mi perfil - Marée' }) %>
+
 <body>
+<main class="page-wrap">
+  <header style="margin-bottom: 32px;">
+    <h1 class="page-title">Mi perfil</h1>
+    <p style="color: var(--c-text-muted); font-size: 16px; margin-top: 8px;">
+      Modifica tus datos personales
+    </p>
+  </header>
 
-<section class="section">
-  <div class="container">
-    <h1 class="title">Mi perfil</h1>
-    <p class="subtitle">Modifica tus datos personales</p>
+  <% if (error) { %>
+    <div class="notification status-pill is-danger" style="border-radius: var(--radius-md); padding: 16px; width: 100%; margin-bottom: 24px;">
+      <%= error %>
+    </div>
+  <% } %>
 
-    <% if (error) { %>
-      <div class="notification is-danger"><%= error %></div>
-    <% } %>
+  <% if (success) { %>
+    <div class="notification status-pill is-active" style="border-radius: var(--radius-md); padding: 16px; width: 100%; margin-bottom: 24px;">
+      <%= success %>
+    </div>
+  <% } %>
 
-    <% if (success) { %>
-      <div class="notification is-success"><%= success %></div>
-    <% } %>
+  <% if (cliente) { %>
+    <div class="card-base" style="max-width: 720px;">
+      <form action="/cliente/perfil" method="POST">
+        <div style="display: flex; flex-direction: column; gap: 18px; margin-bottom: 28px;">
 
-    <% if (cliente) { %>
-      <div class="box">
-        <form action="/cliente/perfil" method="POST">
-          <div class="field">
-            <label class="label">Número telefónico</label>
-            <div class="control">
-              <input
-                class="input"
-                type="text"
-                value="<%= cliente.numero_telefonico %>"
-                disabled>
+          <div>
+            <label style="color: var(--c-text-muted); text-transform: uppercase; font-size: 11px; letter-spacing: 1px;">
+              Número telefónico
+            </label>
+            <input
+              class="input"
+              style="margin-top: 6px;"
+              type="text"
+              value="<%= cliente.numero_telefonico %>"
+              disabled>
+          </div>
+
+          <div>
+            <label style="color: var(--c-text-muted); text-transform: uppercase; font-size: 11px; letter-spacing: 1px;">
+              Nombre
+            </label>
+            <input
+              class="input"
+              style="margin-top: 6px;"
+              type="text"
+              name="nombre"
+              value="<%= cliente.nombre || '' %>"
+              required>
+          </div>
+
+          <div>
+            <label style="color: var(--c-text-muted); text-transform: uppercase; font-size: 11px; letter-spacing: 1px;">
+              Correo
+            </label>
+            <input
+              class="input"
+              style="margin-top: 6px;"
+              type="email"
+              name="correo"
+              value="<%= cliente.correo || '' %>"
+              required>
+          </div>
+
+          <div>
+            <label style="color: var(--c-text-muted); text-transform: uppercase; font-size: 11px; letter-spacing: 1px;">
+              Género
+            </label>
+            <div class="select is-fullwidth" style="margin-top: 6px;">
+              <select name="genero" required>
+                <option value="">Selecciona una opción</option>
+                <option value="Femenino" <%= cliente.genero === 'Femenino' ? 'selected' : '' %>>Femenino</option>
+                <option value="Masculino" <%= cliente.genero === 'Masculino' ? 'selected' : '' %>>Masculino</option>
+                <option value="Otro" <%= cliente.genero === 'Otro' ? 'selected' : '' %>>Otro</option>
+                <option value="Prefiero no decirlo" <%= cliente.genero === 'Prefiero no decirlo' ? 'selected' : '' %>>Prefiero no decirlo</option>
+              </select>
             </div>
           </div>
 
-          <div class="field">
-            <label class="label">Nombre</label>
-            <div class="control">
-              <input
-                class="input"
-                type="text"
-                name="nombre"
-                value="<%= cliente.nombre || '' %>"
-                required>
-            </div>
+          <div>
+            <label style="color: var(--c-text-muted); text-transform: uppercase; font-size: 11px; letter-spacing: 1px;">
+              Fecha de nacimiento
+            </label>
+            <input
+              class="input"
+              style="margin-top: 6px;"
+              type="date"
+              name="fecha_nacimiento"
+              value="<%= cliente.fecha_nacimiento ? String(cliente.fecha_nacimiento).slice(0, 10) : '' %>"
+              required>
           </div>
+        </div>
 
-          <div class="field">
-            <label class="label">Correo</label>
-            <div class="control">
-              <input
-                class="input"
-                type="email"
-                name="correo"
-                value="<%= cliente.correo || '' %>"
-                required>
-            </div>
-          </div>
-
-          <div class="field">
-            <label class="label">Género</label>
-            <div class="control">
-              <div class="select is-fullwidth">
-                <select name="genero" required>
-                  <option value="">Selecciona una opción</option>
-                  <option value="Femenino" <%= cliente.genero === 'Femenino' ? 'selected' : '' %>>Femenino</option>
-                  <option value="Masculino" <%= cliente.genero === 'Masculino' ? 'selected' : '' %>>Masculino</option>
-                  <option value="Otro" <%= cliente.genero === 'Otro' ? 'selected' : '' %>>Otro</option>
-                  <option value="Prefiero no decirlo" <%= cliente.genero === 'Prefiero no decirlo' ? 'selected' : '' %>>Prefiero no decirlo</option>
-                </select>
-              </div>
-            </div>
-          </div>
-
-          <div class="field">
-            <label class="label">Fecha de nacimiento</label>
-            <div class="control">
-              <input
-                class="input"
-                type="date"
-                name="fecha_nacimiento"
-                value="<%= cliente.fecha_nacimiento ? String(cliente.fecha_nacimiento).slice(0, 10) : '' %>"
-                required>
-            </div>
-          </div>
-
-          <div class="field is-grouped mt-5">
-            <div class="control">
-              <button class="button is-primary" type="submit">Guardar cambios</button>
-            </div>
-          </div>
-        </form>
-      </div>
-    <% } %>
-  </div>
-</section>
+        <div style="display: flex; gap: 12px; border-top: 1px solid var(--c-border); padding-top: 24px;">
+          <button class="btn-danger" type="submit">
+            Guardar cambios
+          </button>
+          <a href="/cliente/menu" class="btn-ghost">
+            Volver al menú
+          </a>
+        </div>
+      </form>
+    </div>
+  <% } %>
+</main>
 
 </body>
 </html>
