@@ -104,28 +104,19 @@ exports.getOrden = (request, response, next) => {
 
 exports.getPlatillo = async (request, response, next) => {
   const id = request.query.id
-  console.log('Query: ', request.query)
-  console.log('EN CONTROLLER — buscando:', id)
-
-  /* if (!nombre || typeof nombre !== 'string' || nombre.length > 100) {
-    return response.status(400).json({ disponible: false, mensaje: 'Nombre inválido' })
-  }
-  */
-
   try {
     const [rows] = await db.execute(
       `SELECT p.ID_Producto, p.Nombre, p.Precio, p.Disponible,
               p.Categoría as base,
-              GROUP_CONCAT(i.Nombre SEPARATOR '||') as ingredientes
+              i.ID_Insumo as ing_id,
+              i.Nombre    as ing_nombre,
+              i.Precio    as ing_precio
        FROM producto p
        LEFT JOIN producto_tiene_insumo pti ON p.ID_Producto = pti.ID_Producto
        LEFT JOIN insumo i ON pti.ID_Insumo = i.ID_Insumo
-       WHERE p.ID_Producto = ?
-       GROUP BY p.ID_Producto`,
+       WHERE p.ID_Producto = ?`,
       [id]
     )
-
-    console.log('Resultado BD:', rows) // ve qué regresa
 
     if (rows.length === 0) {
       return response.status(404).json({ disponible: false, mensaje: 'Platillo no encontrado' })
@@ -134,12 +125,21 @@ exports.getPlatillo = async (request, response, next) => {
     const row = rows[0]
     const disponible = row.Disponible === 1 || row.Disponible === '1'
 
+    const ingredientes = rows
+      .filter(r => r.ing_id)
+      .map(r => ({ id: r.ing_id, nombre: r.ing_nombre, precio: parseFloat(r.ing_precio) }))
+
+    const [catalogoRows] = await db.execute(
+      'SELECT ID_Insumo as id, Nombre as nombre, Precio as precio FROM insumo WHERE Activo = 1 ORDER BY Nombre'
+    )
+
     response.status(200).json({
       disponible,
       nombre: row.Nombre,
       precio: row.Precio,
       base: row.base,
-      ingredientes: row.ingredientes ? row.ingredientes.split('||') : []
+      ingredientes,
+      catalogo: catalogoRows.map(r => ({ id: r.id, nombre: r.nombre, precio: parseFloat(r.precio) }))
     })
   } catch (err) {
     console.error('Error buscando platillo:', err)
