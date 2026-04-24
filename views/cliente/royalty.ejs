@@ -12,7 +12,7 @@
     
             <div class="greeting-section mb-4 text-start">
                 <h1 class="greeting-title text-truncate">¡Hola, <%= cliente.Nombre %>!</h1>
-                <p class="loyalty-subtitle">Maree Royalty</p>
+                <p class="loyalty-subtitle">Maree Rewards</p>
             </div>
             <div class="text-center mt-4">
                 <strong id="cliente-nivel-badge" class="badge-nivel mx-auto mt-1"><%= cliente.nivel %></strong>
@@ -36,14 +36,6 @@
                         Muestra este código en caja
                     </span>
                 </div>
-            </div>
-            
-            <div class="sellos-section px-2 mt-4 text-start">
-                <p class="sellos-title">Tus Sellos</p>
-                <div id="contenedor-sellos" data-visitas="<%= cliente.visitas %>"></div>
-            </div>
-            <div class="text-center mt-4">
-                <strong id="cliente-nivel-badge" class="badge-nivel mx-auto mt-1"><%= cliente.nivel %></strong>
             </div>
             
             <div class="sellos-section px-2 mt-4 text-start">
