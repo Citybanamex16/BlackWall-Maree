@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Servidor: localhost
--- Tiempo de generación: 24-04-2026 a las 02:48:15
+-- Tiempo de generación: 24-04-2026 a las 06:12:16
 -- Versión del servidor: 10.4.28-MariaDB
 -- Versión de PHP: 8.2.4
 
@@ -261,30 +261,42 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `sp_fetchTopGlobal` (IN `p_Categorí
 END$$
 
 DROP PROCEDURE IF EXISTS `SP_GuardarItemHibrido`$$
-CREATE DEFINER=`root`@`localhost` PROCEDURE `SP_GuardarItemHibrido` (IN `p_idOrden` VARCHAR(10) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci, IN `p_idProducto` VARCHAR(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci, IN `p_precioVenta` DECIMAL(10,2), IN `p_jsonExtras` TEXT CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci)   BEGIN
+CREATE DEFINER=`root`@`localhost` PROCEDURE `SP_GuardarItemHibrido` (IN `p_idOrden` VARCHAR(10) CHARSET utf8mb4, IN `p_idProducto` VARCHAR(50) CHARSET utf8mb4, IN `p_precioVenta` DECIMAL(10,2), IN `p_jsonExtras` TEXT CHARSET utf8mb4)   BEGIN
     DECLARE v_id_orden_producto INT;
-    DECLARE v_json_length INT DEFAULT 0;
-    DECLARE i INT DEFAULT 0;
-    DECLARE v_id_insumo VARCHAR(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci;
-    DECLARE v_precio_extra DECIMAL(10,2);
+    DECLARE v_json_length       INT          DEFAULT 0;
+    DECLARE i                   INT          DEFAULT 0;
+    DECLARE v_id_insumo         VARCHAR(50)  CHARSET utf8mb4;
+    DECLARE v_precio_extra      DECIMAL(10,2);
+    DECLARE v_tipo_cambio       VARCHAR(20);
 
-    -- 1. Insertamos el producto base
+    -- 1. Insertar el producto en la orden
     INSERT INTO orden_tiene_producto (ID_Orden, ID_Producto, Cantidad, Precio_Venta)
     VALUES (p_idOrden, p_idProducto, 1, p_precioVenta);
 
     SET v_id_orden_producto = LAST_INSERT_ID();
 
-    -- 2. Lógica Híbrida: Procesar ingredientes/extras
+    -- 2. Procesar ingredientes del JSON
     IF p_jsonExtras IS NOT NULL AND p_jsonExtras != '[]' AND p_jsonExtras != '' THEN
         SET v_json_length = JSON_LENGTH(p_jsonExtras);
-        
+
         WHILE i < v_json_length DO
             SET v_id_insumo = JSON_UNQUOTE(JSON_EXTRACT(p_jsonExtras, CONCAT('$[', i, '].id_insumo')));
-            SET v_precio_extra = CAST(JSON_UNQUOTE(JSON_EXTRACT(p_jsonExtras, CONCAT('$[', i, '].precio'))) AS DECIMAL(10,2));
 
-            -- Insertamos usando el nombre correcto de la columna: precio_momento
-            INSERT INTO detalle_orden_insumos (id_orden_producto, ID_Orden, ID_Insumo, precio_momento)
-            VALUES (v_id_orden_producto, p_idOrden, v_id_insumo, IFNULL(v_precio_extra, 0));
+            SET v_precio_extra = CAST(
+                IFNULL(JSON_UNQUOTE(JSON_EXTRACT(p_jsonExtras, CONCAT('$[', i, '].precio'))), '0')
+                AS DECIMAL(10,2)
+            );
+
+            -- Si el JSON trae tipo_cambio lo usa; si no (crepa personalizada legacy) usa 'base'
+            SET v_tipo_cambio = IFNULL(
+                JSON_UNQUOTE(JSON_EXTRACT(p_jsonExtras, CONCAT('$[', i, '].tipo_cambio'))),
+                'base'
+            );
+
+            INSERT INTO detalle_orden_insumos
+                (id_orden_producto, ID_Orden, ID_Insumo, tipo_cambio, precio_momento)
+            VALUES
+                (v_id_orden_producto, p_idOrden, v_id_insumo, v_tipo_cambio, v_precio_extra);
 
             SET i = i + 1;
         END WHILE;
@@ -378,6 +390,7 @@ CREATE TABLE `cliente` (
 --
 
 INSERT INTO `cliente` (`Numero_Telefonico`, `Nombre_Royalty`, `Nombre`, `Correo`, `Genero`, `Fecha_Nacimiento`, `Visitas_Actuales`, `ID_Rol`) VALUES
+('442134789', NULL, 'Lalo', NULL, NULL, NULL, 0, 'Usuario'),
 ('4428199000', NULL, 'Juan Pablo Juarez', NULL, NULL, NULL, 0, 'Usuario'),
 ('443789097', NULL, 'Lalo', NULL, NULL, NULL, 0, 'Usuario'),
 ('55-1156-9800', 'Mega Fan', 'Andrea Iliana Cantú Mayorga', 'ailiana@gmail.com', 'f', '1977-04-01', 2, 'Usuario'),
@@ -722,7 +735,30 @@ INSERT INTO `detalle_orden_insumos` (`id`, `id_orden_producto`, `ID_Insumo`, `ID
 (3, 64, 'IN02201393', 'OD73961888', 'base', 14.00),
 (4, 64, 'IN16420525', 'OD73961888', 'base', 17.00),
 (5, 68, 'IN03374506', 'OD74408809', 'base', 13.00),
-(6, 68, 'IN05269621', 'OD74408809', 'base', 13.00);
+(6, 68, 'IN05269621', 'OD74408809', 'base', 13.00),
+(7, 72, 'IN18602747', 'OD29765935', 'base', 10.00),
+(8, 72, 'IN18968294', 'OD29765935', 'base', 12.00),
+(9, 72, 'IN05269621', 'OD29765935', 'base', 13.00),
+(10, 75, 'IN15204720', 'OD35079193', 'base', 12.00),
+(11, 75, 'IN03374506', 'OD35079193', 'base', 13.00),
+(12, 75, 'IN25799043', 'OD35079193', 'base', 10.00),
+(13, 76, 'IN58134969', 'OD96262689', 'extra', 23.00),
+(14, 76, 'IN03374506', 'OD96262689', 'extra', 13.00),
+(15, 76, 'IN70367614', 'OD96262689', 'base', 0.00),
+(16, 77, 'IN53235582', 'OD96262689', 'extra', 25.00),
+(17, 77, 'IN33700399', 'OD96262689', 'extra', 22.00),
+(18, 77, 'IN68496031', 'OD96262689', 'base', 0.00),
+(19, 78, 'IN52715589', 'OD96262689', 'extra', 20.00),
+(20, 78, 'IN03374506', 'OD96262689', 'extra', 13.00),
+(21, 78, 'IN84763568', 'OD96262689', 'base', 0.00),
+(22, 79, 'IN15500744', 'OD96262689', 'extra', 24.00),
+(23, 79, 'IN05269621', 'OD96262689', 'extra', 13.00),
+(24, 79, 'IN16420525', 'OD96262689', 'extra', 17.00),
+(25, 79, 'IN04894004', 'OD96262689', 'extra', 19.00),
+(26, 80, 'IN97359153', 'OD70559254', 'extra', 13.00),
+(27, 80, 'IN63629622', 'OD70559254', 'base', 0.00),
+(28, 81, 'IN76382864', 'OD70559254', 'extra', 11.00),
+(29, 81, 'IN58759482', 'OD70559254', 'base', 0.00);
 
 -- --------------------------------------------------------
 
@@ -780,6 +816,8 @@ INSERT INTO `estado_royalty_da_promociones` (`Nombre_Royalty`, `ID_Promocion`) V
 ('Fan', 'PR44805876'),
 ('Mega Fan', 'PR31917421'),
 ('Mega Fan', 'PR33274771'),
+('Mega Fan', 'PR89316726'),
+('Mega Fan', 'PR89541165'),
 ('Super Fan', 'PR19912809'),
 ('Super Fan', 'PR67763277');
 
@@ -1006,7 +1044,13 @@ INSERT INTO `log_accesos_otp` (`id`, `telefono`, `accion`, `fecha`) VALUES
 (9, '55-1156-9800', 'OTP_ELIMINADO', '2026-04-24 00:03:56'),
 (10, '55-1156-9800', 'OTP_ELIMINADO', '2026-04-24 00:40:43'),
 (11, '81-3104-6812', 'OTP_ELIMINADO', '2026-04-24 00:42:12'),
-(12, '55-1156-9800', 'OTP_ELIMINADO', '2026-04-24 00:47:04');
+(12, '55-1156-9800', 'OTP_ELIMINADO', '2026-04-24 00:47:04'),
+(13, '55-1156-9800', 'OTP_ELIMINADO', '2026-04-24 00:51:00'),
+(14, '55-1156-9800', 'OTP_ELIMINADO', '2026-04-24 00:52:14'),
+(15, '55-1156-9800', 'OTP_ELIMINADO', '2026-04-24 03:30:59'),
+(16, '55-1156-9800', 'OTP_ELIMINADO', '2026-04-24 03:35:01'),
+(17, '55-1156-9800', 'OTP_ELIMINADO', '2026-04-24 03:39:45'),
+(18, '55-1156-9800', 'OTP_ELIMINADO', '2026-04-24 04:10:24');
 
 -- --------------------------------------------------------
 
@@ -1105,12 +1149,14 @@ INSERT INTO `orden` (`ID_Orden`, `ID_Turno`, `Numero_Telefonico`, `Tipo_Orden`, 
 ('OD20045010', 'TN26496107', '55-3885-6878', 'Sucursal', 'Mariana Frías Olguín', 'Entregado', '2026-09-15 06:00:00', NULL),
 ('OD23043487', 'TN26496107', '55-9297-8935', 'Pick-up', 'Juan Pablo Domínguez Ángel', 'Listo', '2026-01-27 06:00:00', NULL),
 ('OD27810441', 'TN26496107', '8131046813', 'Pick-up', 'Juan Pablo Juarez', 'Pendiente', '2026-04-23 05:00:46', NULL),
+('OD29765935', 'TN26496107', '5511569800', 'Pick-up', 'Andrea Iliana Cantú Mayorga', 'Pendiente', '2026-04-24 03:35:41', NULL),
 ('OD33014213', 'TN47025996', '55-8034-2908', 'Pick-up', 'Sofía Alondra Reyes Gómez', 'Listo', '2026-10-15 06:00:00', NULL),
 ('OD33655470', 'TN46937585', '55-7110-9468', 'Pick-up', 'Santiago Barjau Hernández', 'Entregado', '2026-02-17 06:00:00', NULL),
 ('OD33804496', 'TN46937585', '55-9583-1422', 'Pick-up', 'Galia Lucía Castro Aboytes', 'Cancelado', '2026-12-17 06:00:00', NULL),
 ('OD33834225', 'TN26496107', '8131046813', 'Pick-up', 'Pepe', 'Pendiente', '2026-04-23 04:51:50', NULL),
 ('OD33951115', 'TN47025996', '55-2006-6063', 'Sucursal', 'Isabela Ruiz Velasco Angeles', 'Listo', '2026-09-21 06:00:00', NULL),
 ('OD34843825', 'TN46937585', '55-8069-3709', 'Pick-up', 'Jesús Osvaldo Ramos Pérez', 'Listo', '2026-07-04 06:00:00', NULL),
+('OD35079193', 'TN26496107', '5511569800', 'Pick-up', 'Andrea Iliana Cantú Mayorga', 'Pendiente', '2026-04-24 03:40:32', NULL),
 ('OD36841880', 'TN26496107', '8131046812', 'Delivery', 'Cliente', 'Pendiente', '2026-04-22 03:22:29', NULL),
 ('OD37616868', 'TN46937585', '55-6624-7720', 'Delivery', 'Mariangel Aguirre Magallanes', 'Entregado', '2026-12-22 06:00:00', NULL),
 ('OD37925699', 'TN26496107', '55-4606-3624', 'Sucursal', 'Héctor Alejandro Barrón Tamayo', 'Entregado', '2026-05-22 06:00:00', NULL),
@@ -1137,6 +1183,7 @@ INSERT INTO `orden` (`ID_Orden`, `ID_Turno`, `Numero_Telefonico`, `Tipo_Orden`, 
 ('OD68555825', 'TN47025996', '55-7260-4596', 'Delivery', 'Fernanda Rosales Herrera', 'Entregado', '2026-07-21 06:00:00', NULL),
 ('OD69891418', 'TN46937585', '55-8317-4862', 'Pick-up', 'Oscar Alexander Vilchis Soto', 'Preparando', '2026-02-18 06:00:00', NULL),
 ('OD70011240', 'TN47025996', '55-9661-9093', 'Delivery', 'Diego Serrano Pardo', 'Listo', '2026-01-27 06:00:00', NULL),
+('OD70559254', 'TN26496107', '5511569800', 'Pick-up', 'Andrea Iliana Cantú Mayorga', 'Pendiente', '2026-04-24 04:10:51', NULL),
 ('OD73450134', 'TN46937585', '55-7095-1397', 'Delivery', 'Gabriela Frías Quiroz', 'Listo', '2026-05-16 06:00:00', NULL),
 ('OD73961888', 'TN26496107', '443789097', 'Pick-up', 'Lalo', 'Pendiente', '2026-04-23 05:01:55', NULL),
 ('OD74408809', 'TN26496107', '5511569800', 'Pick-up', 'Andrea Iliana Cantú Mayorga', 'Pendiente', '2026-04-24 00:47:38', NULL),
@@ -1147,6 +1194,7 @@ INSERT INTO `orden` (`ID_Orden`, `ID_Turno`, `Numero_Telefonico`, `Tipo_Orden`, 
 ('OD94187424', 'TN26496107', '55-1827-6651', 'Sucursal', 'David Antonio Gandara Ruiz', 'Entregado', '2026-05-17 06:00:00', NULL),
 ('OD96155417', 'TN46937585', '55-3251-9266', 'Pick-up', 'Ximena Guadalupe Córdoba Ángeles', 'Entregado', '2026-05-21 06:00:00', NULL),
 ('OD96250697', 'TN26496107', '55-9221-5175', 'Pick-up', 'Ana Valeria Machuca Miranda', 'Listo', '2026-02-19 06:00:00', NULL),
+('OD96262689', 'TN26496107', '442134789', 'Pick-up', 'Lalo', 'Pendiente', '2026-04-24 04:07:58', NULL),
 ('OD96747780', 'TN26496107', '55-9026-7777', 'Sucursal', 'Sebastián Mansilla Cots', 'Listo', '2026-04-22 06:00:00', NULL),
 ('OD97056014', 'TN46937585', '55-9862-4951', 'Delivery', 'Ramón Eliezer De Santos García', 'Entregado', '2026-12-27 06:00:00', NULL),
 ('OD97294540', 'TN47025996', '55-4768-9613', 'Sucursal', 'Jessica Hernández Tejeda', 'Entregado', '2026-07-21 06:00:00', NULL);
@@ -1232,7 +1280,20 @@ INSERT INTO `orden_tiene_producto` (`id_orden_producto`, `ID_Orden`, `ID_Product
 (65, 'OD74408809', 'PD12662761', 1, 35.00),
 (66, 'OD74408809', 'PD28020090', 1, 75.00),
 (67, 'OD74408809', 'PD43258149', 1, 58.50),
-(68, 'OD74408809', 'PD_COMODIN', 1, 76.00);
+(68, 'OD74408809', 'PD_COMODIN', 1, 76.00),
+(69, 'OD29765935', 'PD68787354', 1, 8.90),
+(70, 'OD29765935', 'PD76693622', 1, 80.10),
+(71, 'OD29765935', 'PD66451976', 1, 89.00),
+(72, 'OD29765935', 'PD_COMODIN', 1, 85.00),
+(73, 'OD35079193', 'PD12662761', 1, 35.00),
+(74, 'OD35079193', 'PD69673358', 1, 45.00),
+(75, 'OD35079193', 'PD_COMODIN', 1, 85.00),
+(76, 'OD96262689', 'PD69673358', 1, 81.00),
+(77, 'OD96262689', 'PD43258149', 1, 105.50),
+(78, 'OD96262689', 'PD22069675', 1, 112.20),
+(79, 'OD96262689', 'PD_COMODIN', 1, 123.00),
+(80, 'OD70559254', 'PD12662761', 1, 48.00),
+(81, 'OD70559254', 'PD68787354', 1, 19.90);
 
 -- --------------------------------------------------------
 
@@ -1679,6 +1740,7 @@ CREATE TABLE `producto_tiene_promocion` (
 INSERT INTO `producto_tiene_promocion` (`ID_Producto`, `ID_Promocion`) VALUES
 ('PD01400719', 'PR83010754'),
 ('PD01887055', 'PR44805876'),
+('PD01887055', 'PR89541165'),
 ('PD01993843', 'PR97994498'),
 ('PD02624644', 'PR98448306'),
 ('PD09374303', 'PR76785851'),
@@ -1722,6 +1784,7 @@ INSERT INTO `producto_tiene_promocion` (`ID_Producto`, `ID_Promocion`) VALUES
 ('PD66334927', 'PR32616125'),
 ('PD68133903', 'PR43783578'),
 ('PD68787354', 'PR44088429'),
+('PD68787354', 'PR89316726'),
 ('PD69673358', 'PR33846028'),
 ('PD71724278', 'PR78222949'),
 ('PD72174317', 'PR56696931'),
@@ -1734,6 +1797,7 @@ INSERT INTO `producto_tiene_promocion` (`ID_Producto`, `ID_Promocion`) VALUES
 ('PD80503802', 'PR21011143'),
 ('PD81370959', 'PR32616125'),
 ('PD84176755', 'PR27804270'),
+('PD84176755', 'PR89541165'),
 ('PD84630803', 'PR32105836'),
 ('PD85252812', 'PR62258980'),
 ('PD86903926', 'PR27804270'),
@@ -1789,6 +1853,8 @@ INSERT INTO `promocion` (`ID_Promocion`, `Nombre`, `Descuento`, `Condiciones`, `
 ('PR78222949', 'Promoción Dia de la independencia', 0.10, '16 de septiembre', 1, '2026-01-26', '2011-12-26'),
 ('PR83010754', 'Tarde Fruta & Chocolate', 0.10, 'Evento', 1, '2010-02-26', '2029-11-26'),
 ('PR87134462', 'Promoción Año Nuevo', 0.10, '1 de enero', 1, '2021-01-26', '2027-07-26'),
+('PR89316726', 'Super Promoción Exclusiva', 0.90, 'Ser Super Fanatico increíble', 1, '2026-04-07', '2026-04-29'),
+('PR89541165', 'Promoción Exclusiva', 0.25, 'Ser muy buena persona', 1, '2026-04-22', '2026-04-30'),
 ('PR97688224', 'Encuentro Sabores en Capas', 0.10, 'Evento', 1, '2023-03-26', '2022-09-26'),
 ('PR97994498', 'Festival Giro Dorado', 0.20, 'Evento', 1, '2018-04-26', '2023-11-26'),
 ('PR98448306', 'Brunch La Vuelta Francesa', 0.10, 'Evento', 1, '0004-06-26', '2024-07-26');
@@ -2332,19 +2398,19 @@ ALTER TABLE `turno_tiene_sucursal`
 -- AUTO_INCREMENT de la tabla `detalle_orden_insumos`
 --
 ALTER TABLE `detalle_orden_insumos`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=30;
 
 --
 -- AUTO_INCREMENT de la tabla `log_accesos_otp`
 --
 ALTER TABLE `log_accesos_otp`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=13;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=19;
 
 --
 -- AUTO_INCREMENT de la tabla `orden_tiene_producto`
 --
 ALTER TABLE `orden_tiene_producto`
-  MODIFY `id_orden_producto` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=69;
+  MODIFY `id_orden_producto` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=82;
 
 --
 -- Restricciones para tablas volcadas
