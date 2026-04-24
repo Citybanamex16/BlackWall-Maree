@@ -15,10 +15,38 @@ module.exports = class Pedido {
       FROM orden o
       LEFT JOIN cliente c
         ON o.Numero_Telefonico = c.Numero_Telefonico
-      WHERE o.Estado_Orden NOT IN ('Cancelado', 'Entregado')
+      WHERE o.Estado_Orden NOT IN ('Cancelado', 'Entregado', 'Pendiente')
       ORDER BY o.Fecha DESC
     `
     return db.execute(query)
+  }
+
+  static fetchPendingOrders () {
+    const query = `
+      SELECT
+        o.ID_Orden AS id_orden,
+        c.Nombre AS nombre_cliente,
+        o.Numero_Telefonico AS telefono,
+        o.Tipo_Orden AS tipo_orden,
+        o.Estado_Orden AS estado_orden,
+        o.Fecha AS fecha,
+        o.Direccion AS direccion
+      FROM orden o
+      LEFT JOIN cliente c
+        ON o.Numero_Telefonico = c.Numero_Telefonico
+      WHERE o.Estado_Orden = 'Pendiente'
+      ORDER BY o.Fecha ASC
+    `
+    return db.execute(query)
+  }
+
+  static updateOrderStatus (idOrden, nuevoEstado) {
+    const allowed = ['Pendiente', 'Preparando', 'Listo', 'Entregado', 'Cancelado']
+    if (!allowed.includes(nuevoEstado)) throw new Error('Estado inválido')
+    return db.execute(
+      'UPDATE orden SET Estado_Orden = ? WHERE ID_Orden = ?',
+      [nuevoEstado, idOrden]
+    )
   }
 
   static fetchOne (idOrden) {
@@ -287,7 +315,7 @@ static async guardarItems(idOrden, items) {
     FROM orden o
     WHERE REPLACE(o.Numero_Telefonico, '-', '') = REPLACE(?, '-', '')
       AND o.Estado_Orden != 'Cancelado'
-    ORDER BY o.Fecha DESC
+    ORDER BY o.Fecha DESC, o.ID_Orden DESC
   `
   return db.execute(query, [telefono])
 }
