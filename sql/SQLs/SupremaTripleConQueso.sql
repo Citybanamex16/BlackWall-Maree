@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Servidor: localhost
--- Tiempo de generación: 23-04-2026 a las 16:30:07
+-- Tiempo de generación: 24-04-2026 a las 02:48:15
 -- Versión del servidor: 10.4.28-MariaDB
 -- Versión de PHP: 8.2.4
 
@@ -20,13 +20,12 @@ SET time_zone = "+00:00";
 --
 -- Base de datos: `mareebd`
 --
-CREATE DATABASE IF NOT EXISTS `mareebd` DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish2_ci;
-USE `mareebd`;
 
 DELIMITER $$
 --
 -- Procedimientos
 --
+DROP PROCEDURE IF EXISTS `ActualizarCategoria`$$
 CREATE DEFINER=`root`@`localhost` PROCEDURE `ActualizarCategoria` (IN `oldNombre` VARCHAR(50) CHARSET utf8mb4 COLLATE utf8mb4_spanish2_ci, IN `newNombre` VARCHAR(50) CHARSET utf8mb4 COLLATE utf8mb4_spanish2_ci)   BEGIN
     DECLARE EXIT HANDLER FOR SQLEXCEPTION
     BEGIN
@@ -44,6 +43,7 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `ActualizarCategoria` (IN `oldNombre
     COMMIT;
 END$$
 
+DROP PROCEDURE IF EXISTS `ActualizarIngrediente`$$
 CREATE DEFINER=`root`@`localhost` PROCEDURE `ActualizarIngrediente` (IN `p_idInsumo` VARCHAR(10) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish2_ci, IN `p_nombre` VARCHAR(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish2_ci, IN `p_categoria` VARCHAR(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish2_ci, IN `p_precio` DECIMAL(10,2), IN `p_activo` TINYINT(1), IN `p_imagen` TEXT CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish2_ci)   BEGIN
     DECLARE v_error_msg VARCHAR(500);
     DECLARE EXIT HANDLER FOR SQLEXCEPTION
@@ -64,6 +64,7 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `ActualizarIngrediente` (IN `p_idIns
     COMMIT;
 END$$
 
+DROP PROCEDURE IF EXISTS `ActualizarTipo`$$
 CREATE DEFINER=`root`@`localhost` PROCEDURE `ActualizarTipo` (IN `oldNombre` VARCHAR(50) CHARSET utf8mb4 COLLATE utf8mb4_spanish2_ci, IN `newNombre` VARCHAR(50) CHARSET utf8mb4 COLLATE utf8mb4_spanish2_ci)   BEGIN
     DECLARE EXIT HANDLER FOR SQLEXCEPTION
     BEGIN
@@ -80,6 +81,7 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `ActualizarTipo` (IN `oldNombre` VAR
     COMMIT;
 END$$
 
+DROP PROCEDURE IF EXISTS `EliminarIngrediente`$$
 CREATE DEFINER=`root`@`localhost` PROCEDURE `EliminarIngrediente` (IN `p_idInsumo` VARCHAR(10) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish2_ci)   BEGIN
     DECLARE v_error_msg VARCHAR(500);
     -- Manejador de errores para la transacción
@@ -98,6 +100,7 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `EliminarIngrediente` (IN `p_idInsum
     COMMIT;
 END$$
 
+DROP PROCEDURE IF EXISTS `eliminarProducto`$$
 CREATE DEFINER=`root`@`localhost` PROCEDURE `eliminarProducto` (IN `idProducto` VARCHAR(12) CHARSET utf8mb4)  DETERMINISTIC BEGIN
 
 
@@ -138,21 +141,40 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `eliminarProducto` (IN `idProducto` 
     SELECT 'Éxito' AS Estado, 'Producto eliminado correctamente' AS Error_Mensaje;
 END$$
 
+DROP PROCEDURE IF EXISTS `ObtenerPreciosBase`$$
+CREATE DEFINER=`root`@`localhost` PROCEDURE `ObtenerPreciosBase` (IN `p_idsProductos` TEXT, IN `p_idsInsumos` TEXT)   BEGIN
+    -- 1. Selección de Productos (Precio de Lista Estándar)
+    -- Traemos el ID con el alias 'id' para que JS lo reconozca fácil
+    SELECT 
+        ID_Producto AS id, 
+        Precio AS Precio
+    FROM producto 
+    WHERE FIND_IN_SET(ID_Producto, p_idsProductos);
+
+    -- 2. Selección de Insumos (Precio de Lista Estándar)
+    SELECT 
+        ID_Insumo AS id, 
+        Precio AS Precio 
+    FROM insumo 
+    WHERE FIND_IN_SET(ID_Insumo, p_idsInsumos);
+END$$
+
+DROP PROCEDURE IF EXISTS `obtener_promociones_por_tipo`$$
 CREATE DEFINER=`root`@`localhost` PROCEDURE `obtener_promociones_por_tipo` (IN `tipo_promo` VARCHAR(2))   BEGIN 
     -- Lógica de Jerarquía EFRL (Event First, Royalty Last) 
     IF tipo_promo = 'PE' THEN 
-        -- 1. EVENTO: Mandan sobre todas. 
-        SELECT p.Nombre AS Producto, promo.Nombre AS Plantilla_Promo, promo.Descuento, 
-        'Evento' AS Origen 
+        -- 1. EVENTO: Devuelve 5 columnas
+        SELECT p.ID_Producto, p.Nombre AS Producto, promo.Nombre AS Plantilla_Promo, 
+        promo.Descuento, 'Evento' AS Origen 
         FROM evento_contiene_promocion ecp 
         JOIN producto_tiene_promocion ptp ON ecp.ID_Promocion = ptp.ID_Promocion 
         JOIN producto p ON ptp.ID_Producto = p.ID_Producto 
         JOIN promocion promo ON ptp.ID_Promocion = promo.ID_Promocion; 
 
     ELSEIF tipo_promo = 'PU' THEN 
-        -- 2. ÚNICA: Solo si NO es Evento y NO es Royalty 
-        SELECT p.Nombre AS Producto, promo.Nombre AS Plantilla_Promo, promo.Descuento, 
-        'Única' AS Origen 
+        -- 2. ÚNICA: Devuelve 5 columnas
+        SELECT p.ID_Producto, p.Nombre AS Producto, promo.Nombre AS Plantilla_Promo, 
+        promo.Descuento, 'Única' AS Origen 
         FROM producto_tiene_promocion ptp 
         JOIN producto p ON p.ID_Producto = ptp.ID_Producto 
         JOIN promocion promo ON promo.ID_Promocion = ptp.ID_Promocion 
@@ -160,9 +182,9 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `obtener_promociones_por_tipo` (IN `
         AND ptp.ID_Promocion NOT IN (SELECT ID_Promocion FROM estado_royalty_da_promociones); 
 
     ELSEIF tipo_promo = 'PR' THEN 
-        -- 3. ROYALTY: El remanente (Si es Royalty pero NO es Evento) 
-        SELECT p.Nombre AS Producto, promo.Nombre AS Plantilla_Promo, promo.Descuento, 
-        'Royalty' AS Origen 
+        -- 3. ROYALTY: Devuelve 6 columnas (incluyendo Nombre_Royalty)
+        SELECT p.ID_Producto, p.Nombre AS Producto, promo.Nombre AS Plantilla_Promo, 
+        promo.Descuento, erp.Nombre_Royalty, 'Royalty' AS Origen 
         FROM estado_royalty_da_promociones erp 
         JOIN producto_tiene_promocion ptp ON erp.ID_Promocion = ptp.ID_Promocion 
         JOIN producto p ON ptp.ID_Producto = p.ID_Producto 
@@ -170,11 +192,11 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `obtener_promociones_por_tipo` (IN `
         WHERE erp.ID_Promocion NOT IN (SELECT ID_Promocion FROM evento_contiene_promocion); 
 
     ELSE 
-        -- Mensaje de error si el parámetro no es válido 
         SELECT 'Error: El parámetro debe ser PU, PE o PR' AS Mensaje; 
     END IF; 
 END$$
 
+DROP PROCEDURE IF EXISTS `sp_EstadoCliente`$$
 CREATE DEFINER=`root`@`localhost` PROCEDURE `sp_EstadoCliente` (IN `p_telefono` VARCHAR(20))   BEGIN
     SELECT 
         c.Nombre, 
@@ -185,6 +207,7 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `sp_EstadoCliente` (IN `p_telefono` 
      WHERE c.Numero_Telefonico = p_telefono COLLATE utf8mb4_spanish2_ci;
 END$$
 
+DROP PROCEDURE IF EXISTS `sp_fetchEventos`$$
 CREATE DEFINER=`root`@`localhost` PROCEDURE `sp_fetchEventos` (IN `p_Nombre_Royalty` VARCHAR(50))   BEGIN
     SELECT E.Nombre AS Nombre_Evento, E.Fecha_Inicio, E.Fecha_final, E.Descripcion, ER.Nombre_Royalty
     FROM evento E
@@ -198,6 +221,7 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `sp_fetchEventos` (IN `p_Nombre_Roya
     ORDER BY ER.Número_de_prioridad DESC;
 END$$
 
+DROP PROCEDURE IF EXISTS `sp_fetchFavCliente`$$
 CREATE DEFINER=`root`@`localhost` PROCEDURE `sp_fetchFavCliente` (IN `p_Numero_Telefonico` VARCHAR(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish2_ci, IN `p_Categoría` VARCHAR(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish2_ci)   BEGIN
     SELECT O.Numero_Telefonico, P.Nombre, COUNT(OP.ID_Producto) AS Total
     FROM orden_tiene_producto OP
@@ -211,6 +235,7 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `sp_fetchFavCliente` (IN `p_Numero_T
 
 END$$
 
+DROP PROCEDURE IF EXISTS `sp_fetchPromociones`$$
 CREATE DEFINER=`root`@`localhost` PROCEDURE `sp_fetchPromociones` (IN `p_Nombre_Royalty` VARCHAR(50))   BEGIN
     SELECT P.Nombre, P.Descuento, P.Fecha_inicio, P.Fecha_final, E.Nombre_Royalty
     FROM estado_royalty E 
@@ -224,6 +249,7 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `sp_fetchPromociones` (IN `p_Nombre_
     ORDER BY E.Número_de_prioridad DESC;
 END$$
 
+DROP PROCEDURE IF EXISTS `sp_fetchTopGlobal`$$
 CREATE DEFINER=`root`@`localhost` PROCEDURE `sp_fetchTopGlobal` (IN `p_Categoría` VARCHAR(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish2_ci)   BEGIN
     SELECT P.Nombre, COUNT(OP.ID_Producto) AS Total
     FROM orden_tiene_producto OP
@@ -234,6 +260,7 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `sp_fetchTopGlobal` (IN `p_Categorí
     LIMIT 3;
 END$$
 
+DROP PROCEDURE IF EXISTS `SP_GuardarItemHibrido`$$
 CREATE DEFINER=`root`@`localhost` PROCEDURE `SP_GuardarItemHibrido` (IN `p_idOrden` VARCHAR(10) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci, IN `p_idProducto` VARCHAR(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci, IN `p_precioVenta` DECIMAL(10,2), IN `p_jsonExtras` TEXT CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci)   BEGIN
     DECLARE v_id_orden_producto INT;
     DECLARE v_json_length INT DEFAULT 0;
@@ -264,6 +291,12 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `SP_GuardarItemHibrido` (IN `p_idOrd
     END IF;
 END$$
 
+DROP PROCEDURE IF EXISTS `sp_GuardarRoyaltyPromocion`$$
+CREATE DEFINER=`root`@`localhost` PROCEDURE `sp_GuardarRoyaltyPromocion` (IN `p_NombreRoyalty` VARCHAR(100), IN `p_IDPromocion` INT)   BEGIN
+  INSERT INTO estado_royalty_da_promociones (Nombre_Royalty, ID_Promocion)
+  VALUES (p_NombreRoyalty, p_IDPromocion);
+END$$
+
 DELIMITER ;
 
 -- --------------------------------------------------------
@@ -272,6 +305,7 @@ DELIMITER ;
 -- Estructura de tabla para la tabla `calendario`
 --
 
+DROP TABLE IF EXISTS `calendario`;
 CREATE TABLE `calendario` (
   `ID_Calendario` varchar(10) NOT NULL,
   `ID_Sucursal` varchar(10) NOT NULL,
@@ -304,6 +338,7 @@ INSERT INTO `calendario` (`ID_Calendario`, `ID_Sucursal`, `Fecha`, `Es_Laboral`,
 -- Estructura de tabla para la tabla `categoría`
 --
 
+DROP TABLE IF EXISTS `categoría`;
 CREATE TABLE `categoría` (
   `Nombre` varchar(50) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish2_ci;
@@ -326,6 +361,7 @@ INSERT INTO `categoría` (`Nombre`) VALUES
 -- Estructura de tabla para la tabla `cliente`
 --
 
+DROP TABLE IF EXISTS `cliente`;
 CREATE TABLE `cliente` (
   `Numero_Telefonico` varchar(20) NOT NULL,
   `Nombre_Royalty` varchar(50) DEFAULT NULL,
@@ -394,6 +430,7 @@ INSERT INTO `cliente` (`Numero_Telefonico`, `Nombre_Royalty`, `Nombre`, `Correo`
 ('55-9783-5924', 'Fan', 'Ricardo Antonio Gutiérrez García', 'rgutierrez@gmail.com', 'm', '1980-05-28', 13, 'Usuario'),
 ('55-9862-4951', 'Super Fan', 'Ramón Eliezer De Santos García', 'rgarcia@gmail.com', 'm', '1962-01-17', 6, 'Usuario'),
 ('55-9956-8802', 'Super Fan', 'Rodrigo Alejandro Hurtado Cortés', 'rhurtado@gmail.com', 'm', '1983-02-25', 2, 'Usuario'),
+('5511569800', NULL, 'Andrea Iliana Cantú Mayorga', NULL, NULL, NULL, 0, 'Usuario'),
 ('81-3104-6812', 'Fan', 'Carlos Delgado Contreras', 'A01712819@tec.mx', 'Masculino', '2005-08-16', 0, 'Usuario'),
 ('8131046812', NULL, 'Cliente', NULL, NULL, NULL, 0, 'Usuario'),
 ('8131046813', NULL, 'Cliente', NULL, NULL, NULL, 0, 'Usuario'),
@@ -402,6 +439,7 @@ INSERT INTO `cliente` (`Numero_Telefonico`, `Nombre_Royalty`, `Nombre`, `Correo`
 --
 -- Disparadores `cliente`
 --
+DROP TRIGGER IF EXISTS `actualizar_nivel_por_visitas`;
 DELIMITER $$
 CREATE TRIGGER `actualizar_nivel_por_visitas` AFTER UPDATE ON `cliente` FOR EACH ROW BEGIN
     -- Solo actuamos si el número de visitas cambió
@@ -427,6 +465,7 @@ DELIMITER ;
 -- Estructura de tabla para la tabla `cliente_canjea_promociones`
 --
 
+DROP TABLE IF EXISTS `cliente_canjea_promociones`;
 CREATE TABLE `cliente_canjea_promociones` (
   `Numero_Telefonico` varchar(20) NOT NULL,
   `ID_Promocion` varchar(20) NOT NULL,
@@ -485,6 +524,7 @@ INSERT INTO `cliente_canjea_promociones` (`Numero_Telefonico`, `ID_Promocion`, `
 -- Estructura de tabla para la tabla `codigo_verificacion`
 --
 
+DROP TABLE IF EXISTS `codigo_verificacion`;
 CREATE TABLE `codigo_verificacion` (
   `Numero_Telefonico` varchar(20) NOT NULL,
   `Codigo` varchar(6) NOT NULL,
@@ -510,6 +550,7 @@ INSERT INTO `codigo_verificacion` (`Numero_Telefonico`, `Codigo`, `Fecha_Creacio
 --
 -- Disparadores `codigo_verificacion`
 --
+DROP TRIGGER IF EXISTS `tras_usar_otp`;
 DELIMITER $$
 CREATE TRIGGER `tras_usar_otp` BEFORE DELETE ON `codigo_verificacion` FOR EACH ROW BEGIN
     INSERT INTO log_accesos_otp (telefono, accion)
@@ -524,6 +565,7 @@ DELIMITER ;
 -- Estructura de tabla para la tabla `colaborador`
 --
 
+DROP TABLE IF EXISTS `colaborador`;
 CREATE TABLE `colaborador` (
   `ID_Colaborador` varchar(20) NOT NULL,
   `ID_Rol` varchar(20) NOT NULL,
@@ -593,6 +635,7 @@ INSERT INTO `colaborador` (`ID_Colaborador`, `ID_Rol`, `Nombre`, `Contraseña`) 
 -- Estructura de tabla para la tabla `colaborador_tiene_turno`
 --
 
+DROP TABLE IF EXISTS `colaborador_tiene_turno`;
 CREATE TABLE `colaborador_tiene_turno` (
   `ID_Colaborador` varchar(20) NOT NULL,
   `ID_Turno` varchar(20) NOT NULL
@@ -659,6 +702,7 @@ INSERT INTO `colaborador_tiene_turno` (`ID_Colaborador`, `ID_Turno`) VALUES
 -- Estructura de tabla para la tabla `detalle_orden_insumos`
 --
 
+DROP TABLE IF EXISTS `detalle_orden_insumos`;
 CREATE TABLE `detalle_orden_insumos` (
   `id` int(11) NOT NULL,
   `id_orden_producto` int(11) NOT NULL,
@@ -676,7 +720,9 @@ INSERT INTO `detalle_orden_insumos` (`id`, `id_orden_producto`, `ID_Insumo`, `ID
 (1, 63, 'IN18602747', 'OD27810441', 'base', 10.00),
 (2, 63, 'IN18602747', 'OD27810441', 'base', 10.00),
 (3, 64, 'IN02201393', 'OD73961888', 'base', 14.00),
-(4, 64, 'IN16420525', 'OD73961888', 'base', 17.00);
+(4, 64, 'IN16420525', 'OD73961888', 'base', 17.00),
+(5, 68, 'IN03374506', 'OD74408809', 'base', 13.00),
+(6, 68, 'IN05269621', 'OD74408809', 'base', 13.00);
 
 -- --------------------------------------------------------
 
@@ -684,6 +730,7 @@ INSERT INTO `detalle_orden_insumos` (`id`, `id_orden_producto`, `ID_Insumo`, `ID
 -- Estructura de tabla para la tabla `estado_royalty`
 --
 
+DROP TABLE IF EXISTS `estado_royalty`;
 CREATE TABLE `estado_royalty` (
   `Nombre_Royalty` varchar(50) NOT NULL,
   `Número_de_prioridad` int(11) NOT NULL,
@@ -698,7 +745,7 @@ CREATE TABLE `estado_royalty` (
 
 INSERT INTO `estado_royalty` (`Nombre_Royalty`, `Número_de_prioridad`, `Descripción`, `Max_Visitas`, `Min_Visitas`) VALUES
 ('Fan', 1, '\"En este nivel normalmente se ofrecen beneficios exclusivos: acceso anticipado a contenido, mercancía especial, descuentos mayores, eventos privados, interacción más directa con el creador o la marca, e incluso reconocimiento público dentro de la comunidad. La idea es premiar la lealtad y el compromiso constante.\"', 10, 5),
-('Mega Fan', 3, '\"El nivel mega fan va un paso más allá. Está pensado para quienes demuestran un compromiso más fuerte y continuo. En este nivel pueden ofrecerse ventajas más destacadas como experiencias más personalizadas, eventos exclusivos, productos especiales o menciones directas. Se convierte en un espacio más selecto dentro de la comunidad, donde el vínculo con la marca o creador es más cercano y visible.\nEs una especie de escalera de compromiso: cada nivel no solo ofrece beneficios, sino también mayor pertenencia y conexión.\"', 20, 16),
+('Mega Fan', 3, '\"El nivel mega fan va un paso más allá. Está pensado para quienes demuestran un compromiso más fuerte y continuo. En este nivel pueden ofrecerse ventajas más destacadas como experiencias más personalizadas, eventos exclusivos, productos especiales o menciones directas. Se convierte en un espacio más selecto dentro de la comunidad, donde el vínculo con la marca o creador es más cercano y visible.Es una especie de escalera de compromiso: cada nivel no solo ofrece beneficios, sino también mayor pertenencia y conexión.\"', 20, 16),
 ('Super Fan', 2, '\"Un nivel super fan representa a quienes ya no solo siguen el contenido, sino que participan activamente en la comunidad. Aquí suele haber beneficios atractivos como acceso anticipado a publicaciones, contenido exclusivo adicional, descuentos especiales o dinámicas privadas. También puede incluir interacción más cercana con el creador o reconocimiento dentro del grupo. La intención es recompensar la constancia y el entusiasmo.\"', 15, 11);
 
 -- --------------------------------------------------------
@@ -707,6 +754,7 @@ INSERT INTO `estado_royalty` (`Nombre_Royalty`, `Número_de_prioridad`, `Descrip
 -- Estructura de tabla para la tabla `estado_royalty_da_eventos`
 --
 
+DROP TABLE IF EXISTS `estado_royalty_da_eventos`;
 CREATE TABLE `estado_royalty_da_eventos` (
   `Nombre_Royalty` varchar(50) NOT NULL,
   `ID_Evento` varchar(20) NOT NULL
@@ -718,6 +766,7 @@ CREATE TABLE `estado_royalty_da_eventos` (
 -- Estructura de tabla para la tabla `estado_royalty_da_promociones`
 --
 
+DROP TABLE IF EXISTS `estado_royalty_da_promociones`;
 CREATE TABLE `estado_royalty_da_promociones` (
   `Nombre_Royalty` varchar(50) NOT NULL,
   `ID_Promocion` varchar(20) NOT NULL
@@ -729,6 +778,7 @@ CREATE TABLE `estado_royalty_da_promociones` (
 
 INSERT INTO `estado_royalty_da_promociones` (`Nombre_Royalty`, `ID_Promocion`) VALUES
 ('Fan', 'PR44805876'),
+('Mega Fan', 'PR31917421'),
 ('Mega Fan', 'PR33274771'),
 ('Super Fan', 'PR19912809'),
 ('Super Fan', 'PR67763277');
@@ -739,6 +789,7 @@ INSERT INTO `estado_royalty_da_promociones` (`Nombre_Royalty`, `ID_Promocion`) V
 -- Estructura de tabla para la tabla `evento`
 --
 
+DROP TABLE IF EXISTS `evento`;
 CREATE TABLE `evento` (
   `ID_Evento` varchar(20) NOT NULL,
   `Nombre` varchar(100) NOT NULL,
@@ -780,6 +831,7 @@ INSERT INTO `evento` (`ID_Evento`, `Nombre`, `Descripcion`, `Activo`, `Fecha_Ini
 -- Estructura de tabla para la tabla `evento_contiene_promocion`
 --
 
+DROP TABLE IF EXISTS `evento_contiene_promocion`;
 CREATE TABLE `evento_contiene_promocion` (
   `ID_Evento` varchar(20) NOT NULL,
   `ID_Promocion` varchar(20) NOT NULL
@@ -812,6 +864,7 @@ INSERT INTO `evento_contiene_promocion` (`ID_Evento`, `ID_Promocion`) VALUES
 -- Estructura de tabla para la tabla `insumo`
 --
 
+DROP TABLE IF EXISTS `insumo`;
 CREATE TABLE `insumo` (
   `ID_Insumo` varchar(10) NOT NULL,
   `Nombre` varchar(50) NOT NULL,
@@ -929,6 +982,7 @@ INSERT INTO `insumo` (`ID_Insumo`, `Nombre`, `Categoría`, `Precio`, `Activo`, `
 -- Estructura de tabla para la tabla `log_accesos_otp`
 --
 
+DROP TABLE IF EXISTS `log_accesos_otp`;
 CREATE TABLE `log_accesos_otp` (
   `id` int(11) NOT NULL,
   `telefono` varchar(20) DEFAULT NULL,
@@ -948,7 +1002,11 @@ INSERT INTO `log_accesos_otp` (`id`, `telefono`, `accion`, `fecha`) VALUES
 (5, '55-1156-9800', 'OTP_ELIMINADO', '2026-04-22 14:58:27'),
 (6, '55-1156-9800', 'OTP_ELIMINADO', '2026-04-22 18:08:02'),
 (7, '55-1156-9800', 'OTP_ELIMINADO', '2026-04-22 18:14:40'),
-(8, '55-1156-9800', 'OTP_ELIMINADO', '2026-04-22 18:25:29');
+(8, '55-1156-9800', 'OTP_ELIMINADO', '2026-04-22 18:25:29'),
+(9, '55-1156-9800', 'OTP_ELIMINADO', '2026-04-24 00:03:56'),
+(10, '55-1156-9800', 'OTP_ELIMINADO', '2026-04-24 00:40:43'),
+(11, '81-3104-6812', 'OTP_ELIMINADO', '2026-04-24 00:42:12'),
+(12, '55-1156-9800', 'OTP_ELIMINADO', '2026-04-24 00:47:04');
 
 -- --------------------------------------------------------
 
@@ -956,6 +1014,7 @@ INSERT INTO `log_accesos_otp` (`id`, `telefono`, `accion`, `fecha`) VALUES
 -- Estructura de tabla para la tabla `mensaje`
 --
 
+DROP TABLE IF EXISTS `mensaje`;
 CREATE TABLE `mensaje` (
   `ID_Mensaje` varchar(20) NOT NULL,
   `Titulo` varchar(100) NOT NULL,
@@ -977,6 +1036,7 @@ INSERT INTO `mensaje` (`ID_Mensaje`, `Titulo`, `Texto`) VALUES
 -- Estructura de tabla para la tabla `mensaje_notifica_cliente`
 --
 
+DROP TABLE IF EXISTS `mensaje_notifica_cliente`;
 CREATE TABLE `mensaje_notifica_cliente` (
   `Numero_Telefonico` varchar(20) NOT NULL,
   `ID_Mensaje` varchar(20) NOT NULL,
@@ -1012,6 +1072,7 @@ INSERT INTO `mensaje_notifica_cliente` (`Numero_Telefonico`, `ID_Mensaje`, `Fech
 -- Estructura de tabla para la tabla `orden`
 --
 
+DROP TABLE IF EXISTS `orden`;
 CREATE TABLE `orden` (
   `ID_Orden` varchar(10) NOT NULL,
   `ID_Turno` varchar(20) NOT NULL,
@@ -1078,6 +1139,7 @@ INSERT INTO `orden` (`ID_Orden`, `ID_Turno`, `Numero_Telefonico`, `Tipo_Orden`, 
 ('OD70011240', 'TN47025996', '55-9661-9093', 'Delivery', 'Diego Serrano Pardo', 'Listo', '2026-01-27 06:00:00', NULL),
 ('OD73450134', 'TN46937585', '55-7095-1397', 'Delivery', 'Gabriela Frías Quiroz', 'Listo', '2026-05-16 06:00:00', NULL),
 ('OD73961888', 'TN26496107', '443789097', 'Pick-up', 'Lalo', 'Pendiente', '2026-04-23 05:01:55', NULL),
+('OD74408809', 'TN26496107', '5511569800', 'Pick-up', 'Andrea Iliana Cantú Mayorga', 'Pendiente', '2026-04-24 00:47:38', NULL),
 ('OD77070485', 'TN26496107', '8131046812', 'Pick-up', 'Pepe', 'Pendiente', '2026-04-23 03:18:28', NULL),
 ('OD81178473', 'TN46937585', '55-7378-3019', 'Delivery', 'Jonathan de Jesús Anaya Correa', 'Listo', '2026-06-23 06:00:00', NULL),
 ('OD81537460', 'TN26496107', '55-2669-1307', 'Pick-up', 'Ana Camila Cuevas González', 'Listo', '2026-04-06 06:00:00', NULL),
@@ -1095,6 +1157,7 @@ INSERT INTO `orden` (`ID_Orden`, `ID_Turno`, `Numero_Telefonico`, `Tipo_Orden`, 
 -- Estructura de tabla para la tabla `orden_tiene_producto`
 --
 
+DROP TABLE IF EXISTS `orden_tiene_producto`;
 CREATE TABLE `orden_tiene_producto` (
   `id_orden_producto` int(11) NOT NULL,
   `ID_Orden` varchar(10) NOT NULL,
@@ -1165,7 +1228,11 @@ INSERT INTO `orden_tiene_producto` (`id_orden_producto`, `ID_Orden`, `ID_Product
 (55, 'OD33834225', 'PD28020090', 1, 75.00),
 (62, 'OD27810441', 'PD12662761', 1, 70.00),
 (63, 'OD27810441', 'PD_COMODIN', 1, 70.00),
-(64, 'OD73961888', 'PD_COMODIN', 1, 81.00);
+(64, 'OD73961888', 'PD_COMODIN', 1, 81.00),
+(65, 'OD74408809', 'PD12662761', 1, 35.00),
+(66, 'OD74408809', 'PD28020090', 1, 75.00),
+(67, 'OD74408809', 'PD43258149', 1, 58.50),
+(68, 'OD74408809', 'PD_COMODIN', 1, 76.00);
 
 -- --------------------------------------------------------
 
@@ -1173,6 +1240,7 @@ INSERT INTO `orden_tiene_producto` (`id_orden_producto`, `ID_Orden`, `ID_Product
 -- Estructura de tabla para la tabla `pago`
 --
 
+DROP TABLE IF EXISTS `pago`;
 CREATE TABLE `pago` (
   `ID_Pago` varchar(10) NOT NULL,
   `ID_Orden` varchar(10) NOT NULL,
@@ -1244,6 +1312,7 @@ INSERT INTO `pago` (`ID_Pago`, `ID_Orden`, `Monto`, `Metodo_Pago`, `Fecha_Pago`,
 -- Estructura de tabla para la tabla `privilegio`
 --
 
+DROP TABLE IF EXISTS `privilegio`;
 CREATE TABLE `privilegio` (
   `Privilegio` varchar(30) NOT NULL,
   `Transferible` tinyint(1) DEFAULT 0
@@ -1324,6 +1393,7 @@ INSERT INTO `privilegio` (`Privilegio`, `Transferible`) VALUES
 -- Estructura de tabla para la tabla `producto`
 --
 
+DROP TABLE IF EXISTS `producto`;
 CREATE TABLE `producto` (
   `ID_Producto` varchar(10) NOT NULL,
   `Tamaño` varchar(50) NOT NULL,
@@ -1435,6 +1505,7 @@ INSERT INTO `producto` (`ID_Producto`, `Tamaño`, `Categoría`, `Nombre`, `Preci
 -- Estructura de tabla para la tabla `producto_pertenece_evento`
 --
 
+DROP TABLE IF EXISTS `producto_pertenece_evento`;
 CREATE TABLE `producto_pertenece_evento` (
   `ID_Evento` varchar(20) NOT NULL,
   `ID_Producto` varchar(10) NOT NULL
@@ -1473,6 +1544,7 @@ INSERT INTO `producto_pertenece_evento` (`ID_Evento`, `ID_Producto`) VALUES
 -- Estructura de tabla para la tabla `producto_tiene_insumo`
 --
 
+DROP TABLE IF EXISTS `producto_tiene_insumo`;
 CREATE TABLE `producto_tiene_insumo` (
   `ID_Producto` varchar(10) NOT NULL,
   `ID_Insumo` varchar(10) NOT NULL
@@ -1594,6 +1666,7 @@ INSERT INTO `producto_tiene_insumo` (`ID_Producto`, `ID_Insumo`) VALUES
 -- Estructura de tabla para la tabla `producto_tiene_promocion`
 --
 
+DROP TABLE IF EXISTS `producto_tiene_promocion`;
 CREATE TABLE `producto_tiene_promocion` (
   `ID_Producto` varchar(20) NOT NULL,
   `ID_Promocion` varchar(20) NOT NULL
@@ -1610,6 +1683,7 @@ INSERT INTO `producto_tiene_promocion` (`ID_Producto`, `ID_Promocion`) VALUES
 ('PD02624644', 'PR98448306'),
 ('PD09374303', 'PR76785851'),
 ('PD10782835', 'PR32616125'),
+('PD12662761', 'PR31917421'),
 ('PD12662761', 'PR67763277'),
 ('PD12929845', 'PR19912809'),
 ('PD13048411', 'PR78222949'),
@@ -1677,6 +1751,7 @@ INSERT INTO `producto_tiene_promocion` (`ID_Producto`, `ID_Promocion`) VALUES
 -- Estructura de tabla para la tabla `promocion`
 --
 
+DROP TABLE IF EXISTS `promocion`;
 CREATE TABLE `promocion` (
   `ID_Promocion` varchar(20) NOT NULL,
   `Nombre` varchar(100) NOT NULL,
@@ -1695,6 +1770,7 @@ INSERT INTO `promocion` (`ID_Promocion`, `Nombre`, `Descuento`, `Condiciones`, `
 ('PR19912809', 'Promoción Navidad 2025', 0.20, '25 de diciembre y con INE vigente', 0, '2025-12-10', '2026-04-05'),
 ('PR21011143', 'Promoción Cumpleaños', 0.50, 'el dia de tu cumpleaños', 1, '0004-06-26', '2029-08-26'),
 ('PR27804270', 'Sábado de Sartenes', 0.25, 'Evento', 1, '0009-03-26', '0006-09-26'),
+('PR31917421', 'Mega Fan 50%', 0.50, 'Ser Mega Fan', 1, '2026-04-23', '2026-04-30'),
 ('PR32105836', '%50 en Productos Seleccionados', 0.50, 'Reclamar en caja', 1, '2026-04-08', '2026-04-29'),
 ('PR32616125', 'Cumbre del Relleno Secreto', 0.10, 'Evento', 1, '0006-04-26', '0009-07-26'),
 ('PR33274771', 'Promoción Aniversario', 0.30, '5 de junio', 1, '2023-05-26', '2028-12-26'),
@@ -1723,6 +1799,7 @@ INSERT INTO `promocion` (`ID_Promocion`, `Nombre`, `Descuento`, `Condiciones`, `
 -- Estructura de tabla para la tabla `review`
 --
 
+DROP TABLE IF EXISTS `review`;
 CREATE TABLE `review` (
   `ID_Review` varchar(10) NOT NULL,
   `ID_Orden` varchar(10) NOT NULL,
@@ -1794,6 +1871,7 @@ INSERT INTO `review` (`ID_Review`, `ID_Orden`, `Puntaje`, `Comentario`, `Fecha`)
 -- Estructura de tabla para la tabla `rol`
 --
 
+DROP TABLE IF EXISTS `rol`;
 CREATE TABLE `rol` (
   `Rol` varchar(15) NOT NULL,
   `Activo` tinyint(1) DEFAULT 1
@@ -1815,6 +1893,7 @@ INSERT INTO `rol` (`Rol`, `Activo`) VALUES
 -- Estructura de tabla para la tabla `rol_tiene_privilegio`
 --
 
+DROP TABLE IF EXISTS `rol_tiene_privilegio`;
 CREATE TABLE `rol_tiene_privilegio` (
   `ID_Rol` varchar(15) NOT NULL,
   `ID_Privilegio` varchar(30) NOT NULL
@@ -1894,6 +1973,7 @@ INSERT INTO `rol_tiene_privilegio` (`ID_Rol`, `ID_Privilegio`) VALUES
 -- Estructura de tabla para la tabla `sucursal`
 --
 
+DROP TABLE IF EXISTS `sucursal`;
 CREATE TABLE `sucursal` (
   `ID_Sucursal` varchar(10) NOT NULL,
   `Nombre` varchar(50) NOT NULL,
@@ -1919,6 +1999,7 @@ INSERT INTO `sucursal` (`ID_Sucursal`, `Nombre`, `Ciudad`, `Estado`, `País`, `M
 -- Estructura de tabla para la tabla `tamaño`
 --
 
+DROP TABLE IF EXISTS `tamaño`;
 CREATE TABLE `tamaño` (
   `Nombre` varchar(50) NOT NULL,
   `MultiplicadorPrecio` decimal(3,2) NOT NULL
@@ -1940,6 +2021,7 @@ INSERT INTO `tamaño` (`Nombre`, `MultiplicadorPrecio`) VALUES
 -- Estructura de tabla para la tabla `tipos`
 --
 
+DROP TABLE IF EXISTS `tipos`;
 CREATE TABLE `tipos` (
   `nombre` varchar(50) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish2_ci;
@@ -1963,6 +2045,7 @@ INSERT INTO `tipos` (`nombre`) VALUES
 -- Estructura de tabla para la tabla `turno`
 --
 
+DROP TABLE IF EXISTS `turno`;
 CREATE TABLE `turno` (
   `ID_Turno` varchar(20) NOT NULL,
   `Nombre_Turno` varchar(50) NOT NULL,
@@ -1984,6 +2067,7 @@ INSERT INTO `turno` (`ID_Turno`, `Nombre_Turno`, `Fecha`) VALUES
 -- Estructura de tabla para la tabla `turno_tiene_sucursal`
 --
 
+DROP TABLE IF EXISTS `turno_tiene_sucursal`;
 CREATE TABLE `turno_tiene_sucursal` (
   `ID_Turno` varchar(20) NOT NULL,
   `ID_Sucursal` varchar(10) NOT NULL
@@ -2248,19 +2332,19 @@ ALTER TABLE `turno_tiene_sucursal`
 -- AUTO_INCREMENT de la tabla `detalle_orden_insumos`
 --
 ALTER TABLE `detalle_orden_insumos`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
 
 --
 -- AUTO_INCREMENT de la tabla `log_accesos_otp`
 --
 ALTER TABLE `log_accesos_otp`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=13;
 
 --
 -- AUTO_INCREMENT de la tabla `orden_tiene_producto`
 --
 ALTER TABLE `orden_tiene_producto`
-  MODIFY `id_orden_producto` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=65;
+  MODIFY `id_orden_producto` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=69;
 
 --
 -- Restricciones para tablas volcadas
@@ -2417,61 +2501,6 @@ ALTER TABLE `turno_tiene_sucursal`
   ADD CONSTRAINT `turno_tiene_sucursal_ibfk_2` FOREIGN KEY (`ID_Sucursal`) REFERENCES `sucursal` (`ID_Sucursal`);
 COMMIT;
 
--- --------------------------------------------------------
--- DML INICIAL — Defaults y Producto Comodín
--- Todos los inserts son condicionales (WHERE NOT EXISTS).
--- Se ejecutan al importar y en cada recreación de la BD
--- sin duplicar registros existentes.
--- --------------------------------------------------------
-
--- --------------------------------------------------------
--- DML ULTRA-ROBUSTO — Asegura Dependencias y Producto
--- --------------------------------------------------------
-
--- --------------------------------------------------------
--- DML NIVEL CRÍTICO — Asegurar registros exactos
--- --------------------------------------------------------
-
-START TRANSACTION;
-
--- 1. Forzamos la existencia de los padres exactos que necesitamos
-INSERT INTO `tamaño` (`Nombre`) 
-SELECT 'Básico' WHERE NOT EXISTS (SELECT 1 FROM `tamaño` WHERE `Nombre` = 'Básico');
-
-INSERT INTO `categoría` (`Nombre`) 
-SELECT 'Otros' WHERE NOT EXISTS (SELECT 1 FROM `categoría` WHERE `Nombre` = 'Otros');
-
-INSERT INTO `tipos` (`nombre`) 
-SELECT 'Otros' WHERE NOT EXISTS (SELECT 1 FROM `tipos` WHERE `nombre` = 'Otros');
-
--- 2. Insertar el Producto Comodín
--- Usamos subconsultas para que, si por algún milagro el INSERT anterior falló,
--- este INSERT también falle y no cree un producto con datos huérfanos.
-INSERT INTO `producto` (`ID_Producto`, `Tamaño`, `Categoría`, `Nombre`, `Precio`, `Disponible`, `Tipo`, `Imagen`)
-SELECT 
-    'PD_COMODIN', 
-    t.Nombre, 
-    c.Nombre, 
-    'Crepa Personalizada', 
-    25.00, 
-    1, 
-    tp.nombre, 
-    NULL
-FROM 
-    (SELECT 'Básico' as Nombre) temp_t 
-    JOIN `tamaño` t ON t.Nombre = temp_t.Nombre
-    CROSS JOIN (SELECT 'Otros' as Nombre) temp_c
-    JOIN `categoría` c ON c.Nombre = temp_c.Nombre
-    CROSS JOIN (SELECT 'Otros' as nombre) temp_tp
-    JOIN `tipos` tp ON tp.nombre = temp_tp.nombre
-WHERE NOT EXISTS (
-    SELECT 1 FROM `producto` WHERE `ID_Producto` = 'PD_COMODIN'
-);
-
-COMMIT;
-
-
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
 /*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
-
