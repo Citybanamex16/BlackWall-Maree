@@ -327,22 +327,70 @@ exports.getOrders = async (req, res, next) => {
   ]
 
   try {
-    const [pedidos] = await Pedido.fetchOrders()
+    const [[pedidos], [pendientes]] = await Promise.all([
+      Pedido.fetchOrders(),
+      Pedido.fetchPendingOrders()
+    ])
     res.render('admin/orders', {
       pageTitle: 'Órdenes',
       pedidos,
+      pendientes,
       breadcrumbs,
       error: null
     })
   } catch (error) {
     console.error('Error al cargar órdenes:', error)
-
     res.status(500).render('admin/orders', {
       pageTitle: 'Órdenes',
       pedidos: [],
+      pendientes: [],
       breadcrumbs,
       error: 'No hay conexión con la base de datos.'
     })
+  }
+}
+
+exports.getOrdersJson = async (req, res) => {
+  try {
+    const [[pedidos], [pendientes]] = await Promise.all([
+      Pedido.fetchOrders(),
+      Pedido.fetchPendingOrders()
+    ])
+    return res.json({ ok: true, pedidos, pendientes })
+  } catch {
+    return res.status(500).json({ ok: false })
+  }
+}
+
+exports.getOrderItems = async (req, res) => {
+  const { id } = req.params
+  try {
+    const [items] = await Pedido.fetchItems(id)
+    return res.status(200).json({ ok: true, items })
+  } catch (error) {
+    console.error('ERROR getOrderItems:', error)
+    return res.status(500).json({ ok: false, message: 'Error al obtener los items.' })
+  }
+}
+
+exports.postUpdateOrderStatus = async (req, res) => {
+  const { id } = req.params
+  const { estado } = req.body
+  try {
+    await Pedido.updateOrderStatus(id, estado)
+    return res.json({ ok: true })
+  } catch (error) {
+    return res.status(400).json({ ok: false, message: error.message })
+  }
+}
+
+exports.postAcceptOrder = async (req, res) => {
+  const { id } = req.params
+  try {
+    await Pedido.updateOrderStatus(id, 'Preparando')
+    return res.json({ ok: true })
+  } catch (error) {
+    return res.status(400).json({ ok: false, message: error.message })
   }
 }
 

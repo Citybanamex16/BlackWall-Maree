@@ -33,6 +33,14 @@
         <div class="container">
             <h1 class="title">Agregar estados Royalty</h1>
             <p class="subtitle">Aquí se agregan estados royalty</p>
+            <div class="level-right">
+            <div class="level-item">
+                <div class="button is-primary is-rounded">
+                    <!-- Agregar la funcionalidad de abrirModal-->
+                        <button class="button is-primary" onclick="abrirModalNuevoEstadoRoyalty()">Nuevo Estado Royalty</button>
+                </div>
+            </div> 
+        </div>
         </div>
     </section>
 
@@ -93,6 +101,66 @@
             </div>
         </div>
      </div>
+
+     <!-- Pop-up  Agregar estado royalty -->
+     <div class="modal" id="modalAgregarRoyalty">
+        <div class="modal-background"></div>
+        <div class="modal-content">
+            <div class="box">
+                <h3 class="title is-4">Agregar Royalty<span id="modal-nombre"></span></h3>
+                <form id="form-modificarRoyalty">
+                    <div class="field">
+                        <label class="label">Nombre</label>
+                        <div class="control">
+                            <input id="add-input-nombre" class="input" type="text">
+                        </div>
+                    </div>
+                    <div class="field">
+                        <label class="label">Prioridad</label>
+                        <div class="control">
+                            <input id="add-input-prioridad" class="input" type="number">
+                        </div>
+                    </div>
+                    <div class="field">
+                        <label class="label">Descripcion</label>
+                        <div class="control">
+                            <input id="add-input-descripcion" class="input" type="text">
+                        </div>
+                    </div>
+                    <div class="field">
+                        <label class="label">Visitas mínimas</label>
+                        <div class="control">
+                            <input id="add-input-minVisitas" class="input" type="number">
+                        </div>
+                    </div>
+                    <div class="field">
+                        <label class="label">Visitas máximas</label>
+                        <div class="control">
+                            <input id="add-input-maxVisitas" class="input" type="number">
+                        </div>
+                    </div>
+                    <!--Promociones-->
+                    <div class="field">
+                        <label class="label">Promociones</label>
+                        <div id="contenedor-promociones-nuevo" class="box" style="max-height: 150px; overflow-y: auto;">
+                            <p class="has-text-grey">Cargando...</p>
+                        </div>
+                    </div>
+                    <div class="field">
+                        <label class="label">Eventos</label>
+                        <div id="contenedor-eventos-nuevo" class="box" style="max-height: 150px; overflow-y: auto;">
+                            <p class="has-text-grey">Cargando...</p>
+                        </div>
+                    </div>
+                    <!--Eventos-->
+                    <div class="buttons">
+                        <button type="button" class="button is-primary" onclick="RegistroGuardarRoyalty()"> Guardar </button>
+                        <button type="button" class="button" onclick="cerrarModalGuardarRoyalty()">Cancelar</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+     </div>
     <!-- Pop up Confirmacion de modificar estado royalty-->
     <div class="modal" id="modal-confirmarModificarRoyalty">
     <div class="modal-background"></div>
@@ -108,14 +176,17 @@
 </div>
 
 <!--MODAL Error-->
-<dialog id="ModalError" class="maree-modal">
-  <div class="modal-inner" style="text-align:center;">
-    <span class="modal-icon">⚠️</span>
-    <p class="modal-title modal-title-danger" id="errorTitulo">Error</p>
-    <p id="errorMensaje" style="font-size:14px;color:#555;margin-bottom:24px;"></p>
-    <button id="btnCerrarError" class="btn-danger" onclick="cerrarModalError()">Cerrar</button>
+<div id="ModalError" class="modal">
+  <div class="modal-background"></div>
+  <div class="modal-content">
+    <div class="box has-text-centered">
+      <span class="icon has-text-warning" style="font-size: 3rem;">⚠️</span>
+      <p class="title is-4" id="errorTitulo">Error</p>
+      <p id="errorMensaje" style="font-size:14px;color:#555;margin-bottom:24px;"></p>
+      <button class="button is-danger" onclick="cerrarModalError()">Cerrar</button>
+    </div>
   </div>
-</dialog>
+</div>
 
 <!-- MODAL eliminar -->
 <div id="ModalEliminar" class="modal">
@@ -133,6 +204,21 @@
     </div>
   </div>
 </div>
+<!--Modal exito-->
+<div id="modal-exito" class="modal">
+  <div class="modal-background"></div>
+  <div class="modal-content">
+    <div class="box has-text-centered">
+      <h3 class="title is-4 mt-4">¡Registro Exitoso!</h3>
+      <p id="mensaje-exito">La promoción se ha guardado correctamente.</p>
+      <button class="button is-primary mt-5" onclick="location.reload()">Continuar</button>
+    </div>
+  </div>
+</div>
+    </div>
+  </div>
+</div>
+
     <script src = "/js/Royalty/royalty.admin.js"></script>
 </body>
 </html>

@@ -14,7 +14,10 @@
                 <h1 class="greeting-title text-truncate">¡Hola, <%= cliente.Nombre %>!</h1>
                 <p class="loyalty-subtitle">Maree Royalty</p>
             </div>
-
+            <div class="text-center mt-4">
+                <strong id="cliente-nivel-badge" class="badge-nivel mx-auto mt-1"><%= cliente.nivel %></strong>
+            </div>
+            <br>
             <div class="qr-showcase-container mb-4 mx-auto text-center">
                 <div class="qr-placeholder">
                     <% if (typeof qrCode !== 'undefined' && qrCode) { %>
@@ -39,42 +42,80 @@
                 <p class="sellos-title">Tus Sellos</p>
                 <div id="contenedor-sellos" data-visitas="<%= cliente.visitas %>"></div>
             </div>
-            <div class="text-center mt-4">
-                <strong id="cliente-nivel-badge" class="badge-nivel mx-auto mt-1"><%= cliente.nivel %></strong>
-            </div>
+            <div class="wallet-container">
+            <a id="btn-google-wallet" href="#" target="_blank">
+                <img src="https://help.ipswichtheatres.co.uk/hc/article_attachments/24188305565329" alt="Agregar a Google Wallet" style="height: 48px;">
+            </a>
+            <a id="btn-apple-wallet" href="#" target="_blank">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/3/30/Add_to_Apple_Wallet_badge.svg/3840px-Add_to_Apple_Wallet_badge.svg.png" alt="Agregar a Apple Wallet" style="height: 48px;">
+            </a>
+        </div>
         </div>
     </div>
-    
-    <!--
-    <section class="mb-4 ps-2 ps-md-0">
-        <h2 class="section-title mb-3 fs-4">Tus Promociones</h2>
-        <div class="scroll-horizontal pb-3" id="contenedor-promociones">
-            <div class="w-100 text-center py-4 loading-state">
-                <div class="spinner-border text-gold spinner-border-sm" role="status"></div> 
-                <span class="ms-2 small">Cargando promociones...</span>
-            </div>
-        </div>
-    </section>
-    
-    <section class="mb-4 ps-2 ps-md-0">
-        <h2 class="section-title mb-3 fs-4">Tus Eventos</h2>
-        <div class="scroll-horizontal pb-3" id="contenedor-eventos">
-            <div class="w-100 text-center py-4 loading-state">
-                <div class="spinner-border text-gold spinner-border-sm" role="status"></div> 
-                <span class="ms-2 small">Cargando eventos...</span>
-            </div>
-        </div>
-    </section>
 
-    <section id="contenedor-metricas" class="container-fluid px-2 px-md-0 mb-4">
-    <div class="w-100 text-center py-4">
-        <div class="spinner-border text-gold spinner-border-sm" role="status"></div>
-        <span class="ms-2 small text-muted">Calculando tus estadísticas...</span>
-    </div>
-    </section>
-    -->
+
+
+
+
+    <!-- ═══════════════════════════════════════════
+     CARRUSEL DE PROMOCIONES ROYALTY
+     Se inyectan las tarjetas desde JS con construirCarruselPromos()
+════════════════════════════════════════════ -->
+<section class="promos-section premium-card mb-5 ps-2 ps-md-0" style="margin-top: 32px;">
+
+  <!-- Encabezado -->
+  <div class="promos-header mb-3 px-1">
+    <h2 class="section-title fs-5">Tus Promociones</h2>
+    <p class="loyalty-subtitle mb-0">Beneficios exclusivos de tu nivel</p>
+  </div>
+
+  <!-- Estado de carga -->
+  <div id="promos-loading" class="w-100 text-center py-4">
+    <div class="spinner-border spinner-border-sm text-gold" role="status"></div>
+    <span class="ms-2 small text-muted">Cargando promociones...</span>
+  </div>
+
+  <!-- Estado vacío (oculto por defecto) -->
+  <div id="promos-empty" class="alert alert-light border mx-3 w-100 text-center" style="display:none;">
+    No hay promociones disponibles para tu nivel en este momento.
+  </div>
+
+  <!-- Carrusel (oculto hasta que JS inyecte tarjetas) -->
+  <div id="contenedor-promos-carrusel"
+       class="scroll-horizontal pb-3"
+       style="display:none;">
+    <!-- Las .promo-img-card se inyectan aquí desde construirCarruselPromos() -->
+  </div>
+
+</section>
+
+
+
+    
+
+    <script>
+  fetch('/royalty/royaltyUser/api/datos')
+    .then(r => r.json())
+    .then(data => {
+      console.log('Respuesta:', data) // para debuggear
+      if (data.walletLink) {
+        document.getElementById('btn-google-wallet').href = data.walletLink // ✅ nombre correcto
+      }
+    })
+    .catch(err => console.error('Error:', err))
+</script>
+    
+    
 
 </main>
+
+<script>
+  window.clienteData = {
+    nombre:  "<%= cliente.Nombre %>",
+    nivel:   "<%= cliente.nivel %>",
+    visitas: <%= cliente.visitas %>
+  }
+</script>
 
 <script src="/js/Royalty/royalty.cliente.js"></script>
 </body>

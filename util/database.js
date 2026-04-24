@@ -10,13 +10,13 @@ const pool = mysql.createPool({
   database: 'mareebd',
   password: '280904',
   waitForConnection: true,
-  connectionLimit: 10
+  connectionLimit: 10 
 
 })
 */
 /* ==Contraseñas y usuario ==
 Usuario: CL85565990
-Pass: CL006901!
+Pass: CL006901! 
 
 */
 
@@ -32,9 +32,8 @@ const pool = mysql.createPool({
   connectionLimit: 10
 
 })
-/*
 
-// Santi
+/* Santi
 // Pool de conexiones
 
 const pool = mysql.createPool({
@@ -47,4 +46,5 @@ const pool = mysql.createPool({
 
 })
 */
+
 module.exports = pool.promise() // Habilitamos poder usar .then() & .catch() yuhhhh

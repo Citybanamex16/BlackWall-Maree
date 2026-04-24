@@ -29,10 +29,9 @@
             </button>
 
             <button type="button" class="btn-royalty-active" onclick="location.href='/royalty/royaltyUser'">
-                <i class="fas fa-crown"></i> Royalty
+                <i class="fas fa-crown"></i> Rewards
             </button>
-
-            <button type="button" class="btn-logout" onclick="location.href='/cliente/logout';" aria-label="Cerrar Sesión">
+            <button type="button" class="btn-logout" onclick="localStorage.removeItem('pedido'); location.href='/cliente/logout';" aria-label="Cerrar Sesión">
                 Logout
             </button>
         </div>
@@ -71,40 +70,43 @@
      TODO: poblar con buscador y accesos rápidos
 ════════════════════════════════════════ -->
 <div id="sticky-bottom" class="sticky-bottom-app">
-    <!-- Botón Promos -->
-    <a href="/cliente/promosCliente" class="btn btn-icon">
-        <i class="fas fa-ticket-alt is-size-4"></i>
-        <span class="is-size-7">Promos</span>
+
+    <a href="/menu/sucursales" class="btn btn-icon search-side-btn" aria-label="Mapa">
+        <i class="fas fa-map-marker-alt is-size-4"></i>
     </a>
 
-    <div class="search-bar-wrapper control has-icons-left is-expanded">
-        <input class="input is-rounded" type="text" placeholder="Buscar...">
+    <a href="/cliente/promosCliente" class="btn btn-icon search-side-btn" aria-label="Promos">
+        <i class="fas fa-gift is-size-4"></i>
+    </a>
+
+    <button id="btn-search-toggle" class="btn btn-icon" aria-label="Buscar">
+        <i class="fas fa-search is-size-4"></i>
+    </button>
+
+    <div class="search-bar-wrapper control has-icons-left" id="search-expanded" style="display:none;flex:1;">
+        <input id="search-input" class="input is-rounded" type="text" placeholder="Buscar...">
         <span class="icon is-left">
             <i class="fas fa-search"></i>
         </span>
     </div>
 
-    <!-- Botón Eventos -->
-    <a href="/cliente/eventosCliente" class="btn btn-icon">
+    <a href="/cliente/eventosCliente" class="btn btn-icon search-side-btn" aria-label="Eventos">
         <i class="fas fa-calendar-alt is-size-4"></i>
-        <span class="is-size-7">Eventos</span>
+    </a>
+
+    <a href="/menu/orden" class="btn btn-icon search-side-btn" aria-label="Carrito">
+        <span style="position:relative;display:inline-flex;">
+            <i class="fas fa-shopping-cart is-size-4"></i>
+            <span class="fab-badge">0</span>
+        </span>
     </a>
 </div>
 
-
-<!-- FAB — Mapa (ARRIBA) -->
-<!-- 85px (base) + 60px (botón) + 12px (margen) = 157px -->
-<a id="fab-mapa" class="fab-app" href="/menu/sucursales" aria-label="Ver mapa de sucursales" 
-   style="bottom: 157px; background-color: #ffffff; border: 2px solid #a8bc94;">
-    <span class="fab-icon">📍</span>
-</a>
-
-<!-- FAB — Carrito (ABAJO) -->
+<!-- FAB — Crepa Personalizada (Abajo Izquierda) -->
 <!-- Mantiene los 85px que ya tienes en tu CSS -->
-<a id="fab-carrito" class="fab-app" href="/menu/orden" aria-label="Ver carrito">
-    <span class="fab-icon">🛒</span> 
-    <span class="fab-badge">0</span>
-</a>
+<button id="fab-personalizado" class="fab-app-der" aria-label="Armar tu Crepa">
+    <i class="fas fa-utensils" style="font-size:20px;color:#fff;"></i>
+</button>
 
 
 
@@ -120,6 +122,7 @@
     </div>
 </dialog>
 
+
 <!-- ═══════════════════════════════════════
      MODAL — Error de carga del menú
 ════════════════════════════════════════ -->
@@ -134,6 +137,115 @@
     </div>
 </dialog>
 
+
+
+<!-- ═══════════════════════════════════════
+     Seccion — Modal Producto personalizado
+════════════════════════════════════════ -->
+<dialog id="modal-creacion-crepa" class="maree-dialog is-large">
+    <div class="dialog-container">
+        
+        <header class="dialog-header">
+            <h2 id="modal-titulo-personalizacion">Crea tu Obra Maestra</h2>
+            <p id="modal-instrucciones-personalizacion">Paso a paso: elige el corazón de tu crepa y su decoración exterior.</p>
+        </header>
+
+        <section class="dialog-content">
+            <div class="personalization-section">
+                <h3 class="section-subtitle">1. Ingredientes Adentro</h3>
+                <div id="contenedor-ingredientes-adentro" class="ingredientes-grid">
+                    </div>
+            </div>
+
+            <div class="personalization-section">
+                <h3 class="section-subtitle">2. Toppings (Toque Final)</h3>
+                <div id="contenedor-toppings" class="ingredientes-grid">
+                    </div>
+            </div>
+        </section>
+
+        <footer class="dialog-footer">
+            <div class="precio-dinamico-wrapper">
+                <div class="total-label-group">
+                    <span class="label-total">Precio Estimado</span>
+                    <small>Sujeto a cambios según ingredientes extra</small>
+                </div>
+                <span id="placeholder-precio-total" class="precio-monto">$0.00</span>
+            </div>
+
+            <div class="botones-container">
+                <button id="btn-cancelar-creacion" class="btn-cancelar">Volver al Menú</button>
+                <button id="btn-confirmar-creacion" class="btn-crear-final">Agregar al Pedido</button>
+            </div>
+        </footer>
+    </div>
+</dialog>
+
+
+
+<!-- Dialogo Summary de Receta Personalizada -->
+<dialog id="modal-resumen-crepa" class="maree-dialog is-large">
+    <div class="dialog-container">
+        
+        <header class="dialog-header header-success">
+            <h2>Tu Obra Maestra</h2>
+            <p>Revisa tu receta antes de enviarla a la cocina.</p>
+        </header>
+
+        <section class="dialog-content flex-center">
+            <div class="tarjeta-receta">
+                
+                <div class="capa-receta">
+                    <h4 class="capa-titulo">
+                        <span class="icono-capa">✨</span> Cobertura y Toppings
+                    </h4>
+                    <ul id="resumen-lista-toppings" class="lista-ingredientes-final">
+                        </ul>
+                </div>
+
+                <hr class="separador-crepa">
+
+                <div class="capa-receta">
+                    <h4 class="capa-titulo">
+                        <span class="icono-capa">🥞</span> Corazón de la Crepa
+                    </h4>
+                    <ul id="resumen-lista-adentro" class="lista-ingredientes-final">
+                        </ul>
+                </div>
+
+            </div>
+        </section>
+
+        <footer class="dialog-footer">
+            <div class="precio-dinamico-wrapper">
+                <span class="label-total">Total de tu creación:</span>
+                <span id="resumen-precio-total" class="precio-monto">$0.00</span>
+            </div>
+
+            <div class="botones-container">
+                <button id="btn-editar-receta" class="btn-cancelar">Volver a Editar</button>
+                <button id="btn-agregar-carrito" class="btn-crear-final">¡Añadir al Carrito!</button>
+            </div>
+        </footer>
+    </div>
+</dialog>
+
+
+
+
+
+<!-- Dialogo de error -->
+<dialog id="ErrorModal" class=" mymodal">
+    <h2 id="ErrorTitle">Titulo Dinámico</h2>
+    <div class="modal-accent-bar"></div>
+    <p id="ErrorMessage">Mensaje Dinámico</p>
+    <!-- Botón con ID para manipularlo desde JS -->
+    <button id="closeInvalidData" class="modal-close-btn" >Cerrar</button>
+</dialog>
+
+
+
+
 <script>
     const urlParams = new URLSearchParams(window.location.search);
     if (urlParams.get('authError') === 'database') {
@@ -142,5 +254,6 @@
     }
 </script>
 <script src="/js/menudigital/menu.js"></script>
+<script src="/js/menudigital/menuProductoPersonalizado.js"></script>
 </body>
 </html>

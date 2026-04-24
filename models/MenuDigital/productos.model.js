@@ -155,33 +155,38 @@ module.exports = class Producto {
     return result
   }
 
-  static ValidarDatosRegistro (data) {
-    const mensajesError = [] // Lista para acumular errores
 
+  /* --- MODELO PEDIDO --- */
+static ValidarDatosRegistro(data) {
+    let mensajesError = [];
+
+    // 1. Validaciones estructurales básicas
     for (const [key, value] of Object.entries(data)) {
-      // 1. Validar vacío
-      if (value === null || value === undefined || value === '') {
-        mensajesError.push(`Campo vacío: ${key}`)
-      } else if (key === 'Precio') {
-        const precio = parseFloat(value)
-        if (isNaN(precio) || precio <= 0) {
-          mensajesError.push(`Precio inválido: ${value}`)
+        // Verificamos si el valor es nulo, indefinido o un string vacío
+        if (value === null || value === undefined || value === '') {
+            
+            // EXCEPCIÓN: 'direccion' solo es obligatoria si es Delivery
+            if (key === 'direccion' && data.forma !== 'Delivery') {
+                continue; 
+            }
+            
+            mensajesError.push(`Campo vacío: ${key}`);
         }
-      }
     }
 
-    // Si hay mensajes, regresamos falso ;(
+    // 2. Retorno de resultados
     if (mensajesError.length > 0) {
-      return {
-        valido: false,
-        mensaje: mensajesError.join(', ')
-      }
+        return { 
+            valido: false, 
+            mensaje: mensajesError.join(', ') 
+        };
     }
 
-    return { valido: true, mensaje: '' }
-  }
+    // Si todo está presente, la estructura es correcta
+    return { valido: true, mensaje: '' };
+}
 
-  // Esta se va a ir de este modelo
+  
   static async getAllIngredientes () {
     return db.execute('SELECT Nombre as nombre, ID_Insumo as id, Precio as precio FROM INSUMO')
   }
@@ -205,6 +210,11 @@ module.exports = class Producto {
 
   static async desactivarProducto (id) {
     const [result] = await db.execute('UPDATE producto SET Disponible = 0 WHERE ID_Producto = ?', [id])
+    return result
+  }
+
+  static async getCrepaPersoPrecioBase(connection){
+    const [result] = await connection.execute('SELECT Precio as precioBaseCrepaPerso FROM `producto` WHERE ID_Producto = "PD_COMODIN";')
     return result
   }
 }

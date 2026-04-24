@@ -60,3 +60,8 @@ coverage/
 
 dist/
 build/
+
+############################
+# Licencias de Google
+############################
+util/GoogleCredentials/Google-Wallet.json

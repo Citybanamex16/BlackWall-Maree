@@ -2,6 +2,7 @@
 const nav = require('../models/breadcrumbs.model.js')
 const Royalty = require('../models/royalty.model.js')
 const QRCode = require('qrcode')
+const WalletModel = require('../models/googleWallet.model.js')
 
 // Admin
 exports.getRoyaltyAdmin = async (request, response, next) => {
@@ -25,6 +26,77 @@ exports.getRoyaltyAdmin = async (request, response, next) => {
       succes: false,
       message: 'No se pudo mandar los estados royalties'
     })
+  }
+}
+
+exports.postRegistrarEstadoRoyalty = async (request, response, next) => {
+  console.log('Body recibido:', request.body)
+  const { nombre, prioridad, descripcion, minVisitas, maxVisitas, promociones, eventos } = request.body
+
+  if (!nombre || prioridad === undefined || !descripcion || !minVisitas || !maxVisitas) {
+    return response.status(400).json({
+      success: false,
+      message: 'Faltan datos obligatorios para registrar Estado Royalty'
+    })
+  }
+  try {
+    const nuevoEstadoRoyalty = new Royalty(nombre, prioridad, descripcion, maxVisitas, minVisitas)
+    await nuevoEstadoRoyalty.save()
+    const promesas = []
+    if (promociones && promociones.length > 0) {
+      const idsPromociones = promociones.map(p => p.id)
+      promesas.push(Royalty.guardarEstadoRoyaltyPromociones(nombre, idsPromociones))
+    }
+    if (eventos && eventos.length > 0) {
+      const idsEventos = eventos.map(e => e.id)
+      promesas.push(Royalty.guardarEstadoRoyaltyEventos(nombre, idsEventos))
+    }
+    await Promise.all(promesas)
+    await WalletModel.crearLoyaltyClass(nombre, maxVisitas)
+    response.status(200).json({
+      success: true,
+      message: 'Estado Royalty registrado correctamente'
+    })
+  } catch (error) {
+    console.log('Error al guardar datos:', error)
+    response.status(500).json({
+      success: false,
+      message: 'Error al guardar el estado royalty'
+    })
+  }
+}
+
+exports.getFilterPromocionesEventos = async (request, response, next) => {
+  try {
+    const { promociones, eventos } = request.query
+    const [productos] = await Royalty.fetchPromocionesEventos(promociones, eventos)
+    response.status(200).json({
+      success: true,
+      data: productos
+    })
+  } catch (error) {
+    console.log(error)
+    next(error)
+  }
+}
+
+exports.getTodasPromociones = async (request, response, next) => {
+  try {
+    const [todas] = await Royalty.fetchTodasPromociones()
+    response.status(200).json({ success: true, data: todas })
+  } catch (error) {
+    console.log(error)
+    response.status(500).json({ success: false })
+  }
+}
+
+exports.getTodosEventos = async (request, response, next) => {
+  try {
+    const [todas] = await Royalty.fetchTodosEventos()
+    response.status(200).json({ success: true, data: todas })
+  } catch (error) {
+    console.log(error)
+    response.status(500).json({ success: false })
   }
 }
 
@@ -53,14 +125,16 @@ exports.getRoyaltyAdminJSON = async (request, response, next) => {
   }
 }
 
-exports.deleteRoyalty = (request, response, next) => {
+exports.deleteRoyalty = async (request, response, next) => {
   const nombre = request.params.nombre
-  Royalty.deleteRoyaltyBD(nombre).then(() => {
+  try {
+    await Royalty.deleteRoyaltyBD(nombre)
+    await WalletModel.eliminarLoyaltyClass(nombre)
     response.status(200).json({ mensaje: 'Borrado correctamente' })
-  }).catch((error) => {
+  } catch (error) {
     console.log(error)
     next(error)
-  })
+  }
 }
 
 exports.updateRoyalty = async (request, response, next) => {
@@ -70,6 +144,8 @@ exports.updateRoyalty = async (request, response, next) => {
     await Royalty.updateEstadoRoyalty(nombreOriginal, nombre, prioridad, descripcion, minVisitas, maxVisitas)
     await Royalty.updatePromocionesRoyalty(nombre, promociones)
     await Royalty.updateEventosRoyalty(nombre, eventos)
+    await WalletModel.actualizarLoyaltyClass(nombreOriginal, nombre, maxVisitas)
+    await WalletModel.actualizarTarjetaPorNivel(nombreOriginal, nombre, maxVisitas)
     response.status(200).json({
       success: true,
       message: 'Se han modificado los datos correctamente'
@@ -127,6 +203,45 @@ exports.getRoyaltyMetrics = (req, res, next) => {
   res.render('/royalty/royaltyAdmin')
 }
 
+// Para escanear el QR en la wallet
+exports.postRegistrarVisita = async (request, response, next) => {
+  try {
+    const { telefono } = request.body
+
+    if (!telefono) {
+      return response.status(400).json({ success: false, message: 'Teléfono requerido' })
+    }
+
+    const clienteActualizado = await Royalty.agregarVisita(telefono)
+
+    if (!clienteActualizado) {
+      return response.status(404).json({ success: false, message: 'Cliente no encontrado' })
+    }
+
+    const nivelActualizado = await Royalty.actualizarNivelSiCorresponde(telefono)
+
+    await WalletModel.actualizarLoyaltyObject(
+      telefono,
+      nivelActualizado?.Nombre_Royalty || clienteActualizado.Nombre_Royalty,
+      clienteActualizado.Visitas,
+      nivelActualizado?.Max_Visitas || clienteActualizado.Max_Visitas
+    )
+
+    return response.status(200).json({
+      success: true,
+      message: 'Visita registrada correctamente',
+      data: {
+        telefono,
+        visitas: clienteActualizado.Visitas,
+        nivel: nivelActualizado?.Nombre_Royalty || clienteActualizado.Nombre_Royalty
+      }
+    })
+  } catch (error) {
+    console.error('Error al registrar visita:', error)
+    return response.status(500).json({ success: false, message: 'Error al registrar visita' })
+  }
+}
+
 // Cliente
 exports.getRoyaltyCli = async (request, response, next) => {
   if (!request.session.isLoggedIn) {
@@ -169,6 +284,7 @@ exports.getRoyaltyCli = async (request, response, next) => {
 }
 
 exports.getRoyaltyDataAPI = async (request, response, next) => {
+  console.log('getRoyaltyDataAPI llamado')
   if (!request.session.isLoggedIn || request.session.rol !== 'Usuario') {
     return response.status(401).json({ redirectUrl: '/cliente/login' })
   }
@@ -196,10 +312,21 @@ exports.getRoyaltyDataAPI = async (request, response, next) => {
       Royalty.fetchFavoritosCliente(telefono, 'Platillo')
     ])
 
+    const walletLink = await WalletModel.generarLinkWallet(
+      telefono,
+      clienteInfo.nivel,
+      clienteInfo.visitas,
+      clienteInfo.Max_Visitas
+    )
+
+    console.log('Wallet link generado:', walletLink)
+    console.log('clienteInfo completo:', clienteInfo)
+
     return response.status(200).json({
       clienteNivel: nivelId,
       promociones: promotionsData,
       eventos: eventsData,
+      walletLink,
       metrics: {
         global: {
           bebidas: topBebidasResult[0] || [],

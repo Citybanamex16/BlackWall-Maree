@@ -143,7 +143,7 @@ exports.postVerifyOtp = async (request, response, next) => {
       await Login.deleteVerificationCode(telefono)
       request.session.isLoggedIn = true
       request.session.rol = client.rol
-      request.session.cliente = { nombre: client.nombre, telefono: client.telefono, genero: client.genero, visitas: client.visitasActual || 0 }
+      request.session.cliente = { nombre: client.Nombre, telefono: client.telefono, genero: client.genero, visitas: client.visitasActual || 0 }
       delete request.session.pendingPhone
 
       return response.status(200).json({
