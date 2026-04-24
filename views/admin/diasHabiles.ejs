@@ -35,6 +35,20 @@
       Registrar día hábil
     </h2>
 
+    <div>
+      <label style="color: var(--c-text-muted); text-transform: uppercase; font-size: 11px; letter-spacing: 1px;">
+        ID Calendario
+      </label>
+      <input
+        class="input"
+        style="margin-top: 6px;"
+        type="text"
+        name="id_calendario"
+        value="<%= oldInput.id_calendario %>"
+        readonly
+        required>
+    </div>
+
     <form action="/admin/dias-habiles" method="POST">
       <div style="display: flex; flex-direction: column; gap: 18px; margin-bottom: 28px;">
 
