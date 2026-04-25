@@ -44,7 +44,9 @@ exports.postRegistrarEstadoRoyalty = async (request, response, next) => {
     await nuevoEstadoRoyalty.save()
     const promesas = []
     if (promociones && promociones.length > 0) {
+      console.log('promociones recibidas:', promociones)
       const idsPromociones = promociones.map(p => p.id)
+      console.log('ids extraídos:', idsPromociones)
       promesas.push(Royalty.guardarEstadoRoyaltyPromociones(nombre, idsPromociones))
     }
     if (eventos && eventos.length > 0) {
@@ -64,6 +66,7 @@ exports.postRegistrarEstadoRoyalty = async (request, response, next) => {
       message: 'Error al guardar el estado royalty'
     })
   }
+  
 }
 
 exports.getFilterPromocionesEventos = async (request, response, next) => {
@@ -144,8 +147,8 @@ exports.updateRoyalty = async (request, response, next) => {
     await Royalty.updateEstadoRoyalty(nombreOriginal, nombre, prioridad, descripcion, minVisitas, maxVisitas)
     await Royalty.updatePromocionesRoyalty(nombre, promociones)
     await Royalty.updateEventosRoyalty(nombre, eventos)
-    await WalletModel.actualizarLoyaltyClass(nombreOriginal, nombre, maxVisitas)
-    await WalletModel.actualizarTarjetaPorNivel(nombreOriginal, nombre, maxVisitas)
+    await WalletModel.actualizarLoyaltyClass(nombreOriginal, nombre, null, maxVisitas)
+    await WalletModel.actualizarTarjetaPorNivel(nombreOriginal, nombre, null, maxVisitas)
     response.status(200).json({
       success: true,
       message: 'Se han modificado los datos correctamente'
@@ -326,7 +329,7 @@ exports.getRoyaltyDataAPI = async (request, response, next) => {
     const clienteInfo = statusData[0]
     const nivelId = clienteInfo.nivel
     console.log(clienteInfo.Nombre)
-    console.log(clienteInfo.Max_Visitas)
+    console.log(clienteInfo.visitas)
     const [
       [promotionsData],
       [eventsData],
@@ -347,7 +350,7 @@ exports.getRoyaltyDataAPI = async (request, response, next) => {
       telefono,
       statusDataGoogle.Nombre,
       statusDataGoogle.nivel,
-      statusDataGoogle.Visitas,
+      statusDataGoogle.Visitas_Actuales,
       statusDataGoogle.Max_Visitas
     )
 
