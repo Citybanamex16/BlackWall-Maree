@@ -91,7 +91,7 @@ async function crearLoyaltyClass (nombreRoyalty, maxVisita) {
 }
 
 // Cuando se modifica un estado royalty:
-async function actualizarLoyaltyClass (nombreOriginal, nuevoNombre, maxVisitas, nombreCliente) {
+async function actualizarLoyaltyClass (nombreOriginal, nuevoNombre, maxVisitas) {
   const classIdOriginal = getClassId(nombreOriginal)
   const classIdNuevo = getClassId(nuevoNombre)
 
@@ -104,8 +104,8 @@ async function actualizarLoyaltyClass (nombreOriginal, nuevoNombre, maxVisitas, 
       await walletClient.loyaltyclass.patch({
         resourceId: classIdOriginal,
         requestBody: {
-          stampInfos: { stampCount: maxVisitas },
-          programName: `${nuevoNombre}`
+          reviewStatus: 'UNDER_REVIEW',
+          programName: nuevoNombre
         }
       })
       console.log(`Clase actualizada: ${classIdOriginal}`)
