@@ -130,7 +130,12 @@ exports.getPlatillo = async (request, response, next) => {
       .map(r => ({ id: r.ing_id, nombre: r.ing_nombre, precio: parseFloat(r.ing_precio) }))
 
     const [catalogoRows] = await db.execute(
-      'SELECT ID_Insumo as id, Nombre as nombre, Precio as precio FROM insumo WHERE Activo = 1 ORDER BY Nombre'
+      `SELECT i.ID_Insumo as id, i.Nombre as nombre, i.Precio as precio
+       FROM insumo i
+       JOIN insumo_categoria ic ON i.ID_Insumo = ic.ID_Insumo
+       WHERE ic.Nom_Categoria = ? AND i.Activo = 1
+       ORDER BY i.Nombre`,
+      [row.base]
     )
 
     response.status(200).json({
@@ -742,7 +747,10 @@ exports.getIngredientesActivos = async (req, res, nex) => {
         await connection.beginTransaction();
 
         // Ejecutamos ambas consultas usando la misma conexión
-        const result = await ingrediente.fetchAllValid(connection);
+        const categoria = req.query.categoria
+        const result = categoria
+          ? await ingrediente.fetchAllValidPorCategoria(connection, categoria)
+          : await ingrediente.fetchAllValid(connection)
         const resultPrecioBase = await productos.getCrepaPersoPrecioBase(connection);
 
         // Si todo sale bien, confirmamos (commit)

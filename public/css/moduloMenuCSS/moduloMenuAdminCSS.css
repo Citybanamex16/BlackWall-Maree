@@ -1438,4 +1438,67 @@ Spinner CSS
   margin-bottom: 6px;
 }
 
+/* ═══════════════════════════════════════════
+   BOTONES DE MODALES — paleta Marée
+   Reemplaza colores Bulma (teal/gris) por café/dorado
+═══════════════════════════════════════════ */
+
+/* Acción primaria → café dorado */
+.mymodal .button.is-primary,
+.mymodal #RegisterProduct,
+.mymodal #RegisterModification,
+.mymodal #submitFormsRegistrar,
+.mymodal #btnConfirmarAccion {
+  background-color: #b5956a !important;
+  border-color: #b5956a !important;
+  color: #fff !important;
+  font-family: 'Jost', sans-serif;
+  font-weight: 500;
+  letter-spacing: 0.5px;
+  transition: background 0.2s, transform 0.15s;
+}
+.mymodal .button.is-primary:hover,
+.mymodal #RegisterProduct:hover,
+.mymodal #RegisterModification:hover,
+.mymodal #submitFormsRegistrar:hover,
+.mymodal #btnConfirmarAccion:hover {
+  background-color: #9e7d55 !important;
+  border-color: #9e7d55 !important;
+  transform: translateY(-1px);
+}
+
+/* Acción secundaria (Cerrar/Cancelar) → borde suave */
+.mymodal .button.is-light,
+.mymodal .button:not([class*="is-"]) {
+  background-color: #faf7f3 !important;
+  border-color: #e0c9a8 !important;
+  color: #7a6040 !important;
+  font-family: 'Jost', sans-serif;
+}
+.mymodal .button.is-light:hover,
+.mymodal .button:not([class*="is-"]):hover {
+  background-color: #f0e8da !important;
+  border-color: #b5956a !important;
+}
+
+/* Desactivar → ámbar cálido */
+.mymodal .button.is-warning {
+  background-color: #f5e6c8 !important;
+  border-color: #d4a855 !important;
+  color: #7a5a1e !important;
+}
+.mymodal .button.is-warning:hover {
+  background-color: #ead5a4 !important;
+}
+
+/* Eliminar → rojo discreto, sin cambio */
+.mymodal .button.is-danger {
+  background-color: #fdf0f0 !important;
+  border-color: #e0a0a0 !important;
+  color: #9b2335 !important;
+}
+.mymodal .button.is-danger:hover {
+  background-color: #f5d5d5 !important;
+  border-color: #c0392b !important;
+}
 

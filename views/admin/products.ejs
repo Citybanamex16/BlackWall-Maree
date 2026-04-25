@@ -1,37 +1,48 @@
 <!DOCTYPE html>
-<html>
+<html lang="es" data-theme="light">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Products - Admin Marée</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@1.0.4/css/bulma.min.css">
-    <link rel="stylesheet" href="/css/moduloMenuCSS/moduloMenuAdminCSS.css">
+    <title>Catálogo de Productos - Marée</title>
 
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@1.0.4/css/bulma.min.css">
+
+    <link rel="stylesheet" href="/css/CSSglobales/global_theme.css">
+    <link rel="stylesheet" href="/css/CSSglobales/global_components.css">
+    <link rel="stylesheet" href="/css/moduloMenuCSS/moduloMenuAdminCSS.css">
 </head>
 <body>
 
-    <%- include('../partials/breadcrumbs') %>
+<!-- NAVIGATION Bar-->
+<nav class="navbar" role="navigation">
+  <div class="navbar-brand">
+    <div class="navbar-item">
+      <div class="logo-area">
+        <span class="logo-text">MARÉE</span>
+        <span class="logo-sub">Love at First Crêpe</span>
+      </div>
+    </div>
+  </div>
+</nav>
 
     <section class="section">
         <div class="container">
 
-            <!-- Encabezado de página -->
-            <div class="level mb-4">
-                <div class="level-left">
-                    <div>
-                        <h1 class="title mb-1">Catálogo de Productos</h1>
-                        <p class="subtitle is-6">Gestiona categorías, precios y disponibilidad</p>
-                    </div>
-                </div>
-                <div class="level-right">
-                    <!-- Buscador rápido por nombre -->
-                    <div class="field">
-                        <div class="control has-icons-left">
-                            <input id="filtroBusqueda" class="input" type="text" placeholder="Buscar producto...">
-                            <span class="icon is-left">🔍</span>
-                        </div>
-                    </div>
-                </div>
+            <a href="/admin" class="back-link">← Admin Dashboard</a>
+
+            <!-- Encabezado -->
+            <div class="ing-header">
+              <div>
+                <h1 class="page-title">Productos</h1>
+                <p class="page-sub">Gestiona categorías, precios y disponibilidad</p>
+              </div>
+              <div style="display:flex; gap:12px; align-items:center;">
+                <button id="registrarNuevoProducto" class="btn-maree" style="background:#b5956a;">+ Añadir Producto</button>
+              </div>
             </div>
 
             <!-- Resumen rápido — JS inyecta los números -->
@@ -62,13 +73,6 @@
         </div>
     </section>
 
-     <!-- BOTÓN Registrar nuevo Producto -->
-    <a href="#" id="registrarNuevoProducto" class="button fab is-primary is-rounded">
-        <span class="icon">
-            <i class="fas fa-plus"></i> 
-        </span>
-        <span>Añadir Producto</span>
-    </a>
 
 
 <dialog id="TypeFormsCU04" class="mymodal">

@@ -109,7 +109,14 @@ module.exports = class Producto {
 
   // Función para obtener los ingredientes pertenecientes a una Categoría
   static async getCategoryIngredientes (categoria) {
-    return db.execute('SELECT ID_Insumo as id ,Nombre as nombre, Precio as precio FROM insumo WHERE Categoría = ?', [categoria])
+    return db.execute(
+      `SELECT i.ID_Insumo as id, i.Nombre as nombre, i.Precio as precio
+       FROM insumo i
+       JOIN insumo_categoria ic ON i.ID_Insumo = ic.ID_Insumo
+       WHERE ic.Nom_Categoria = ? AND i.Activo = 1
+       ORDER BY i.Nombre`,
+      [categoria]
+    )
   }
 
   static generarID (prefijo) {

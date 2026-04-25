@@ -16,7 +16,7 @@ document.getElementById("fab-personalizado")
 async function getPersModalData(){
 	try{
 		//Nos vamos a traer las categorías y los ingredientes
-		const respuestaIng = await fetch('/Menu/ingActivos')
+		const respuestaIng = await fetch('/Menu/ingActivos?categoria=Crepas')
 		//const respuestaCat = await fetch('/Menu/categorias')
 
 		if(!respuestaIng.ok){
