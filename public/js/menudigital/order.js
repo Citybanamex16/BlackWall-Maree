@@ -6,8 +6,7 @@ const seccionCheckout = document.getElementById('seccion-checkout')
 
 let pedido = JSON.parse(localStorage.getItem('pedido') || '[]')
 
-console.log("Pedido guardado: ",pedido)
-
+console.log('Pedido guardado: ', pedido)
 
 // Helpers
 
@@ -39,8 +38,7 @@ const htmlIngredientes = (item) => {
     : ''
 }
 
-
-// fin de helpers 
+// fin de helpers
 
 // MODAL de orden
 const crearOverlay = () => {
@@ -248,11 +246,11 @@ const abrirModalConfirmacion = (forma, telefono, direccion) => {
   const overlay = crearOverlay()
 
   const resumenItems = pedido.map(item => {
-  const nombre     = esPersonalizado(item) ? item.producto_base : item.nombre
-  const precioText = '$' + precioNumerico(item).toFixed(2)
-  const detalle    = htmlIngredientes(item)
+    const nombre = esPersonalizado(item) ? item.producto_base : item.nombre
+    const precioText = '$' + precioNumerico(item).toFixed(2)
+    const detalle = htmlIngredientes(item)
 
-  return `
+    return `
     <div style="padding:10px 0;border-bottom:1px solid #f0f0f0;">
       <div style="display:flex;justify-content:space-between;">
         <span style="font-size:14px;color:#333;">${nombre}</span>
@@ -261,7 +259,7 @@ const abrirModalConfirmacion = (forma, telefono, direccion) => {
       ${detalle}
     </div>
   `
-}).join('')
+  }).join('')
 
   const totalConfirm = pedido.reduce((sum, item) => sum + precioNumerico(item), 0)
 
@@ -343,7 +341,7 @@ const renderPedido = () => {
 
     // ── Nombre y descripción según tipo ──
     const nombre = esPersonalizado(item) ? item.producto_base : (item.nombre || '—')
-    const desc   = esPersonalizado(item)
+    const desc = esPersonalizado(item)
       ? htmlIngredientes(item)
       : (item.desc?.trim() ? `<p style="font-size:13px;color:#777;margin:4px 0 0 0;">${item.desc}</p>` : '')
 
@@ -409,3 +407,76 @@ const navCount = document.getElementById('nav-item-count')
 if (navCount && pedido.length > 0) {
   navCount.textContent = `${pedido.length} ${pedido.length === 1 ? 'artículo' : 'artículos'}`
 }
+
+// --- GESTIÓN DE PREMIOS ROYALTY ---
+
+const renderizarSeccionRoyalty = () => {
+  const contenedor = document.getElementById('contenedor-royalty-ui')
+  if (!contenedor || !window.datosRoyalty || window.datosRoyalty.tokens <= 0) return
+
+  // Verificar si ya se aplicó un premio en este pedido
+  const premioYaAplicado = pedido.some(item => item.premioAplicado)
+  if (premioYaAplicado) return
+
+  contenedor.innerHTML = `
+        <div style="margin: 20px 0; padding: 15px; background: #faf7f3; border: 1px solid #b5956a; border-radius: 8px; display: flex; justify-content: space-between; align-items: center;">
+            <div>
+                <p style="margin:0; font-weight:600; color:#b5956a;">¡Tienes un regalo disponible!</p>
+                <p style="margin:0; font-size:12px;">Aplica un ${window.datosRoyalty.descuento}% de descuento a un producto.</p>
+            </div>
+            <button onclick="abrirModalPremios()" class="button is-small" style="background:#b5956a; color:white; border:none;">Canjear</button>
+        </div>
+    `
+}
+
+window.abrirModalPremios = () => {
+  const lista = document.getElementById('lista-productos-premios')
+  const modal = document.getElementById('modal-royalty')
+  lista.innerHTML = ''
+
+  if (pedido.length === 0) {
+    alert('Agrega productos al carrito primero.')
+    return
+  }
+
+  pedido.forEach((item, index) => {
+    const precioBase = precioNumerico(item)
+    const ahorro = precioBase * (window.datosRoyalty.descuento / 100)
+    const precioFinal = precioBase - ahorro
+
+    const itemDiv = document.createElement('div')
+    itemDiv.style.cssText = 'padding:10px; border-bottom:1px solid #eee; display:flex; justify-content:space-between; align-items:center;'
+    itemDiv.innerHTML = `
+            <div>
+                <span style="display:block; font-weight:500;">${item.producto_base ? 'Crepa Personalizada' : item.nombre}</span>
+                <span style="font-size:13px; color:#888;"><strike>$${precioBase.toFixed(2)}</strike> → <b>$${precioFinal.toFixed(2)}</b></span>
+            </div>
+            <button onclick="aplicarPremio(${index})" class="button is-success is-small">Aplicar</button>
+        `
+    lista.appendChild(itemDiv)
+  })
+
+  modal.classList.add('is-active')
+}
+
+window.aplicarPremio = (index) => {
+  const item = pedido[index]
+  const precioBase = precioNumerico(item)
+  const descuento = window.datosRoyalty.descuento
+
+  // Modificamos el objeto con las banderas para el POLICÍA del backend
+  item.precio_total = (precioBase - (precioBase * (descuento / 100))).toFixed(2)
+  item.premioAplicado = true
+  item.descuentoAplicado = descuento
+
+  // Guardar y refrescar vista
+  localStorage.setItem('pedido', JSON.stringify(pedido))
+  window.location.reload()
+}
+
+window.cerrarModalPremios = () => {
+  document.getElementById('modal-royalty').classList.remove('is-active')
+}
+
+// Ejecutar al cargar
+document.addEventListener('DOMContentLoaded', renderizarSeccionRoyalty)
