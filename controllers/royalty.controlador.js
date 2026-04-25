@@ -345,6 +345,9 @@ exports.getRoyaltyDataAPI = async (request, response, next) => {
       Royalty.fetchFavoritosCliente(telefono, 'Bebidas'),
       Royalty.fetchFavoritosCliente(telefono, 'Platillo')
     ])
+    if (statusDataGoogle.nivel == null) {
+      statusDataGoogle.nivel = "¡Bienvenido!"
+    }
 
     const walletLink = await WalletModel.generarLinkWallet(
       telefono,
