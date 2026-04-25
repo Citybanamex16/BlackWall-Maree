@@ -147,7 +147,7 @@ exports.updateRoyalty = async (request, response, next) => {
     await Royalty.updateEstadoRoyalty(nombreOriginal, nombre, prioridad, descripcion, minVisitas, maxVisitas)
     await Royalty.updatePromocionesRoyalty(nombre, promociones)
     await Royalty.updateEventosRoyalty(nombre, eventos)
-    await WalletModel.actualizarLoyaltyClass(nombreOriginal, nombre, null, maxVisitas)
+    await WalletModel.actualizarLoyaltyClass(nombreOriginal, nombre, maxVisitas)
     await WalletModel.actualizarTarjetaPorNivel(nombreOriginal, nombre, null, maxVisitas)
     response.status(200).json({
       success: true,
