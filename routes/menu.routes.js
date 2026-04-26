@@ -13,6 +13,9 @@ router.post('/agregaritem', menuControlador.agregarItem)
 router.post('/pedidos/validar', menuControlador.contextoUsuario ,menuControlador.validarPedido)
 router.post('/pedidos/confirmar', menuControlador.confirmarPedido)
 
+//FeedbackCliente
+router.post('/feedback/Nuevo', menuControlador.postNewFeedback)
+
 // Productos Personalizados
 router.get('/categorias', menuControlador.getCategorías)
 router.get('/ingActivos', menuControlador.getIngredientesActivos)

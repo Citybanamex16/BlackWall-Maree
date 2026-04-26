@@ -6,7 +6,9 @@ const tipos = require('../models/MenuDigital/tipos.model.js')
 const promos = require('../models/promociones.model.js')
 const Pedido = require('../models/pedidos.model.js')
 const sucursal = require('../models/MenuDigital/sucursales.model.js')
+const feedback = require('../models/MenuDigital/feedback.model.js')
 const db = require('../util/database.js')
+
 
 // CU11 Vizualisar Menu
 exports.getMenu = (request, response, next) => {
@@ -769,5 +771,98 @@ exports.getIngredientesActivos = async (req, res, nex) => {
         if (connection) connection.release();
     }
 };
+
+
+//Sección feedback Cliente
+
+exports.getClientReview = async (req, res, nex) => {
+  console.log("Getting Client's review history")
+  try{
+
+    const clientData = req.body
+
+    const resultData = await feedback.getClientFeedback(clientData.Numero_Telefonico)
+
+     res.status(200).json({
+          ok: true,
+          message: 'Catalogo Feedback Obtenido',
+          reviewCatalog:resultData
+                  })
+
+  } catch (err) {
+    res.status(500).json({
+          ok: false,
+          message: 'Error al obtener catalogo feedback',
+          error:err
+                  })
+
+  }
+}
+
+
+
+
+exports.postNewFeedback = async (req, res, post) => {
+  console.log("Generando nuevo feedback de cliente")
+  let resultData
+  try{
+
+    const NewReviewData = req.body
+    // Extracción tipo map
+     const {
+      ID_Orden,            // Recibir
+      Puntaje,             // Recibir
+      Comentario,          // Recibir
+      Numero_Telefonico    // Recibir para cliente_tiene_review
+  } = NewReviewData;
+
+  //Generar variables
+  const ID_Review = productos.generarID("RV")
+  console.log("ID generado para nueva review: ", ID_Review)
+
+  const now = new Date();
+  const Fecha_Hora = now.toISOString().slice(0, 19).replace('T', ' ');
+
+  //Preparando paquetes de info para cada tabla:
+  // Para tabla Review
+const reviewRecord = {
+    ID_Review,
+    ID_Orden,
+    Puntaje,
+    Fecha_Hora,
+    Comentario
+};
+
+// Para tabla cliente_tiene_review
+const intermediaryData = {
+    ID_Review, // ID_Review generada arriba
+    Numero_Telefonico
+};
+
+console.log(reviewRecord);
+console.log(intermediaryData);
+
+//Ejecutando POST 
+resultData = await  feedback.postNewOrderFeedback(reviewRecord,intermediaryData)
+
+  res.status(200).json({
+          ok: true,
+          message: 'Feedback Guardado correctamente',
+          result:resultData
+                  })
+
+
+  } catch (err){
+    console.log("Error interno en POST de feedback: ", err)
+    res.status(500).json({
+          ok: false,
+          message: 'Error al guardar feedback',
+          result:resultData
+                  })
+
+
+  }
+}
+
 
 

@@ -18,4 +18,41 @@ module.exports = class Feedback {
     )
     return result[0] || null
   }
+
+  //Cliente modelos 
+
+ static async postNewOrderFeedback(ReviewData, IntermediaryData) {
+    // El orden debe ser: ID_Review, ID_Orden, Puntaje, Fecha_Hora, Comentario, Numero_Telefonico
+    const params = [
+        ReviewData.ID_Review,
+        ReviewData.ID_Orden,
+        ReviewData.Puntaje,
+        ReviewData.Fecha_Hora,
+        ReviewData.Comentario,
+        IntermediaryData.Numero_Telefonico
+    ];
+
+    const [result] = await db.execute(`CALL sp_RegistrarReview(?, ?, ?, ?, ?, ?)`, params);
+    
+    // Al usar CALL, result suele ser un array donde el primer elemento 
+    // contiene el SELECT de éxito/error del SP.
+    return result[0]; 
+
+  }
+
+  static async getClientFeedback(telefono){
+    const [result] = await db.execute( `
+        SELECT 
+            r.ID_Review, 
+            r.ID_Orden, 
+            r.Puntaje, 
+            r.Fecha_Hora, 
+            r.Comentario
+        FROM review r
+        INNER JOIN cliente_tiene_review ctr ON r.ID_Review = ctr.ID_Review
+        WHERE ctr.Numero_Telefonico = ?
+        ORDER BY r.Fecha_Hora DESC
+    `,telefono)
+    return result
+  }
 }
