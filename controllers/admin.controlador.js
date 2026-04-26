@@ -1194,3 +1194,37 @@ exports.getMetricasRoyalty = async (request, response, next) => {
     console.log(error)
   }
 }
+
+exports.postDeleteDiaHabil = async (req, res, next) => {
+  try {
+    const idCalendario = String(req.params.id || '').trim()
+
+    if (!idCalendario) {
+      return res.status(400).json({
+        ok: false,
+        mensaje: 'ID de día hábil inválido.'
+      })
+    }
+
+    const resultado = await Calendario.deleteById(idCalendario)
+
+    if (!resultado) {
+      return res.status(404).json({
+        ok: false,
+        mensaje: 'No fue posible eliminar el día hábil.'
+      })
+    }
+
+    return res.json({
+      ok: true,
+      mensaje: 'Día hábil eliminado correctamente.'
+    })
+  } catch (error) {
+    console.error('Error al eliminar día hábil:', error)
+
+    return res.status(500).json({
+      ok: false,
+      mensaje: 'Ocurrió un error al actualizar la base de datos.'
+    })
+  }
+}
