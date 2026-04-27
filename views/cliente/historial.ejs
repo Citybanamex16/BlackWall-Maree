@@ -92,7 +92,16 @@
                         <p style="font-size:13px;color:#aaa;font-family:'Jost',sans-serif;">Sin productos registrados.</p>
                     <% } %>
 
-                    <div class="cancel-area" style="margin-top:12px;min-height:32px;"></div>
+                    <div class="cancel-area" style="margin-top:12px;min-height:32px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">
+                        <% if (orden.estado_orden === 'Entregado') { %>
+                            <button
+                                class="btn-resena"
+                                data-orden-id="<%= orden.id_orden %>"
+                                onclick="abrirModalResena('<%= orden.id_orden %>')">
+                                ★ Dejar reseña
+                            </button>
+                        <% } %>
+                    </div>
                 </div>
             <% }) %>
         <% } %>
@@ -108,6 +117,125 @@
         padding: 20px;
         margin-bottom: 16px;
     }
+
+    .btn-resena {
+        padding: 7px 16px;
+        background: transparent;
+        border: 1px solid #b5956a;
+        border-radius: 6px;
+        color: #b5956a;
+        font-size: 13px;
+        font-family: 'Jost', sans-serif;
+        font-weight: 500;
+        cursor: pointer;
+        transition: background 0.2s, color 0.2s;
+        margin-left: auto;
+    }
+    .btn-resena:hover {
+        background: #b5956a;
+        color: #fff;
+    }
+
+    /* Modal reseña */
+    #modal-resena {
+        border: none;
+        border-radius: 16px;
+        padding: 28px 24px;
+        width: 90%;
+        max-width: 400px;
+        box-shadow: 0 8px 32px rgba(0,0,0,0.15);
+        font-family: 'Jost', sans-serif;
+    }
+    #modal-resena::backdrop {
+        background: rgba(0,0,0,0.45);
+    }
+    .resena-title {
+        font-family: 'Cormorant Garamond', serif;
+        font-size: 22px;
+        font-weight: 400;
+        color: #222;
+        margin: 0 0 4px;
+    }
+    .resena-sub {
+        font-size: 12px;
+        color: #aaa;
+        margin-bottom: 20px;
+    }
+    .estrellas-container {
+        display: flex;
+        gap: 8px;
+        margin-bottom: 20px;
+    }
+    .estrella-btn {
+        background: none;
+        border: none;
+        font-size: 32px;
+        cursor: pointer;
+        color: #e0d0b8;
+        transition: color 0.15s, transform 0.1s;
+        padding: 0;
+        line-height: 1;
+    }
+    .estrella-btn.activa {
+        color: #b5956a;
+    }
+    .estrella-btn:hover {
+        transform: scale(1.15);
+    }
+    .resena-label {
+        font-size: 12px;
+        color: #888;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        margin-bottom: 6px;
+        display: block;
+    }
+    .resena-textarea {
+        width: 100%;
+        border: 1px solid #e0c9a8;
+        border-radius: 8px;
+        padding: 10px 12px;
+        font-family: 'Jost', sans-serif;
+        font-size: 14px;
+        color: #333;
+        resize: none;
+        box-sizing: border-box;
+        outline: none;
+        transition: border-color 0.2s;
+        margin-bottom: 20px;
+    }
+    .resena-textarea:focus {
+        border-color: #b5956a;
+    }
+    .resena-footer {
+        display: flex;
+        justify-content: flex-end;
+        gap: 10px;
+    }
+    .btn-resena-cancelar {
+        padding: 9px 20px;
+        background: #faf7f3;
+        border: 1px solid #e0c9a8;
+        border-radius: 6px;
+        color: #7a6040;
+        font-family: 'Jost', sans-serif;
+        font-size: 13px;
+        cursor: pointer;
+    }
+    .btn-resena-enviar {
+        padding: 9px 20px;
+        background: #b5956a;
+        border: 1px solid #b5956a;
+        border-radius: 6px;
+        color: #fff;
+        font-family: 'Jost', sans-serif;
+        font-size: 13px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: background 0.2s;
+    }
+    .btn-resena-enviar:hover { background: #9e7d55; }
+    .btn-resena-enviar:disabled { opacity: 0.5; cursor: not-allowed; }
 </style>
 
 <!-- Modal — Confirmar cancelación -->
@@ -130,8 +258,32 @@
     </div>
 </div>
 
+<!-- Modal reseña -->
+<dialog id="modal-resena">
+    <p class="resena-title">Deja tu reseña</p>
+    <p class="resena-sub" id="resena-orden-sub">Orden —</p>
+
+    <span class="resena-label">Puntuación</span>
+    <div class="estrellas-container" id="estrellas-container">
+        <button class="estrella-btn" data-val="1" onclick="seleccionarEstrella(1)">★</button>
+        <button class="estrella-btn" data-val="2" onclick="seleccionarEstrella(2)">★</button>
+        <button class="estrella-btn" data-val="3" onclick="seleccionarEstrella(3)">★</button>
+        <button class="estrella-btn" data-val="4" onclick="seleccionarEstrella(4)">★</button>
+        <button class="estrella-btn" data-val="5" onclick="seleccionarEstrella(5)">★</button>
+    </div>
+
+    <span class="resena-label">Comentario <span style="font-weight:300;text-transform:none;">(opcional)</span></span>
+    <textarea class="resena-textarea" id="resena-comentario" rows="3" placeholder="¿Cómo fue tu experiencia?"></textarea>
+
+    <div class="resena-footer">
+        <button class="btn-resena-cancelar" onclick="cerrarModalResena()">Cancelar</button>
+        <button class="btn-resena-enviar" id="btn-enviar-resena" onclick="enviarResena()">Enviar reseña</button>
+    </div>
+</dialog>
+
 <script>
     const ORDENES_INIT = <%- JSON.stringify(ordenes.map(o => ({ id: o.id_orden, fecha: o.fecha, estado: o.estado_orden }))) %>;
+    const CLIENTE_TELEFONO = '<%= datosCliente.telefono %>';
 </script>
 <script src="/js/menudigital/historial.js"></script>
 </body>

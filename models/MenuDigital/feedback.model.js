@@ -3,7 +3,7 @@ const db = require('../../util/database.js')
 module.exports = class Feedback {
   static async getFeedBackCatalog () {
     const [result] = await db.execute(
-      'SELECT * FROM `review` WHERE Fecha <= CURDATE() ORDER BY Fecha DESC;'
+      'SELECT * FROM `review` WHERE Fecha <= NOW() ORDER BY Fecha DESC;'
     )
     return result
   }
@@ -46,7 +46,7 @@ module.exports = class Feedback {
             r.ID_Review, 
             r.ID_Orden, 
             r.Puntaje, 
-            r.Fecha_Hora, 
+            r.Fecha,
             r.Comentario
         FROM review r
         INNER JOIN cliente_tiene_review ctr ON r.ID_Review = ctr.ID_Review

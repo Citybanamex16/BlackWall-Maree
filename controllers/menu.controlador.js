@@ -821,7 +821,12 @@ exports.postNewFeedback = async (req, res, post) => {
   console.log("ID generado para nueva review: ", ID_Review)
 
   const now = new Date();
-  const Fecha_Hora = now.toISOString().slice(0, 19).replace('T', ' ');
+  const Fecha_Hora = now.getFullYear() + '-' +
+    String(now.getMonth() + 1).padStart(2, '0') + '-' +
+    String(now.getDate()).padStart(2, '0') + ' ' +
+    String(now.getHours()).padStart(2, '0') + ':' +
+    String(now.getMinutes()).padStart(2, '0') + ':' +
+    String(now.getSeconds()).padStart(2, '0');
 
   //Preparando paquetes de info para cada tabla:
   // Para tabla Review
@@ -842,8 +847,14 @@ const intermediaryData = {
 console.log(reviewRecord);
 console.log(intermediaryData);
 
-//Ejecutando POST 
-resultData = await  feedback.postNewOrderFeedback(reviewRecord,intermediaryData)
+//Ejecutando POST
+resultData = await feedback.postNewOrderFeedback(reviewRecord, intermediaryData)
+
+  console.log("Resultado SP:", JSON.stringify(resultData))
+
+  if (resultData && resultData[0]?.Estado === 'Error') {
+    throw new Error(`SP falló: ${resultData[0]?.Mensaje}`)
+  }
 
   res.status(200).json({
           ok: true,
