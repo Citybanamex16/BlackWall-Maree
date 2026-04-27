@@ -1,6 +1,8 @@
 const express = require('express')
 const router = express.Router()
 const menuControlador = require('../controllers/menu.controlador.js')
+const isAdmin = require('../middleware/isAdmin.js')
+const isAdminOrCollaborator = require('../middleware/isAdminOrCollaborator.js')
 
 // Rutas Menu cliente
 router.get('/menu', menuControlador.getMenu)
@@ -10,7 +12,7 @@ router.get('/sucursales', menuControlador.getMapaSucursales)
 router.get('/consultaplatillo', menuControlador.getPlatillo)
 router.get('/consultarPromosMenu', menuControlador.getMenuPromos)
 router.post('/agregaritem', menuControlador.agregarItem)
-router.post('/pedidos/validar', menuControlador.contextoUsuario ,menuControlador.validarPedido)
+router.post('/pedidos/validar', menuControlador.contextoUsuario, menuControlador.validarPedido)
 router.post('/pedidos/confirmar', menuControlador.confirmarPedido)
 
 // Productos Personalizados
@@ -21,18 +23,18 @@ router.get('/ingActivos', menuControlador.getIngredientesActivos)
 router.get('/Sucursales/getAll', menuControlador.getAllSucursales)
 
 // Rutas Admin
-router.get('/productos', menuControlador.getProducts)
-router.get('/productosCatalog', menuControlador.getProductsCatalog)
-router.get('/productosTipos', menuControlador.getTypes)
-router.get('/formsTipoPlatillo', menuControlador.getCategorys)
-router.get('/formsRegistraPlatillo', menuControlador.getProductfieldsAndIngredientes)
-router.post('/registerNewProduct', menuControlador.postNewProduct)
-router.put('/modifProduct/:id', menuControlador.postModifProduct)
+router.get('/productos', isAdminOrCollaborator, menuControlador.getProducts)
+router.get('/productosCatalog', isAdminOrCollaborator, menuControlador.getProductsCatalog)
+router.get('/productosTipos', isAdmin, menuControlador.getTypes)
+router.get('/formsTipoPlatillo', isAdmin, menuControlador.getCategorys)
+router.get('/formsRegistraPlatillo', isAdmin, menuControlador.getProductfieldsAndIngredientes)
+router.post('/registerNewProduct', isAdmin, menuControlador.postNewProduct)
+router.put('/modifProduct/:id', isAdmin, menuControlador.postModifProduct)
 // Eliminar Producto
-router.delete('/eliminarProducto', menuControlador.deleteProducto)
-router.put('/desactivarProducto', menuControlador.putDesactivarProducto)
+router.delete('/eliminarProducto', isAdmin, menuControlador.deleteProducto)
+router.put('/desactivarProducto', isAdmin, menuControlador.putDesactivarProducto)
 
 // Rutas Global: Rutas utilizadas por cualquier CU, devuelven información general
-router.get('/globalAdminIngredientes', menuControlador.getIngredientesFullCatalog)
+router.get('/globalAdminIngredientes', isAdmin, menuControlador.getIngredientesFullCatalog)
 
 module.exports = router

@@ -167,6 +167,8 @@
 </head>
 
 <body>
+  <% const dashboardHref = rolUsuario === 'Colaborador' ? '/colaborador' : '/admin' %>
+  <% const dashboardLabel = rolUsuario === 'Colaborador' ? 'Collaborator Dashboard' : 'Admin Dashboard' %>
   <nav class="navbar" role="navigation">
     <div class="navbar-brand">
       <div class="navbar-item">
@@ -180,6 +182,8 @@
 
   <section class="section">
     <div class="container">
+      <a id="role-dashboard-link" href="<%= dashboardHref %>" class="back-link">Back to <%= dashboardLabel %></a>
+      <style>#role-dashboard-link ~ .back-link { display: none; }</style>
 
       <a href="/admin" class="back-link">← Admin Dashboard</a>
 

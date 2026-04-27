@@ -17,6 +17,10 @@
 </head>
 
 <body>
+<% const dashboardHref = rolUsuario === 'Colaborador' ? '/colaborador' : '/admin' %>
+<% const dashboardLabel = rolUsuario === 'Colaborador' ? 'Collaborator Dashboard' : 'Admin Dashboard' %>
+<% const canManageIngredients = rolUsuario === 'Administrador' %>
+<style>#role-dashboard-link ~ .back-link { display: none; }</style>
 
 <!-- NAVIGATION Bar-->
 <nav class="navbar" role="navigation">
@@ -32,6 +36,7 @@
 
 <section class="section">
   <div class="container">
+    <a id="role-dashboard-link" href="<%= dashboardHref %>" class="back-link">Back to <%= dashboardLabel %></a>
 
     <a href="/admin" class="back-link">← Admin Dashboard</a>
 
@@ -185,6 +190,9 @@
   </div>
 </dialog>
 
+<script>
+  window.canManageIngredients = <%- JSON.stringify(canManageIngredients) %>
+</script>
 <script src="/js/menudigital/AdminIngredientsScripts/adminIngredientes.js"></script>
 </body>
 </html>

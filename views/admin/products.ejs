@@ -9,11 +9,15 @@
 
 </head>
 <body>
+    <% const dashboardHref = rolUsuario === 'Colaborador' ? '/colaborador' : '/admin' %>
+    <% const dashboardLabel = rolUsuario === 'Colaborador' ? 'Collaborator Dashboard' : 'Admin Dashboard' %>
+    <% const canManageProducts = rolUsuario === 'Administrador' %>
 
     <%- include('../partials/breadcrumbs') %>
 
     <section class="section">
         <div class="container">
+            <a href="<%= dashboardHref %>" class="back-link">Back to <%= dashboardLabel %></a>
 
             <!-- Encabezado de página -->
             <div class="level mb-4">
@@ -63,12 +67,14 @@
     </section>
 
      <!-- BOTÓN Registrar nuevo Producto -->
+    <% if (canManageProducts) { %>
     <a href="#" id="registrarNuevoProducto" class="button fab is-primary is-rounded">
         <span class="icon">
             <i class="fas fa-plus"></i> 
         </span>
         <span>Añadir Producto</span>
     </a>
+    <% } %>
 
 
 <dialog id="TypeFormsCU04" class="mymodal">
@@ -225,6 +231,9 @@
 
 
 
+<script>
+  window.canManageProducts = <%- JSON.stringify(canManageProducts) %>
+</script>
 <script src="/js/menudigital/AdminProductsScripts/adminProducts.js"></script>
 <script src="/js/menudigital/AdminProductsScripts/ModifElimProducts.js"></script>
 </body>

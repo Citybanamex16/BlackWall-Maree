@@ -1,5 +1,6 @@
 /* global ConstruirModifModal, ModifyProduct, eliminarDesactivarModal */
 // JS FRONTEND de la vista de Productos del Admin
+const canManageProducts = window.canManageProducts === true
 
 // Funciones Globales
 
@@ -87,7 +88,7 @@ function construirFichaProductos (datosProducto, datosCategorias) {
     gridDestino.addEventListener('click', (e) => {
       // Click en botón Elim/Desact — tiene prioridad, no propaga a la fila
       const btnElim = e.target.closest('.btn-elim-desact')
-      if (btnElim) {
+      if (btnElim && canManageProducts) {
         e.stopPropagation()
         const idProd = btnElim.dataset.idProd
         const nameProd = btnElim.dataset.nameProd
@@ -97,7 +98,7 @@ function construirFichaProductos (datosProducto, datosCategorias) {
 
       // Click en la fila — abre modal de edición
       const ficha = e.target.closest('.admin-prod-row')
-      if (!ficha) return
+      if (!ficha || !canManageProducts) return
       const prod = catalogoProductosMap.get(ficha.dataset.id)
       ConstruirModifModal(prod, datosCategorias)
     })
@@ -126,13 +127,15 @@ function renderProductoAdmin (prod) {
       </div>
       
       <div class="admin-prod-actions">
-       <button class="btn-elim-desact" data-id-prod="${prod.id}" data-name-prod="${prod.nombre}">
+       ${canManageProducts
+? `<button class="btn-elim-desact" data-id-prod="${prod.id}" data-name-prod="${prod.nombre}">
   <!-- Icono de basura minimalista -->
   <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
     <polyline points="3 6 5 6 21 6"></polyline>
     <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
   </svg>
-</button>
+</button>`
+: ''}
     </div>
   `
 }
@@ -236,7 +239,9 @@ function construirCatalogoAdmin (datos) {
 /* CU04 Registrar Nuevo Producto */
 // 1. Referencia a Boton
 const registerButton = document.getElementById('registrarNuevoProducto')
-registerButton.addEventListener('click', registerButtonOnClick)
+if (canManageProducts && registerButton) {
+  registerButton.addEventListener('click', registerButtonOnClick)
+}
 
 const typeFormsModal = document.getElementById('TypeFormsCU04')
 const typeFormsTitle = document.getElementById('tituloModal')
