@@ -51,6 +51,8 @@ let _ingOriginales = []
 let _ingEliminados = new Set()
 let _ingExtras = []
 let _precioBase = 0
+let _cremaBatida = null
+let _cremaBatidaSeleccionada = false
 
 function _chipOriginal (ing) {
   const removed = _ingEliminados.has(ing.id)
@@ -85,8 +87,9 @@ function _renderIngExtras () {
 
 function _actualizarPrecioVivo () {
   const extrasTotal = _ingExtras.reduce((s, i) => s + i.precio, 0)
+  const cremaBatidaTotal = _cremaBatidaSeleccionada && _cremaBatida ? _cremaBatida.precio : 0
   const el = document.getElementById('modal-precio-vivo')
-  if (el) el.textContent = `$${(_precioBase + extrasTotal).toFixed(2)}`
+  if (el) el.textContent = `$${(_precioBase + extrasTotal + cremaBatidaTotal).toFixed(2)}`
 
   const restantes = (_ingOriginales.length - _ingEliminados.size) + _ingExtras.length
   const btn = document.getElementById('btn-confirmar-agregar')
@@ -124,12 +127,41 @@ function generarHTMLModal (platillo, dataExtra, promoDisplay, promoPrecio) {
          🏷️ ${promoDisplay}
        </div>`
     : ''
+  const cremaBatidaHTML = dataExtra.cremaBatida
+    ? `
+      <div style="margin-top:14px;margin-bottom:18px;padding:16px 18px;border:1px solid #e2ceb0;border-radius:14px;background:linear-gradient(135deg,#fff8ec 0%,#f7ecda 100%);box-shadow:0 10px 24px rgba(181,149,106,0.14);">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
+          <span style="display:inline-flex;align-items:center;justify-content:center;width:34px;height:34px;border-radius:999px;background:#b5956a;color:#fff;font-size:16px;">+</span>
+          <div style="display:flex;flex-direction:column;gap:2px;">
+            <span style="font-size:11px;font-weight:700;letter-spacing:1px;color:#8c7553;text-transform:uppercase;">Toque final</span>
+            <span style="font-size:16px;font-weight:700;color:#3f352b;">¿Quieres crema batida?</span>
+          </div>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap;">
+          <div style="display:flex;flex-direction:column;gap:3px;">
+            <span style="font-size:13px;color:#6e6256;">Se agrega como extra especial a tu pedido.</span>
+            <span style="font-size:13px;font-weight:600;color:#b5956a;">+$${dataExtra.cremaBatida.precio.toFixed(2)}</span>
+          </div>
+          <div id="crema-batida-opciones" style="display:flex;gap:8px;flex-wrap:wrap;">
+            <button type="button" id="btn-crema-batida-si"
+              style="padding:8px 14px;border:1px solid #d8c3a5;border-radius:999px;background:#fff;color:#7a5f3d;font-size:12px;font-family:'Jost',sans-serif;cursor:pointer;font-weight:600;">
+              Sí agregar
+            </button>
+            <button type="button" id="btn-crema-batida-no"
+              style="padding:8px 14px;border:1px solid #d8c3a5;border-radius:999px;background:#b5956a;color:#fff;font-size:12px;font-family:'Jost',sans-serif;cursor:pointer;font-weight:600;">
+              No gracias
+            </button>
+          </div>
+        </div>
+      </div>`
+    : ''
 
   return `
     <div class="modal-detalle-header">
         <h2 class="title is-4 font-cormorant" style="font-family:'Cormorant Garamond',serif;margin-bottom:4px;">${platillo.nombre}</h2>
         <p class="subtitle is-5" style="margin-bottom:4px;">${precioHTML}</p>
         ${promoHTML}
+        ${cremaBatidaHTML}
     </div>
     <div class="modal-detalle-body" style="margin-top:16px;">
         <p style="color:#666;font-size:14px;">${dataExtra.base ? 'Categoría: ' + dataExtra.base : 'Crepa artesanal preparada al momento.'}</p>
@@ -205,11 +237,40 @@ async function verDetalleProducto (id) {
     _ingOriginales = data.ingredientes || []
     _ingEliminados = new Set()
     _ingExtras = []
+    _cremaBatida = data.cremaBatida || null
+    _cremaBatidaSeleccionada = false
 
     modalContent.innerHTML = generarHTMLModal(producto, data, promoDisplay, promoPrecio)
     modalOverlay.showModal()
 
     _renderIngOriginales()
+
+    const btnCremaBatidaSi = document.getElementById('btn-crema-batida-si')
+    const btnCremaBatidaNo = document.getElementById('btn-crema-batida-no')
+    const actualizarBotonesCremaBatida = () => {
+      if (!btnCremaBatidaSi || !btnCremaBatidaNo) return
+
+      btnCremaBatidaSi.style.background = _cremaBatidaSeleccionada ? '#b5956a' : '#fff'
+      btnCremaBatidaSi.style.color = _cremaBatidaSeleccionada ? '#fff' : '#7a5f3d'
+      btnCremaBatidaNo.style.background = _cremaBatidaSeleccionada ? '#fff' : '#b5956a'
+      btnCremaBatidaNo.style.color = _cremaBatidaSeleccionada ? '#7a5f3d' : '#fff'
+    }
+
+    if (btnCremaBatidaSi && btnCremaBatidaNo) {
+      btnCremaBatidaSi.addEventListener('click', () => {
+        _cremaBatidaSeleccionada = true
+        actualizarBotonesCremaBatida()
+        _actualizarPrecioVivo()
+      })
+
+      btnCremaBatidaNo.addEventListener('click', () => {
+        _cremaBatidaSeleccionada = false
+        actualizarBotonesCremaBatida()
+        _actualizarPrecioVivo()
+      })
+
+      actualizarBotonesCremaBatida()
+    }
 
     const ingIdsOriginales = new Set(_ingOriginales.map(i => i.id))
     const selector = document.getElementById('selector-extra')
@@ -237,13 +298,20 @@ async function verDetalleProducto (id) {
 
     document.getElementById('btn-confirmar-agregar').onclick = () => {
       const extrasTotal = _ingExtras.reduce((s, i) => s + i.precio, 0)
+      const cremaBatidaTotal = _cremaBatidaSeleccionada && _cremaBatida ? _cremaBatida.precio : 0
       const item = {
         id,
         nombre: data.nombre,
-        precio_total: _precioBase + extrasTotal,
-        desc: [data.base, producto?.tipo].filter(Boolean).join(' · '),
+        precio_total: _precioBase + extrasTotal + cremaBatidaTotal,
+        desc: [
+          data.base,
+          producto?.tipo,
+          _cremaBatidaSeleccionada ? 'Con crema batida' : null
+        ].filter(Boolean).join(' · '),
         ingredientes_adentro: _ingExtras.map(i => ({ id_insumo: i.id_insumo, nombre: i.nombre, precio: i.precio })),
-        ingredientes_toppings: [],
+        ingredientes_toppings: _cremaBatidaSeleccionada && _cremaBatida
+          ? [{ id_insumo: _cremaBatida.id, nombre: _cremaBatida.nombre, precio: _cremaBatida.precio }]
+          : [],
         ingredientes_base: _ingOriginales
           .filter(i => !_ingEliminados.has(i.id))
           .map(i => ({ id_insumo: i.id, nombre: i.nombre, precio: i.precio })),
@@ -697,16 +765,19 @@ function generarBadgesIngredientes (listaIngredientes) {
 /* Actor C: Sección de categoría */
 function construirCategoria (cat, contenedorMenu) {
   const seccionCat = document.createElement('section')
-  seccionCat.className = 'categoria-render mb-5 animate-fade-in' // Clase para animación suave
+  const idSeccion = `cat-${cat.Nombre.toLowerCase().replace(/\s+/g, '-')}`
+  const idGridPrincipal = `grid-principal-${cat.Nombre.toLowerCase().replace(/\s+/g, '-')}`
+  seccionCat.className = 'categoria-section categoria-render mb-5 animate-fade-in' // Clase para animación suave
+  seccionCat.id = idSeccion
 
   // Estructura limpia: Título elegante y Grid preparado para 3 columnas
   seccionCat.innerHTML = `
     <h2 class="category-display-title">${cat.Nombre}</h2>
-    <div id="grid-principal" class="columns is-mobile is-multiline product-grid-app">
+    <div id="${idGridPrincipal}" class="columns is-mobile is-multiline product-grid-app">
         </div>`
 
   contenedorMenu.appendChild(seccionCat)
-  return { id: 'grid-principal', nombre: cat.Nombre }
+  return { id: idGridPrincipal, nombre: cat.Nombre }
 }
 
 /* Actor D: Sticky tabs */
@@ -878,7 +949,7 @@ function renderizarVistaCategoria (categoriaObj, productos, allTypes, allPromos,
     // Forzamos que la sección de Otros empiece colapsada para no estorbar (Opcional)
     gridOtros.parentElement.classList.remove('is-open')
 
-    construirFichaProductos(productosRestantes, gridOtros)
+    construirFichaProductos(productosRestantes, allPromos, gridOtros, SesionData)
   }
 }
 
@@ -937,4 +1008,3 @@ if (btnSearchToggle) {
 
 //funciones finales
 actualizarBotonResumen()
-
