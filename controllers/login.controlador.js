@@ -71,7 +71,7 @@ exports.postLogin = async (request, response, next) => {
 
           const redirectUrl = colaborador.id_rol === 'Administrador'
             ? '/admin'
-            : '/menu/menu'
+            : '/colaborador'
 
           return response.status(200).json({ success: true, redirectUrl })
         }

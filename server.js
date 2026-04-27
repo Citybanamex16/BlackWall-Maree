@@ -39,6 +39,7 @@ appServer.use(bodyParser.json())
 // Sección de Routers
 const clienteRutes = require('./routes/cliente.routes.js')
 const adminRutes = require('./routes/admin.routes.js')
+const colaboradorRoutes = require('./routes/colaborador.routes.js')
 const menuRutes = require('./routes/menu.routes.js')
 const rutasEventosPromos = require('./routes/promo_eventos.routes.js')
 const rutasRoyalty = require('./routes/royalty.routes.js')
@@ -46,6 +47,7 @@ const rutasRoyalty = require('./routes/royalty.routes.js')
 // Prefijos De Routes
 appServer.use('/cliente', clienteRutes) // Modulos a Quitar
 appServer.use('/admin', adminRutes) // Modulos a quitar
+appServer.use('/colaborador', colaboradorRoutes)
 appServer.use('/menu', menuRutes) // Modulo de Menu Digital
 appServer.use('/promos', rutasEventosPromos)
 appServer.use('/royalty', rutasRoyalty)
