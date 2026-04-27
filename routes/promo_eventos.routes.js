@@ -76,6 +76,8 @@ router.get('/promociones', evenPromoControlador.getPromotionsPage)
 
 router.get('/promociones/api/all', evenPromoControlador.getPromotionsAPI)
 
+router.get('/promociones/api/metricas', evenPromoControlador.getPromotionsMetricsAPI)
+
 router.get('/promociones/producto-filtro', evenPromoControlador.getFilterProductos)
 
 router.get('/promociones/:idPromocion', evenPromoControlador.getPromotionDetail)

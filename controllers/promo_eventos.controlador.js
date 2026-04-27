@@ -564,6 +564,25 @@ exports.getPromotionsAPI = async (req, res, next) => {
   }
 }
 
+exports.getPromotionsMetricsAPI = async (req, res, next) => {
+  try {
+    const limite = Number.parseInt(req.query.limit, 10)
+    const [promociones] = await Promociones.fetchPromocionesPopulares(limite)
+
+    res.status(200).json({
+      success: true,
+      message: 'Metricas de promociones obtenidas correctamente.',
+      data: promociones
+    })
+  } catch (error) {
+    console.log('Error al obtener metricas de promociones:', error)
+    res.status(500).json({
+      success: false,
+      message: 'No se pudieron obtener las metricas de promociones.'
+    })
+  }
+}
+
 exports.getFilterProductos = async (req, res, next) => {
   try {
     const { categoria, tipo } = req.query
