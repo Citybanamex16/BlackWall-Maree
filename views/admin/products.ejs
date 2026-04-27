@@ -73,6 +73,11 @@
         </div>
     </section>
 
+     <!-- BOTÓN Registrar nuevo Producto -->
+   <a href="#" id="registrarNuevoProducto" class="fab btn-maree button-floating" style="border-radius: 50px; gap: 8px; padding: 14px 24px;">
+    <i class="fas fa-plus" style="font-size: 14px;"></i> 
+    <span>Añadir Producto</span>
+</a>
 
 
 <dialog id="TypeFormsCU04" class="mymodal">
@@ -80,43 +85,55 @@
   <h2 id="tituloModal">Título dinámico</h2>
   <p>Elige una opción:</p>
   <br>
-  <button id="cerrarModal"  style="margin-top: 10px;">Cerrar</button>
 </dialog>
 
 
-<dialog id="RegisterFormsCU04" class="mymodal">
+<dialog id="RegisterFormsCU04" class="maree-modal">
+  <div class="modal-accent-bar" style="background-color: var(--gold); width: 100%;"></div>
+  
   <button class="modal-close-btn" id="closeRegisterFormsX">✕</button>
-  <h2 id="formsRegistrarTitulo">Título dinámico</h2>
-  <h3 id ="idSection"></h3>
-  <form id="formsRegistrarForm" novalidate>
-    <!-- Campos dinámicos (nombre, precio, etc.) se inyectan aquí -->
 
-    <!-- ═══════════════════════════════════════════
-         SECCIÓN INGREDIENTES
-    ════════════════════════════════════════════ -->
-  </form>
-  <!-- Footer del modal -->
-  <div class="modal-footer">
-    <button id="cerrarFormsRegistrar"  type="button" class="button is-light">Cancelar</button>
-    <button id="submitFormsRegistrar" type="button" class="button is-primary">Guardar Producto</button>
-  </div>
-</dialog>
-
-
-
-
-<dialog id="SummaryCU04" class="mymodal">
-  <button class="modal-close-btn" id="closeSummaryX">✕</button>
-  <h2 id="SummaryTitleModal">Título dinámico</h2>
-  <p>Revisa los datos antes de registrar</p>
-   <hr style="border:none; border-top:1px solid #ebebeb; margin: 12px 0;">
-    <div id="summaryContent"></div> 
+  <div class="modal-inner">
+    <h2 id="formsRegistrarTitulo" class="modal-title">Título dinámico</h2>
+    <p id="idSection" class="modal-sub"></p>
+    
+    <form id="formsRegistrarForm" novalidate>
+      </form>
 
     <div class="modal-footer">
-    <button id="cerrarSummaryModal" type="button" class="button is-light">Cerrar</button>
-    <button id="RegisterProduct"    type="button" class="button is-primary">Registrar Producto</button>
+      <button id="cerrarFormsRegistrar" type="button" class="btn-secondary">
+        Cancelar
+      </button>
+      <button id="submitFormsRegistrar" type="button" class="btn-primary">
+        Guardar Producto
+      </button>
+    </div>
   </div>
+</dialog>
 
+
+
+
+<dialog id="SummaryCU04" class="maree-modal">
+  <div class="modal-accent-bar"></div>
+  <button class="modal-close-btn" id="closeSummaryX">✕</button>
+
+  <div class="modal-inner">
+    <h2 id="SummaryTitleModal" class="modal-title">Confirmar Producto</h2>
+    <p class="modal-sub">Verifica que los ingredientes y costos sean correctos</p>
+    
+    <div id="summaryContent" class="maree-summary-container">
+      </div>
+
+    <div class="modal-footer">
+      <button id="cerrarSummaryModal" type="button" class="btn-secondary">
+        Corregir
+      </button>
+      <button id="RegisterProduct" type="button" class="btn-primary">
+        <i class="fas fa-check"></i> Confirmar y Guardar
+      </button>
+    </div>
+  </div>
 </dialog>
 
 
@@ -236,78 +253,3 @@
 
 
 
-<!-- 
-🆔 IDs (Identificadores Únicos)
-Estructura Principal y Estadísticas:
-filtroBusqueda (Input de búsqueda)
-statTotal, statDisponibles, statCategorias (Contenedores de números)
-admin-catalogo (Contenedor donde se inyecta la tabla/lista)
-registrarNuevoProducto (Botón flotante principal)
-1. Modal Selección (TypeFormsCU04):
-TypeFormsCU04, closeTypeFormsX, tituloModal, cerrarModal
-2. Modal Registro/Edición (RegisterFormsCU04):
-RegisterFormsCU04, closeRegisterFormsX, formsRegistrarTitulo, idSection, formsRegistrarForm, cerrarFormsRegistrar, submitFormsRegistrar
-3. Modal Resumen Alta (SummaryCU04):
-SummaryCU04, closeSummaryX, SummaryTitleModal, summaryContent, cerrarSummaryModal, RegisterProduct
-4. Modal Resumen Modificación (modifSummaryCU05):
-modifSummaryCU05, closeSummaryModifX, SummaryTitleModif, modifSummaryContent, cerrarSummaryModif, RegisterModification
-5. Modales de Estado (Éxito/Error):
-ModalExito, TituloExito, exitoContent, closeExito
-ErrorModal, ErrorTitle, ErrorMessage, closeInvalidData
-6. Modales de Acción (Eliminar/Confirmar):
-ElimDesactModal, closeElimDesact, elimDesactNombre, btnDesactivar, btnEliminar, btnSalirElimDesact
-ConfirmActionModal, closeConfirmAction, confirmAccentBar, confirmActionTitle, confirmActionDesc, btnCancelarConfirm, btnConfirmarAccion
-🏷️ Clases (Estilos y Comportamiento)
-Bulma & Layout:
-section, container, level, level-left, level-right, mb-4, mb-5, mb-1, title, subtitle, is-6, field, control, has-icons-left, input, icon, is-left, has-text-centered, heading, is-primary, is-rounded, is-light, is-warning, is-danger, is-fullwidth, button
-Personalizadas (CSS Propio):
-stats-bar (Barra de resumen)
-fab, button-floating (Botón "Añadir")
-mymodal (Clase general de todos los <dialog>)
-modal-close-btn (Botón de cierre "X" y botones de acción de cierre)
-modal-footer (Contenedor inferior de botones)
-error-modal (Estilo específico para éxito/error)
-modal-accent-bar (Barra de color superior en modales)
-modif-summary-header, modif-summary-body, modif-col-label, modif-col-old, modif-col-new (Estructura de comparación de cambios)
-elim-desact-opciones, elim-desact-btn, elim-desact-btn-text, elim-desact-btn-title, elim-desact-btn-sub (Botones grandes de eliminación)
-
-
-
-//Dinámicos (Generado por JS)
-
-🆔 IDs Dinámicos (Generados por JS)
-Estos cambian según el nombre de la categoría:
-cat-[nombre-categoria]: (Ej: cat-bebidas) Identificador único de cada sección <section>.
-grid-[nombre-categoria]: (Ej: grid-bebidas) ID del contenedor donde se inyectan los productos.
-badge-grid-[nombre-categoria]: ID del contador (badge) que muestra cuántos productos hay en esa sección.
-🏷️ Clases Dinámicas
-Contenedores de Categoría:
-categoria-section: Clase base de la sección.
-is-dynamic: Indica que fue creada por JS.
-is-open: Controla si la categoría está desplegada o colapsada.
-cat-header / toggle-menu: El área clickable para abrir/cerrar.
-cat-title: Estilo del nombre de la categoría.
-cat-badge: Estilo del círculo contador.
-cat-chevron: La flecha indicadora.
-grid-productos / admin-grid: El contenedor de la lista de productos.
-grid-collapsible: Clase para aplicar la animación de colapso (CSS).
-Fichas de Producto (Rows):
-admin-prod-row: La fila completa del producto (clickable para editar).
-admin-prod-info: Contenedor de imagen y textos.
-admin-prod-img-container / admin-prod-img: Estilos de la fotografía.
-admin-prod-texts / admin-prod-name / admin-prod-meta: Jerarquía de textos.
-admin-tag-tipo: Etiqueta pequeña para el tipo de producto.
-admin-prod-price: Estilo del precio.
-admin-prod-actions: Contenedor del botón lateral.
-btn-elim-desact: El botón con el icono de basura.
-Estados Especiales:
-empty-state / empty-icon: Se muestran cuando una categoría no tiene productos.
-💾 Atributos de Datos (data-*)
-Estos son vitales para tu lógica de JS, ya que es donde guardas la información que recuperan tus Handlers:
-data-id (en .admin-prod-row): Guarda el ID del producto para abrir el modal de edición correcto.
-data-id-prod (en .btn-elim-desact): El ID para la función de eliminar.
-data-name-prod (en .btn-elim-desact): El nombre para mostrarlo en el modal de confirmación.
-
-
-
--->
