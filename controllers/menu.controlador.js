@@ -263,12 +263,30 @@ exports.validarPedido = async (request, response, next) => {
 
   const { items } = request.body
 
+  try {
+    const tienePremio = items.some(i => i.premioAplicado === true);
+    let descuentoRecompensa = 0;
+
+    if (tienePremio) {
+      const [statusData] = await Royalty.fetchClientStatus(usuario.telefono);
+      const info = statusData[0];
+      
+      const tokensReales = Math.floor(info.Visitas_Actuales / 10) - (info.tokens_gastados || 0);
+
+      if (tokensReales <= 0) {
+        return response.status(200).json({ 
+          pedidoValido: false, 
+          mensaje: 'No tienes tokens suficientes para reclamar este premio.' 
+        });
+      }
+      descuentoRecompensa = parseFloat(info.descuento_premio) || 0;
+    }
+
   // ── Validación básica ──
   if (!Array.isArray(items) || items.length === 0) {
     return response.status(400).json({ pedidoValido: false, mensaje: 'El pedido está vacío' })
   }
 
-  try {
     // ── 1. Recolección de IDs ──
     const idsProductos = [...new Set(items.map(i => i.id))]
     const idsInsumos = [...new Set(items.flatMap(i => [
@@ -295,11 +313,13 @@ exports.validarPedido = async (request, response, next) => {
 
     items.forEach((item, index) => {
       // Pasamos el compendio para que el cálculo sepa qué promo aplicar
-      const precioOficial = Pedido.calcularPrecioRealItem(item, listaOro, compendio)
-
+      const precioOficial = Pedido.calcularPrecioRealItem(item, listaOro, compendio, descuentoRecompensa)
+      
       const precioRecibido = parseFloat(
         String(item.precio_total ?? item.precio).replace(/[^0-9.]/g, '')
       )
+
+      console.log(` ⚖️ [COMPARACIÓN] Item ${index + 1}: Poli calculó $${precioOficial} | Front envió $${precioRecibido}`);
 
       if (Math.abs(precioOficial - precioRecibido) > 0.01) {
         erroresPrecio.push(`Item ${index + 1}: se esperaba $${precioOficial} pero se recibió $${precioRecibido}`)
@@ -323,7 +343,7 @@ exports.validarPedido = async (request, response, next) => {
     console.error('💥 Error en Policía:', err)
     next(err)
   }
-}
+};
 
 exports.confirmarPedido = async (request, response, next) => {
   const { items, forma, telefono: telefonoBody, nombre: nombreBody, direccion } = request.body

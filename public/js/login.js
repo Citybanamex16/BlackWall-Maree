@@ -12,6 +12,32 @@ document.addEventListener('DOMContentLoaded', () => {
   const passwordField = document.getElementById('password-field')
   const tabsContainer = document.getElementById('tabs-container')
 
+  const btnLogin = document.getElementById('btn-login');
+  const btnSignup = document.getElementById('btn-signup');
+  const btnOtp = document.getElementById('btn-otp');
+
+
+// LÓGICA DE VALIDACIÓN
+  const validateForm = (form, submitBtn) => {
+    const inputs = Array.from(form.querySelectorAll('input[required], select[required]'));
+    
+    const allFilled = inputs.every(input => {
+      return input.value.trim() !== '';
+    });
+
+    submitBtn.disabled = !allFilled;
+  };
+
+  const formsToWatch = [
+    { form: formLogin, btn: btnLogin },
+    { form: formSignup, btn: btnSignup },
+    { form: formOtp, btn: btnOtp }
+  ];
+
+  formsToWatch.forEach(({ form, btn }) => {
+    form.addEventListener('input', () => validateForm(form, btn));
+  });
+
   // Función global para mostrar alertas
   const showAlert = (msg, type = 'danger') => {
     if (type === 'danger') {

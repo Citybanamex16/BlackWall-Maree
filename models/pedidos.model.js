@@ -170,7 +170,7 @@ module.exports = class Pedido {
   /**
  * El "Cerebro" que aplica la matemática final item por item.
  */
-  static calcularPrecioRealItem (item, listaOro, compendio) {
+  static calcularPrecioRealItem (item, listaOro, compendio, descuentoRoyalty = 0) {
     let acumulado = 0
     const nombreItem = item.nombre || item.producto_base || item.id
 
@@ -185,11 +185,14 @@ module.exports = class Pedido {
     console.log(`   💰 Precio Base: $${precioBase}`)
 
     // 2. Aplicar Promoción del Compendio
-    if (compendio[item.id]) {
+    if (item.premioAplicado){
+      const descuentoEfectivo = precioBase * descuentoRoyalty
+      precioBase = precioBase - descuentoEfectivo
+      console.log(`   🏆 [PREMIO ROYALTY] Aplicando descuento de recompensa: ${descuentoRoyalty * 100}% (-$${descuentoEfectivo.toFixed(2)})`)
+    } else if (compendio[item.id]) {
       const promo = compendio[item.id]
       const descuentoEfectivo = precioBase * promo.descuento
       precioBase = precioBase - descuentoEfectivo
-
       console.log(`   🎁 [PROMO DETECTADA] Tipo: ${promo.tipo} | Descuento: ${promo.descuento * 100}% (-$${descuentoEfectivo.toFixed(2)})`)
       console.log(`   📉 Precio con Descuento: $${precioBase.toFixed(2)}`)
     } else {

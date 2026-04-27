@@ -95,15 +95,22 @@ body {
     border: none;
     border-radius: 8px;
     padding: 13px 16px;
-    background: #e7c4b8;
+    background-color: #e0a3a3;
     color: #ffffff;
     font-size: 16px;
     font-weight: 600;
     cursor: pointer;
-    transition: background 0.3s;
+    transition: all 0.3s ease;
 }
 
 .primary-btn:hover { background: #deb7a8; }
+
+.primary-btn:disabled {
+    background-color: #e0e0e0; /* Gris claro */
+    color: #a0a0a0;
+    cursor: not-allowed;
+    opacity: 0.7;
+}
 
 .secondary-btn {
     width: 100%;

@@ -2,6 +2,7 @@
 
 ALTER TABLE cliente ADD COLUMN tokens_gastados INT DEFAULT 0;
 ALTER TABLE cliente ADD COLUMN username VARCHAR(20);
+ALTER TABLE estado_royalty ADD COLUMN descuento_premio FLOAT;
 
 -- Historial de canjes de premios
 CREATE TABLE historial_canjes_royalty (
