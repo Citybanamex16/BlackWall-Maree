@@ -874,6 +874,10 @@ exports.postDiasHabiles = async (req, res, next) => {
 }
 // Sección Categorias
 
+function parsePermiteCremaBatida (value) {
+  return value === true || value === 'true' || value === 1 || value === '1' ? 1 : 0
+}
+
 // GET categorias-tipos
 exports.getCategoriasTipos = (req, res, next) => {
   res.render('admin/categoriasTipos')
@@ -908,7 +912,7 @@ exports.verificarNombreCategoria = async (req, res, next) => {
 // Inserta nueva categoria
 exports.crearCategoria = async (req, res, next) => {
   try {
-    const { Nombre } = req.body
+    const { Nombre, PermiteCremaBatida } = req.body
     if (!Nombre || String(Nombre).trim() === '') {
       return res.status(400).json({ success: false, message: 'El nombre es obligatorio' })
     }
@@ -916,7 +920,10 @@ exports.crearCategoria = async (req, res, next) => {
     if (existente.length > 0) {
       return res.status(409).json({ success: false, message: 'Ya existe una categoría con ese nombre' })
     }
-    await Categoria.insertNuevaCategoria(Nombre.trim())
+    await Categoria.insertNuevaCategoria(
+      Nombre.trim(),
+      parsePermiteCremaBatida(PermiteCremaBatida)
+    )
     res.status(200).json({ success: true, message: 'Categoría registrada exitosamente' })
   } catch (error) {
     console.error('Error en crearCategoria:', error)
@@ -945,22 +952,37 @@ exports.verificarCategoriaEnUso = async (req, res, next) => {
 exports.actualizarCategoria = async (req, res, next) => {
   try {
     const oldNombre = decodeURIComponent(req.params.nombre)
-    const { Nombre: newNombre } = req.body
+    const { Nombre: newNombre, PermiteCremaBatida } = req.body
 
     if (!newNombre || String(newNombre).trim() === '') {
       return res.status(400).json({ success: false, message: 'El nombre es obligatorio' })
     }
 
-    if (oldNombre === newNombre.trim()) {
+    const nombreFinal = newNombre.trim()
+    const permiteCremaBatida = parsePermiteCremaBatida(PermiteCremaBatida)
+    const [actualRows] = await Categoria.buscarPorNombre(oldNombre)
+    const categoriaActual = actualRows[0]
+
+    if (!categoriaActual) {
+      return res.status(404).json({ success: false, message: 'Categoría no encontrada' })
+    }
+
+    const mismoNombre = oldNombre === nombreFinal
+    const mismaBandera = Number(categoriaActual.permiteCremaBatida) === permiteCremaBatida
+
+    if (mismoNombre && mismaBandera) {
       return res.status(200).json({ success: true, message: 'Sin cambios' })
     }
 
-    const [existente] = await Categoria.buscarPorNombre(newNombre.trim())
-    if (existente.length > 0) {
-      return res.status(409).json({ success: false, message: 'Ya existe una categoría con ese nombre' })
+    if (!mismoNombre) {
+      const [existente] = await Categoria.buscarPorNombre(nombreFinal)
+      if (existente.length > 0) {
+        return res.status(409).json({ success: false, message: 'Ya existe una categoría con ese nombre' })
+      }
+      await Categoria.actualizarCategoria(oldNombre, nombreFinal)
     }
 
-    await Categoria.actualizarCategoria(oldNombre, newNombre.trim())
+    await Categoria.actualizarPermiteCremaBatida(nombreFinal, permiteCremaBatida)
     res.status(200).json({ success: true, message: 'Categoría actualizada correctamente' })
   } catch (error) {
     console.error('Error en actualizarCategoria:', error)
