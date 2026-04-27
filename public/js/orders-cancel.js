@@ -1,10 +1,10 @@
 document.addEventListener('DOMContentLoaded', () => {
   // ── Cancel modal ──────────────────────────────────────────────
-  const cancelModal   = document.getElementById('cancel-order-modal')
+  const cancelModal = document.getElementById('cancel-order-modal')
   const closeModalBtn = document.getElementById('close-cancel-modal')
-  const cancelModalBtn= document.getElementById('cancel-modal-btn')
-  const confirmBtn    = document.getElementById('confirm-cancel-btn')
-  const alertContainer= document.getElementById('alert-container')
+  const cancelModalBtn = document.getElementById('cancel-modal-btn')
+  const confirmBtn = document.getElementById('confirm-cancel-btn')
+  const alertContainer = document.getElementById('alert-container')
 
   let selectedOrderId = null
 
@@ -39,7 +39,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const id = selectedOrderId
       closeCancelModal()
       try {
-        const res  = await fetch(`/admin/api/orders/${id}/cancel`, { method: 'POST', headers: { 'Content-Type': 'application/json' } })
+        const res = await fetch(`/admin/api/orders/${id}/cancel`, { method: 'POST', headers: { 'Content-Type': 'application/json' } })
         const data = await res.json()
         if (!res.ok || !data.ok) { showAlert(data.message || 'No se pudo cancelar la orden.', 'is-danger'); return }
 
@@ -56,9 +56,9 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // ── Detail modal ──────────────────────────────────────────────
-  const detailModal   = document.getElementById('detail-order-modal')
-  const closeDetailBtn= document.getElementById('close-detail-modal')
-  let   currentDetailId = null
+  const detailModal = document.getElementById('detail-order-modal')
+  const closeDetailBtn = document.getElementById('close-detail-modal')
+  let currentDetailId = null
 
   const closeDetailModal = () => { detailModal.classList.remove('is-active'); currentDetailId = null }
 
@@ -71,7 +71,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (!currentDetailId || btn.classList.contains('active-status')) return
       const nuevoEstado = btn.dataset.status
       try {
-        const res  = await fetch(`/admin/api/orders/${currentDetailId}/status`, {
+        const res = await fetch(`/admin/api/orders/${currentDetailId}/status`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ estado: nuevoEstado })
@@ -93,7 +93,7 @@ document.addEventListener('DOMContentLoaded', () => {
           const badge = row.querySelector('.order-status-cell .order-badge')
           if (badge && typeof badgeClass === 'function') {
             badge.textContent = nuevoEstado
-            badge.className   = `order-badge ${badgeClass(nuevoEstado)}`
+            badge.className = `order-badge ${badgeClass(nuevoEstado)}`
           }
           // Si pasó a Entregado o Cancelado, quitar de la tabla
           if (nuevoEstado === 'Entregado' || nuevoEstado === 'Cancelado') {
@@ -121,11 +121,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const id = row.dataset.orderRow || row.dataset.pendingRow
     currentDetailId = id
 
-    document.getElementById('detail-id').textContent        = id
-    document.getElementById('detail-nombre').textContent    = row.dataset.nombre
-    document.getElementById('detail-telefono').textContent  = row.dataset.telefono
-    document.getElementById('detail-tipo').textContent      = row.dataset.tipo
-    document.getElementById('detail-fecha').textContent     = row.dataset.fecha
+    document.getElementById('detail-id').textContent = id
+    document.getElementById('detail-nombre').textContent = row.dataset.nombre
+    document.getElementById('detail-telefono').textContent = row.dataset.telefono
+    document.getElementById('detail-tipo').textContent = row.dataset.tipo
+    document.getElementById('detail-fecha').textContent = row.dataset.fecha
     document.getElementById('detail-direccion').textContent = row.dataset.direccion || '—'
 
     const estadoActual = row.dataset.estado
@@ -140,7 +140,7 @@ document.addEventListener('DOMContentLoaded', () => {
     })
 
     const itemsList = document.getElementById('detail-items')
-    const totalEl   = document.getElementById('detail-total')
+    const totalEl = document.getElementById('detail-total')
     itemsList.innerHTML = '<tr><td colspan="3" style="text-align:center;color:#aaa;padding:16px;">Cargando...</td></tr>'
     totalEl.textContent = ''
     detailModal.classList.add('is-active')
@@ -157,14 +157,14 @@ document.addEventListener('DOMContentLoaded', () => {
           const subtotal = item.cantidad * item.precio
           total += subtotal
 
-          const base    = item.ings_base    ? item.ings_base.split('||')    : []
-          const extras  = item.ings_extra   ? item.ings_extra.split('||')   : []
-          const quitados= item.ings_quitado ? item.ings_quitado.split('||') : []
+          const base = item.ings_base ? item.ings_base.split('||') : []
+          const extras = item.ings_extra ? item.ings_extra.split('||') : []
+          const quitados = item.ings_quitado ? item.ings_quitado.split('||') : []
 
           const ingsHTML = (() => {
             const partes = []
-            if (base.length)     partes.push(`<span style="font-size:11px;color:#888;">${base.join(', ')}</span>`)
-            if (extras.length)   partes.push(`<span style="font-size:11px;color:#3a7d52;">+ ${extras.join(', ')}</span>`)
+            if (base.length) partes.push(`<span style="font-size:11px;color:#888;">${base.join(', ')}</span>`)
+            if (extras.length) partes.push(`<span style="font-size:11px;color:#3a7d52;">+ ${extras.join(', ')}</span>`)
             if (quitados.length) partes.push(`<span style="font-size:11px;color:#c0392b;text-decoration:line-through;">Sin: ${quitados.join(', ')}</span>`)
             return partes.length
               ? `<div style="display:flex;flex-direction:column;gap:1px;margin-top:2px;">${partes.join('')}</div>`

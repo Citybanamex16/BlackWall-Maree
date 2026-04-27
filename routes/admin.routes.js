@@ -29,6 +29,7 @@ router.post('/colaboradores/:id/baja', isAuth, isAdmin, adminControlador.postDar
 router.get('/dias-habiles', isAuth, isAdmin, adminControlador.getDiasHabiles)
 router.get('/dias-habiles', isAuth, isAdmin, adminControlador.getDiasHabiles)
 router.post('/dias-habiles', isAuth, isAdmin, adminControlador.postDiasHabiles)
+router.post('/dias-habiles/:id/delete', isAuth, isAdmin, adminControlador.postDeleteDiaHabil)
 
 router.get('/ordenes', isAuth, isAdmin, adminControlador.getOrders)
 router.get('/api/orders', isAuth, isAdmin, adminControlador.getOrdersJson)
