@@ -10,6 +10,7 @@ const isAdmin = require('../middleware/isAdmin.js')
 // Visualizar estados Royalties
 router.get('/royaltyAdmin', isAuth, isAdmin, royaltyControlador.getRoyaltyAdmin)
 router.get('/royaltyAdmin/api', isAuth, isAdmin, royaltyControlador.getRoyaltyAdminJSON)
+router.get('/royaltyUser/apple-pass', royaltyControlador.getApplePass)
 
 // Modificar estados Royalties
 router.put('/royaltyAdmin/:nombre', isAuth, isAdmin, royaltyControlador.updateRoyalty)

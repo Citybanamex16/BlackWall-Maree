@@ -3,6 +3,9 @@ const nav = require('../models/breadcrumbs.model.js')
 const Royalty = require('../models/royalty.model.js')
 const QRCode = require('qrcode')
 const WalletModel = require('../models/googleWallet.model.js')
+const AppleWallet = require('../models/appleWallet.model.js')
+const path = require('path')
+const fs = require('fs')
 
 // Admin
 exports.getRoyaltyAdmin = async (request, response, next) => {
@@ -26,6 +29,33 @@ exports.getRoyaltyAdmin = async (request, response, next) => {
       succes: false,
       message: 'No se pudo mandar los estados royalties'
     })
+  }
+}
+
+exports.getApplePass = async (request, response) => {
+  if (!request.session.isLoggedIn || request.session.rol !== 'Usuario') {
+    return response.redirect('/cliente/login')
+  }
+
+  const telefono = request.session.cliente.telefono
+  const [[statusDataGoogle]] = await Royalty.fetchClienteStatusGoogle(telefono)
+
+  try {
+    const passBuffer = await AppleWallet.generarApplePass(
+      telefono,
+      statusDataGoogle.Nombre,
+      statusDataGoogle.nivel,
+      statusDataGoogle.Visitas_Actuales,
+      statusDataGoogle.Max_Visitas
+    )
+
+    const fileName = `maree-${String(telefono).replace(/[^a-zA-Z0-9]/g, '')}.pkpass`
+    response.setHeader('Content-Type', 'application/vnd.apple.pkpass')
+    response.setHeader('Content-Disposition', `attachment; filename="${fileName}"`)
+    response.send(passBuffer)
+  } catch (err) {
+    console.error('Error generando Apple Pass:', err)
+    response.status(500).send('Error generando pase')
   }
 }
 
@@ -66,7 +96,6 @@ exports.postRegistrarEstadoRoyalty = async (request, response, next) => {
       message: 'Error al guardar el estado royalty'
     })
   }
-  
 }
 
 exports.getFilterPromocionesEventos = async (request, response, next) => {
@@ -346,9 +375,10 @@ exports.getRoyaltyDataAPI = async (request, response, next) => {
       Royalty.fetchFavoritosCliente(telefono, 'Platillo')
     ])
     if (statusDataGoogle.nivel == null) {
-      statusDataGoogle.nivel = "¡Bienvenido!"
+      statusDataGoogle.nivel = '¡Bienvenido!'
     }
 
+    // Google Wallet
     const walletLink = await WalletModel.generarLinkWallet(
       telefono,
       statusDataGoogle.Nombre,
@@ -356,6 +386,28 @@ exports.getRoyaltyDataAPI = async (request, response, next) => {
       statusDataGoogle.Visitas_Actuales,
       statusDataGoogle.Max_Visitas
     )
+
+    // Apple Wallet
+    let applePassUrl = null
+    try {
+      const passBuffer = await AppleWallet.generarApplePass(
+        telefono,
+        statusDataGoogle.Nombre,
+        statusDataGoogle.nivel,
+        statusDataGoogle.Visitas_Actuales,
+        statusDataGoogle.Max_Visitas
+      )
+
+      // Guardamos el buffer temporalmente y mandamos la ruta
+      const fileName = `maree-${String(telefono).replace(/[^a-zA-Z0-9]/g, '')}.pkpass`
+      const filePath = path.join('./passes', fileName)
+      fs.writeFileSync(filePath, passBuffer)
+      const host = request.headers.host
+      const protocol = request.headers['x-forwarded-proto'] || 'https'
+      applePassUrl = `${protocol}://${host}/passes/${fileName}`
+    } catch (err) {
+      console.error('Error generando Apple Pass:', err)
+    }
 
     console.log('Wallet link generado:', walletLink)
     console.log('clienteInfo completo:', clienteInfo)
@@ -365,6 +417,7 @@ exports.getRoyaltyDataAPI = async (request, response, next) => {
       promociones: promotionsData,
       eventos: eventsData,
       walletLink,
+      applePassUrl,
       metrics: {
         global: {
           bebidas: topBebidasResult[0] || [],

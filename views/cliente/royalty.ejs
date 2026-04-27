@@ -47,11 +47,11 @@
                  alt="Agregar a Google Wallet" 
                  style="height: 44px; width: auto;">
         </a>
-        <a id="btn-apple-wallet" href="#" target="_blank" class="mx-2">
-            <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/3/30/Add_to_Apple_Wallet_badge.svg/3840px-Add_to_Apple_Wallet_badge.svg.png" 
-                 alt="Agregar a Apple Wallet" 
-                 style="height: 44px; width: auto;">
-        </a>
+        <a id="btn-apple-wallet" href="/royalty/royaltyUser/apple-pass" target="_blank" class="mx-2">
+    <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/3/30/Add_to_Apple_Wallet_badge.svg/3840px-Add_to_Apple_Wallet_badge.svg.png" 
+         alt="Agregar a Apple Wallet" 
+         style="height: 44px; width: auto;">
+</a>
     </div>
 </div>
         </div>
@@ -97,6 +97,34 @@
 </section>
 </div>
 </div>
+
+<script>
+fetch('/royalty/royaltyUser/api/datos')
+  .then(r => {
+    document.body.insertAdjacentHTML('beforeend',
+      `<div style="position:fixed;bottom:0;left:0;right:0;background:red;color:white;padding:10px;font-size:14px;z-index:9999">
+        Status: ${r.status}
+      </div>`
+    )
+    return r.json()
+  })
+  .then(data => {
+    document.body.insertAdjacentHTML('beforeend',
+      `<div style="position:fixed;bottom:40px;left:0;right:0;background:blue;color:white;padding:10px;font-size:12px;z-index:9999;word-break:break-all">
+        wallet: ${data.walletLink ? 'SI' : 'NO'} | 
+        apple: ${data.applePassUrl || 'NO'} |
+        redirect: ${data.redirectUrl || 'NO'}
+      </div>`
+    )
+  })
+  .catch(err => {
+    document.body.insertAdjacentHTML('beforeend',
+      `<div style="position:fixed;bottom:0;left:0;right:0;background:orange;padding:10px;font-size:14px;z-index:9999">
+        Error: ${err.message}
+      </div>`
+    )
+  })
+</script>
 
 
 
