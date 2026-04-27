@@ -56,19 +56,39 @@ module.exports = class Producto {
 
   static async getValidProductData () {
     // 1. ejecutamos Consulta
-    const [rows] = await db.execute(`SELECT 
+    const [rows] = await db.execute(`
+  SELECT
     P.ID_Producto AS productoID,
-    P.nombre AS productoNombre, 
-    P.precio AS productoPrecio, 
-    P.categoría AS productoCategoria, 
-    P.Tipo  AS productoTipo,
-    P.imagen AS productoImagen, 
+    P.Nombre AS productoNombre,
+    P.Precio AS productoPrecio,
+    P.Categoría AS productoCategoria,
+    P.Tipo AS productoTipo,
+    P.Imagen AS productoImagen,
+    P.EsExclusivo AS esExclusivo,
     I.ID_Insumo AS insumoID,
-    I.nombre AS insumoNombre
-    FROM producto AS P
-    INNER JOIN producto_tiene_insumo AS PI ON P.ID_Producto = PI.ID_Producto
-    INNER JOIN insumo AS I ON PI.ID_Insumo = I.ID_Insumo
-    WHERE P.Disponible = 1;`)
+    I.Nombre AS insumoNombre
+  FROM producto AS P
+  INNER JOIN producto_tiene_insumo AS PI
+    ON P.ID_Producto = PI.ID_Producto
+  INNER JOIN insumo AS I
+    ON PI.ID_Insumo = I.ID_Insumo
+  WHERE P.Disponible = 1
+    AND (
+      P.EsExclusivo = 0
+      OR (
+        P.EsExclusivo = 1
+        AND EXISTS (
+          SELECT 1
+          FROM producto_pertenece_evento AS ppe
+          INNER JOIN evento AS e
+            ON e.ID_Evento = ppe.ID_Evento
+          WHERE ppe.ID_Producto = P.ID_Producto
+            AND e.Activo = 1
+            AND CURDATE() BETWEEN e.Fecha_Inicio AND COALESCE(e.Fecha_Final, e.Fecha_Inicio)
+        )
+      )
+    )
+`)
 
     // console.log('Rows: ', rows)
 
@@ -155,38 +175,35 @@ module.exports = class Producto {
     return result
   }
 
-
   /* --- MODELO PEDIDO --- */
-static ValidarDatosRegistro(data) {
-    let mensajesError = [];
+  static ValidarDatosRegistro (data) {
+    const mensajesError = []
 
     // 1. Validaciones estructurales básicas
     for (const [key, value] of Object.entries(data)) {
-        // Verificamos si el valor es nulo, indefinido o un string vacío
-        if (value === null || value === undefined || value === '') {
-            
-            // EXCEPCIÓN: 'direccion' solo es obligatoria si es Delivery
-            if (key === 'direccion' && data.forma !== 'Delivery') {
-                continue; 
-            }
-            
-            mensajesError.push(`Campo vacío: ${key}`);
+      // Verificamos si el valor es nulo, indefinido o un string vacío
+      if (value === null || value === undefined || value === '') {
+        // EXCEPCIÓN: 'direccion' solo es obligatoria si es Delivery
+        if (key === 'direccion' && data.forma !== 'Delivery') {
+          continue
         }
+
+        mensajesError.push(`Campo vacío: ${key}`)
+      }
     }
 
     // 2. Retorno de resultados
     if (mensajesError.length > 0) {
-        return { 
-            valido: false, 
-            mensaje: mensajesError.join(', ') 
-        };
+      return {
+        valido: false,
+        mensaje: mensajesError.join(', ')
+      }
     }
 
     // Si todo está presente, la estructura es correcta
-    return { valido: true, mensaje: '' };
-}
+    return { valido: true, mensaje: '' }
+  }
 
-  
   static async getAllIngredientes () {
     return db.execute('SELECT Nombre as nombre, ID_Insumo as id, Precio as precio FROM INSUMO')
   }
@@ -213,7 +230,7 @@ static ValidarDatosRegistro(data) {
     return result
   }
 
-  static async getCrepaPersoPrecioBase(connection){
+  static async getCrepaPersoPrecioBase (connection) {
     const [result] = await connection.execute('SELECT Precio as precioBaseCrepaPerso FROM `producto` WHERE ID_Producto = "PD_COMODIN";')
     return result
   }
