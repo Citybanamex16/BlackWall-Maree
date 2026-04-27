@@ -1,11 +1,40 @@
 /* eslint-env browser */
 /* eslint-disable no-unused-vars */
 
-const { walletClient, ISSUER_ID } = require('../util/GoogleCredentials/googleWallet')
+const fs = require('fs')
+const {
+  walletClient,
+  ISSUER_ID,
+  googleWalletDisponible,
+  credentialsPath
+} = require('../util/GoogleCredentials/googleWallet')
 const { GoogleAuth } = require('google-auth-library')
 const db = require('../util/database')
 const jwt = require('jsonwebtoken')
-const credentials = require('../util/GoogleCredentials/google-wallet.json')
+
+let credentials = null
+let googleWalletWarningShown = false
+
+if (googleWalletDisponible) {
+  try {
+    credentials = JSON.parse(fs.readFileSync(credentialsPath, 'utf8'))
+  } catch (error) {
+    console.warn('[Google Wallet] No se pudieron leer las credenciales:', error.message)
+  }
+}
+
+function googleWalletConfigurado () {
+  return Boolean(walletClient && credentials)
+}
+
+function advertirGoogleWalletNoDisponible () {
+  if (googleWalletWarningShown) {
+    return
+  }
+
+  googleWalletWarningShown = true
+  console.warn('[Google Wallet] No se encontro util/GoogleCredentials/Google-Wallet.json. La integracion se omitira en este entorno.')
+}
 
 function limpiarTelefono (telefono) {
   return String(telefono).replace(/[^a-zA-Z0-9_]/g, '_')
@@ -39,6 +68,11 @@ function generarSellos (visitasActuales, maxVisitas) {
 
 // Crear clases dinámicas
 async function crearLoyaltyClass (nombreRoyalty, maxVisitas) {
+  if (!googleWalletConfigurado()) {
+    advertirGoogleWalletNoDisponible()
+    return null
+  }
+
   const classId = getClassId(nombreRoyalty)
   try {
     await walletClient.loyaltyclass.insert({
@@ -67,6 +101,11 @@ async function crearLoyaltyClass (nombreRoyalty, maxVisitas) {
 
 // Cuando se modifica un estado royalty:
 async function actualizarLoyaltyClass (nombreOriginal, nuevoNombre, maxVisitas) {
+  if (!googleWalletConfigurado()) {
+    advertirGoogleWalletNoDisponible()
+    return null
+  }
+
   const classIdOriginal = getClassId(nombreOriginal)
   const classIdNuevo = getClassId(nuevoNombre)
 
@@ -93,6 +132,11 @@ async function actualizarLoyaltyClass (nombreOriginal, nuevoNombre, maxVisitas) 
 
 // Si se elimina un estado royalty
 async function eliminarLoyaltyClass (nombreRoyalty) {
+  if (!googleWalletConfigurado()) {
+    advertirGoogleWalletNoDisponible()
+    return null
+  }
+
   const classId = getClassId(nombreRoyalty)
   try {
     await walletClient.loyaltyclass.patch({
@@ -107,6 +151,10 @@ async function eliminarLoyaltyClass (nombreRoyalty) {
 
 // Crea la tarjeta de un cliente nuevo
 async function crearLoyaltyObject (telefono, nombreRoyalty, puntosActuales, maxPuntos) {
+  if (!googleWalletConfigurado()) {
+    advertirGoogleWalletNoDisponible()
+    return null
+  }
   const classId = getClassId(nombreRoyalty)
   const objectId = `${ISSUER_ID}.cliente_${limpiarTelefono(telefono)}`
   try {
@@ -156,6 +204,10 @@ async function crearLoyaltyObject (telefono, nombreRoyalty, puntosActuales, maxP
 
 // Actualiza la tarjeta cuandoo cambia el nivel del cliente
 async function actualizarLoyaltyObject (telefono, nombreRoyalty, puntosActuales, maxPuntos) {
+  if (!googleWalletConfigurado()) {
+    advertirGoogleWalletNoDisponible()
+    return null
+  }
   const classId = getClassId(nombreRoyalty)
   const objectId = `${ISSUER_ID}.cliente_${limpiarTelefono(telefono)}`
 
@@ -197,6 +249,10 @@ async function actualizarLoyaltyObject (telefono, nombreRoyalty, puntosActuales,
 // Actualiza todos los clientes de un nivel cuando el admin modifica ese estado royalty
 // Query a la base de datos
 async function actualizarTarjetaPorNivel (nombreRoyalty, nuevoNombre, nuevoDescripcion) {
+  if (!googleWalletConfigurado()) {
+    advertirGoogleWalletNoDisponible()
+    return null
+  }
   const [clientes] = await db.execute(
     'SELECT telefono, Visitas FROM cliente WHERE Nombre_Royalty = ?',
     [nombreRoyalty]
@@ -211,6 +267,10 @@ async function actualizarTarjetaPorNivel (nombreRoyalty, nuevoNombre, nuevoDescr
 }
 
 async function generarLinkWallet (telefono, nombreRoyalty, puntosActuales, maxPuntos) {
+  if (!googleWalletConfigurado()) {
+    advertirGoogleWalletNoDisponible()
+    return null
+  }
   await crearLoyaltyClass(nombreRoyalty, maxPuntos)
   await crearLoyaltyObject(telefono, nombreRoyalty, puntosActuales, maxPuntos)
   const objectId = `${ISSUER_ID}.cliente_${limpiarTelefono(telefono)}`
@@ -225,7 +285,7 @@ async function generarLinkWallet (telefono, nombreRoyalty, puntosActuales, maxPu
   }
 
   const auth = new GoogleAuth({
-    keyFile: './util/GoogleCredentials/google-wallet.json',
+    keyFile: credentialsPath,
     scopes: ['https://www.googleapis.com/auth/wallet_object.issuer']
   })
 
@@ -233,9 +293,7 @@ async function generarLinkWallet (telefono, nombreRoyalty, puntosActuales, maxPu
     algorithm: 'RS256',
     expiresIn: '1h'
   })
-  const objectJSON = JSON.stringify({ id: objectId })
-  const client = await auth.getClient()
-
+  await auth.getClient()
   return `https://pay.google.com/gp/v/save/${token}`
 }
 
