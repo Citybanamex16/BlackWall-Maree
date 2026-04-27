@@ -20,18 +20,6 @@ appServer.use(session({
   saveUninitialized: false // Asegura que no se guarde una sesión para una petición que no lo necesita
 }))
 
-appServer.use((req, res, next) => {
-  if (!req.session.user) {
-    req.session.user = {
-      id: 999,
-      rol: 'admin',
-      nombre: 'Administrador de prueba'
-    }
-    req.session.name = 'Administrador de prueba'
-  }
-  next()
-})
-
 // ESTO Hace que no salga /Ruta fallida por cada foto, no lo borren porfa
 appServer.use('/img/placeholder.webp', (req, res) => {
   res.redirect('https://placehold.co/400x300/fdf8f2/b5956a?text=Marée')
@@ -40,7 +28,8 @@ appServer.use('/img/placeholder.webp', (req, res) => {
 // Middlewares Globales de enrutamiento, redirects & locals
 appServer.use((req, res, next) => {
   // res.locals es lo que EJS lee por defecto
-  res.locals.nombreUsuario = req.session.name || null
+  res.locals.nombreUsuario = req.session.user?.nombre || req.session.cliente?.nombre || req.session.name || null
+  res.locals.rolUsuario = req.session.user?.rol || req.session.rol || null
   next()
 })
 const bodyParser = require('body-parser')
