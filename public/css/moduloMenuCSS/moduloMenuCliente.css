@@ -705,28 +705,27 @@ html {
 
 
 .add-btn-app {
-    background: #a8bc94;
-    color: #1d2b11;
+    background: #b5956a;
+    color: #fff;
     border: none;
     border-radius: 6px;
     cursor: pointer;
-    padding: 3px 8px; /* Más compacto verticalmente */
-    min-width: 70px;  /* Reducido para evitar desbordes en móviles */
-    font-size: 11px;  /* Letra acorde al tamaño de la ficha */
+    padding: 3px 8px;
+    min-width: 70px;
+    font-size: 11px;
     font-weight: 600;
     display: flex;
     align-items: center;
     justify-content: center;
     gap: 4px;
     transition: all 0.3s ease;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    box-shadow: 0 2px 4px rgba(181,149,106,0.25);
 }
 
-/* Efecto al pasar el mouse */
 .add-btn-app:hover {
-    background: #96a982; /* Un verde un poco más intenso */
-    transform: translateY(-2px); /* Pequeño salto hacia arriba */
-    box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+    background: #9e7d55;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 10px rgba(181,149,106,0.35);
 }
 
 
@@ -1323,5 +1322,142 @@ html {
     color: #aaa;
     font-style: italic;
     font-size: 14px;
+}
+
+
+/* ═══════════════════════════════════════════
+   MEJORAS MOBILE
+═══════════════════════════════════════════ */
+
+/* Fix 4: Header de tipo — estilo Marée en lugar de texto gris plano */
+.type-subtitle {
+    font-family: 'Cormorant Garamond', serif !important;
+    font-size: 18px !important;
+    font-weight: 400 !important;
+    color: #b5956a !important;
+    text-transform: none !important;
+    letter-spacing: 0.5px !important;
+}
+
+.type-header {
+    background: #faf7f3 !important;
+    border: 1px solid #ede5d8;
+    border-radius: 10px !important;
+    padding: 14px 16px !important;
+}
+
+.type-header:hover,
+.type-header:active {
+    background: #f5ede0 !important;
+    border-color: #d4b896 !important;
+}
+
+.type-accordion.is-open .type-header {
+    background: #faf7f3 !important;
+    border-color: #d4b896 !important;
+    border-bottom: 1px solid #ede5d8 !important;
+}
+
+.type-accordion:not(.is-open) .type-subtitle {
+    color: #c9a882 !important;
+    font-weight: 400 !important;
+}
+
+/* Fix 5: Tabs sticky — scroll horizontal en mobile para no aplastarse */
+@media (max-width: 768px) {
+    .sticky-nav-container .tabs ul {
+        flex-wrap: nowrap !important;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+        justify-content: flex-start !important;
+        padding-bottom: 4px;
+    }
+
+    .sticky-nav-container .tabs ul::-webkit-scrollbar {
+        display: none;
+    }
+
+    .sticky-nav-container .tabs.is-toggle li a {
+        white-space: nowrap;
+    }
+}
+
+/* Fix 3: Padding lateral — cards no tocan el borde */
+@media (max-width: 768px) {
+    .categoria-render,
+    .type-group-container {
+        padding-left: 12px;
+        padding-right: 12px;
+    }
+
+    /* Fix 2: 1 columna en mobile */
+    .product-grid-app .column {
+        width: 100% !important;
+        padding: 4px 0 !important;
+    }
+
+    /* Fix 2: Card horizontal — imagen izquierda, contenido derecha */
+    .product-card-app {
+        flex-direction: row !important;
+        height: 90px !important;
+        margin-top: 8px !important;
+        align-items: stretch;
+    }
+
+    .product-img-wrapper {
+        width: 90px !important;
+        min-width: 90px;
+        height: 100% !important;
+        border-radius: 12px 0 0 12px !important;
+    }
+
+    .has-active-promo .product-img-wrapper {
+        border-radius: 0 0 0 12px !important;
+    }
+
+    .product-info-wrapper {
+        height: auto !important;
+        flex: 1;
+        padding: 8px 10px 4px !important;
+        text-align: left !important;
+        justify-content: center !important;
+    }
+
+    .product-name-app {
+        font-size: 13px;
+        height: auto !important;
+        max-height: none !important;
+    }
+
+    .product-price-app {
+        font-size: 11px;
+        margin: 3px 0 0 !important;
+        display: inline-block;
+    }
+
+    .product-action-wrapper {
+        height: auto !important;
+        width: 72px;
+        min-width: 72px;
+        justify-content: center !important;
+        align-items: center !important;
+        padding: 8px 8px 8px 0 !important;
+    }
+
+    .add-btn-app {
+        min-width: 60px !important;
+        padding: 5px 6px !important;
+        font-size: 10px !important;
+    }
+
+    /* Pestaña de promo adaptada al layout horizontal */
+    .promo-folder-tab {
+        top: 0;
+        left: 0;
+        border-radius: 12px 0 4px 0;
+        font-size: 9px;
+        padding: 2px 7px;
+    }
 }
 
