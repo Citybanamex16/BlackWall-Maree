@@ -2,15 +2,30 @@ const db = require('../util/database.js')
 
 module.exports = class Categoria {
   static async fetchAll () {
-    return db.execute('SELECT Nombre FROM `categoría` ORDER BY Nombre ASC')
+    return db.execute(`
+      SELECT
+        Nombre,
+        Permite_Crema_Batida AS permiteCremaBatida
+      FROM \`categoría\`
+      ORDER BY Nombre ASC
+    `)
   }
 
   static async buscarPorNombre (nombre) {
-    return db.execute('SELECT Nombre FROM `categoría` WHERE Nombre = ?', [nombre])
+    return db.execute(`
+      SELECT
+        Nombre,
+        Permite_Crema_Batida AS permiteCremaBatida
+      FROM \`categoría\`
+      WHERE Nombre = ?
+    `, [nombre])
   }
 
-  static async insertNuevaCategoria (nombre) {
-    return db.execute('INSERT INTO `categoría` (Nombre) VALUES (?)', [nombre])
+  static async insertNuevaCategoria (nombre, permiteCremaBatida) {
+    return db.execute(
+      'INSERT INTO `categoría` (Nombre, Permite_Crema_Batida) VALUES (?, ?)',
+      [nombre, permiteCremaBatida]
+    )
   }
 
   static async buscarEnUso (nombre) {
@@ -28,6 +43,13 @@ module.exports = class Categoria {
 
   static async actualizarCategoria (oldNombre, newNombre) {
     return db.execute('CALL ActualizarCategoria(?, ?)', [oldNombre, newNombre])
+  }
+
+  static async actualizarPermiteCremaBatida (nombre, permiteCremaBatida) {
+    return db.execute(
+      'UPDATE `categoría` SET Permite_Crema_Batida = ? WHERE Nombre = ?',
+      [permiteCremaBatida, nombre]
+    )
   }
 
   static async eliminarCategoria (nombre) {
