@@ -14,6 +14,8 @@ router.post('/pedidos/validar', menuControlador.contextoUsuario ,menuControlador
 router.post('/pedidos/confirmar', menuControlador.confirmarPedido)
 
 //FeedbackCliente
+router.get('/feedback/historView', menuControlador.getReviewHistoryView)
+router.get('/feedback/historyData', menuControlador.getClientReviewHistory)
 router.post('/feedback/Nuevo', menuControlador.postNewFeedback)
 
 // Productos Personalizados

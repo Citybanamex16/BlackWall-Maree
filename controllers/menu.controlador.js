@@ -774,14 +774,30 @@ exports.getIngredientesActivos = async (req, res, nex) => {
 
 
 //Sección feedback Cliente
+exports.getReviewHistoryView = (request, response, next) => {
+  const breadcrumbs = nav.getBreadcrumbs('Menu')
+  const SesionData = request.session.cliente
+  console.log("Datos del cliente: ", SesionData)
+  response.render('cliente/historialClienteReviews', { breadcrumbs, datosCliente: SesionData})
+}
 
-exports.getClientReview = async (req, res, nex) => {
+
+
+exports.getClientReviewHistory = async (req, res, nex) => {
   console.log("Getting Client's review history")
   try{
 
-    const clientData = req.body
+    const clienteTelefono = req.query.Numero_Telefonico;
 
-    const resultData = await feedback.getClientFeedback(clientData.Numero_Telefonico)
+    if(clienteTelefono === undefined){
+      throw new Error("Telefono indefinido")
+    }
+
+    console.log("Teléfono recibido:", clienteTelefono);
+
+    const resultData = await feedback.getClientFeedback(clienteTelefono)
+
+    console.log("Reviews obtenidas: ", resultData)
 
      res.status(200).json({
           ok: true,
