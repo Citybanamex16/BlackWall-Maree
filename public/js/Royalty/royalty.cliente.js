@@ -1,5 +1,3 @@
-
-
 document.addEventListener('DOMContentLoaded', () => {
   // Referencias a los contenedores en el HTML
   const contenedorPromociones = document.getElementById('contenedor-promociones')
@@ -158,52 +156,47 @@ document.addEventListener('DOMContentLoaded', () => {
       contenedorEventos.innerHTML = '<div class="alert alert-danger mx-3 w-100">Ocurrió un error al cargar los eventos.</div>'
     })
 
-//SECCION NUEVA DE CHARLY NO BORRAR SI APARECE EN MERGE CONFLICT ESTO ES NUEVO Y FUNCIONAL
+  // SECCION NUEVA DE CHARLY NO BORRAR SI APARECE EN MERGE CONFLICT ESTO ES NUEVO Y FUNCIONAL
 
-async function obtenerCatalogoDePRs(){
-  console.log("Obteniendo PRs respetando EFUL")
-  try{
-    const response = await fetch('/menu/consultarPromosMenu')
+  async function obtenerCatalogoDePRs () {
+    console.log('Obteniendo PRs respetando EFUL')
+    try {
+      const response = await fetch('/menu/consultarPromosMenu')
 
-    if(!response.ok){
-      console.log('Error Interno')
-      throw new Error("Error Interno PRs")
+      if (!response.ok) {
+        console.log('Error Interno')
+        throw new Error('Error Interno PRs')
+      }
+
+      const data = await response.json()
+
+      const RPs = data.allPRs[0]
+
+      const cliente = {
+        nombre: window.clienteData.nombre,
+        nivel: window.clienteData.nivel,
+        visitas: window.clienteData.visitas
+      }
+
+      console.log('PROMOS obtenidas: ', RPs)
+      console.log('Cliente: ', cliente)
+
+      const RPsFinales = filtrarRPs(RPs, cliente) // obtenemos solo RPs del nivel del cliente
+      console.log('RPs finales: ', RPsFinales)
+
+      construirCarruselPromos(RPsFinales)
+    } catch (err) {
+
     }
-
-    const data = await response.json()
-
-    const RPs = data.allPRs[0]
-
-    const cliente = {
-    nombre: window.clienteData.nombre,
-    nivel: window.clienteData.nivel,
-    visitas: window.clienteData.visitas
-    };
-
-    console.log("PROMOS obtenidas: ", RPs)
-    console.log("Cliente: ", cliente)
-
-    const RPsFinales = filtrarRPs(RPs, cliente) //obtenemos solo RPs del nivel del cliente
-    console.log("RPs finales: ", RPsFinales)
-
-    construirCarruselPromos(RPsFinales)
-
-
-  } catch(err){
-
   }
-}
 
-
-obtenerCatalogoDePRs()
-
+  obtenerCatalogoDePRs()
 })
 
+function filtrarRPs (RPsGlobales, datosCliente) {
+  console.log('Filtrando RPsGlobales')
 
-function filtrarRPs(RPsGlobales, datosCliente) {
-  console.log("Filtrando RPsGlobales")
-
-  const RPsFiltradas = RPsGlobales.filter(promo => 
+  const RPsFiltradas = RPsGlobales.filter(promo =>
     promo.Nombre_Royalty === datosCliente.nivel
   )
 
@@ -211,12 +204,11 @@ function filtrarRPs(RPsGlobales, datosCliente) {
   return RPsFiltradas
 }
 
+function construirCarruselPromos (RPsFinales) {
+  console.log('Construyendo carrusel con RPs finales')
 
-function construirCarruselPromos(RPsFinales) {
-  console.log("Construyendo carrusel con RPs finales")
-
-  const loading  = document.getElementById('promos-loading')
-  const empty    = document.getElementById('promos-empty')
+  const loading = document.getElementById('promos-loading')
+  const empty = document.getElementById('promos-empty')
   const carrusel = document.getElementById('contenedor-promos-carrusel')
 
   loading.style.display = 'none'
@@ -256,17 +248,3 @@ function construirCarruselPromos(RPsFinales) {
 
   carrusel.style.display = 'flex'
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-

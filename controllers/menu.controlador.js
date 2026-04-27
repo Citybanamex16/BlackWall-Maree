@@ -153,7 +153,6 @@ exports.agregarItem = (request, response, next) => {
   response.status(200).json({ agregado: true, nombre, precio, desc })
 }
 
-
 /* ==== middleware de contexto de sesion ==== */
 // middlewares/contextoUsuario.middleware.js
 
@@ -174,7 +173,7 @@ exports.contextoUsuario = async (request, response, next) => {
       request.session?.rol === 'Usuario' &&
       cliente?.telefono
     ) {
-      console.log("📡 [ROYALTY] Consultando nivel del cliente...")
+      console.log('📡 [ROYALTY] Consultando nivel del cliente...')
 
       const telefono = cliente.telefono
 
@@ -184,7 +183,7 @@ exports.contextoUsuario = async (request, response, next) => {
 
       nivelRoyalty = clienteInfo?.nivel || 'CLIENTE_GENERAL'
 
-      console.log("👑 [ROYALTY] Nivel detectado:", nivelRoyalty)
+      console.log('👑 [ROYALTY] Nivel detectado:', nivelRoyalty)
     }
 
     request.usuario = {
@@ -201,14 +200,13 @@ exports.contextoUsuario = async (request, response, next) => {
       esRoyalty: nivelRoyalty !== 'CLIENTE_GENERAL'
     }
 
-    console.log("🔐 [MIDDLEWARE]");
-    console.log("   Usuario:", request.usuario.nombre);
-    console.log("   Nivel:", request.usuario.nivelRoyalty);
+    console.log('🔐 [MIDDLEWARE]')
+    console.log('   Usuario:', request.usuario.nombre)
+    console.log('   Nivel:', request.usuario.nivelRoyalty)
 
     next()
-
   } catch (error) {
-    console.error("❌ Error obteniendo contexto de usuario:", error)
+    console.error('❌ Error obteniendo contexto de usuario:', error)
 
     // Fallback seguro
     request.usuario = {
@@ -226,79 +224,75 @@ exports.contextoUsuario = async (request, response, next) => {
   }
 }
 
-
 exports.validarPedido = async (request, response, next) => {
-  const usuario = request.usuario; // Trae: nombre, esRoyalty, nivelRoyalty, etc.
+  const usuario = request.usuario // Trae: nombre, esRoyalty, nivelRoyalty, etc.
 
-  const { items } = request.body;
+  const { items } = request.body
 
   // ── Validación básica ──
   if (!Array.isArray(items) || items.length === 0) {
-    return response.status(400).json({ pedidoValido: false, mensaje: 'El pedido está vacío' });
+    return response.status(400).json({ pedidoValido: false, mensaje: 'El pedido está vacío' })
   }
 
   try {
     // ── 1. Recolección de IDs ──
-    const idsProductos = [...new Set(items.map(i => i.id))];
+    const idsProductos = [...new Set(items.map(i => i.id))]
     const idsInsumos = [...new Set(items.flatMap(i => [
-        ...(i.ingredientes_adentro || []).map(ins => ins.id_insumo),
-        ...(i.ingredientes_toppings || []).map(ins => ins.id_insumo)
-    ]))];
+      ...(i.ingredientes_adentro || []).map(ins => ins.id_insumo),
+      ...(i.ingredientes_toppings || []).map(ins => ins.id_insumo)
+    ]))]
 
     // ── 2. Disponibilidad ──
-    const idsDisponibles = await Pedido.verificarDisponibilidadPorId(idsProductos);
+    const idsDisponibles = await Pedido.verificarDisponibilidadPorId(idsProductos)
     if (!idsProductos.every(id => idsDisponibles.includes(id))) {
-      return response.status(200).json({ pedidoValido: false, mensaje: 'Algunos platillos ya no están disponibles.' });
+      return response.status(200).json({ pedidoValido: false, mensaje: 'Algunos platillos ya no están disponibles.' })
     }
 
     // ── 3. Fase de Inteligencia: El Compendio ──
     // Obtenemos precios base e ingredientes
-    const listaOro = await Pedido.obtenerListaDeOro(idsProductos, idsInsumos);
-    
+    const listaOro = await Pedido.obtenerListaDeOro(idsProductos, idsInsumos)
+
     // Armamos el compendio de promociones filtrado por el contexto del usuario
-    const compendio = await Pedido.obtenerCompendioPromociones(usuario);
+    const compendio = await Pedido.obtenerCompendioPromociones(usuario)
 
     // ── 4. Inspección del Policía (Item por Item) ──
-    let granTotalOficial = 0;
-    const erroresPrecio = [];
+    let granTotalOficial = 0
+    const erroresPrecio = []
 
     items.forEach((item, index) => {
       // Pasamos el compendio para que el cálculo sepa qué promo aplicar
-      const precioOficial = Pedido.calcularPrecioRealItem(item, listaOro, compendio);
-      
+      const precioOficial = Pedido.calcularPrecioRealItem(item, listaOro, compendio)
+
       const precioRecibido = parseFloat(
         String(item.precio_total ?? item.precio).replace(/[^0-9.]/g, '')
-      );
+      )
 
       if (Math.abs(precioOficial - precioRecibido) > 0.01) {
-        erroresPrecio.push(`Item ${index + 1}: se esperaba $${precioOficial} pero se recibió $${precioRecibido}`);
+        erroresPrecio.push(`Item ${index + 1}: se esperaba $${precioOficial} pero se recibió $${precioRecibido}`)
       }
-      granTotalOficial += precioOficial;
-    });
+      granTotalOficial += precioOficial
+    })
 
     if (erroresPrecio.length > 0) {
       return response.status(200).json({
         pedidoValido: false,
         mensaje: 'Discrepancia de precios detectada.',
         detalles: erroresPrecio
-      });
+      })
     }
 
     return response.status(200).json({
       pedidoValido: true,
       totalVerificado: granTotalOficial
-    });
-
+    })
   } catch (err) {
-    console.error('💥 Error en Policía:', err);
-    next(err);
+    console.error('💥 Error en Policía:', err)
+    next(err)
   }
-};
-
-
+}
 
 exports.confirmarPedido = async (request, response, next) => {
-  const { items, forma, telefono: telefonoBody, nombre: nombreBody, direccion } = request.body
+  const { items, forma, telefono: telefonoBody, nombre: nombreBody, direccion, descripcion } = request.body
 
   const sesion = request.session.cliente
   const telefonoFinal = sesion ? String(sesion.telefono) : telefonoBody
@@ -318,9 +312,24 @@ exports.confirmarPedido = async (request, response, next) => {
     return response.status(400).json({ pedidoConfirmado: false, mensaje: 'El pedido está vacío' })
   }
 
+  const descripcionFinal = String(descripcion || '').trim()
+
+  if (descripcionFinal.length > 500) {
+    return response.status(400).json({
+      pedidoConfirmado: false,
+      mensaje: 'La especificación no puede superar los 500 caracteres.'
+    })
+  }
+
   try {
     await Pedido.verificarOCrearCliente(telefonoLimpio, nombreFinal)
-    const idOrden = await Pedido.guardarOrden(telefonoLimpio, forma, nombreFinal, forma === 'Delivery' ? (direccion || null) : null)
+    const idOrden = await Pedido.guardarOrden(
+      telefonoLimpio,
+      forma,
+      nombreFinal,
+      forma === 'Delivery' ? (direccion || null) : null,
+      descripcionFinal || null
+    )
     await Pedido.guardarItems(idOrden, items)
 
     response.status(200).json({ pedidoConfirmado: true, idOrden })
@@ -329,7 +338,6 @@ exports.confirmarPedido = async (request, response, next) => {
     response.status(500).json({ pedidoConfirmado: false, mensaje: 'Error al guardar el pedido' })
   }
 }
-
 
 /* CU 14 Visualizar Catalogo Productos */
 exports.getProducts = (req, res, next) => {
@@ -703,14 +711,11 @@ exports.putDesactivarProducto = async (req, res, next) => {
   }
 }
 
+// Seccion Personalizacion de productos
 
-
-// Seccion Personalizacion de productos 
-
-
-exports.getCategorías = async (req, res, nex) =>{
-  console.log("Obteniendo las categorías")
-  try{
+exports.getCategorías = async (req, res, nex) => {
+  console.log('Obteniendo las categorías')
+  try {
     const result = await categorías.fecthAll()
 
     res.status(200).json({
@@ -718,56 +723,48 @@ exports.getCategorías = async (req, res, nex) =>{
       message: 'Catalogo de categorías Obtenido',
       categoriasCatalog: result
     })
-
   } catch (err) {
     res.status(500).json({
       ok: false,
       message: err
     })
-
-
   }
-
 }
 
-
 exports.getIngredientesActivos = async (req, res, nex) => {
-    console.log("Obteniendo los ingredientes activos con transacción");
-    
-    // PLACEHOLDER: Obtener el objeto de conexión/pool de tu configuración de BD
-    const connection = await db.getConnection(); 
+  console.log('Obteniendo los ingredientes activos con transacción')
 
-    try {
-        // Iniciamos la transacción
-        await connection.beginTransaction();
+  // PLACEHOLDER: Obtener el objeto de conexión/pool de tu configuración de BD
+  const connection = await db.getConnection()
 
-        // Ejecutamos ambas consultas usando la misma conexión
-        const result = await ingrediente.fetchAllValid(connection);
-        const resultPrecioBase = await productos.getCrepaPersoPrecioBase(connection);
+  try {
+    // Iniciamos la transacción
+    await connection.beginTransaction()
 
-        // Si todo sale bien, confirmamos (commit)
-        await connection.commit();
+    // Ejecutamos ambas consultas usando la misma conexión
+    const result = await ingrediente.fetchAllValid(connection)
+    const resultPrecioBase = await productos.getCrepaPersoPrecioBase(connection)
 
-        res.status(200).json({
-            ok: true,
-            message: 'Catalogo de Ingredientes Activos Obtenido',
-            ingActiveCatalog: result,
-            precioBasePerso: resultPrecioBase
-        });
+    // Si todo sale bien, confirmamos (commit)
+    await connection.commit()
 
-    } catch (err) {
-        // Si algo falla, revertimos cualquier cambio (rollback)
-        if (connection) await connection.rollback();
-        
-        res.status(500).json({
-            ok: false,
-            message: 'Error en la transacción',
-            error: err.message || err
-        });
-    } finally {
-        // Siempre liberamos la conexión al terminar
-        if (connection) connection.release();
-    }
-};
+    res.status(200).json({
+      ok: true,
+      message: 'Catalogo de Ingredientes Activos Obtenido',
+      ingActiveCatalog: result,
+      precioBasePerso: resultPrecioBase
+    })
+  } catch (err) {
+    // Si algo falla, revertimos cualquier cambio (rollback)
+    if (connection) await connection.rollback()
 
-
+    res.status(500).json({
+      ok: false,
+      message: 'Error en la transacción',
+      error: err.message || err
+    })
+  } finally {
+    // Siempre liberamos la conexión al terminar
+    if (connection) connection.release()
+  }
+}

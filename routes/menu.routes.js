@@ -10,7 +10,7 @@ router.get('/sucursales', menuControlador.getMapaSucursales)
 router.get('/consultaplatillo', menuControlador.getPlatillo)
 router.get('/consultarPromosMenu', menuControlador.getMenuPromos)
 router.post('/agregaritem', menuControlador.agregarItem)
-router.post('/pedidos/validar', menuControlador.contextoUsuario ,menuControlador.validarPedido)
+router.post('/pedidos/validar', menuControlador.contextoUsuario, menuControlador.validarPedido)
 router.post('/pedidos/confirmar', menuControlador.confirmarPedido)
 
 // Productos Personalizados

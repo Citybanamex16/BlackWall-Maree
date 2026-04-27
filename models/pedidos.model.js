@@ -11,7 +11,8 @@ module.exports = class Pedido {
         o.Tipo_Orden AS tipo_orden,
         o.Estado_Orden AS estado_orden,
         o.Fecha AS fecha,
-        o.Direccion AS direccion
+        o.Direccion AS direccion,
+        o.Descripcion AS descripcion
       FROM orden o
       LEFT JOIN cliente c
         ON o.Numero_Telefonico = c.Numero_Telefonico
@@ -30,7 +31,8 @@ module.exports = class Pedido {
         o.Tipo_Orden AS tipo_orden,
         o.Estado_Orden AS estado_orden,
         o.Fecha AS fecha,
-        o.Direccion AS direccion
+        o.Direccion AS direccion,
+        o.Descripcion AS descripcion
       FROM orden o
       LEFT JOIN cliente c
         ON o.Numero_Telefonico = c.Numero_Telefonico
@@ -56,6 +58,7 @@ module.exports = class Pedido {
         c.Nombre AS nombre_cliente,
         o.Numero_Telefonico AS telefono,
         o.Tipo_Orden AS tipo_orden,
+        o.Descripcion AS descripcion,
         o.Estado_Orden AS estado_orden,
         o.Fecha AS fecha
       FROM orden o
@@ -161,8 +164,13 @@ static async obtenerListaDeOro(idsProductos, idsInsumos) {
     ]);
 
     const lista = { productos: {}, insumos: {} };
-    resultSets[0].forEach(p => lista.productos[p.id] = parseFloat(p.Precio));
-    resultSets[1].forEach(i => lista.insumos[i.id] = parseFloat(i.Precio));
+    resultSets[0].forEach((p) => {
+      lista.productos[p.id] = parseFloat(p.Precio)
+    })
+
+    resultSets[1].forEach((i) => {
+      lista.insumos[i.id] = parseFloat(i.Precio)
+    })
 
     console.log(`📥 [LISTA ORO] Cargados ${Object.keys(lista.productos).length} productos y ${Object.keys(lista.insumos).length} insumos.`);
     return lista;
@@ -217,15 +225,15 @@ static calcularPrecioRealItem(item, listaOro, compendio) {
 }
 
 
-  static async guardarOrden (telefono, tipoOrden, nombreCliente, direccion = null) {
+  static async guardarOrden (telefono, tipoOrden, nombreCliente, direccion = null, descripcion = null) {
     const idOrden = Pedido.generarID()
     const idTurnoFijo = 'TN26496107'
 
     await db.execute(
       `INSERT INTO orden
-       (ID_Orden, ID_Turno, Numero_Telefonico, Tipo_Orden, Nombre_cliente, Estado_Orden, Direccion)
-       VALUES (?, ?, ?, ?, ?, ?, ?)`,
-      [idOrden, idTurnoFijo, telefono, tipoOrden, nombreCliente, 'Pendiente', direccion]
+      (ID_Orden, ID_Turno, Numero_Telefonico, Tipo_Orden, Nombre_cliente, Estado_Orden, Direccion, Descripcion)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+      [idOrden, idTurnoFijo, telefono, tipoOrden, nombreCliente, 'Pendiente', direccion, descripcion]
     )
 
     return idOrden

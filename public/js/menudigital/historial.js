@@ -92,9 +92,11 @@ async function actualizarStatus () {
       if (badge && badge.textContent.trim() !== o.estado_orden) {
         badge.textContent = o.estado_orden
         // actualiza color según estado
-        const color = o.estado_orden === 'Entregado' ? '#3a7d52'
-                    : o.estado_orden === 'Cancelado'  ? '#c0392b'
-                    : '#b5956a'
+        const color = o.estado_orden === 'Entregado'
+          ? '#3a7d52'
+          : o.estado_orden === 'Cancelado'
+            ? '#c0392b'
+            : '#b5956a'
         badge.style.color = color
         badge.style.background = color + '15'
         card.dataset.estado = o.estado_orden
