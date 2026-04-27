@@ -8,6 +8,47 @@ const Pedido = require('../models/pedidos.model.js')
 const sucursal = require('../models/MenuDigital/sucursales.model.js')
 const db = require('../util/database.js')
 
+const CREMA_BATIDA_INGREDIENT_ID = 'INCRMBT001'
+
+function permiteCremaBatidaPorNombre (nombreProducto) {
+  return !String(nombreProducto || '').toLowerCase().includes('chamoyada')
+}
+
+async function fetchPlatilloRows (id) {
+  try {
+    return await db.execute(
+      `SELECT p.ID_Producto, p.Nombre, p.Precio, p.Disponible,
+              p.Categoría as base,
+              c.Permite_Crema_Batida as permiteCremaBatida,
+              i.ID_Insumo as ing_id,
+              i.Nombre    as ing_nombre,
+              i.Precio    as ing_precio
+       FROM producto p
+       LEFT JOIN categoría c ON p.Categoría = c.Nombre
+       LEFT JOIN producto_tiene_insumo pti ON p.ID_Producto = pti.ID_Producto
+       LEFT JOIN insumo i ON pti.ID_Insumo = i.ID_Insumo
+       WHERE p.ID_Producto = ?`,
+      [id]
+    )
+  } catch (error) {
+    if (error.code !== 'ER_BAD_FIELD_ERROR') throw error
+
+    return db.execute(
+      `SELECT p.ID_Producto, p.Nombre, p.Precio, p.Disponible,
+              p.Categoría as base,
+              0 as permiteCremaBatida,
+              i.ID_Insumo as ing_id,
+              i.Nombre    as ing_nombre,
+              i.Precio    as ing_precio
+       FROM producto p
+       LEFT JOIN producto_tiene_insumo pti ON p.ID_Producto = pti.ID_Producto
+       LEFT JOIN insumo i ON pti.ID_Insumo = i.ID_Insumo
+       WHERE p.ID_Producto = ?`,
+      [id]
+    )
+  }
+}
+
 // CU11 Vizualisar Menu
 exports.getMenu = (request, response, next) => {
   const breadcrumbs = nav.getBreadcrumbs('Menu')
@@ -105,18 +146,7 @@ exports.getOrden = (request, response, next) => {
 exports.getPlatillo = async (request, response, next) => {
   const id = request.query.id
   try {
-    const [rows] = await db.execute(
-      `SELECT p.ID_Producto, p.Nombre, p.Precio, p.Disponible,
-              p.Categoría as base,
-              i.ID_Insumo as ing_id,
-              i.Nombre    as ing_nombre,
-              i.Precio    as ing_precio
-       FROM producto p
-       LEFT JOIN producto_tiene_insumo pti ON p.ID_Producto = pti.ID_Producto
-       LEFT JOIN insumo i ON pti.ID_Insumo = i.ID_Insumo
-       WHERE p.ID_Producto = ?`,
-      [id]
-    )
+    const [rows] = await fetchPlatilloRows(id)
 
     if (rows.length === 0) {
       return response.status(404).json({ disponible: false, mensaje: 'Platillo no encontrado' })
@@ -129,17 +159,36 @@ exports.getPlatillo = async (request, response, next) => {
       .filter(r => r.ing_id)
       .map(r => ({ id: r.ing_id, nombre: r.ing_nombre, precio: parseFloat(r.ing_precio) }))
 
+    const permiteCremaBatidaCategoria = row.permiteCremaBatida === 1 || row.permiteCremaBatida === '1'
+    const permiteCremaBatida = permiteCremaBatidaCategoria && permiteCremaBatidaPorNombre(row.Nombre)
     const [catalogoRows] = await db.execute(
       'SELECT ID_Insumo as id, Nombre as nombre, Precio as precio FROM insumo WHERE Activo = 1 ORDER BY Nombre'
     )
+    const [cremaBatidaRows] = permiteCremaBatida
+      ? await db.execute(
+          'SELECT ID_Insumo as id, Nombre as nombre, Precio as precio FROM insumo WHERE Activo = 1 AND ID_Insumo = ? LIMIT 1',
+          [CREMA_BATIDA_INGREDIENT_ID]
+        )
+      : [[]]
+    const cremaBatida = cremaBatidaRows[0] || null
 
     response.status(200).json({
       disponible,
       nombre: row.Nombre,
       precio: row.Precio,
       base: row.base,
+      permiteCremaBatida,
+      cremaBatida: cremaBatida
+        ? {
+            id: cremaBatida.id,
+            nombre: cremaBatida.nombre,
+            precio: parseFloat(cremaBatida.precio)
+          }
+        : null,
       ingredientes,
-      catalogo: catalogoRows.map(r => ({ id: r.id, nombre: r.nombre, precio: parseFloat(r.precio) }))
+      catalogo: catalogoRows
+        .filter(r => r.id !== CREMA_BATIDA_INGREDIENT_ID)
+        .map(r => ({ id: r.id, nombre: r.nombre, precio: parseFloat(r.precio) }))
     })
   } catch (err) {
     console.error('Error buscando platillo:', err)
@@ -290,6 +339,12 @@ exports.validarPedido = async (request, response, next) => {
     });
 
   } catch (err) {
+    if (err.code === 'INVALID_ITEM_CONFIGURATION') {
+      return response.status(200).json({
+        pedidoValido: false,
+        mensaje: err.message
+      })
+    }
     console.error('💥 Error en Policía:', err);
     next(err);
   }
@@ -769,5 +824,3 @@ exports.getIngredientesActivos = async (req, res, nex) => {
         if (connection) connection.release();
     }
 };
-
-
