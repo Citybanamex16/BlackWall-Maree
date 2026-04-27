@@ -91,6 +91,28 @@ module.exports = class Promocion {
     `, [idPromocion])
   }
 
+  static fetchPromocionesPopulares (limit = 5) {
+    const limiteSeguro = Number.isInteger(Number(limit)) && Number(limit) > 0
+      ? Number(limit)
+      : 5
+
+    return db.execute(`
+      SELECT
+        p.ID_Promocion,
+        p.Nombre,
+        COUNT(cp.ID_Promocion) AS usos,
+        COUNT(DISTINCT cp.Numero_Telefonico) AS clientes_distintos,
+        SUM(CASE WHEN cp.Canjeado = 1 THEN 1 ELSE 0 END) AS promociones_canjeadas
+      FROM promocion p
+      LEFT JOIN cliente_canjea_promociones cp
+        ON cp.ID_Promocion = p.ID_Promocion
+      GROUP BY p.ID_Promocion, p.Nombre
+      HAVING usos > 0
+      ORDER BY usos DESC, promociones_canjeadas DESC, clientes_distintos DESC, p.Nombre ASC
+      LIMIT ${limiteSeguro}
+    `)
+  }
+
   static guardarProductosPromocion (idPromocion, idsProductos) {
     const idsUnicos = [...new Set((idsProductos || []).filter(Boolean))]
 
