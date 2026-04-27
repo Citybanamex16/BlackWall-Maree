@@ -46,13 +46,13 @@ module.exports = class Feedback {
             r.ID_Review, 
             r.ID_Orden, 
             r.Puntaje, 
-            r.Fecha_Hora, 
+            r.Fecha, 
             r.Comentario
         FROM review r
         INNER JOIN cliente_tiene_review ctr ON r.ID_Review = ctr.ID_Review
         WHERE ctr.Numero_Telefonico = ?
-        ORDER BY r.Fecha_Hora DESC
-    `,telefono)
+        ORDER BY r.Fecha DESC
+    `,[telefono])
     return result
   }
 }
