@@ -444,15 +444,32 @@ window.abrirModalPremios = () => {
     const ahorro = precioBase * (window.datosRoyalty.descuento / 100)
     const precioFinal = precioBase - ahorro
 
-    const itemDiv = document.createElement('div')
-    itemDiv.style.cssText = 'padding:10px; border-bottom:1px solid #eee; display:flex; justify-content:space-between; align-items:center;'
-    itemDiv.innerHTML = `
+const itemDiv = document.createElement('div');
+        // Quitamos el estilo en línea de itemDiv y usamos clases/estilos armónicos
+        itemDiv.style.cssText = "padding: 15px; border: 1px solid #eee; border-radius: 10px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; background: #fff; transition: box-shadow 0.2s, border-color 0.2s;";
+        
+        // Efecto hover (opcional, imita tu .order-btn-card)
+        itemDiv.onmouseover = () => { itemDiv.style.borderColor = '#e0b89a'; itemDiv.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.06)'; };
+        itemDiv.onmouseout = () => { itemDiv.style.borderColor = '#eee'; itemDiv.style.boxShadow = 'none'; };
+
+        itemDiv.innerHTML = `
             <div>
-                <span style="display:block; font-weight:500;">${item.producto_base ? 'Crepa Personalizada' : item.nombre}</span>
-                <span style="font-size:13px; color:#888;"><strike>$${precioBase.toFixed(2)}</strike> → <b>$${precioFinal.toFixed(2)}</b></span>
+                <span style="display:block; font-family: 'Jost', sans-serif; font-weight: 500; font-size: 15px; color: #222;">
+                    ${item.producto_base ? 'Crepa Personalizada' : item.nombre}
+                </span>
+                <span style="display:block; font-family: 'Jost', sans-serif; font-size: 13px; color: #888; margin-top: 4px;">
+                    <strike style="opacity: 0.6;">$${precioBase.toFixed(2)}</strike> 
+                    <span style="margin: 0 4px; color: #ccc;">→</span> 
+                    <b style="color: #b5956a; font-size: 15px; font-weight: 600;">$${precioFinal.toFixed(2)}</b>
+                </span>
             </div>
-            <button onclick="aplicarPremio(${index})" class="button is-success is-small">Aplicar</button>
-        `
+            <button onclick="aplicarPremio(${index})" 
+                style="background: transparent; border: 1.5px solid #b5956a; border-radius: 7px; color: #b5956a; font-family: 'Jost', sans-serif; font-size: 13px; font-weight: 500; padding: 6px 16px; cursor: pointer; transition: all 0.2s;"
+                onmouseover="this.style.background='#b5956a'; this.style.color='#fff'" 
+                onmouseout="this.style.background='transparent'; this.style.color='#b5956a'">
+                Aplicar
+            </button>
+        `;
     lista.appendChild(itemDiv)
   })
 

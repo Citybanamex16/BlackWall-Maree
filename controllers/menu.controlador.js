@@ -334,7 +334,6 @@ exports.validarPedido = async (request, response, next) => {
         detalles: erroresPrecio
       })
     }
-
     return response.status(200).json({
       pedidoValido: true,
       totalVerificado: granTotalOficial
