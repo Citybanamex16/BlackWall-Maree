@@ -9,6 +9,9 @@ const formatearTelefono = (tel) => {
   return tel
 }
 
+const normalizarIdColaborador = (valor = '') => valor.trim().toUpperCase()
+const esPosibleTelefonoCliente = (valor = '') => /^[\d\s-]{10,15}$/.test(valor)
+
 const setEmployeeSession = (request, colaborador) => {
   request.session.isLoggedIn = true
   request.session.user = {
@@ -57,9 +60,10 @@ exports.postLogin = async (request, response, next) => {
   const { telefono, password } = request.body
 
   try {
+    const idColaborador = normalizarIdColaborador(telefono)
     // --- LÓGICA COLABORADOR ---
-    if (/^CL\d{8}$/i.test(telefono)) {
-      const [rows] = await Login.fetchColaborador(telefono)
+    if (!esPosibleTelefonoCliente(telefono)) {
+      const [rows] = await Login.fetchColaborador(idColaborador)
       const colaborador = rows[0]
       if (!colaborador) {
         return response.status(404).json({ error: 'ID de Colaborador no encontrado.' })
@@ -81,7 +85,7 @@ exports.postLogin = async (request, response, next) => {
     }
 
     // --- LÓGICA CLIENTE ---
-    if (/^[\d\s-]{10,15}$/.test(telefono)) {
+    if (esPosibleTelefonoCliente(telefono)) {
       const telefonoFormateado = formatearTelefono(telefono)
       const client = await Login.findByPhoneForLogin(telefonoFormateado)
 
