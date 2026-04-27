@@ -5,7 +5,7 @@
 const platillobotones = document.getElementsByClassName('platillo-btn')
 const modalOverlay = document.getElementById('modal-overlay')
 const modalContent = document.getElementById('modal-content')
-let pedido = JSON.parse(localStorage.getItem('pedido')) || [];
+let pedido = JSON.parse(localStorage.getItem('pedido')) || []
 
 // MODAL
 const cerrarModal = () => {
@@ -260,9 +260,7 @@ async function verDetalleProducto (id) {
   }
 }
 
-
-
-//funciones globales 
+// funciones globales
 
 /* == Conf y Show de Error Modal == */
 // Error elements references
@@ -281,12 +279,7 @@ function ShowErrorModal (title, content) {
   ErrorModal.showModal()
 }
 
-
-
-
 // fin de funciones globales
-
-
 
 /* CU11 Visualizar Menu Digital */
 let globalProducts = [] // Variable global de productos
@@ -369,41 +362,40 @@ function cleanSesionPromos (rawSesionPromos, AcceptedPromos) {
 }
 
 //
-function getSesionPRs(SesionData, AllPromos) {
-    console.log("🛠️ [FRONT-FILTRO] Iniciando selección local de PRs...");
-    
-    // 1. Extraemos el nivel de la sesión (ej: 'Mega Fan', 'Fan', etc.)
-    const nivelUsuario = SesionData.nivelRoyalty;
-    
-    // 2. Extraemos la lista maestra de PRs que ya bajaste de la DB
-    const masterList = AllPromos?.allPRs?.[0] || [];
+function getSesionPRs (SesionData, AllPromos) {
+  console.log('🛠️ [FRONT-FILTRO] Iniciando selección local de PRs...')
 
-    console.log(`👤 Usuario: ${SesionData.usuario?.nombre || 'Invitado'} | Nivel: ${nivelUsuario}`);
+  // 1. Extraemos el nivel de la sesión (ej: 'Mega Fan', 'Fan', etc.)
+  const nivelUsuario = SesionData.nivelRoyalty
 
-    // REGLA DE ORO 1: Si no hay nivel o es "General", no hay PRs que buscar.
-    if (!nivelUsuario || nivelUsuario === 'General' || nivelUsuario === 'Cliente general') {
-        console.log("⚪ [SKIP] Usuario sin nivel Royalty. Devolviendo lista vacía.");
-        return [];
-    }
+  // 2. Extraemos la lista maestra de PRs que ya bajaste de la DB
+  const masterList = AllPromos?.allPRs?.[0] || []
 
-    // 3. FILTRADO LOCAL (Sin fetch, sin esperas)
-    // Buscamos en la lista maestra solo las que coincidan con el nivel del cliente
-    try {
-        const autorizadas = masterList.filter(promo => {
-            return promo.Nombre_Royalty === nivelUsuario;
-        });
+  console.log(`👤 Usuario: ${SesionData.usuario?.nombre || 'Invitado'} | Nivel: ${nivelUsuario}`)
 
-        console.log(`✅ [EXITO] Se encontraron ${autorizadas.length} promos para el nivel ${nivelUsuario}`);
-        
-        // Opcional: Aquí puedes seguir usando tu función cleanSesionPromos si hace limpiezas extra
-        // return cleanSesionPromos(autorizadas, masterList);
-        
-        return autorizadas;
+  // REGLA DE ORO 1: Si no hay nivel o es "General", no hay PRs que buscar.
+  if (!nivelUsuario || nivelUsuario === 'General' || nivelUsuario === 'Cliente general') {
+    console.log('⚪ [SKIP] Usuario sin nivel Royalty. Devolviendo lista vacía.')
+    return []
+  }
 
-    } catch (err) {
-        console.error('💥 Error filtrando promociones en local:', err);
-        return [];
-    }
+  // 3. FILTRADO LOCAL (Sin fetch, sin esperas)
+  // Buscamos en la lista maestra solo las que coincidan con el nivel del cliente
+  try {
+    const autorizadas = masterList.filter(promo => {
+      return promo.Nombre_Royalty === nivelUsuario
+    })
+
+    console.log(`✅ [EXITO] Se encontraron ${autorizadas.length} promos para el nivel ${nivelUsuario}`)
+
+    // Opcional: Aquí puedes seguir usando tu función cleanSesionPromos si hace limpiezas extra
+    // return cleanSesionPromos(autorizadas, masterList);
+
+    return autorizadas
+  } catch (err) {
+    console.error('💥 Error filtrando promociones en local:', err)
+    return []
+  }
 }
 
 // Funcion para obtener los datos del Menu
@@ -447,8 +439,6 @@ async function obtenerMenu (SesionData) {
     ShowMenuErrorModal()
   }
 }
-
-
 
 async function getSesionInfo () {
   // Datos de la sesión:
@@ -622,7 +612,7 @@ function promosMaster (cardHTML, promosData, productId, dataSesion) {
   // 1. Extraer promos
   let PRs = []
   if (dataSesion != null) {
-    //console.log("Data sesion PRs en promosMaster: ", dataSesion)
+    // console.log("Data sesion PRs en promosMaster: ", dataSesion)
     PRs = dataSesion.PRs
   }
 
@@ -882,8 +872,6 @@ function renderizarVistaCategoria (categoriaObj, productos, allTypes, allPromos,
   }
 }
 
-
-
 // ── BÚSQUEDA ──
 const btnSearchToggle = document.getElementById('btn-search-toggle')
 const searchExpanded = document.getElementById('search-expanded')
@@ -934,7 +922,5 @@ if (btnSearchToggle) {
   })
 }
 
-
-//funciones finales
+// funciones finales
 actualizarBotonResumen()
-
