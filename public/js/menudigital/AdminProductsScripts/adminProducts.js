@@ -162,7 +162,7 @@ function construirCategoria (cat, contenedorMenu) {
       <!-- Cabecera de columnas -->
      <div class="admin-prod-header">
   <span>Producto</span>
-  <span>Acción</span>
+  <span>${canManageProducts ? 'Acción' : ''}</span>
 </div>
     </div>`
 

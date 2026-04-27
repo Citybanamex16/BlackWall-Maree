@@ -35,11 +35,6 @@ let datosParaEnviar = null
 // Cuando carga la pagina
 
 document.addEventListener('DOMContentLoaded', () => {
-  if (!canManageIngredients) {
-    document.getElementById('btnRegistrarIngrediente')?.remove()
-    document.querySelector('a[href="/admin/metricas-ingredientes"]')?.remove()
-  }
-
   cargarTablaIngredientes()
   if (canManageIngredients) {
     cargarCategorias()
