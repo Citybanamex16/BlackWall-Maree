@@ -11,18 +11,18 @@ const pool = mysql.createPool({
   database: 'mareedb',
   password: '280904',
   waitForConnection: true,
-  connectionLimit: 10 
+  connectionLimit: 10
 
 })
 */
 
 /* ==Contraseñas y usuario ==
 Usuario: CL85565990
-Pass: CL006901! 
+Pass: CL006901!
 
 /*
 
-/*
+
 // Charly
 
 // Pool de conexiones
@@ -31,6 +31,7 @@ const pool = mysql.createPool({
   user: 'root',
   database: 'mareebd',
   password: '',
+  charset: 'utf8mb4_spanish2_ci' ,
   waitForConnection: true,
   connectionLimit: 10
 
@@ -52,18 +53,19 @@ const pool = mysql.createPool({
 
 })
 
-/* Santi
-// Pool de conexiones
+// Santi
+/* Pool de conexiones
 
 const pool = mysql.createPool({
   host: 'mysql-maree2.alwaysdata.net',
   user: 'maree2',
-  database: 'maree2_final',
+  database: 'maree2_37',
   password: 'maree123',
-  waitForConnection: true,
+  waitForConnections: true,
   connectionLimit: 10
 
 })
+
 */
 
 /*
@@ -75,19 +77,21 @@ const pool = mysql.createPool({
   user: 'maree2',
   database: 'maree2_final',
   password: 'maree123',
-  waitForConnection: true,
+  waitForConnections: true,
   connectionLimit: 10
 
 })
 */
 
-/* Pool de conexiones - Andy :)
+/*
+// Pool de conexiones - Andy :)
+
 const pool = mysql.createPool({
   host: 'localhost',
   user: 'root',
   database: 'mareebd',
   password: '',
-  waitForConnection: true,
+  waitForConnections: true,
   connectionLimit: 10
 
 })

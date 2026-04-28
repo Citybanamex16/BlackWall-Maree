@@ -143,6 +143,7 @@
               <th>Fecha</th>
               <th>Es laboral</th>
               <th>Descripción</th>
+              <th>Acciones</th>
             </tr>
           </thead>
           <tbody>
@@ -159,6 +160,14 @@
                   <% } %>
                 </td>
                 <td><%= dia.descripcion || '' %></td>
+                <td>
+                  <button
+                    class="btn-danger btn-eliminar-dia"
+                    data-id="<%= dia.id_calendario %>"
+                    data-fecha="<%= dia.fecha ? String(dia.fecha).slice(0, 10) : '' %>">
+                    Eliminar
+                  </button>
+                </td>
               </tr>
             <% }) %>
           </tbody>
@@ -167,6 +176,11 @@
     <% } %>
   </div>
 </main>
+
+
+<script src="/js/adminOrderNotifications.js"></script>
+<script src="/js/diasHabiles.js"></script>
+
 
 </body>
 </html>

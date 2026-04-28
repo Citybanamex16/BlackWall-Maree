@@ -6,8 +6,7 @@ const seccionCheckout = document.getElementById('seccion-checkout')
 
 let pedido = JSON.parse(localStorage.getItem('pedido') || '[]')
 
-console.log("Pedido guardado: ",pedido)
-
+console.log('Pedido guardado: ', pedido)
 
 // Helpers
 
@@ -39,8 +38,7 @@ const htmlIngredientes = (item) => {
     : ''
 }
 
-
-// fin de helpers 
+// fin de helpers
 
 // MODAL de orden
 const crearOverlay = () => {
@@ -138,6 +136,18 @@ const abrirModalCheckout = () => {
         </p>
       </div>
 
+      <p style="font-size:13px;font-weight:600;color:#444;margin-bottom:6px;">
+        Especificaciones extra
+      </p>
+      <textarea id="input-descripcion" maxlength="500"
+        placeholder="Ej. Menos Nutella, sin azúcar glass, partir en dos..."
+        style="width:100%;min-height:84px;padding:10px 14px;border:1px solid #ddd;border-radius:6px;
+              font-size:14px;font-family:'Jost',sans-serif;margin-bottom:4px;
+              box-sizing:border-box;outline:none;resize:vertical;"></textarea>
+      <p id="contador-descripcion" style="font-size:12px;color:#aaa;margin-bottom:16px;">
+        500 caracteres restantes
+      </p>
+
       <p id="error-servidor"
         style="display:none;color:#e74c3c;font-size:12px;margin-bottom:12px;">
         Hubo un error al procesar tu pedido. Intenta de nuevo.
@@ -153,6 +163,14 @@ const abrirModalCheckout = () => {
   `
 
   document.body.appendChild(overlay)
+
+  const inputDescripcion = document.getElementById('input-descripcion')
+  const contadorDescripcion = document.getElementById('contador-descripcion')
+
+  inputDescripcion.addEventListener('input', () => {
+    const restantes = 500 - inputDescripcion.value.length
+    contadorDescripcion.textContent = `${restantes} caracteres restantes`
+  })
 
   document.getElementById('cerrar-checkout').addEventListener('click', cerrarModal)
   overlay.addEventListener('click', (e) => {
@@ -179,6 +197,7 @@ const abrirModalCheckout = () => {
     const direccion = document.getElementById('input-direccion')?.value.trim() || ''
     const errorServ = document.getElementById('error-servidor')
     const errorDir = document.getElementById('error-direccion')
+    const descripcion = document.getElementById('input-descripcion')?.value.trim() || ''
 
     let telefono, nombre
 
@@ -224,7 +243,8 @@ const abrirModalCheckout = () => {
             forma: formaSeleccionada,
             telefono,
             nombre,
-            direccion: formaSeleccionada === 'Delivery' ? direccion : null
+            direccion: formaSeleccionada === 'Delivery' ? direccion : null,
+            descripcion
           })
         })
           .then(r => r.json())
@@ -248,11 +268,11 @@ const abrirModalConfirmacion = (forma, telefono, direccion) => {
   const overlay = crearOverlay()
 
   const resumenItems = pedido.map(item => {
-  const nombre     = esPersonalizado(item) ? item.producto_base : item.nombre
-  const precioText = '$' + precioNumerico(item).toFixed(2)
-  const detalle    = htmlIngredientes(item)
+    const nombre = esPersonalizado(item) ? item.producto_base : item.nombre
+    const precioText = '$' + precioNumerico(item).toFixed(2)
+    const detalle = htmlIngredientes(item)
 
-  return `
+    return `
     <div style="padding:10px 0;border-bottom:1px solid #f0f0f0;">
       <div style="display:flex;justify-content:space-between;">
         <span style="font-size:14px;color:#333;">${nombre}</span>
@@ -261,7 +281,7 @@ const abrirModalConfirmacion = (forma, telefono, direccion) => {
       ${detalle}
     </div>
   `
-}).join('')
+  }).join('')
 
   const totalConfirm = pedido.reduce((sum, item) => sum + precioNumerico(item), 0)
 
@@ -343,7 +363,7 @@ const renderPedido = () => {
 
     // ── Nombre y descripción según tipo ──
     const nombre = esPersonalizado(item) ? item.producto_base : (item.nombre || '—')
-    const desc   = esPersonalizado(item)
+    const desc = esPersonalizado(item)
       ? htmlIngredientes(item)
       : (item.desc?.trim() ? `<p style="font-size:13px;color:#777;margin:4px 0 0 0;">${item.desc}</p>` : '')
 

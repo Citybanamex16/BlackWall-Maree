@@ -1,4 +1,5 @@
 console.log('adminIngredientes.js cargadouu')
+const canManageIngredients = window.canManageIngredients === true
 
 // Referencias del DOM
 const btnRegistrar = document.getElementById('btnRegistrarIngrediente')
@@ -7,7 +8,7 @@ const btnCerrarRegistro = document.getElementById('btnCerrarRegistro')
 const btnConfirmarRegistro = document.getElementById('btnConfirmarRegistro')
 
 const inputNombre = document.getElementById('inputNombre')
-const selectCategoria = document.getElementById('selectCategoria')
+const checksCategoriasContainer = document.getElementById('checksCategorias')
 const inputPrecio = document.getElementById('inputPrecio')
 const inputImagen = document.getElementById('inputImagen')
 const checkActivo = document.getElementById('checkActivo')
@@ -35,7 +36,9 @@ let datosParaEnviar = null
 
 document.addEventListener('DOMContentLoaded', () => {
   cargarTablaIngredientes()
-  cargarCategorias()
+  if (canManageIngredients) {
+    cargarCategorias()
+  }
 })
 
 // Tabluki
@@ -76,24 +79,29 @@ async function cargarTablaIngredientes () {
         ? '<span class="badge badge-activo">Disponible</span>'
         : '<span class="badge badge-inactivo">Inactivo</span>'
 
+      const cats = ing.categorias || [ing.Categoría]
+      const badgesCats = cats.map(c => `<span class="badge badge-cat">${c}</span>`).join(' ')
+
       tr.innerHTML = `
         <td class="muted" style="font-size:12px;font-family:monospace;">${ing.ID_Insumo}</td>
         <td style="font-weight:500;">${ing.Nombre}</td>
-        <td><span class="badge badge-cat">${ing.Categoría}</span></td>
+        <td>${badgesCats}</td>
         <td style="color:#b5956a;font-weight:500;">$${parseFloat(ing.Precio).toFixed(2)}</td>
         <td>${badgeEstado}</td>
-        <td><button class="btn-eliminar" data-id="${ing.ID_Insumo}" data-nombre="${ing.Nombre}">Eliminar</button></td>
+        <td>${canManageIngredients ? `<button class="btn-eliminar" data-id="${ing.ID_Insumo}" data-nombre="${ing.Nombre}">Eliminar</button>` : ''}</td>
       `
       tbody.appendChild(tr)
 
-      tr.querySelector('.btn-eliminar').addEventListener('click', (e) => {
-        abrirModalEliminar(e.target.dataset.id, e.target.dataset.nombre)
-      })
+      if (canManageIngredients) {
+        tr.querySelector('.btn-eliminar').addEventListener('click', (e) => {
+          abrirModalEliminar(e.target.dataset.id, e.target.dataset.nombre)
+        })
 
-      tr.addEventListener('click', (e) => {
-        if (e.target.classList.contains('btn-eliminar')) return
-        abrirModalEditar(ing)
-      })
+        tr.addEventListener('click', (e) => {
+          if (e.target.classList.contains('btn-eliminar')) return
+          abrirModalEditar(ing)
+        })
+      }
     })
 
     tabla.appendChild(tbody)
@@ -114,76 +122,81 @@ async function cargarCategorias () {
     const obj = await res.json()
     const categorias = obj.data
 
-    selectCategoria.innerHTML = '<option value="">Selecciona una categoría</option>'
+    checksCategoriasContainer.innerHTML = ''
     categorias.forEach(cat => {
-      const opt = document.createElement('option')
-      opt.value = cat.Nombre
-      opt.textContent = cat.Nombre
-      selectCategoria.appendChild(opt)
+      const label = document.createElement('label')
+      label.className = 'maree-checkbox-row'
+      label.style.cssText = 'display:inline-flex;align-items:center;gap:6px;margin:0;cursor:pointer;'
+      label.innerHTML = `<input type="checkbox" class="cat-check-registro" value="${cat.Nombre}"> ${cat.Nombre}`
+      checksCategoriasContainer.appendChild(label)
     })
   } catch (error) {
     console.error('Error cargando categorías:', error)
-    selectCategoria.innerHTML = '<option value="">Error al cargar</option>'
+    checksCategoriasContainer.innerHTML = '<span style="color:red;font-size:13px;">Error al cargar</span>'
   }
 }
 
 // Abrir formulario
-btnRegistrar.addEventListener('click', (e) => {
-  e.preventDefault()
-  limpiarFormulario()
-  modalRegistro.showModal()
-})
+if (canManageIngredients && btnRegistrar && modalRegistro) {
+  btnRegistrar.addEventListener('click', (e) => {
+    e.preventDefault()
+    limpiarFormulario()
+    modalRegistro.showModal()
+  })
 
-btnCerrarRegistro.addEventListener('click', (e) => {
-  e.preventDefault()
-  modalRegistro.close()
-})
+  btnCerrarRegistro.addEventListener('click', (e) => {
+    e.preventDefault()
+    modalRegistro.close()
+  })
+}
 
 // Validaci´ón nombre
-btnConfirmarRegistro.addEventListener('click', async (e) => {
-  e.preventDefault()
+if (canManageIngredients && btnConfirmarRegistro) {
+  btnConfirmarRegistro.addEventListener('click', async (e) => {
+    e.preventDefault()
 
-  const datos = obtenerDatosFormulario()
+    const datos = obtenerDatosFormulario()
 
-  // Valida campos vacíos
-  try {
-    const resValidar = await fetch('/admin/api/ingredientes/validar', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(datos)
-    })
-    const objValidar = await resValidar.json()
+    // Valida campos vacíos
+    try {
+      const resValidar = await fetch('/admin/api/ingredientes/validar', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(datos)
+      })
+      const objValidar = await resValidar.json()
 
-    if (objValidar.camposVacios) {
-      mostrarError('Campos incompletos', `El campo "${objValidar.campoFaltante}" es obligatorio.`)
+      if (objValidar.camposVacios) {
+        mostrarError('Campos incompletos', `El campo "${objValidar.campoFaltante}" es obligatorio.`)
+        return
+      }
+    } catch (error) {
+      mostrarError('Error de validación', 'No se pudo validar el formulario.')
+      console.error(error)
       return
     }
-  } catch (error) {
-    mostrarError('Error de validación', 'No se pudo validar el formulario.')
-    console.error(error)
-    return
-  }
 
-  // Verifica duplicados (nombre)
-  try {
-    const resNombre = await fetch(`/admin/api/ingredientes/verificarNombre?nombre=${encodeURIComponent(datos.Nombre)}`)
-    const objNombre = await resNombre.json()
+    // Verifica duplicados (nombre)
+    try {
+      const resNombre = await fetch(`/admin/api/ingredientes/verificarNombre?nombre=${encodeURIComponent(datos.Nombre)}`)
+      const objNombre = await resNombre.json()
 
-    if (objNombre.existe) {
-      mostrarError('Ingrediente ya existente', `Ya existe un ingrediente con el nombre "${datos.Nombre}".`)
+      if (objNombre.existe) {
+        mostrarError('Ingrediente ya existente', `Ya existe un ingrediente con el nombre "${datos.Nombre}".`)
+        return
+      }
+    } catch (error) {
+      mostrarError('Error de verificación', 'No se pudo verificar el nombre del ingrediente.')
+      console.error(error)
       return
     }
-  } catch (error) {
-    mostrarError('Error de verificación', 'No se pudo verificar el nombre del ingrediente.')
-    console.error(error)
-    return
-  }
 
-  // Resumen
-  datosParaEnviar = datos
-  modalRegistro.close()
-  mostrarResumen(datos)
-})
+    // Resumen
+    datosParaEnviar = datos
+    modalRegistro.close()
+    mostrarResumen(datos)
+  })
+}
 
 // Resumen final
 function mostrarResumen (datos) {
@@ -191,7 +204,7 @@ function mostrarResumen (datos) {
 
   const campos = [
     { label: 'Nombre', value: datos.Nombre },
-    { label: 'Categoría', value: datos.Categoría },
+    { label: 'Categorías', value: (datos.Categorias || []).join(', ') || '—' },
     { label: 'Precio', value: `$${parseFloat(datos.Precio).toFixed(2)}` },
     { label: 'Imagen', value: datos.Imagen || '—' },
     { label: 'Disponible', value: datos.Activo ? 'Sí' : 'No' }
@@ -217,44 +230,48 @@ function mostrarResumen (datos) {
   modalResumen.showModal()
 }
 
-btnVolverFormulario.addEventListener('click', (e) => {
-  e.preventDefault()
-  modalResumen.close()
-  modalRegistro.showModal()
-})
+if (canManageIngredients && btnVolverFormulario) {
+  btnVolverFormulario.addEventListener('click', (e) => {
+    e.preventDefault()
+    modalResumen.close()
+    modalRegistro.showModal()
+  })
+}
 
 // Guardado en BD
-btnConfirmarCreacion.addEventListener('click', async (e) => {
-  e.preventDefault()
+if (canManageIngredients && btnConfirmarCreacion) {
+  btnConfirmarCreacion.addEventListener('click', async (e) => {
+    e.preventDefault()
 
-  if (!datosParaEnviar) {
-    mostrarError('Error interno', 'No hay datos para guardar.')
-    return
-  }
-
-  try {
-    const res = await fetch('/admin/api/ingredientes/crear', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(datosParaEnviar)
-    })
-
-    const obj = await res.json()
-
-    if (obj.success) {
-      modalResumen.close()
-      exitoTitulo.textContent = `¡${datosParaEnviar.Nombre} registrado!`
-      exitoMensaje.textContent = 'El ingrediente fue guardado exitosamente en el catálogo.'
-      modalExito.showModal()
-      cargarTablaIngredientes()
-    } else {
-      mostrarError('Error al registrar', obj.message || 'Error desconocido')
+    if (!datosParaEnviar) {
+      mostrarError('Error interno', 'No hay datos para guardar.')
+      return
     }
-  } catch (error) {
-    mostrarError('Error interno', `Fallo al conectar con el servidor: ${error}`)
-    console.error(error)
-  }
-})
+
+    try {
+      const res = await fetch('/admin/api/ingredientes/crear', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(datosParaEnviar)
+      })
+
+      const obj = await res.json()
+
+      if (obj.success) {
+        modalResumen.close()
+        exitoTitulo.textContent = `¡${datosParaEnviar.Nombre} registrado!`
+        exitoMensaje.textContent = 'El ingrediente fue guardado exitosamente en el catálogo.'
+        modalExito.showModal()
+        cargarTablaIngredientes()
+      } else {
+        mostrarError('Error al registrar', obj.message || 'Error desconocido')
+      }
+    } catch (error) {
+      mostrarError('Error interno', `Fallo al conectar con el servidor: ${error}`)
+      console.error(error)
+    }
+  })
+}
 
 // Cerrado de los modales
 btnCerrarError.addEventListener('click', () => modalError.close())
@@ -266,9 +283,10 @@ btnCerrarExito.addEventListener('click', () => {
 
 // Helpers
 function obtenerDatosFormulario () {
+  const checks = checksCategoriasContainer.querySelectorAll('.cat-check-registro:checked')
   return {
     Nombre: inputNombre.value.trim(),
-    Categoría: selectCategoria.value,
+    Categorias: Array.from(checks).map(c => c.value),
     Precio: inputPrecio.value,
     Imagen: inputImagen.value.trim(),
     Activo: checkActivo.checked
@@ -277,7 +295,7 @@ function obtenerDatosFormulario () {
 
 function limpiarFormulario () {
   inputNombre.value = ''
-  selectCategoria.value = ''
+  checksCategoriasContainer.querySelectorAll('.cat-check-registro').forEach(c => { c.checked = false })
   inputPrecio.value = ''
   inputImagen.value = ''
   checkActivo.checked = true
@@ -326,41 +344,45 @@ async function abrirModalEliminar (id, nombre) {
   }
 }
 
-btnCancelarEliminar.addEventListener('click', () => {
-  modalEliminar.close()
-  idParaEliminar = null
-})
-
-btnConfirmarEliminar.addEventListener('click', async () => {
-  if (!idParaEliminar) return
-
-  try {
-    const res = await fetch(`/admin/api/ingredientes/${idParaEliminar}/eliminar`, {
-      method: 'DELETE'
-    })
-    const obj = await res.json()
-
-    if (obj.success) {
-      modalEliminar.close()
-      exitoTitulo.textContent = 'Ingrediente eliminado'
-      exitoMensaje.textContent = 'El ingrediente fue eliminado correctamente del catálogo.'
-      modalExito.showModal()
-      cargarTablaIngredientes()
-    } else {
-      mostrarError('Error al eliminar', obj.message || 'Error desconocido')
-    }
-  } catch (error) {
-    mostrarError('Error interno', `${error}`)
-  } finally {
+if (canManageIngredients && btnCancelarEliminar) {
+  btnCancelarEliminar.addEventListener('click', () => {
+    modalEliminar.close()
     idParaEliminar = null
-  }
-})
+  })
+}
+
+if (canManageIngredients && btnConfirmarEliminar) {
+  btnConfirmarEliminar.addEventListener('click', async () => {
+    if (!idParaEliminar) return
+
+    try {
+      const res = await fetch(`/admin/api/ingredientes/${idParaEliminar}/eliminar`, {
+        method: 'DELETE'
+      })
+      const obj = await res.json()
+
+      if (obj.success) {
+        modalEliminar.close()
+        exitoTitulo.textContent = 'Ingrediente eliminado'
+        exitoMensaje.textContent = 'El ingrediente fue eliminado correctamente del catálogo.'
+        modalExito.showModal()
+        cargarTablaIngredientes()
+      } else {
+        mostrarError('Error al eliminar', obj.message || 'Error desconocido')
+      }
+    } catch (error) {
+      mostrarError('Error interno', `${error}`)
+    } finally {
+      idParaEliminar = null
+    }
+  })
+}
 
 // Modal modificar ingredientes
 const modalEditar = document.getElementById('ModalEditar')
 const editarSubtitulo = document.getElementById('editarSubtitulo')
 const editNombre = document.getElementById('editNombre')
-const editCategoria = document.getElementById('editCategoria')
+const editChecksCatContainer = document.getElementById('editChecksCategorias')
 const editPrecio = document.getElementById('editPrecio')
 const editImagen = document.getElementById('editImagen')
 const editActivo = document.getElementById('editActivo')
@@ -375,102 +397,108 @@ async function abrirModalEditar (ing) {
   nombreOriginalEditar = ing.Nombre
   editarSubtitulo.textContent = `Editando: ${ing.Nombre}`
 
-  // Llena campos con datos actuales
   editNombre.value = ing.Nombre
   editPrecio.value = ing.Precio
   editImagen.value = ing.Imagen ?? ''
   editActivo.checked = ing.Activo === 1
 
-  // Carga categorias y selecciona la que ya esta seleccionada
+  const ingCategorias = ing.categorias || [ing.Categoría]
+
   const res = await fetch('/admin/api/ingredientes/categorias')
   const obj = await res.json()
-  editCategoria.innerHTML = ''
+  editChecksCatContainer.innerHTML = ''
   obj.data.forEach(cat => {
-    const opt = document.createElement('option')
-    opt.value = cat.Nombre
-    opt.textContent = cat.Nombre
-    if (cat.Nombre === ing.Categoría) opt.selected = true
-    editCategoria.appendChild(opt)
+    const label = document.createElement('label')
+    label.className = 'maree-checkbox-row'
+    label.style.cssText = 'display:inline-flex;align-items:center;gap:6px;margin:0;cursor:pointer;'
+    const checked = ingCategorias.includes(cat.Nombre) ? 'checked' : ''
+    label.innerHTML = `<input type="checkbox" class="cat-check-editar" value="${cat.Nombre}" ${checked}> ${cat.Nombre}`
+    editChecksCatContainer.appendChild(label)
   })
 
   modalEditar.showModal()
 }
 
-btnCancelarEditar.addEventListener('click', () => {
-  modalEditar.close()
-  idParaEditar = null
-})
+if (canManageIngredients && btnCancelarEditar) {
+  btnCancelarEditar.addEventListener('click', () => {
+    modalEditar.close()
+    idParaEditar = null
+  })
+}
 
-btnGuardarEditar.addEventListener('click', async () => {
-  if (!idParaEditar) return
+if (canManageIngredients && btnGuardarEditar) {
+  btnGuardarEditar.addEventListener('click', async () => {
+    if (!idParaEditar) return
 
-  const nombre = editNombre.value.trim()
-  const precio = parseFloat(editPrecio.value)
+    const nombre = editNombre.value.trim()
+    const precio = parseFloat(editPrecio.value)
+    const categorias = Array.from(editChecksCatContainer.querySelectorAll('.cat-check-editar:checked')).map(c => c.value)
 
-  // Valida campos vacios
-  if (!nombre || !editCategoria.value || !editPrecio.value) {
-    mostrarError('Campos incompletos', 'Nombre, Categoría y Precio son obligatorios.')
-    return
-  }
-
-  // Valida que el precio no sea negativo
-  if (isNaN(precio) || precio < 0) {
-    mostrarError('Precio inválido', 'El precio debe ser un número positivo.')
-    return
-  }
-
-  // Verifica duplicado solo si el nombre cambio
-  if (nombre !== nombreOriginalEditar) {
-    try {
-      const resNombre = await fetch(`/admin/api/ingredientes/verificarNombre?nombre=${encodeURIComponent(nombre)}`)
-      const objNombre = await resNombre.json()
-      if (objNombre.existe) {
-        mostrarError('Nombre duplicado', `Ya existe un ingrediente con el nombre "${nombre}".`)
-        return
-      }
-    } catch (error) {
-      mostrarError('Error de verificación', 'No se pudo verificar el nombre.')
+    // 1. Valida campos vacios
+    if (!nombre || !categorias.length || !editPrecio.value) {
+      mostrarError('Campos incompletos', 'Nombre, al menos una Categoría y Precio son obligatorios.')
       return
     }
-  }
 
-  const body = {
-    Nombre: editNombre.value.trim(),
-    Categoría: editCategoria.value,
-    Precio: editPrecio.value,
-    Activo: editActivo.checked,
-    Imagen: editImagen.value.trim()
-  }
-
-  try {
-    const res = await fetch(`/admin/api/ingredientes/${idParaEditar}/actualizar`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(body)
-    })
-
-    // Si el servidor responde con error
-    if (!res.ok) {
-      // Intentamos obtener el mensaje que manda el backendsito, si no, usa uno general
-      const errorData = await res.json().catch(() => ({}))
-      throw new Error(errorData.message || 'La base de datos no está disponible.')
+    // 2. Valida que el precio no sea negativo
+    if (isNaN(precio) || precio < 0) {
+      mostrarError('Precio inválido', 'El precio debe ser un número positivo.')
+      return
     }
 
-    const obj = await res.json()
-
-    if (obj.success) {
-      modalEditar.close()
-      exitoTitulo.textContent = 'Ingrediente actualizado'
-      exitoMensaje.textContent = 'Los cambios fueron guardados correctamente.'
-      modalExito.showModal()
-      cargarTablaIngredientes()
-    } else {
-      mostrarError('Error al actualizar', obj.message || 'Error desconocido')
+    // 3. Verifica duplicado solo si el nombre cambio
+    if (nombre !== nombreOriginalEditar) {
+      try {
+        const resNombre = await fetch(`/admin/api/ingredientes/verificarNombre?nombre=${encodeURIComponent(nombre)}`)
+        const objNombre = await resNombre.json()
+        if (objNombre.existe) {
+          mostrarError('Nombre duplicado', `Ya existe un ingrediente con el nombre "${nombre}".`)
+          return
+        }
+      } catch (error) {
+        mostrarError('Error de verificación', 'No se pudo verificar el nombre.')
+        return
+      }
     }
-  } catch (error) {
+
+    // 4. Construcción del Body (Solo una vez)
+    const body = {
+      Nombre: nombre,
+      Categorias: categorias,
+      Precio: precio,
+      Activo: editActivo.checked,
+      Imagen: editImagen.value.trim()
+    }
+
+    try {
+      const res = await fetch(`/admin/api/ingredientes/${idParaEditar}/actualizar`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body)
+      })
+
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}))
+        throw new Error(errorData.message || 'La base de datos no está disponible.')
+      }
+
+      const obj = await res.json()
+
+      if (obj.success) {
+        modalEditar.close()
+        exitoTitulo.textContent = 'Ingrediente actualizado'
+        exitoMensaje.textContent = 'Los cambios fueron guardados correctamente.'
+        modalExito.showModal()
+        cargarTablaIngredientes()
+      } else {
+        mostrarError('Error al actualizar', obj.message || 'Error desconocido')
+      }
+    } catch (error) {
+
     // Si se cae la BD, el "throw new Error" de arriba manda la ejecucion para aca abajo
-    mostrarError('Error al intentar modificar ingrediente', error.message)
-  } finally {
-    idParaEditar = null
-  }
-})
+      mostrarError('Error al intentar modificar ingrediente', error.message)
+    } finally {
+      idParaEditar = null
+    }
+  })
+}

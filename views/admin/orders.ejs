@@ -167,6 +167,8 @@
 </head>
 
 <body>
+  <% const dashboardHref = rolUsuario === 'Colaborador' ? '/colaborador' : '/admin' %>
+  <% const dashboardLabel = rolUsuario === 'Colaborador' ? 'Panel de colaborador' : 'Panel de administración' %>
   <nav class="navbar" role="navigation">
     <div class="navbar-brand">
       <div class="navbar-item">
@@ -180,8 +182,7 @@
 
   <section class="section">
     <div class="container">
-
-      <a href="/admin" class="back-link">← Admin Dashboard</a>
+      <a href="<%= dashboardHref %>" class="back-link">Volver a <%= dashboardLabel %></a>
 
       <div class="ing-header">
         <div>
@@ -221,6 +222,7 @@
                 data-tipo="<%= p.tipo_orden || '—' %>"
                 data-fecha="<%= fechaP %>"
                 data-direccion="<%= p.direccion || '' %>"
+                data-descripcion="<%= p.descripcion || '' %>"
                 data-estado="<%= p.estado_orden %>"
                 style="cursor:pointer;">
                 <div class="pending-row-info">
@@ -259,6 +261,7 @@
               <th>Teléfono</th>
               <th>Tipo</th>
               <th>Dirección</th>
+              <th>Especificaciones</th>
               <th>Estatus</th>
               <th>Fecha</th>
               <th>Acciones</th>
@@ -286,12 +289,14 @@
                   data-tipo="<%= pedido.tipo_orden || '—' %>"
                   data-fecha="<%= fechaStr %>"
                   data-direccion="<%= pedido.direccion || '' %>"
+                  data-descripcion="<%= pedido.descripcion || '' %>"
                   data-estado="<%= pedido.estado_orden %>">
                   <td><strong><%= pedido.id_orden %></strong></td>
                   <td><%= pedido.nombre_cliente || 'Sin nombre' %></td>
                   <td><%= pedido.telefono || '—' %></td>
                   <td><%= pedido.tipo_orden || '—' %></td>
                   <td><%= pedido.direccion || '—' %></td>
+                  <td><%= pedido.descripcion || '—' %></td>
                   <td class="order-status-cell">
                     <span class="order-badge <%= badgeClass %>"><%= pedido.estado_orden %></span>
                   </td>
@@ -311,7 +316,7 @@
               <% }) %>
             <% } else { %>
               <tr id="empty-row">
-                <td colspan="8" style="text-align:center;padding:32px;color:#aaa;">
+                <td colspan="9" style="text-align:center;padding:32px;color:#aaa;">
                   No hay órdenes activas.
                 </td>
               </tr>
@@ -361,6 +366,15 @@
             <p class="detail-label">Dirección</p>
             <p class="detail-value" id="detail-direccion"></p>
           </div>
+          <div style="grid-column:1 / -1;">
+            <p class="detail-label">Especificaciones extra</p>
+            <p class="detail-value" id="detail-descripcion"></p>
+          </div>
+        </div>
+
+        <div style="grid-column:1 / -1;">
+          <p class="detail-label">Especificaciones extra</p>
+          <p class="detail-value" id="detail-descripcion"></p>
         </div>
 
         <hr style="margin:8px 0 16px;border:none;border-top:1px solid #eee;">
@@ -463,6 +477,7 @@
       div.dataset.tipo      = p.tipo_orden || '—'
       div.dataset.fecha     = fechaStr(p.fecha)
       div.dataset.direccion = p.direccion || ''
+      div.dataset.descripcion = p.descripcion || ''
       div.dataset.estado    = p.estado_orden
       div.style.cursor      = 'pointer'
       div.innerHTML = `
@@ -571,6 +586,8 @@
       row.addEventListener('click', (e) => {
         if (e.target.closest('button')) return
         window._openDetailModal(row, false)
+        document.getElementById('detail-descripcion').textContent =
+          row.dataset.descripcion || 'Sin especificaciones'
       })
       row.querySelector('.btn-accept-order').addEventListener('click', async (e) => {
         e.stopPropagation()
@@ -594,5 +611,6 @@
 
     setInterval(pollOrders, 15000)
   </script>
+  <script src="/js/adminOrderNotifications.js"></script>
 </body>
 </html>

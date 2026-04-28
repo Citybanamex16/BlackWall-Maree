@@ -468,11 +468,15 @@ exports.getIngredientes = (req, res, next) => {
 // Regresa lista de ingredientes activos (para llenar la tabla en el front yuhhhh)
 exports.getIngredientesLista = async (req, res, next) => {
   try {
-    const [ingredientes] = await Ingrediente.fetchAll()
+    const [rows] = await Ingrediente.fetchAll()
+    const data = rows.map(row => ({
+      ...row,
+      categorias: row.cats_raw ? row.cats_raw.split('|') : [row.Categoría]
+    }))
     res.status(200).json({
       success: true,
       message: 'Ingredientes recuperados',
-      data: ingredientes
+      data
     })
   } catch (error) {
     console.error('Error en getIngredientesLista:', error)
@@ -552,7 +556,7 @@ exports.validarIngrediente = async (req, res, next) => {
 exports.crearIngrediente = async (req, res, next) => {
   try {
     const { Nombre, Precio, Activo, Imagen } = req.body
-    const Categoria = req.body['Categoría']
+    const Categorias = req.body.Categorias // array de categorías seleccionadas
 
     // Validación de campos obligatorios
     const resultado = Ingrediente.verificarCamposVacios(req.body)
@@ -576,16 +580,15 @@ exports.crearIngrediente = async (req, res, next) => {
     const nuevoID = Ingrediente.generarID()
     console.log('Nuevo ID Ingrediente:', nuevoID)
 
-    console.log('Datos a insertar:', { nuevoID, Nombre, Categoria, Precio, Activo, Imagen })
-
     await Ingrediente.insertNuevoIngrediente(
       nuevoID,
       Nombre.trim(),
-      Categoria,
+      Categorias[0],
       parseFloat(Precio),
       Activo !== undefined ? Activo : true,
       Imagen || null
     )
+    await Ingrediente.insertCategoriasInsumo(nuevoID, Categorias)
 
     res.status(200).json({
       success: true,
@@ -635,16 +638,18 @@ exports.actualizarIngrediente = async (req, res, next) => {
   try {
     const { id } = req.params
     const { Nombre, Precio, Activo, Imagen } = req.body
-    const Categoria = req.body['Categoría']
+    const Categorias = req.body.Categorias // array de categorías seleccionadas
 
-    if (!id || !Nombre || !Categoria || !Precio) {
+    if (!id || !Nombre || !Categorias || !Categorias.length || !Precio) {
       return res.status(400).json({ success: false, message: 'Campos obligatorios faltantes' })
     }
 
     await Ingrediente.actualizarIngrediente(
-      id, Nombre.trim(), Categoria,
+      id, Nombre.trim(), Categorias[0],
       parseFloat(Precio), Activo, Imagen || null
     )
+    await Ingrediente.deleteCategoriasInsumo(id)
+    await Ingrediente.insertCategoriasInsumo(id, Categorias)
 
     res.status(200).json({ success: true, message: 'Ingrediente actualizado correctamente' })
   } catch (error) {
@@ -874,6 +879,10 @@ exports.postDiasHabiles = async (req, res, next) => {
 }
 // Sección Categorias
 
+function parsePermiteCremaBatida (value) {
+  return value === true || value === 'true' || value === 1 || value === '1' ? 1 : 0
+}
+
 // GET categorias-tipos
 exports.getCategoriasTipos = (req, res, next) => {
   res.render('admin/categoriasTipos')
@@ -908,7 +917,7 @@ exports.verificarNombreCategoria = async (req, res, next) => {
 // Inserta nueva categoria
 exports.crearCategoria = async (req, res, next) => {
   try {
-    const { Nombre } = req.body
+    const { Nombre, PermiteCremaBatida } = req.body
     if (!Nombre || String(Nombre).trim() === '') {
       return res.status(400).json({ success: false, message: 'El nombre es obligatorio' })
     }
@@ -916,7 +925,10 @@ exports.crearCategoria = async (req, res, next) => {
     if (existente.length > 0) {
       return res.status(409).json({ success: false, message: 'Ya existe una categoría con ese nombre' })
     }
-    await Categoria.insertNuevaCategoria(Nombre.trim())
+    await Categoria.insertNuevaCategoria(
+      Nombre.trim(),
+      parsePermiteCremaBatida(PermiteCremaBatida)
+    )
     res.status(200).json({ success: true, message: 'Categoría registrada exitosamente' })
   } catch (error) {
     console.error('Error en crearCategoria:', error)
@@ -945,22 +957,37 @@ exports.verificarCategoriaEnUso = async (req, res, next) => {
 exports.actualizarCategoria = async (req, res, next) => {
   try {
     const oldNombre = decodeURIComponent(req.params.nombre)
-    const { Nombre: newNombre } = req.body
+    const { Nombre: newNombre, PermiteCremaBatida } = req.body
 
     if (!newNombre || String(newNombre).trim() === '') {
       return res.status(400).json({ success: false, message: 'El nombre es obligatorio' })
     }
 
-    if (oldNombre === newNombre.trim()) {
+    const nombreFinal = newNombre.trim()
+    const permiteCremaBatida = parsePermiteCremaBatida(PermiteCremaBatida)
+    const [actualRows] = await Categoria.buscarPorNombre(oldNombre)
+    const categoriaActual = actualRows[0]
+
+    if (!categoriaActual) {
+      return res.status(404).json({ success: false, message: 'Categoría no encontrada' })
+    }
+
+    const mismoNombre = oldNombre === nombreFinal
+    const mismaBandera = Number(categoriaActual.permiteCremaBatida) === permiteCremaBatida
+
+    if (mismoNombre && mismaBandera) {
       return res.status(200).json({ success: true, message: 'Sin cambios' })
     }
 
-    const [existente] = await Categoria.buscarPorNombre(newNombre.trim())
-    if (existente.length > 0) {
-      return res.status(409).json({ success: false, message: 'Ya existe una categoría con ese nombre' })
+    if (!mismoNombre) {
+      const [existente] = await Categoria.buscarPorNombre(nombreFinal)
+      if (existente.length > 0) {
+        return res.status(409).json({ success: false, message: 'Ya existe una categoría con ese nombre' })
+      }
+      await Categoria.actualizarCategoria(oldNombre, nombreFinal)
     }
 
-    await Categoria.actualizarCategoria(oldNombre, newNombre.trim())
+    await Categoria.actualizarPermiteCremaBatida(nombreFinal, permiteCremaBatida)
     res.status(200).json({ success: true, message: 'Categoría actualizada correctamente' })
   } catch (error) {
     console.error('Error en actualizarCategoria:', error)
@@ -1192,5 +1219,39 @@ exports.getMetricasRoyalty = async (request, response, next) => {
     })
   } catch (error) {
     console.log(error)
+  }
+}
+
+exports.postDeleteDiaHabil = async (req, res, next) => {
+  try {
+    const idCalendario = String(req.params.id || '').trim()
+
+    if (!idCalendario) {
+      return res.status(400).json({
+        ok: false,
+        mensaje: 'ID de día hábil inválido.'
+      })
+    }
+
+    const resultado = await Calendario.deleteById(idCalendario)
+
+    if (!resultado) {
+      return res.status(404).json({
+        ok: false,
+        mensaje: 'No fue posible eliminar el día hábil.'
+      })
+    }
+
+    return res.json({
+      ok: true,
+      mensaje: 'Día hábil eliminado correctamente.'
+    })
+  } catch (error) {
+    console.error('Error al eliminar día hábil:', error)
+
+    return res.status(500).json({
+      ok: false,
+      mensaje: 'Ocurrió un error al actualizar la base de datos.'
+    })
   }
 }

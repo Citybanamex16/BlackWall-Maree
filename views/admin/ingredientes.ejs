@@ -17,6 +17,10 @@
 </head>
 
 <body>
+<% const dashboardHref = rolUsuario === 'Colaborador' ? '/colaborador' : '/admin' %>
+<% const dashboardLabel = rolUsuario === 'Colaborador' ? 'Panel de colaborador' : 'Panel de administración' %>
+<% const canManageIngredients = rolUsuario === 'Administrador' %>
+<% const ingredientsSubtitle = canManageIngredients ? 'Catálogo de insumos del restaurante' : 'Consulta de insumos disponibles en el restaurante' %>
 
 <!-- NAVIGATION Bar-->
 <nav class="navbar" role="navigation">
@@ -32,15 +36,16 @@
 
 <section class="section">
   <div class="container">
+    <a href="<%= dashboardHref %>" class="back-link">Volver a <%= dashboardLabel %></a>
 
-    <a href="/admin" class="back-link">← Admin Dashboard</a>
 
     <!-- Encabezado -->
     <div class="ing-header">
       <div>
         <h1 class="page-title">Ingredientes</h1>
-        <p class="page-sub">Catálogo de insumos del restaurante</p>
+        <p class="page-sub"><%= ingredientsSubtitle %></p>
       </div>
+      <% if (canManageIngredients) { %>
       <div style="display:flex; gap:12px; align-items:center;">
         <a href="/admin/metricas-ingredientes" class="btn-maree" style="text-decoration:none; background:#b5956a;">
           📊 Ver Métricas
@@ -49,6 +54,7 @@
         + Nuevo Ingrediente
       </button>
       </div>
+      <% } %>
     </div>
 
     <!-- Tabla -->
@@ -73,10 +79,10 @@
     </div>
 
     <div class="maree-field">
-      <label class="maree-label" for="selectCategoria">Categoría</label>
-      <select class="maree-select" id="selectCategoria">
-        <option value="">Cargando...</option>
-      </select>
+      <label class="maree-label">Categorías</label>
+      <div id="checksCategorias" style="display:flex;flex-wrap:wrap;gap:10px;padding:6px 0;">
+        <span style="color:#999;font-size:13px;">Cargando...</span>
+      </div>
     </div>
 
     <div class="maree-field">
@@ -160,8 +166,8 @@
       <input class="maree-input" type="text" id="editNombre" maxlength="50">
     </div>
     <div class="maree-field">
-      <label class="maree-label">Categoría</label>
-      <select class="maree-select" id="editCategoria"></select>
+      <label class="maree-label">Categorías</label>
+      <div id="editChecksCategorias" style="display:flex;flex-wrap:wrap;gap:10px;padding:6px 0;"></div>
     </div>
     <div class="maree-field">
       <label class="maree-label">Precio ($)</label>
@@ -185,6 +191,10 @@
   </div>
 </dialog>
 
+<script>
+  window.canManageIngredients = <%- JSON.stringify(canManageIngredients) %>
+</script>
 <script src="/js/menudigital/AdminIngredientsScripts/adminIngredientes.js"></script>
+<script src="/js/adminOrderNotifications.js"></script>
 </body>
 </html>

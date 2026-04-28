@@ -1,1 +1,56 @@
-<!-- index colaborador-->
+<%- include('../partials/header_admin', { pageTitle }) %>
+
+<nav class="navbar" role="navigation">
+  <div class="navbar-brand">
+    <div class="navbar-item">
+      <div class="logo-area">
+        <span class="logo-text">MAREE</span>
+        <span class="logo-sub">Love at First Crepe</span>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<%- include('../partials/breadcrumbs') %>
+
+<main class="page-wrap">
+  <header style="margin-bottom: 32px;">
+    <h1 class="page-title">Panel de colaborador</h1>
+    <p class="page-sub">Accesos rápidos para la operación diaria.</p>
+  </header>
+
+  <div class="dashboard-grid">
+    <% dashboardCards.forEach((card) => { %>
+      <a
+        href="<%= card.url %>"
+        class="dashboard-card"
+        <% if (card.isScanner) { %>onclick="iniciarEscaneo(); return false;"<% } %>
+      >
+        <div class="icon-circle <%= card.colorClass %>"><%= card.icon %></div>
+        <p><%= card.title %></p>
+      </a>
+    <% }) %>
+  </div>
+
+  <div id="seccion-scanner-royalty" class="scanner-modal-overlay">
+    <div class="scanner-modal-content">
+      <div id="contenedor-dinamico-cliente"></div>
+
+      <div class="text-center mt-4">
+        <button
+          type="button"
+          onclick="cerrarPanelScanner()"
+          class="btn-base"
+          style="background: var(--c-bg-body); color: var(--c-text-muted);"
+        >
+          Cerrar
+        </button>
+      </div>
+    </div>
+  </div>
+</main>
+
+<script src="https://unpkg.com/html5-qrcode"></script>
+<script src="/js/Royalty/scannerHandler.js"></script>
+</body>
+</html>

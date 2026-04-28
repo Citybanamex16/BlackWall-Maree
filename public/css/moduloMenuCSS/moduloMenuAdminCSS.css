@@ -1438,4 +1438,292 @@ Spinner CSS
   margin-bottom: 6px;
 }
 
+/* ═══════════════════════════════════════════
+   BOTONES DE MODALES — paleta Marée
+   Reemplaza colores Bulma (teal/gris) por café/dorado
+═══════════════════════════════════════════ */
+
+/* Acción primaria → café dorado */
+.mymodal .button.is-primary,
+.mymodal #RegisterProduct,
+.mymodal #RegisterModification,
+.mymodal #submitFormsRegistrar,
+.mymodal #btnConfirmarAccion {
+  background-color: #b5956a !important;
+  border-color: #b5956a !important;
+  color: #fff !important;
+  font-family: 'Jost', sans-serif;
+  font-weight: 500;
+  letter-spacing: 0.5px;
+  transition: background 0.2s, transform 0.15s;
+}
+.mymodal .button.is-primary:hover,
+.mymodal #RegisterProduct:hover,
+.mymodal #RegisterModification:hover,
+.mymodal #submitFormsRegistrar:hover,
+.mymodal #btnConfirmarAccion:hover {
+  background-color: #9e7d55 !important;
+  border-color: #9e7d55 !important;
+  transform: translateY(-1px);
+}
+
+/* Acción secundaria (Cerrar/Cancelar) → borde suave */
+.mymodal .button.is-light,
+.mymodal .button:not([class*="is-"]) {
+  background-color: #faf7f3 !important;
+  border-color: #e0c9a8 !important;
+  color: #7a6040 !important;
+  font-family: 'Jost', sans-serif;
+}
+.mymodal .button.is-light:hover,
+.mymodal .button:not([class*="is-"]):hover {
+  background-color: #f0e8da !important;
+  border-color: #b5956a !important;
+}
+
+/* Desactivar → ámbar cálido */
+.mymodal .button.is-warning {
+  background-color: #f5e6c8 !important;
+  border-color: #d4a855 !important;
+  color: #7a5a1e !important;
+}
+.mymodal .button.is-warning:hover {
+  background-color: #ead5a4 !important;
+}
+
+/* Eliminar → rojo discreto, sin cambio */
+.mymodal .button.is-danger {
+  background-color: #fdf0f0 !important;
+  border-color: #e0a0a0 !important;
+  color: #9b2335 !important;
+}
+.mymodal .button.is-danger:hover {
+  background-color: #f5d5d5 !important;
+  border-color: #c0392b !important;
+}
+
+/* ═══════════════════════════════════════════
+   ANIMACIÓN TÁCTIL (CLICK) PARA BOTONES Producto View Admin
+═══════════════════════════════════════════ */
+.button-floating:active,
+.btn-maree:active {
+  transform: scale(0.92) translateY(2px) !important;
+  box-shadow: 0 2px 8px rgba(181, 149, 106, 0.2) !important;
+  transition: transform 0.05s ease-in, box-shadow 0.05s ease-in !important;
+}
+
+
+/* ═══════════════════════════════════════════
+   ZONA DE INGREDIENTES PREMIUM (RECETA)
+═══════════════════════════════════════════ */
+
+.maree-recipe-zone {
+  background: var(--gold-bg); /* Fondo crema suave */
+  border: 1px solid var(--gold-light);
+  border-radius: 12px;
+  padding: 20px;
+  margin-top: 24px;
+  box-shadow: inset 0 2px 4px rgba(181, 149, 106, 0.05);
+}
+
+.ingredients-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 18px;
+  border-bottom: 1px solid rgba(181, 149, 106, 0.2);
+  padding-bottom: 12px;
+}
+
+.ingredients-premium-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 20px;
+  color: var(--gold);
+  margin: 0;
+  font-weight: 600;
+}
+
+.maree-badge-gold {
+  background: var(--gold);
+  color: white;
+  padding: 4px 12px;
+  border-radius: 50px;
+  font-family: 'Jost', sans-serif;
+  font-size: 11px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+/* El botón de "Agregar" dentro de esta zona */
+.btn-add-ingredient-premium {
+  background: transparent;
+  border: 2px dashed var(--gold-light);
+  color: var(--gold);
+  width: 100%;
+  padding: 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-family: 'Jost', sans-serif;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  margin-top: 15px;
+}
+
+.btn-add-ingredient-premium:hover {
+  background: var(--gold);
+  color: white;
+  border-style: solid;
+  transform: translateY(-2px);
+}
+
+/* Estilo para las filas de ingredientes que se inyectan */
+.ingredients-list-container {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+
+/* ═══════════════════════════════════════════
+   DISEÑO DE FILAS DE INGREDIENTES
+═══════════════════════════════════════════ */
+
+.maree-ing-row {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  width: 100%;
+  animation: fadeInRow 0.3s ease forwards;
+}
+
+/* El select ocupa el espacio sobrante */
+.ing-dropdown {
+  flex-grow: 1;
+}
+
+.btn-remove-ing-premium {
+  position: relative;
+  background: transparent;
+  border: 1px solid #ffcfcf;
+  color: #e74c3c;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  flex-shrink: 0;
+  padding: 0;
+  font-size: 16px;
+  line-height: 1;
+}
+
+/* Efecto Hover Elegante */
+.btn-remove-ing-premium:hover {
+  background: #e74c3c;
+  color: white;
+  border-color: #e74c3c;
+  transform: rotate(90deg) scale(1.1);
+}
+
+/* Si quieres que se vea "relleno" cuando el usuario lo presione */
+.btn-remove-ing-premium:active {
+  transform: rotate(90deg) scale(0.9);
+}
+
+/* Opcional: Si el icono falla, esto asegura que la X siempre se vea */
+.btn-remove-ing-premium i {
+  pointer-events: none; /* Asegura que el clic siempre toque el botón */
+}
+
+/* ═══════════════════════════════════════════
+   ANIMACIONES
+═══════════════════════════════════════════ */
+
+@keyframes fadeInRow {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.removing-row {
+  animation: fadeOutRow 0.3s ease forwards;
+}
+
+@keyframes fadeOutRow {
+  from { opacity: 1; transform: scale(1); }
+  to { opacity: 0; transform: scale(0.9); }
+}
+
+
+/* ═══════════════════════════════════════════
+   RESUMEN DE PRODUCTO (SUMMARY)
+═══════════════════════════════════════════ */
+
+.maree-summary-container {
+  background: var(--white);
+  border: 1px solid var(--gold-light);
+  border-radius: 12px;
+  padding: 8px 20px;
+  margin: 20px 0;
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.maree-summary-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--gold-bg);
+}
+
+.maree-summary-row:last-child {
+  border-bottom: none;
+}
+
+.maree-summary-label {
+  font-family: 'Jost', sans-serif;
+  text-transform: uppercase;
+  font-size: 11px;
+  letter-spacing: 1.2px;
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+.maree-summary-value {
+  font-family: 'Jost', sans-serif;
+  font-size: 15px;
+  color: var(--text-main);
+  font-weight: 400;
+  text-align: right;
+}
+
+/* El toque dorado para precios */
+.text-gold {
+  color: var(--gold);
+  font-weight: 600;
+}
+
+/* Contenedor de imagen en el resumen */
+.maree-summary-img-wrapper {
+  width: 80px;
+  height: 80px;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 2px solid var(--gold-light);
+  box-shadow: 0 4px 10px rgba(181, 149, 106, 0.15);
+}
+
+.maree-summary-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.3s ease;
+}
+
+.maree-summary-img:hover {
+  transform: scale(1.2);
+}
 
