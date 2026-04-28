@@ -32,7 +32,7 @@
         </div>
 
         <div class="auth-card">
-            <form id="form-login">
+            <form id="form-login" autocomplete="off">
                 <div class="field">
                     <label class="auth-label">Identificador (Teléfono o ID)</label>
                     <div class="control">
@@ -40,7 +40,7 @@
                     </div>
                 </div>
                 <div class="field mt-4 is-hidden" id="password-field">
-                    <label class="auth-label">Contraseña de Colaborador</label>
+                    <label class="auth-label">Contraseña</label>
                     <div class="control">
                         <input class="input auth-input" type="password" name="password" placeholder="••••••••">
                     </div>
@@ -66,7 +66,7 @@
                 <p class="otp-title">Verificación</p>
                 <p class="otp-meta mb-2" id="otp-phone-text"></p>
                 <p class="otp-meta mb-4 is-hidden" id="debug-code-box">Código (Dev Mode): <span class="otp-code" id="debug-code-text"></span></p>
-                
+
                 <form id="form-otp">
                     <div class="field">
                         <div class="control"><input class="input auth-input" type="text" name="codigo" placeholder="123456" maxlength="6" required></div>
