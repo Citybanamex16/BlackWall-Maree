@@ -9,6 +9,38 @@ const formatearTelefono = (tel) => {
   return tel
 }
 
+const normalizarIdColaborador = (valor = '') => valor.trim().toUpperCase()
+const esPosibleTelefonoCliente = (valor = '') => /^[\d\s-]{10,15}$/.test(valor)
+
+const setEmployeeSession = (request, colaborador) => {
+  request.session.isLoggedIn = true
+  request.session.user = {
+    id: colaborador.id_colaborador,
+    nombre: colaborador.nombre,
+    rol: colaborador.id_rol
+  }
+  request.session.rol = colaborador.id_rol
+  request.session.name = colaborador.nombre
+
+  delete request.session.cliente
+  delete request.session.pendingPhone
+}
+
+const setClientSession = (request, client) => {
+  request.session.isLoggedIn = true
+  request.session.rol = client.rol
+  request.session.name = client.Nombre
+  request.session.cliente = {
+    nombre: client.Nombre,
+    telefono: client.telefono,
+    genero: client.genero,
+    visitas: client.visitasActual || 0
+  }
+
+  delete request.session.user
+  delete request.session.pendingPhone
+}
+
 exports.logout = (request, response, next) => {
   request.session.destroy((err) => {
     if (err) return next(err)
@@ -28,9 +60,10 @@ exports.postLogin = async (request, response, next) => {
   const { telefono, password } = request.body
 
   try {
+    const idColaborador = normalizarIdColaborador(telefono)
     // --- LÓGICA COLABORADOR ---
-    if (/^CL\d{8}$/i.test(telefono)) {
-      const [rows] = await Login.fetchColaborador(telefono)
+    if (!esPosibleTelefonoCliente(telefono)) {
+      const [rows] = await Login.fetchColaborador(idColaborador)
       const colaborador = rows[0]
       if (!colaborador) {
         return response.status(404).json({ error: 'ID de Colaborador no encontrado.' })
@@ -38,16 +71,11 @@ exports.postLogin = async (request, response, next) => {
 
       if (password) {
         if (password === colaborador.password) {
-          request.session.isLoggedIn = true
-          request.session.user = {
-            id: colaborador.id_colaborador,
-            nombre: colaborador.nombre
-          }
-          request.session.rol = colaborador.id_rol
+          setEmployeeSession(request, colaborador)
 
           const redirectUrl = colaborador.id_rol === 'Administrador'
             ? '/admin'
-            : '/menu/menu'
+            : '/colaborador'
 
           return response.status(200).json({ success: true, redirectUrl })
         }
@@ -57,7 +85,7 @@ exports.postLogin = async (request, response, next) => {
     }
 
     // --- LÓGICA CLIENTE ---
-    if (/^[\d\s-]{10,15}$/.test(telefono)) {
+    if (esPosibleTelefonoCliente(telefono)) {
       const telefonoFormateado = formatearTelefono(telefono)
       const client = await Login.findByPhoneForLogin(telefonoFormateado)
 
@@ -141,10 +169,7 @@ exports.postVerifyOtp = async (request, response, next) => {
       }
 
       await Login.deleteVerificationCode(telefono)
-      request.session.isLoggedIn = true
-      request.session.rol = client.rol
-      request.session.cliente = { nombre: client.Nombre, telefono: client.telefono, genero: client.genero, visitas: client.visitasActual || 0 }
-      delete request.session.pendingPhone
+      setClientSession(request, client)
 
       return response.status(200).json({
         success: true,
