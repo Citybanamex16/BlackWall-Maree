@@ -824,6 +824,8 @@ Array -> .forEach
 
 const SummaryContent = document.getElementById('summaryContent')
 
+let handlerRegister = null
+
 function ShowProductSummary (SummaryData, type, Registerdata) {
   limpiarModal(SummaryModal)
   console.log('Summary getting: ', SummaryData)
@@ -844,11 +846,15 @@ function ShowProductSummary (SummaryData, type, Registerdata) {
     SummaryModal.close()
   }, { once: true })
 
-  SummaryRegisterbtn.addEventListener('click', async (event) => {
-    // Send de los Datos del Summary
+  if (handlerRegister) SummaryRegisterbtn.removeEventListener('click', handlerRegister)
+
+  handlerRegister = async (event) => {
     event.preventDefault()
     registerNewProduct(Registerdata, type)
-  }, { once: true })
+  }
+
+  SummaryRegisterbtn.addEventListener('click', handlerRegister)
+
   console.log('Mostrando Modal de Summary')
   SummaryModal.showModal()
 }
