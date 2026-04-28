@@ -6,6 +6,7 @@ const tipos = require('../models/MenuDigital/tipos.model.js')
 const promos = require('../models/promociones.model.js')
 const Pedido = require('../models/pedidos.model.js')
 const sucursal = require('../models/MenuDigital/sucursales.model.js')
+const feedback = require('../models/MenuDigital/feedback.model.js')
 const db = require('../util/database.js')
 
 const CREMA_BATIDA_INGREDIENT_ID = 'INCRMBT001'
@@ -162,7 +163,12 @@ exports.getPlatillo = async (request, response, next) => {
     const permiteCremaBatidaCategoria = row.permiteCremaBatida === 1 || row.permiteCremaBatida === '1'
     const permiteCremaBatida = permiteCremaBatidaCategoria && permiteCremaBatidaPorNombre(row.Nombre)
     const [catalogoRows] = await db.execute(
-      'SELECT ID_Insumo as id, Nombre as nombre, Precio as precio FROM insumo WHERE Activo = 1 ORDER BY Nombre'
+      `SELECT i.ID_Insumo as id, i.Nombre as nombre, i.Precio as precio
+       FROM insumo i
+       JOIN insumo_categoria ic ON i.ID_Insumo = ic.ID_Insumo
+       WHERE ic.Nom_Categoria = ? AND i.Activo = 1
+       ORDER BY i.Nombre`,
+      [row.base]
     )
     const [cremaBatidaRows] = permiteCremaBatida
       ? await db.execute(
@@ -786,21 +792,24 @@ exports.getCategorías = async (req, res, nex) => {
   }
 }
 
+
 exports.getIngredientesActivos = async (req, res, nex) => {
   console.log('Obteniendo los ingredientes activos con transacción')
 
-  // PLACEHOLDER: Obtener el objeto de conexión/pool de tu configuración de BD
   const connection = await db.getConnection()
 
   try {
-    // Iniciamos la transacción
     await connection.beginTransaction()
 
-    // Ejecutamos ambas consultas usando la misma conexión
-    const result = await ingrediente.fetchAllValid(connection)
+    // 🔥 UNIFICACIÓN: soporte para filtro opcional por categoría
+    const categoria = req.query.categoria
+
+    const result = categoria
+      ? await ingrediente.fetchAllValidPorCategoria(connection, categoria)
+      : await ingrediente.fetchAllValid(connection)
+
     const resultPrecioBase = await productos.getCrepaPersoPrecioBase(connection)
 
-    // Si todo sale bien, confirmamos (commit)
     await connection.commit()
 
     res.status(200).json({
@@ -809,8 +818,8 @@ exports.getIngredientesActivos = async (req, res, nex) => {
       ingActiveCatalog: result,
       precioBasePerso: resultPrecioBase
     })
+
   } catch (err) {
-    // Si algo falla, revertimos cualquier cambio (rollback)
     if (connection) await connection.rollback()
 
     res.status(500).json({
@@ -818,8 +827,114 @@ exports.getIngredientesActivos = async (req, res, nex) => {
       message: 'Error en la transacción',
       error: err.message || err
     })
+
   } finally {
-    // Siempre liberamos la conexión al terminar
     if (connection) connection.release()
+  }
+}
+
+
+// Sección feedback Cliente
+exports.getReviewHistoryView = (request, response, next) => {
+  const breadcrumbs = nav.getBreadcrumbs('Menu')
+  const SesionData = request.session.cliente
+  console.log('Datos del cliente: ', SesionData)
+  response.render('cliente/historialClienteReviews', { breadcrumbs, datosCliente: SesionData })
+}
+
+exports.getClientReviewHistory = async (req, res, nex) => {
+  console.log("Getting Client's review history")
+  try {
+    const clienteTelefono = req.query.Numero_Telefonico
+
+    if (clienteTelefono === undefined) {
+      throw new Error('Telefono indefinido')
+    }
+
+    console.log('Teléfono recibido:', clienteTelefono)
+
+    const resultData = await feedback.getClientFeedback(clienteTelefono)
+
+    console.log('Reviews obtenidas: ', resultData)
+
+    res.status(200).json({
+      ok: true,
+      message: 'Catalogo Feedback Obtenido',
+      reviewCatalog: resultData
+    })
+  } catch (err) {
+    res.status(500).json({
+      ok: false,
+      message: 'Error al obtener catalogo feedback',
+      error: err
+    })
+  }
+}
+
+exports.postNewFeedback = async (req, res, post) => {
+  console.log('Generando nuevo feedback de cliente')
+  let resultData
+  try {
+    const NewReviewData = req.body
+    // Extracción tipo map
+    const {
+      ID_Orden, // Recibir
+      Puntaje, // Recibir
+      Comentario, // Recibir
+      Numero_Telefonico // Recibir para cliente_tiene_review
+    } = NewReviewData
+
+    // Generar variables
+    const ID_Review = productos.generarID('RV')
+    console.log('ID generado para nueva review: ', ID_Review)
+
+    const now = new Date()
+    const Fecha_Hora = now.getFullYear() + '-' +
+    String(now.getMonth() + 1).padStart(2, '0') + '-' +
+    String(now.getDate()).padStart(2, '0') + ' ' +
+    String(now.getHours()).padStart(2, '0') + ':' +
+    String(now.getMinutes()).padStart(2, '0') + ':' +
+    String(now.getSeconds()).padStart(2, '0')
+
+    // Preparando paquetes de info para cada tabla:
+    // Para tabla Review
+    const reviewRecord = {
+      ID_Review,
+      ID_Orden,
+      Puntaje,
+      Fecha_Hora,
+      Comentario
+    }
+
+    // Para tabla cliente_tiene_review
+    const intermediaryData = {
+      ID_Review, // ID_Review generada arriba
+      Numero_Telefonico
+    }
+
+    console.log(reviewRecord)
+    console.log(intermediaryData)
+
+    // Ejecutando POST
+    resultData = await feedback.postNewOrderFeedback(reviewRecord, intermediaryData)
+
+    console.log('Resultado SP:', JSON.stringify(resultData))
+
+    if (resultData && resultData[0]?.Estado === 'Error') {
+      throw new Error(`SP falló: ${resultData[0]?.Mensaje}`)
+    }
+
+    res.status(200).json({
+      ok: true,
+      message: 'Feedback Guardado correctamente',
+      result: resultData
+    })
+  } catch (err) {
+    console.log('Error interno en POST de feedback: ', err)
+    res.status(500).json({
+      ok: false,
+      message: 'Error al guardar feedback',
+      result: resultData
+    })
   }
 }

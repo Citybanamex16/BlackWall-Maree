@@ -8,7 +8,7 @@ const btnCerrarRegistro = document.getElementById('btnCerrarRegistro')
 const btnConfirmarRegistro = document.getElementById('btnConfirmarRegistro')
 
 const inputNombre = document.getElementById('inputNombre')
-const selectCategoria = document.getElementById('selectCategoria')
+const checksCategoriasContainer = document.getElementById('checksCategorias')
 const inputPrecio = document.getElementById('inputPrecio')
 const inputImagen = document.getElementById('inputImagen')
 const checkActivo = document.getElementById('checkActivo')
@@ -79,10 +79,13 @@ async function cargarTablaIngredientes () {
         ? '<span class="badge badge-activo">Disponible</span>'
         : '<span class="badge badge-inactivo">Inactivo</span>'
 
+      const cats = ing.categorias || [ing.Categoría]
+      const badgesCats = cats.map(c => `<span class="badge badge-cat">${c}</span>`).join(' ')
+
       tr.innerHTML = `
         <td class="muted" style="font-size:12px;font-family:monospace;">${ing.ID_Insumo}</td>
         <td style="font-weight:500;">${ing.Nombre}</td>
-        <td><span class="badge badge-cat">${ing.Categoría}</span></td>
+        <td>${badgesCats}</td>
         <td style="color:#b5956a;font-weight:500;">$${parseFloat(ing.Precio).toFixed(2)}</td>
         <td>${badgeEstado}</td>
         <td>${canManageIngredients ? `<button class="btn-eliminar" data-id="${ing.ID_Insumo}" data-nombre="${ing.Nombre}">Eliminar</button>` : ''}</td>
@@ -119,16 +122,17 @@ async function cargarCategorias () {
     const obj = await res.json()
     const categorias = obj.data
 
-    selectCategoria.innerHTML = '<option value="">Selecciona una categoría</option>'
+    checksCategoriasContainer.innerHTML = ''
     categorias.forEach(cat => {
-      const opt = document.createElement('option')
-      opt.value = cat.Nombre
-      opt.textContent = cat.Nombre
-      selectCategoria.appendChild(opt)
+      const label = document.createElement('label')
+      label.className = 'maree-checkbox-row'
+      label.style.cssText = 'display:inline-flex;align-items:center;gap:6px;margin:0;cursor:pointer;'
+      label.innerHTML = `<input type="checkbox" class="cat-check-registro" value="${cat.Nombre}"> ${cat.Nombre}`
+      checksCategoriasContainer.appendChild(label)
     })
   } catch (error) {
     console.error('Error cargando categorías:', error)
-    selectCategoria.innerHTML = '<option value="">Error al cargar</option>'
+    checksCategoriasContainer.innerHTML = '<span style="color:red;font-size:13px;">Error al cargar</span>'
   }
 }
 
@@ -200,7 +204,7 @@ function mostrarResumen (datos) {
 
   const campos = [
     { label: 'Nombre', value: datos.Nombre },
-    { label: 'Categoría', value: datos.Categoría },
+    { label: 'Categorías', value: (datos.Categorias || []).join(', ') || '—' },
     { label: 'Precio', value: `$${parseFloat(datos.Precio).toFixed(2)}` },
     { label: 'Imagen', value: datos.Imagen || '—' },
     { label: 'Disponible', value: datos.Activo ? 'Sí' : 'No' }
@@ -279,9 +283,10 @@ btnCerrarExito.addEventListener('click', () => {
 
 // Helpers
 function obtenerDatosFormulario () {
+  const checks = checksCategoriasContainer.querySelectorAll('.cat-check-registro:checked')
   return {
     Nombre: inputNombre.value.trim(),
-    Categoría: selectCategoria.value,
+    Categorias: Array.from(checks).map(c => c.value),
     Precio: inputPrecio.value,
     Imagen: inputImagen.value.trim(),
     Activo: checkActivo.checked
@@ -290,7 +295,7 @@ function obtenerDatosFormulario () {
 
 function limpiarFormulario () {
   inputNombre.value = ''
-  selectCategoria.value = ''
+  checksCategoriasContainer.querySelectorAll('.cat-check-registro').forEach(c => { c.checked = false })
   inputPrecio.value = ''
   inputImagen.value = ''
   checkActivo.checked = true
@@ -377,7 +382,7 @@ if (canManageIngredients && btnConfirmarEliminar) {
 const modalEditar = document.getElementById('ModalEditar')
 const editarSubtitulo = document.getElementById('editarSubtitulo')
 const editNombre = document.getElementById('editNombre')
-const editCategoria = document.getElementById('editCategoria')
+const editChecksCatContainer = document.getElementById('editChecksCategorias')
 const editPrecio = document.getElementById('editPrecio')
 const editImagen = document.getElementById('editImagen')
 const editActivo = document.getElementById('editActivo')
@@ -392,22 +397,23 @@ async function abrirModalEditar (ing) {
   nombreOriginalEditar = ing.Nombre
   editarSubtitulo.textContent = `Editando: ${ing.Nombre}`
 
-  // Llena campos con datos actuales
   editNombre.value = ing.Nombre
   editPrecio.value = ing.Precio
   editImagen.value = ing.Imagen ?? ''
   editActivo.checked = ing.Activo === 1
 
-  // Carga categorias y selecciona la que ya esta seleccionada
+  const ingCategorias = ing.categorias || [ing.Categoría]
+
   const res = await fetch('/admin/api/ingredientes/categorias')
   const obj = await res.json()
-  editCategoria.innerHTML = ''
+  editChecksCatContainer.innerHTML = ''
   obj.data.forEach(cat => {
-    const opt = document.createElement('option')
-    opt.value = cat.Nombre
-    opt.textContent = cat.Nombre
-    if (cat.Nombre === ing.Categoría) opt.selected = true
-    editCategoria.appendChild(opt)
+    const label = document.createElement('label')
+    label.className = 'maree-checkbox-row'
+    label.style.cssText = 'display:inline-flex;align-items:center;gap:6px;margin:0;cursor:pointer;'
+    const checked = ingCategorias.includes(cat.Nombre) ? 'checked' : ''
+    label.innerHTML = `<input type="checkbox" class="cat-check-editar" value="${cat.Nombre}" ${checked}> ${cat.Nombre}`
+    editChecksCatContainer.appendChild(label)
   })
 
   modalEditar.showModal()
@@ -426,6 +432,7 @@ if (canManageIngredients && btnGuardarEditar) {
 
     const nombre = editNombre.value.trim()
     const precio = parseFloat(editPrecio.value)
+<<<<<<< HEAD
 
     // Valida campos vacios
     if (!nombre || !editCategoria.value || !editPrecio.value) {
@@ -434,10 +441,22 @@ if (canManageIngredients && btnGuardarEditar) {
     }
 
     // Valida que el precio no sea negativo
+=======
+    const categorias = Array.from(editChecksCatContainer.querySelectorAll('.cat-check-editar:checked')).map(c => c.value)
+
+    // 1. Valida campos vacios
+    if (!nombre || !categorias.length || !editPrecio.value) {
+      mostrarError('Campos incompletos', 'Nombre, al menos una Categoría y Precio son obligatorios.')
+      return
+    }
+
+    // 2. Valida que el precio no sea negativo
+>>>>>>> moduloMenu
     if (isNaN(precio) || precio < 0) {
       mostrarError('Precio inválido', 'El precio debe ser un número positivo.')
       return
     }
+<<<<<<< HEAD
 
     // Verifica duplicado solo si el nombre cambio
     if (nombre !== nombreOriginalEditar) {
@@ -476,6 +495,45 @@ if (canManageIngredients && btnGuardarEditar) {
         throw new Error(errorData.message || 'La base de datos no está disponible.')
       }
 
+=======
+
+    // 3. Verifica duplicado solo si el nombre cambio
+    if (nombre !== nombreOriginalEditar) {
+      try {
+        const resNombre = await fetch(`/admin/api/ingredientes/verificarNombre?nombre=${encodeURIComponent(nombre)}`)
+        const objNombre = await resNombre.json()
+        if (objNombre.existe) {
+          mostrarError('Nombre duplicado', `Ya existe un ingrediente con el nombre "${nombre}".`)
+          return
+        }
+      } catch (error) {
+        mostrarError('Error de verificación', 'No se pudo verificar el nombre.')
+        return
+      }
+    }
+
+    // 4. Construcción del Body (Solo una vez)
+    const body = {
+      Nombre: nombre,
+      Categorias: categorias,
+      Precio: precio,
+      Activo: editActivo.checked,
+      Imagen: editImagen.value.trim()
+    }
+
+    try {
+      const res = await fetch(`/admin/api/ingredientes/${idParaEditar}/actualizar`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body)
+      })
+
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}))
+        throw new Error(errorData.message || 'La base de datos no está disponible.')
+      }
+
+>>>>>>> moduloMenu
       const obj = await res.json()
 
       if (obj.success) {
@@ -488,7 +546,10 @@ if (canManageIngredients && btnGuardarEditar) {
         mostrarError('Error al actualizar', obj.message || 'Error desconocido')
       }
     } catch (error) {
+<<<<<<< HEAD
     // Si se cae la BD, el "throw new Error" de arriba manda la ejecucion para aca abajo
+=======
+>>>>>>> moduloMenu
       mostrarError('Error al intentar modificar ingrediente', error.message)
     } finally {
       idParaEditar = null

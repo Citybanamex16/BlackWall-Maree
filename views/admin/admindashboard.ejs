@@ -14,13 +14,14 @@
 <%- include('../partials/breadcrumbs') %>
 <main class="page-wrap">
 
-    <header style="margin-bottom: 32px;">
-        <h1 class="page-title">Admin Dashboard</h1>
-        <p class="page-sub">Manage your cafeteria operations</p>
-        
+    <header style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom: 32px;">
+        <div>
+            <h1 class="page-title">Admin Dashboard</h1>
+            <p class="page-sub">Gestión de operaciones</p>
+        </div>
         <button onclick="iniciarEscaneo()" class="btn-scanner-top" title="Registrar Visita">
-        <i class="fas fa-camera"></i>
-        <span>Escanear Royalty</span>
+            <i class="fas fa-camera"></i>
+            <span>Escanear Royalty</span>
         </button>
     </header>
 
@@ -81,10 +82,11 @@
             <p>WhatsApp</p>
         </a>
 
-        <a href="/admin/dias-habiles" class="box dashboard-card">
-            <div class="icon-circle teal">🗓️</div>
+        <a href="/admin/dias-habiles" class="dashboard-card">
+            <div class="icon-circle bg-teal">🗓️</div>
             <p>Días Hábiles</p>
-            
+        </a>
+
         <a href="/admin/sucursales" class="dashboard-card">
             <div class="icon-circle bg-purple">🏪</div>
             <p>Sucursales</p>
@@ -109,5 +111,6 @@
 <script src="https://unpkg.com/html5-qrcode"></script>
 <script src="/js/Royalty/scannerHandler.js"></script>
 <script src="/js/admin.js"></script>
+<script src="/js/adminOrderNotifications.js"></script>
 </body>
 </html>

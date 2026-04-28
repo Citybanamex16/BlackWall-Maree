@@ -141,6 +141,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!response) return
 
     if (response.status === 200 && response.data.redirectUrl) {
+      localStorage.removeItem('pedido') 
       window.location.href = response.data.redirectUrl
     } else {
       showAlert(response.data.error)

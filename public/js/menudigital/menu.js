@@ -5,6 +5,13 @@
 const platillobotones = document.getElementsByClassName('platillo-btn')
 const modalOverlay = document.getElementById('modal-overlay')
 const modalContent = document.getElementById('modal-content')
+<<<<<<< HEAD
+=======
+
+const cartToast = document.getElementById('cart-toast')
+let cartToastTimer
+
+>>>>>>> moduloMenu
 let pedido = JSON.parse(localStorage.getItem('pedido')) || []
 
 // MODAL
@@ -34,6 +41,18 @@ function actualizarBotonResumen () {
   }
   const fabBadge = document.querySelector('.fab-badge')
   if (fabBadge) fabBadge.textContent = pedido.length
+}
+
+function mostrarToastCarrito (mensaje = 'Se ha agregado un producto al carrito') {
+  if (!cartToast) return
+
+  cartToast.textContent = mensaje
+  cartToast.classList.add('is-visible')
+
+  clearTimeout(cartToastTimer)
+  cartToastTimer = setTimeout(() => {
+    cartToast.classList.remove('is-visible')
+  }, 1800)
 }
 
 // Datos platillo seleccionado
@@ -204,13 +223,18 @@ async function agregarAlCarrito (item) {
   pedido = JSON.parse(localStorage.getItem('pedido')) || []
   pedido.push(item)
   localStorage.setItem('pedido', JSON.stringify(pedido))
+  actualizarBotonResumen()
+  mostrarToastCarrito()
+
   try {
     const response = await fetch('/menu/agregaritem', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(item)
     })
-    if (response.ok) actualizarBotonResumen()
+    if (!response.ok) {
+      console.warn('No se pudo sincronizar el carrito con el servidor.')
+    }
   } catch (err) {
     console.error('Error al sincronizar:', err)
   } finally {
@@ -936,9 +960,13 @@ function renderizarVistaCategoria (categoriaObj, productos, allTypes, allPromos,
     const idGridOtros = construirSeccionTipo('Otros', mainWrapper)
     const gridOtros = document.getElementById(idGridOtros)
 
+
     // Forzamos que la sección de Otros empiece colapsada para no estorbar (Opcional)
     gridOtros.parentElement.classList.remove('is-open')
+<<<<<<< HEAD
 
+=======
+>>>>>>> moduloMenu
     construirFichaProductos(productosRestantes, allPromos, gridOtros, SesionData)
   }
 }
