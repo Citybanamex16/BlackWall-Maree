@@ -522,36 +522,31 @@ async function cargarRoyalty () {
       }
       // Añadimos en la vista
       container.innerHTML += `
-        <div class="column is-half">
-          <div class="card">
-            <div class="card-content">
-              <p class="title is-5">${royalty.Nombre_Royalty}</p>
-              <div class="content">
-                <p><strong>Prioridad:</strong> ${royalty.Número_de_prioridad}</p>
-                <p><strong>Descripción:</strong> ${royalty.Descripción}</p>
-                <p><strong>Visitas mínimas:</strong> ${royalty.Min_Visitas}</p>
-                <p><strong>Visitas máximas:</strong> ${royalty.Max_Visitas}</p>
-                <hr>
-                <strong> Promociones: </strong>
-                ${promocionesHTML}
-              </div>
-                <strong> Eventos: </strong>
-                ${eventosHTML}
-                <br>
-              <footer class="card-footer">
-                <button class="button is-warning card-footer-item" onclick="modificarRoyalty('${royalty.Nombre_Royalty}')">
-                  <span class="icon"><i class="fas fa-pen"></i></span>
-                  <span>Modificar</span>
-                </button>
-                <button class="button is-danger card-footer-item" onclick="borrarRoyalty('${royalty.Nombre_Royalty}')">
-                  <span class="icon"><i class="fas fa-trash"></i></span>
-                  <span>Borrar</span>
-                </button>
-              </footer>
-            </div>
-          </div>
-        </div>
-      `
+  <div class="royalty-card">
+    <p class="royalty-card-name">${royalty.Nombre_Royalty}</p>
+    <div class="royalty-card-meta">
+      <span class="royalty-meta-pill"><i class="fas fa-star"></i> Prioridad ${royalty.Número_de_prioridad}</span>
+      <span class="royalty-meta-pill"><i class="fas fa-arrow-up"></i> Min ${royalty.Min_Visitas}</span>
+      <span class="royalty-meta-pill"><i class="fas fa-arrow-down"></i> Max ${royalty.Max_Visitas}</span>
+    </div>
+    <p class="royalty-card-desc">${royalty.Descripción}</p>
+    <hr style="margin: 4px 0; border-color: var(--c-border);">
+    <div style="font-size:13px; color: var(--c-text-soft);">
+      <strong>Promociones:</strong> ${promocionesHTML}
+      <strong>Eventos:</strong> ${eventosHTML}
+    </div>
+    <div class="royalty-card-actions">
+      <button class="button" onclick="modificarRoyalty('${royalty.Nombre_Royalty}')">
+        <span class="icon"><i class="fas fa-pen"></i></span>
+        <span>Modificar</span>
+      </button>
+      <button class="button is-danger" onclick="borrarRoyalty('${royalty.Nombre_Royalty}')">
+        <span class="icon"><i class="fas fa-trash"></i></span>
+        <span>Borrar</span>
+      </button>
+    </div>
+  </div>
+`
     })
     // Si no se logra añadir a la vista
   } catch (error) {
