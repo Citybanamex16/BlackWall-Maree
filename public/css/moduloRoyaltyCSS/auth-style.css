@@ -95,7 +95,7 @@ body {
     border: none;
     border-radius: 8px;
     padding: 13px 16px;
-    background: #e7c4b8;
+    background: var(--accent-deep);
     color: #ffffff;
     font-size: 16px;
     font-weight: 600;
@@ -103,7 +103,7 @@ body {
     transition: background 0.3s;
 }
 
-.primary-btn:hover { background: #deb7a8; }
+.primary-btn:hover { background: #b7845b; }
 
 .secondary-btn {
     width: 100%;

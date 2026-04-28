@@ -250,6 +250,35 @@
     <button id="closeInvalidData" class="modal-close-btn" >Cerrar</button>
 </dialog>
 
+<div id="cart-toast" class="cart-toast" role="status" aria-live="polite" aria-atomic="true"></div>
+
+<style>
+    .cart-toast {
+        position: fixed;
+        top: 16px;
+        right: 16px;
+        z-index: 3000;
+        max-width: min(92vw, 360px);
+        background: #d8f3dc;
+        color: #1b5e20;
+        border: 1px solid #95d5b2;
+        border-radius: 10px;
+        padding: 10px 14px;
+        font-size: 14px;
+        font-weight: 600;
+        box-shadow: 0 8px 22px rgba(0, 0, 0, 0.12);
+        opacity: 0;
+        transform: translateY(-10px);
+        pointer-events: none;
+        transition: opacity 0.22s ease, transform 0.22s ease;
+    }
+
+    .cart-toast.is-visible {
+        opacity: 1;
+        transform: translateY(0);
+    }
+ </style>
+
 
 
 
