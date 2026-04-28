@@ -618,7 +618,7 @@ html {
 .product-card-app {
     background: #fff;
     border-radius: 12px;
-    height: 180px; 
+    height: 240px;
     display: flex;
     flex-direction: column;
     /* Sombras más definidas para que parezcan tarjetas físicas */
@@ -629,9 +629,9 @@ html {
     transition: all 0.3s ease;
 }
 
-/* 45% Imagen */
+/* 55% Imagen */
 .product-img-wrapper {
-    height: 45%;
+    height: 55%;
     overflow: hidden;
     border-radius: 12px 12px 0 0; /* Redondea solo las esquinas de arriba */
 }
@@ -671,7 +671,8 @@ html {
 
     /* Truco para puntos suspensivos en la segunda línea */
     display: -webkit-box;
-    -webkit-line-clamp: 2;  
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
     -webkit-box-orient: vertical;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -874,7 +875,7 @@ html {
 
 /* Lógica de ocultar/mostrar */
 .type-content {
-    max-height: 2000px; /* Un valor alto para permitir el despliegue */
+    max-height: 9999px;
     overflow: hidden;
     transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s;
     opacity: 1;
@@ -1337,3 +1338,9 @@ html {
     filter: drop-shadow(0 0 7px rgba(125, 166, 186, 0.95));
 }
 
+
+@media screen and (min-width: 1024px) {
+    .product-card-app {
+        height: 240px;
+    }
+}

@@ -731,9 +731,18 @@ function promosMaster (cardHTML, promosData, productId, dataSesion) {
 function construirFichaProductos (productosFiltrados, PromosData, gridDestino, DatosSesion) {
   gridDestino.innerHTML = ''
 
+  if (productosFiltrados.length === 0) {
+    gridDestino.innerHTML = `
+      <div style="width:100%;padding:40px 0;text-align:center;color:#aaa;font-family:'Jost',sans-serif;font-size:14px;">
+        <span style="font-size:32px;display:block;margin-bottom:10px;">🍽️</span>
+        Aún no hay productos registrados para esta categoría.
+      </div>`
+    return
+  }
+
   productosFiltrados.forEach((prod, i) => {
     const cardHTML = `
-            <div class="column is-half-mobile is-half-tablet"> 
+            <div class="column is-half-mobile is-half-tablet is-one-third-desktop">
                 <div class="product-card-app">
                     
                     <div class="product-img-wrapper">
@@ -873,7 +882,7 @@ function contruirMenuDinamico (datos, promosDatos, datosCliente) {
 
 function construirSeccionTipo (tipoNombre, contenedorPadre) {
   const wrapperTipo = document.createElement('div')
-  wrapperTipo.className = 'type-accordion mb-2 is-open' // Por defecto abierto
+  wrapperTipo.className = 'type-accordion mb-2 is-open column is-full'
 
   const idGridTipo = `grid-tipo-${tipoNombre.toLowerCase().replace(/\s+/g, '-')}`
 
@@ -934,6 +943,15 @@ function renderizarVistaCategoria (categoriaObj, productos, allTypes, allPromos,
 
   // 2. Filtro inicial: Productos de esta categoría
   const productosDeCategoria = productos.filter(p => p.categoria === categoriaObj.Nombre)
+
+  if (productosDeCategoria.length === 0) {
+    mainWrapper.innerHTML = `
+      <div style="width:100%;padding:48px 0;text-align:center;color:#aaa;font-family:'Jost',sans-serif;font-size:14px;">
+        <span style="font-size:36px;display:block;margin-bottom:12px;">🍽️</span>
+        Aún no hay productos registrados para esta categoría.
+      </div>`
+    return
+  }
 
   // 3. Clasificación: Separar conocidos de "Otros"
   let productosRestantes = [...productosDeCategoria]
