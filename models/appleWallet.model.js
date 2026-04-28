@@ -23,22 +23,23 @@ async function generarApplePass (telefono, nombreCliente, nombreRoyalty, visitas
       message: String(telefono),
       format: 'PKBarcodeFormatQR',
       messageEncoding: 'iso-8859-1'
-    }],
-    // Sobreescribe los campos dinámicamente
-    storeCard: {
-      primaryFields: [
-        { key: 'nivel', label: 'Nivel', value: nombreRoyalty || 'Bienvenido' }
-      ],
-      secondaryFields: [
-        { key: 'visitas', label: 'Visitas', value: String(visitasActuales ?? 0) },
-        { key: 'meta', label: 'Meta', value: String(maxVisitas ?? 0) }
-      ],
-      backFields: [
-        { key: 'nombre', label: 'Cliente', value: nombreCliente || '' },
-        { key: 'telefono', label: 'Teléfono', value: String(telefono) }
-      ]
-    }
+    }]
   })
+
+  // Sobreescribir directamente el objeto interno del pase
+  pass.props.storeCard = {
+    primaryFields: [
+      { key: 'nivel', label: 'Nivel', value: nombreRoyalty || 'Bienvenido' }
+    ],
+    secondaryFields: [
+      { key: 'visitas', label: 'Visitas', value: String(visitasActuales ?? 0) },
+      { key: 'meta', label: 'Meta', value: String(maxVisitas ?? 0) }
+    ],
+    backFields: [
+      { key: 'nombre', label: 'Cliente', value: nombreCliente || '' },
+      { key: 'telefono', label: 'Teléfono', value: String(telefono) }
+    ]
+  }
 
   return await pass.getAsBuffer()
 }
