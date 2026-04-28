@@ -10,10 +10,10 @@ router.get('/sucursales', menuControlador.getMapaSucursales)
 router.get('/consultaplatillo', menuControlador.getPlatillo)
 router.get('/consultarPromosMenu', menuControlador.getMenuPromos)
 router.post('/agregaritem', menuControlador.agregarItem)
-router.post('/pedidos/validar', menuControlador.contextoUsuario ,menuControlador.validarPedido)
+router.post('/pedidos/validar', menuControlador.contextoUsuario, menuControlador.validarPedido)
 router.post('/pedidos/confirmar', menuControlador.confirmarPedido)
 
-//FeedbackCliente
+// FeedbackCliente
 router.get('/feedback/historView', menuControlador.getReviewHistoryView)
 router.get('/feedback/historyData', menuControlador.getClientReviewHistory)
 router.post('/feedback/Nuevo', menuControlador.postNewFeedback)

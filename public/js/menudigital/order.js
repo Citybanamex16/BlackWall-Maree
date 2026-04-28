@@ -6,8 +6,7 @@ const seccionCheckout = document.getElementById('seccion-checkout')
 
 let pedido = JSON.parse(localStorage.getItem('pedido') || '[]')
 
-console.log("Pedido guardado: ",pedido)
-
+console.log('Pedido guardado: ', pedido)
 
 // Helpers
 
@@ -39,8 +38,7 @@ const htmlIngredientes = (item) => {
     : ''
 }
 
-
-// fin de helpers 
+// fin de helpers
 
 // MODAL de orden
 const crearOverlay = () => {
@@ -248,11 +246,11 @@ const abrirModalConfirmacion = (forma, telefono, direccion) => {
   const overlay = crearOverlay()
 
   const resumenItems = pedido.map(item => {
-  const nombre     = esPersonalizado(item) ? item.producto_base : item.nombre
-  const precioText = '$' + precioNumerico(item).toFixed(2)
-  const detalle    = htmlIngredientes(item)
+    const nombre = esPersonalizado(item) ? item.producto_base : item.nombre
+    const precioText = '$' + precioNumerico(item).toFixed(2)
+    const detalle = htmlIngredientes(item)
 
-  return `
+    return `
     <div style="padding:10px 0;border-bottom:1px solid #f0f0f0;">
       <div style="display:flex;justify-content:space-between;">
         <span style="font-size:14px;color:#333;">${nombre}</span>
@@ -261,7 +259,7 @@ const abrirModalConfirmacion = (forma, telefono, direccion) => {
       ${detalle}
     </div>
   `
-}).join('')
+  }).join('')
 
   const totalConfirm = pedido.reduce((sum, item) => sum + precioNumerico(item), 0)
 
@@ -343,7 +341,7 @@ const renderPedido = () => {
 
     // ── Nombre y descripción según tipo ──
     const nombre = esPersonalizado(item) ? item.producto_base : (item.nombre || '—')
-    const desc   = esPersonalizado(item)
+    const desc = esPersonalizado(item)
       ? htmlIngredientes(item)
       : (item.desc?.trim() ? `<p style="font-size:13px;color:#777;margin:4px 0 0 0;">${item.desc}</p>` : '')
 

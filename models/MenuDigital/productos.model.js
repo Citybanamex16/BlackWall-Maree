@@ -162,38 +162,35 @@ module.exports = class Producto {
     return result
   }
 
-
   /* --- MODELO PEDIDO --- */
-static ValidarDatosRegistro(data) {
-    let mensajesError = [];
+  static ValidarDatosRegistro (data) {
+    const mensajesError = []
 
     // 1. Validaciones estructurales básicas
     for (const [key, value] of Object.entries(data)) {
-        // Verificamos si el valor es nulo, indefinido o un string vacío
-        if (value === null || value === undefined || value === '') {
-            
-            // EXCEPCIÓN: 'direccion' solo es obligatoria si es Delivery
-            if (key === 'direccion' && data.forma !== 'Delivery') {
-                continue; 
-            }
-            
-            mensajesError.push(`Campo vacío: ${key}`);
+      // Verificamos si el valor es nulo, indefinido o un string vacío
+      if (value === null || value === undefined || value === '') {
+        // EXCEPCIÓN: 'direccion' solo es obligatoria si es Delivery
+        if (key === 'direccion' && data.forma !== 'Delivery') {
+          continue
         }
+
+        mensajesError.push(`Campo vacío: ${key}`)
+      }
     }
 
     // 2. Retorno de resultados
     if (mensajesError.length > 0) {
-        return { 
-            valido: false, 
-            mensaje: mensajesError.join(', ') 
-        };
+      return {
+        valido: false,
+        mensaje: mensajesError.join(', ')
+      }
     }
 
     // Si todo está presente, la estructura es correcta
-    return { valido: true, mensaje: '' };
-}
+    return { valido: true, mensaje: '' }
+  }
 
-  
   static async getAllIngredientes () {
     return db.execute('SELECT Nombre as nombre, ID_Insumo as id, Precio as precio FROM INSUMO')
   }
@@ -220,7 +217,7 @@ static ValidarDatosRegistro(data) {
     return result
   }
 
-  static async getCrepaPersoPrecioBase(connection){
+  static async getCrepaPersoPrecioBase (connection) {
     const [result] = await connection.execute('SELECT Precio as precioBaseCrepaPerso FROM `producto` WHERE ID_Producto = "PD_COMODIN";')
     return result
   }
