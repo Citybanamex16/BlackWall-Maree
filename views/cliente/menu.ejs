@@ -25,12 +25,10 @@
         </div>
         <div class="royalty-actions">
             <button type="button" class="btn-royalty-active" onclick="location.href='/cliente/perfil'">
-                <i class="fas fa-user"></i> Mi perfil
+                <i class="fas fa-user"></i>
             </button>
 
-            <button type="button" class="btn-royalty-active" onclick="location.href='/royalty/royaltyUser'">
-                <i class="fas fa-crown"></i> Rewards
-            </button>
+        
             <button type="button" class="btn-logout" onclick="localStorage.removeItem('pedido'); location.href='/cliente/logout';" aria-label="Cerrar Sesión">
                 Logout
             </button>
@@ -75,9 +73,11 @@
         <i class="fas fa-map-marker-alt is-size-4"></i>
     </a>
 
-    <a href="/cliente/promosCliente" class="btn btn-icon search-side-btn" aria-label="Promos">
-        <i class="fas fa-gift is-size-4"></i>
+    <% if (datosCliente) { %>
+    <a href="/royalty/royaltyUser" class="btn btn-icon search-side-btn btn-rewards-glow" aria-label="Rewards">
+        <i class="fas fa-crown is-size-4"></i>
     </a>
+    <% } %>
 
     <button id="btn-search-toggle" class="btn btn-icon" aria-label="Buscar">
         <i class="fas fa-search is-size-4"></i>
@@ -100,6 +100,7 @@
             <span class="fab-badge">0</span>
         </span>
     </a>
+
 </div>
 
 <!-- FAB — Crepa Personalizada (Abajo Izquierda) -->

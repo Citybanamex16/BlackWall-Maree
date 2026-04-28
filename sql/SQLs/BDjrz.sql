@@ -2,10 +2,10 @@
 -- version 5.2.1
 -- https://www.phpmyadmin.net/
 --
--- Servidor: localhost
--- Tiempo de generación: 24-04-2026 a las 06:41:53
--- Versión del servidor: 10.4.28-MariaDB
--- Versión de PHP: 8.2.4
+-- Servidor: 127.0.0.1
+-- Tiempo de generación: 27-04-2026 a las 22:43:57
+-- Versión del servidor: 10.4.32-MariaDB
+-- Versión de PHP: 8.2.12
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 START TRANSACTION;
@@ -36,9 +36,10 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `ActualizarCategoria` (IN `oldNombre
 
     START TRANSACTION;
         SET FOREIGN_KEY_CHECKS = 0;
-        UPDATE `categoría` SET Nombre = newNombre WHERE Nombre = oldNombre;
-        UPDATE `insumo` SET `Categoría` = newNombre WHERE `Categoría` = oldNombre;
-        UPDATE `producto` SET `Categoría` = newNombre WHERE `Categoría` = oldNombre;
+        UPDATE `categoría`        SET Nombre          = newNombre WHERE Nombre          = oldNombre;
+        UPDATE `insumo`           SET `Categoría`     = newNombre WHERE `Categoría`     = oldNombre;
+        UPDATE `insumo_categoria` SET `Nom_Categoria` = newNombre WHERE `Nom_Categoria` = oldNombre;
+        UPDATE `producto`         SET `Categoría`     = newNombre WHERE `Categoría`     = oldNombre;
         SET FOREIGN_KEY_CHECKS = 1;
     COMMIT;
 END$$
@@ -84,7 +85,6 @@ END$$
 DROP PROCEDURE IF EXISTS `EliminarIngrediente`$$
 CREATE DEFINER=`root`@`localhost` PROCEDURE `EliminarIngrediente` (IN `p_idInsumo` VARCHAR(10) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish2_ci)   BEGIN
     DECLARE v_error_msg VARCHAR(500);
-    -- Manejador de errores para la transacción
     DECLARE EXIT HANDLER FOR SQLEXCEPTION
     BEGIN
         GET DIAGNOSTICS CONDITION 1 v_error_msg = MESSAGE_TEXT;
@@ -93,10 +93,9 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `EliminarIngrediente` (IN `p_idInsum
     END;
 
     START TRANSACTION;
-        -- Primero eliminamos la relación para evitar error de FK
+        DELETE FROM insumo_categoria     WHERE ID_Insumo = p_idInsumo;
         DELETE FROM producto_tiene_insumo WHERE ID_Insumo = p_idInsumo;
-        -- Luego eliminamos el insumo
-        DELETE FROM insumo WHERE ID_Insumo = p_idInsumo;
+        DELETE FROM insumo               WHERE ID_Insumo = p_idInsumo;
     COMMIT;
 END$$
 
@@ -309,6 +308,27 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `sp_GuardarRoyaltyPromocion` (IN `p_
   VALUES (p_NombreRoyalty, p_IDPromocion);
 END$$
 
+DROP PROCEDURE IF EXISTS `sp_RegistrarReview`$$
+CREATE DEFINER=`root`@`localhost` PROCEDURE `sp_RegistrarReview` (IN `_ID_Review` VARCHAR(10), IN `_ID_Orden` VARCHAR(10), IN `_Puntaje` INT, IN `_Fecha_Hora` DATETIME, IN `_Comentario` TEXT, IN `_Numero_Telefonico` VARCHAR(15))   BEGIN
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+        ROLLBACK;
+        SELECT 'Error' AS Estado, 'No se pudo completar el registro de la reseña' AS Mensaje;
+    END;
+
+    START TRANSACTION;
+
+    INSERT INTO review (ID_Review, ID_Orden, Puntaje, Comentario)
+    VALUES (_ID_Review, _ID_Orden, _Puntaje, _Comentario);
+
+    INSERT INTO cliente_tiene_review (ID_Review, Numero_Telefonico)
+    VALUES (_ID_Review, _Numero_Telefonico);
+
+    COMMIT;
+
+    SELECT 'Exito' AS Estado, CONCAT('Reseña ', _ID_Review, ' registrada correctamente') AS Mensaje;
+END$$
+
 DELIMITER ;
 
 -- --------------------------------------------------------
@@ -362,7 +382,6 @@ CREATE TABLE `categoría` (
 INSERT INTO `categoría` (`Nombre`) VALUES
 ('Bebidas'),
 ('Crepas'),
-('Infusiones'),
 ('Otros'),
 ('Platillo'),
 ('Waffles');
@@ -392,8 +411,10 @@ CREATE TABLE `cliente` (
 --
 
 INSERT INTO `cliente` (`Numero_Telefonico`, `Nombre_Royalty`, `Nombre`, `Correo`, `Genero`, `Fecha_Nacimiento`, `Visitas_Actuales`, `ID_Rol`, `tokens_gastados`, `username`) VALUES
+('11111113', NULL, 'AAAAA', NULL, NULL, NULL, 0, 'Usuario', 0, NULL),
 ('442134789', NULL, 'Lalo', NULL, NULL, NULL, 0, 'Usuario', 0, NULL),
 ('4428199000', NULL, 'Juan Pablo Juarez', NULL, NULL, NULL, 0, 'Usuario', 0, NULL),
+('44294924', NULL, 'RN', NULL, NULL, NULL, 0, 'Usuario', 0, NULL),
 ('443789097', NULL, 'Lalo', NULL, NULL, NULL, 0, 'Usuario', 0, NULL),
 ('55-1156-9800', 'Mega Fan', 'Andrea Iliana Cantú Mayorga', 'ailiana@gmail.com', 'f', '1977-04-01', 2, 'Usuario', 0, NULL),
 ('55-1579-6753', 'Super Fan', 'Eduardo Daniel Juárez Pineda', 'ejuarez@gmail.com', 'm', '1967-06-07', 16, 'Usuario', 0, NULL),
@@ -446,6 +467,7 @@ INSERT INTO `cliente` (`Numero_Telefonico`, `Nombre_Royalty`, `Nombre`, `Correo`
 ('55-9862-4951', 'Super Fan', 'Ramón Eliezer De Santos García', 'rgarcia@gmail.com', 'm', '1962-01-17', 6, 'Usuario', 0, NULL),
 ('55-9956-8802', 'Super Fan', 'Rodrigo Alejandro Hurtado Cortés', 'rhurtado@gmail.com', 'm', '1983-02-25', 2, 'Usuario', 0, NULL),
 ('5511569800', NULL, 'Andrea Iliana Cantú Mayorga', NULL, NULL, NULL, 0, 'Usuario', 0, NULL),
+('5532519266', NULL, 'Ximena Guadalupe Córdoba Ángeles', NULL, NULL, NULL, 0, 'Usuario', 0, NULL),
 ('81-3104-6812', 'Fan', 'Carlos Delgado Contreras', 'A01712819@tec.mx', 'Masculino', '2005-08-16', 0, 'Usuario', 0, NULL),
 ('8131046812', NULL, 'Cliente', NULL, NULL, NULL, 0, 'Usuario', 0, NULL),
 ('8131046813', NULL, 'Cliente', NULL, NULL, NULL, 0, 'Usuario', 0, NULL),
@@ -527,6 +549,28 @@ INSERT INTO `cliente_canjea_promociones` (`Numero_Telefonico`, `ID_Promocion`, `
 ('55-9661-9093', 'PR32616125', '2026-09-15', 1),
 ('55-9783-5924', 'PR48403051', '2025-09-01', 0),
 ('55-9862-4951', 'PR87134462', '2026-07-02', 1);
+
+-- --------------------------------------------------------
+
+--
+-- Estructura de tabla para la tabla `cliente_tiene_review`
+--
+
+DROP TABLE IF EXISTS `cliente_tiene_review`;
+CREATE TABLE `cliente_tiene_review` (
+  `Numero_Telefonico` varchar(20) NOT NULL,
+  `ID_Review` varchar(10) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish2_ci;
+
+--
+-- Volcado de datos para la tabla `cliente_tiene_review`
+--
+
+INSERT INTO `cliente_tiene_review` (`Numero_Telefonico`, `ID_Review`) VALUES
+('55-3251-9266', 'RV16880275'),
+('55-3251-9266', 'RV28862328'),
+('55-3251-9266', 'RV73832776'),
+('55-3251-9266', 'RV77544422');
 
 -- --------------------------------------------------------
 
@@ -762,7 +806,17 @@ INSERT INTO `detalle_orden_insumos` (`id`, `id_orden_producto`, `ID_Insumo`, `ID
 (33, 84, 'IN15500744', 'OD18014207', 'extra', 24.00),
 (34, 84, 'IN07275176', 'OD18014207', 'extra', 11.00),
 (35, 84, 'IN13442507', 'OD18014207', 'extra', 14.00),
-(36, 84, 'IN18602747', 'OD18014207', 'extra', 10.00);
+(36, 84, 'IN18602747', 'OD18014207', 'extra', 10.00),
+(37, 85, 'IN97359153', 'OD61327051', 'extra', 13.00),
+(38, 85, 'IN09927406', 'OD61327051', 'base', 0.00),
+(39, 86, 'IN04894004', 'OD95000104', 'extra', 19.00),
+(40, 86, 'IN22595885', 'OD95000104', 'base', 0.00),
+(41, 87, 'IN70788691', 'OD23256977', 'base', 0.00),
+(42, 88, 'IN52715589', 'OD99905005', 'base', 0.00),
+(43, 89, 'IN33700399', 'OD99905005', 'base', 0.00),
+(44, 90, 'IN63629622', 'OD56710921', 'base', 0.00),
+(45, 91, 'IN76382864', 'OD56710921', 'extra', 11.00),
+(46, 91, 'IN29165394', 'OD56710921', 'base', 0.00);
 
 -- --------------------------------------------------------
 
@@ -935,32 +989,31 @@ CREATE TABLE `insumo` (
 --
 
 INSERT INTO `insumo` (`ID_Insumo`, `Nombre`, `Categoría`, `Precio`, `Activo`, `Imagen`) VALUES
-('IN02201393', 'Leche de soya', 'Platillo', 14.00, 1, '15'),
+('IN02201393', 'Leche de soya', 'Bebidas', 14.00, 1, '15'),
 ('IN02803814', 'Rajas de chile poblano', 'Platillo', 0.00, 1, NULL),
-('IN03374506', 'arugula', 'Platillo', 13.00, 1, '15'),
-('IN04894004', 'Kinder Delice', 'Platillo', 19.00, 1, '15'),
+('IN03374506', 'arugula', 'Crepas', 13.00, 1, '15'),
+('IN04894004', 'Kinder Delice', 'Crepas', 19.00, 1, '15'),
 ('IN05269621', 'Cajeta de la casa', 'Platillo', 13.00, 1, '15'),
-('IN06332851', 'Nutella', 'Platillo', 23.00, 1, '20'),
+('IN06332851', 'Nutella', 'Crepas', 23.00, 1, '20'),
 ('IN07050794', 'Nuez', 'Platillo', 22.00, 1, '15'),
-('IN07275176', 'Chai', 'Platillo', 11.00, 1, '15'),
+('IN07275176', 'Chai', 'Bebidas', 11.00, 1, '15'),
 ('IN09130588', 'Mermelada de fresa', 'Platillo', 19.00, 0, '15'),
 ('IN09927406', 'Fresa ', 'Platillo', 18.00, 1, '15'),
 ('IN12080526', 'Miel de maple', 'Platillo', 13.00, 0, '15'),
-('IN13297648', 'Mocha Chalry', 'Platillo', 25.50, 1, NULL),
+('IN13297648', 'Mocha Chalry', 'Bebidas', 25.50, 1, NULL),
 ('IN13442507', 'Coco Tostado', 'Platillo', 14.00, 1, '15'),
-('IN15204720', 'Albahaca', 'Platillo', 12.00, 1, '15'),
+('IN15204720', 'Albahaca', 'Crepas', 12.00, 1, '15'),
 ('IN15500744', 'Zarzamora', 'Platillo', 24.00, 1, '15'),
 ('IN16420525', 'Avellana', 'Platillo', 17.00, 1, '15'),
 ('IN18602747', 'queso parmesano', 'Platillo', 10.00, 1, '15'),
-('IN18968294', 'Pesto', 'Platillo', 12.00, 1, '15'),
-('IN19746459', 'Fresa', 'Platillo', 16.00, 0, '15'),
+('IN18968294', 'Pesto', 'Crepas', 12.00, 1, '15'),
 ('IN19821749', 'Paleta Magnum', 'Platillo', 16.00, 1, '15'),
 ('IN20877882', 'Nieve', 'Platillo', 17.00, 1, '25'),
 ('IN21283895', 'Snickers', 'Platillo', 15.00, 1, '15'),
 ('IN21585929', 'Oreo', 'Platillo', 10.00, 1, '15'),
 ('IN21882955', 'Fresas naturales', 'Platillo', 23.00, 1, '15'),
 ('IN22197307', 'Lechera', 'Platillo', 23.00, 0, '15'),
-('IN22595885', 'jamón', 'Platillo', 21.00, 1, '15'),
+('IN22595885', 'jamón', 'Crepas', 21.00, 1, '15'),
 ('IN24527442', 'Crema de cacahuate', 'Platillo', 22.00, 0, '15'),
 ('IN25799043', 'tres quesos', 'Platillo', 10.00, 1, '15'),
 ('IN28033998', 'Plátano', 'Platillo', 24.00, 0, '15'),
@@ -968,7 +1021,7 @@ INSERT INTO `insumo` (`ID_Insumo`, `Nombre`, `Categoría`, `Precio`, `Activo`, `
 ('IN29165394', 'Philadelphia', 'Platillo', 11.00, 0, '15'),
 ('IN33700399', 'Arándanos', 'Platillo', 22.00, 1, '15'),
 ('IN34568576', 'Nutella', 'Platillo', 21.00, 1, '15'),
-('IN36386148', 'Chai', 'Platillo', 18.00, 1, '15'),
+('IN36386148', 'Chai', 'Bebidas', 18.00, 1, '15'),
 ('IN36405225', 'frosting', 'Platillo', 25.00, 1, '15'),
 ('IN37891778', 'Bubulubu', 'Platillo', 18.00, 1, '15'),
 ('IN37997343', 'Vainilla', 'Platillo', 12.00, 1, '15'),
@@ -976,8 +1029,8 @@ INSERT INTO `insumo` (`ID_Insumo`, `Nombre`, `Categoría`, `Precio`, `Activo`, `
 ('IN44222704', 'Pollo', 'Platillo', 22.00, 1, '15'),
 ('IN45987803', 'Moras Azules', 'Platillo', 25.00, 1, '15'),
 ('IN48200057', 'Queso mozzarella', 'Platillo', 24.00, 1, '15'),
-('IN50256666', 'Leche de avena', 'Platillo', 24.00, 1, '15'),
-('IN51420289', 'Leche de coco', 'Platillo', 22.00, 1, '15'),
+('IN50256666', 'Leche de avena', 'Bebidas', 24.00, 1, '15'),
+('IN51420289', 'Leche de coco', 'Bebidas', 22.00, 1, '15'),
 ('IN51564559', 'Ferrero', 'Platillo', 20.00, 1, '15'),
 ('IN52715589', 'Caramelo', 'Platillo', 20.00, 1, '15'),
 ('IN52938515', 'Pan Oroweat de 12 granos', 'Platillo', 50.00, 1, NULL),
@@ -993,7 +1046,7 @@ INSERT INTO `insumo` (`ID_Insumo`, `Nombre`, `Categoría`, `Precio`, `Activo`, `
 ('IN59824502', 'Nutella', 'Platillo', 19.00, 1, '20'),
 ('IN60313355', 'Manzana', 'Platillo', 21.00, 1, '15'),
 ('IN61916404', 'pistache natural', 'Platillo', 12.00, 1, '15'),
-('IN62252551', 'Crema Irlandesa', 'Platillo', 18.00, 1, '15'),
+('IN62252551', 'Crema Irlandesa', 'Bebidas', 18.00, 1, '15'),
 ('IN63629622', 'Nutella', 'Platillo', 24.00, 1, '20'),
 ('IN63793176', 'crema de chile poblano', 'Platillo', 25.00, 1, '15'),
 ('IN65318693', 'Vainilla', 'Platillo', 15.00, 1, '15'),
@@ -1010,7 +1063,7 @@ INSERT INTO `insumo` (`ID_Insumo`, `Nombre`, `Categoría`, `Precio`, `Activo`, `
 ('IN74154670', 'Avellana', 'Platillo', 16.00, 1, '15'),
 ('IN74201967', 'Plátano', 'Platillo', 24.00, 1, '15'),
 ('IN74484938', 'Crema de pistáche', 'Platillo', 21.00, 1, '15'),
-('IN74817391', 'Leche deslactosada', 'Platillo', 11.00, 1, '10'),
+('IN74817391', 'Leche deslactosada', 'Bebidas', 10.00, 1, '10'),
 ('IN75784983', 'Frambuesa', 'Platillo', 23.00, 1, '15'),
 ('IN76382864', 'Crema de almendra', 'Platillo', 11.00, 1, '15'),
 ('IN76712465', 'Chocolate blanco', 'Platillo', 21.00, 1, '15'),
@@ -1018,10 +1071,10 @@ INSERT INTO `insumo` (`ID_Insumo`, `Nombre`, `Categoría`, `Precio`, `Activo`, `
 ('IN80392027', 'Crema de lotus', 'Platillo', 16.00, 1, '15'),
 ('IN80740094', 'Canela', 'Platillo', 15.00, 1, '15'),
 ('IN80873458', 'Madreselva', 'Platillo', 11.00, 1, '15'),
-('IN82503493', 'Fresa', 'Platillo', 19.00, 1, '15'),
 ('IN82598534', 'Zarzamora', 'Platillo', 21.00, 1, '15'),
+('IN82910385', 'PruebaALLCAT', 'Bebidas', 15.00, 1, NULL),
 ('IN84684230', 'Jamón serrano', 'Platillo', 18.00, 1, '15'),
-('IN84763568', 'Leche de almendra', 'Platillo', 21.00, 1, '15'),
+('IN84763568', 'Leche de almendra', 'Bebidas', 15.00, 1, '15'),
 ('IN85641851', 'Chocolate cookies n\' cream', 'Platillo', 19.00, 1, '15'),
 ('IN87022030', 'galleta lotus', 'Platillo', 18.00, 1, '15'),
 ('IN90060430', 'Mocha', 'Platillo', 11.00, 1, '15'),
@@ -1031,6 +1084,131 @@ INSERT INTO `insumo` (`ID_Insumo`, `Nombre`, `Categoría`, `Precio`, `Activo`, `
 ('IN97359153', 'Cebolla', 'Platillo', 13.00, 1, '15'),
 ('IN98136923', 'Mermelada de zarzamora', 'Platillo', 23.00, 0, '15'),
 ('IN99852788', 'Vainilla', 'Platillo', 12.00, 1, '15');
+
+-- --------------------------------------------------------
+
+--
+-- Estructura de tabla para la tabla `insumo_categoria`
+--
+
+DROP TABLE IF EXISTS `insumo_categoria`;
+CREATE TABLE `insumo_categoria` (
+  `ID_Insumo` varchar(10) NOT NULL,
+  `Nom_Categoria` varchar(50) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish2_ci;
+
+--
+-- Volcado de datos para la tabla `insumo_categoria`
+--
+
+INSERT INTO `insumo_categoria` (`ID_Insumo`, `Nom_Categoria`) VALUES
+('IN02201393', 'Bebidas'),
+('IN02803814', 'Platillo'),
+('IN03374506', 'Crepas'),
+('IN03374506', 'Platillo'),
+('IN04894004', 'Crepas'),
+('IN04894004', 'Platillo'),
+('IN04894004', 'Waffles'),
+('IN05269621', 'Platillo'),
+('IN06332851', 'Crepas'),
+('IN06332851', 'Platillo'),
+('IN07050794', 'Platillo'),
+('IN07275176', 'Bebidas'),
+('IN07275176', 'Platillo'),
+('IN09130588', 'Platillo'),
+('IN09927406', 'Platillo'),
+('IN12080526', 'Platillo'),
+('IN13297648', 'Bebidas'),
+('IN13442507', 'Platillo'),
+('IN15204720', 'Crepas'),
+('IN15204720', 'Platillo'),
+('IN15500744', 'Platillo'),
+('IN16420525', 'Platillo'),
+('IN18602747', 'Platillo'),
+('IN18968294', 'Crepas'),
+('IN18968294', 'Platillo'),
+('IN19821749', 'Platillo'),
+('IN20877882', 'Platillo'),
+('IN21283895', 'Platillo'),
+('IN21585929', 'Platillo'),
+('IN21882955', 'Platillo'),
+('IN22197307', 'Platillo'),
+('IN22595885', 'Crepas'),
+('IN22595885', 'Platillo'),
+('IN22595885', 'Waffles'),
+('IN24527442', 'Platillo'),
+('IN25799043', 'Platillo'),
+('IN28033998', 'Platillo'),
+('IN29033240', 'Platillo'),
+('IN29165394', 'Platillo'),
+('IN33700399', 'Platillo'),
+('IN34568576', 'Platillo'),
+('IN36386148', 'Bebidas'),
+('IN36405225', 'Platillo'),
+('IN37891778', 'Platillo'),
+('IN37997343', 'Platillo'),
+('IN38338698', 'Platillo'),
+('IN44222704', 'Platillo'),
+('IN45987803', 'Platillo'),
+('IN48200057', 'Platillo'),
+('IN50256666', 'Bebidas'),
+('IN51420289', 'Bebidas'),
+('IN51564559', 'Platillo'),
+('IN52715589', 'Platillo'),
+('IN52938515', 'Platillo'),
+('IN53190866', 'Platillo'),
+('IN53235582', 'Platillo'),
+('IN53462867', 'Platillo'),
+('IN54232707', 'Platillo'),
+('IN56899901', 'Platillo'),
+('IN58134969', 'Platillo'),
+('IN58688454', 'Platillo'),
+('IN58759482', 'Platillo'),
+('IN59087286', 'Platillo'),
+('IN59824502', 'Platillo'),
+('IN60313355', 'Platillo'),
+('IN61916404', 'Platillo'),
+('IN62252551', 'Bebidas'),
+('IN62252551', 'Platillo'),
+('IN63629622', 'Platillo'),
+('IN63793176', 'Platillo'),
+('IN65318693', 'Platillo'),
+('IN65885034', 'Platillo'),
+('IN68263429', 'Platillo'),
+('IN68300439', 'Platillo'),
+('IN68496031', 'Platillo'),
+('IN68797428', 'Platillo'),
+('IN68810175', 'Platillo'),
+('IN69166690', 'Platillo'),
+('IN70367614', 'Platillo'),
+('IN70788691', 'Platillo'),
+('IN73813019', 'Platillo'),
+('IN74154670', 'Platillo'),
+('IN74201967', 'Platillo'),
+('IN74484938', 'Platillo'),
+('IN74817391', 'Bebidas'),
+('IN75784983', 'Platillo'),
+('IN76382864', 'Platillo'),
+('IN76712465', 'Platillo'),
+('IN78060232', 'Platillo'),
+('IN80392027', 'Platillo'),
+('IN80740094', 'Platillo'),
+('IN80873458', 'Platillo'),
+('IN82598534', 'Platillo'),
+('IN82910385', 'Bebidas'),
+('IN82910385', 'Otros'),
+('IN82910385', 'Platillo'),
+('IN84684230', 'Platillo'),
+('IN84763568', 'Bebidas'),
+('IN85641851', 'Platillo'),
+('IN87022030', 'Platillo'),
+('IN90060430', 'Platillo'),
+('IN90562067', 'Platillo'),
+('IN93347807', 'Platillo'),
+('IN93539227', 'Platillo'),
+('IN97359153', 'Platillo'),
+('IN98136923', 'Platillo'),
+('IN99852788', 'Platillo');
 
 -- --------------------------------------------------------
 
@@ -1069,7 +1247,20 @@ INSERT INTO `log_accesos_otp` (`id`, `telefono`, `accion`, `fecha`) VALUES
 (16, '55-1156-9800', 'OTP_ELIMINADO', '2026-04-24 03:35:01'),
 (17, '55-1156-9800', 'OTP_ELIMINADO', '2026-04-24 03:39:45'),
 (18, '55-1156-9800', 'OTP_ELIMINADO', '2026-04-24 04:10:24'),
-(19, '55-1156-9800', 'OTP_ELIMINADO', '2026-04-24 04:21:22');
+(19, '55-1156-9800', 'OTP_ELIMINADO', '2026-04-24 04:21:22'),
+(20, '55-3251-9266', 'OTP_ELIMINADO', '2026-04-27 02:25:07'),
+(21, '55-3251-9266', 'OTP_ELIMINADO', '2026-04-27 02:25:34'),
+(22, '55-3251-9266', 'OTP_ELIMINADO', '2026-04-27 02:26:28'),
+(23, '55-3251-9266', 'OTP_ELIMINADO', '2026-04-27 02:34:16'),
+(24, '55-3251-9266', 'OTP_ELIMINADO', '2026-04-27 02:38:05'),
+(25, '55-3251-9266', 'OTP_ELIMINADO', '2026-04-27 02:43:43'),
+(26, '55-3251-9266', 'OTP_ELIMINADO', '2026-04-27 02:49:11'),
+(27, '55-3251-9266', 'OTP_ELIMINADO', '2026-04-27 02:59:07'),
+(28, '55-3251-9266', 'OTP_ELIMINADO', '2026-04-27 03:01:59'),
+(29, '55-3251-9266', 'OTP_ELIMINADO', '2026-04-27 04:03:07'),
+(30, '55-3251-9266', 'OTP_ELIMINADO', '2026-04-27 04:03:21'),
+(31, '55-3251-9266', 'OTP_ELIMINADO', '2026-04-27 13:15:56'),
+(32, '55-3251-9266', 'OTP_ELIMINADO', '2026-04-27 13:16:13');
 
 -- --------------------------------------------------------
 
@@ -1164,60 +1355,65 @@ INSERT INTO `orden` (`ID_Orden`, `ID_Turno`, `Numero_Telefonico`, `Tipo_Orden`, 
 ('OD16211107', 'TN26496107', '55-8962-5930', 'Pick-up', 'Juan Pablo Juárez Ortiz', 'Cancelado', '2026-12-11 06:00:00', NULL),
 ('OD16481371', 'TN47025996', '55-9783-5924', 'Pick-up', 'Ricardo Antonio Gutiérrez García', 'Listo', '2026-11-01 06:00:00', NULL),
 ('OD17661841', 'TN46937585', '55-4217-5522', 'Sucursal', 'Ilian Judith Castillo Beristain', 'Listo', '2026-03-02 06:00:00', NULL),
-('OD18014207', 'TN26496107', '5511569800', 'Pick-up', 'Andrea Iliana Cantú Mayorga', 'Pendiente', '2026-04-24 04:22:23', NULL),
+('OD18014207', 'TN26496107', '5511569800', 'Pick-up', 'Andrea Iliana Cantú Mayorga', 'Cancelado', '2026-04-24 04:22:23', NULL),
 ('OD19367239', 'TN26496107', '55-7634-3304', 'Sucursal', 'Carlos Delgado Contreras', 'Entregado', '2026-07-11 06:00:00', NULL),
 ('OD20045010', 'TN26496107', '55-3885-6878', 'Sucursal', 'Mariana Frías Olguín', 'Entregado', '2026-09-15 06:00:00', NULL),
 ('OD23043487', 'TN26496107', '55-9297-8935', 'Pick-up', 'Juan Pablo Domínguez Ángel', 'Listo', '2026-01-27 06:00:00', NULL),
-('OD27810441', 'TN26496107', '8131046813', 'Pick-up', 'Juan Pablo Juarez', 'Pendiente', '2026-04-23 05:00:46', NULL),
-('OD29765935', 'TN26496107', '5511569800', 'Pick-up', 'Andrea Iliana Cantú Mayorga', 'Pendiente', '2026-04-24 03:35:41', NULL),
+('OD23256977', 'TN26496107', '5532519266', 'Sucursal', 'Ximena Guadalupe Córdoba Ángeles', 'Entregado', '2026-04-27 02:25:41', NULL),
+('OD27810441', 'TN26496107', '8131046813', 'Pick-up', 'Juan Pablo Juarez', 'Cancelado', '2026-04-23 05:00:46', NULL),
+('OD29765935', 'TN26496107', '5511569800', 'Pick-up', 'Andrea Iliana Cantú Mayorga', 'Cancelado', '2026-04-24 03:35:41', NULL),
 ('OD33014213', 'TN47025996', '55-8034-2908', 'Pick-up', 'Sofía Alondra Reyes Gómez', 'Listo', '2026-10-15 06:00:00', NULL),
 ('OD33655470', 'TN46937585', '55-7110-9468', 'Pick-up', 'Santiago Barjau Hernández', 'Entregado', '2026-02-17 06:00:00', NULL),
 ('OD33804496', 'TN46937585', '55-9583-1422', 'Pick-up', 'Galia Lucía Castro Aboytes', 'Cancelado', '2026-12-17 06:00:00', NULL),
-('OD33834225', 'TN26496107', '8131046813', 'Pick-up', 'Pepe', 'Pendiente', '2026-04-23 04:51:50', NULL),
+('OD33834225', 'TN26496107', '8131046813', 'Pick-up', 'Pepe', 'Cancelado', '2026-04-23 04:51:50', NULL),
 ('OD33951115', 'TN47025996', '55-2006-6063', 'Sucursal', 'Isabela Ruiz Velasco Angeles', 'Listo', '2026-09-21 06:00:00', NULL),
 ('OD34843825', 'TN46937585', '55-8069-3709', 'Pick-up', 'Jesús Osvaldo Ramos Pérez', 'Listo', '2026-07-04 06:00:00', NULL),
-('OD35079193', 'TN26496107', '5511569800', 'Pick-up', 'Andrea Iliana Cantú Mayorga', 'Pendiente', '2026-04-24 03:40:32', NULL),
-('OD36841880', 'TN26496107', '8131046812', 'Delivery', 'Cliente', 'Pendiente', '2026-04-22 03:22:29', NULL),
+('OD35079193', 'TN26496107', '5511569800', 'Pick-up', 'Andrea Iliana Cantú Mayorga', 'Cancelado', '2026-04-24 03:40:32', NULL),
+('OD36841880', 'TN26496107', '8131046812', 'Delivery', 'Cliente', 'Cancelado', '2026-04-22 03:22:29', NULL),
 ('OD37616868', 'TN46937585', '55-6624-7720', 'Delivery', 'Mariangel Aguirre Magallanes', 'Entregado', '2026-12-22 06:00:00', NULL),
 ('OD37925699', 'TN26496107', '55-4606-3624', 'Sucursal', 'Héctor Alejandro Barrón Tamayo', 'Entregado', '2026-05-22 06:00:00', NULL),
 ('OD38730521', 'TN26496107', '55-4203-5221', 'Delivery', 'Ricardo Cortés Espinosa', 'Entregado', '2026-09-25 06:00:00', NULL),
-('OD39256016', 'TN26496107', '8131046812', 'Pick-up', 'Cliente', 'Pendiente', '2026-04-22 03:19:18', NULL),
-('OD41009687', 'TN26496107', '8134556800', 'Pick-up', 'Juan Pablo Juarez', 'Pendiente', '2026-04-23 04:53:41', NULL),
+('OD39256016', 'TN26496107', '8131046812', 'Pick-up', 'Cliente', 'Cancelado', '2026-04-22 03:19:18', NULL),
+('OD41009687', 'TN26496107', '8134556800', 'Pick-up', 'Juan Pablo Juarez', 'Cancelado', '2026-04-23 04:53:41', NULL),
 ('OD45723683', 'TN47025996', '55-5018-5507', 'Sucursal', 'Armando Montealegre Villagrán', 'Cancelado', '2026-12-02 06:00:00', NULL),
-('OD45999906', 'TN26496107', '4428199000', 'Pick-up', 'Juan Pablo Juarez', 'Pendiente', '2026-04-23 04:56:04', NULL),
-('OD46400505', 'TN26496107', '8131046813', 'Pick-up', 'Cliente', 'Pendiente', '2026-04-22 14:58:48', NULL),
+('OD45999906', 'TN26496107', '4428199000', 'Pick-up', 'Juan Pablo Juarez', 'Cancelado', '2026-04-23 04:56:04', NULL),
+('OD46400505', 'TN26496107', '8131046813', 'Pick-up', 'Cliente', 'Cancelado', '2026-04-22 14:58:48', NULL),
 ('OD48634931', 'TN26496107', '55-3672-3148', 'Delivery', 'Alejandro Contreras Magallanes', 'Preparando', '2026-06-18 06:00:00', NULL),
 ('OD51835069', 'TN46937585', '55-8616-1973', 'Pick-up', 'Alberto Barba Arroyo', 'Preparando', '2026-10-25 06:00:00', NULL),
 ('OD52937565', 'TN26496107', '55-2884-7043', 'Sucursal', 'Eduardo Hernández Alonso', 'Listo', '2026-11-15 06:00:00', NULL),
 ('OD54215310', 'TN47025996', '55-8361-8067', 'Delivery', 'Katya Jiménez Antonio', 'Listo', '2026-01-07 06:00:00', NULL),
 ('OD54491099', 'TN26496107', '55-6788-4484', 'Sucursal', 'Víctor Hugo Esquivel Feregrino', 'Preparando', '2026-05-22 06:00:00', NULL),
 ('OD55639966', 'TN47025996', '55-7731-4202', 'Delivery', 'Renata Martínez Ozumbilla', 'Entregado', '2026-07-08 06:00:00', NULL),
+('OD56710921', 'TN26496107', '5532519266', 'Sucursal', 'Ximena Guadalupe Córdoba Ángeles', 'Pendiente', '2026-04-27 13:16:47', NULL),
 ('OD58196492', 'TN47025996', '55-3938-1454', 'Pick-up', 'Hannah Carolina Hernández Reyes', 'Preparando', '2026-08-15 06:00:00', NULL),
 ('OD59250531', 'TN47025996', '55-3647-8536', 'Pick-up', 'Dana Izel Martínez García', 'Preparando', '2026-05-13 06:00:00', NULL),
+('OD61327051', 'TN26496107', '11111113', 'Sucursal', 'AAAAA', 'Preparando', '2026-04-25 00:11:12', NULL),
 ('OD62481224', 'TN26496107', '55-1156-9800', 'Pick-up', 'Andrea Iliana Cantú Mayorga', 'Preparando', '2026-08-06 06:00:00', NULL),
 ('OD62573621', 'TN47025996', '55-7869-6124', 'Sucursal', 'Emiliano Murillo Ruiz', 'Preparando', '2026-06-10 06:00:00', NULL),
 ('OD66638248', 'TN46937585', '55-8913-8427', 'Sucursal', 'Fernanda Curiel Perez', 'Listo', '2026-08-26 06:00:00', NULL),
-('OD67602512', 'TN26496107', '8131046812', 'Pick-up', 'Pepe', 'Pendiente', '2026-04-23 04:58:22', NULL),
+('OD67602512', 'TN26496107', '8131046812', 'Pick-up', 'Pepe', 'Cancelado', '2026-04-23 04:58:22', NULL),
 ('OD68164439', 'TN26496107', '55-6026-1598', 'Pick-up', 'Maria Fernanda Padme Lakshmi Martínez Jara', 'Preparando', '2026-06-08 06:00:00', NULL),
 ('OD68369798', 'TN26496107', '55-3225-9858', 'Delivery', 'Alexis Yaocalli Berthou Haas', 'Listo', '2026-08-19 06:00:00', NULL),
 ('OD68555825', 'TN47025996', '55-7260-4596', 'Delivery', 'Fernanda Rosales Herrera', 'Entregado', '2026-07-21 06:00:00', NULL),
 ('OD69891418', 'TN46937585', '55-8317-4862', 'Pick-up', 'Oscar Alexander Vilchis Soto', 'Preparando', '2026-02-18 06:00:00', NULL),
 ('OD70011240', 'TN47025996', '55-9661-9093', 'Delivery', 'Diego Serrano Pardo', 'Listo', '2026-01-27 06:00:00', NULL),
-('OD70559254', 'TN26496107', '5511569800', 'Pick-up', 'Andrea Iliana Cantú Mayorga', 'Pendiente', '2026-04-24 04:10:51', NULL),
+('OD70559254', 'TN26496107', '5511569800', 'Pick-up', 'Andrea Iliana Cantú Mayorga', 'Cancelado', '2026-04-24 04:10:51', NULL),
 ('OD73450134', 'TN46937585', '55-7095-1397', 'Delivery', 'Gabriela Frías Quiroz', 'Listo', '2026-05-16 06:00:00', NULL),
-('OD73961888', 'TN26496107', '443789097', 'Pick-up', 'Lalo', 'Pendiente', '2026-04-23 05:01:55', NULL),
-('OD74408809', 'TN26496107', '5511569800', 'Pick-up', 'Andrea Iliana Cantú Mayorga', 'Pendiente', '2026-04-24 00:47:38', NULL),
-('OD77070485', 'TN26496107', '8131046812', 'Pick-up', 'Pepe', 'Pendiente', '2026-04-23 03:18:28', NULL),
+('OD73961888', 'TN26496107', '443789097', 'Pick-up', 'Lalo', 'Cancelado', '2026-04-23 05:01:55', NULL),
+('OD74408809', 'TN26496107', '5511569800', 'Pick-up', 'Andrea Iliana Cantú Mayorga', 'Cancelado', '2026-04-24 00:47:38', NULL),
+('OD77070485', 'TN26496107', '8131046812', 'Pick-up', 'Pepe', 'Cancelado', '2026-04-23 03:18:28', NULL),
 ('OD81178473', 'TN46937585', '55-7378-3019', 'Delivery', 'Jonathan de Jesús Anaya Correa', 'Listo', '2026-06-23 06:00:00', NULL),
 ('OD81537460', 'TN26496107', '55-2669-1307', 'Pick-up', 'Ana Camila Cuevas González', 'Listo', '2026-04-06 06:00:00', NULL),
 ('OD82644084', 'TN26496107', '55-1579-6753', 'Pick-up', 'Eduardo Daniel Juárez Pineda', 'Entregado', '2026-07-26 06:00:00', NULL),
 ('OD94187424', 'TN26496107', '55-1827-6651', 'Sucursal', 'David Antonio Gandara Ruiz', 'Entregado', '2026-05-17 06:00:00', NULL),
+('OD95000104', 'TN26496107', '44294924', 'Sucursal', 'RN', 'Cancelado', '2026-04-25 01:08:13', NULL),
 ('OD96155417', 'TN46937585', '55-3251-9266', 'Pick-up', 'Ximena Guadalupe Córdoba Ángeles', 'Entregado', '2026-05-21 06:00:00', NULL),
 ('OD96250697', 'TN26496107', '55-9221-5175', 'Pick-up', 'Ana Valeria Machuca Miranda', 'Listo', '2026-02-19 06:00:00', NULL),
-('OD96262689', 'TN26496107', '442134789', 'Pick-up', 'Lalo', 'Pendiente', '2026-04-24 04:07:58', NULL),
+('OD96262689', 'TN26496107', '442134789', 'Pick-up', 'Lalo', 'Cancelado', '2026-04-24 04:07:58', NULL),
 ('OD96747780', 'TN26496107', '55-9026-7777', 'Sucursal', 'Sebastián Mansilla Cots', 'Listo', '2026-04-22 06:00:00', NULL),
 ('OD97056014', 'TN46937585', '55-9862-4951', 'Delivery', 'Ramón Eliezer De Santos García', 'Entregado', '2026-12-27 06:00:00', NULL),
-('OD97294540', 'TN47025996', '55-4768-9613', 'Sucursal', 'Jessica Hernández Tejeda', 'Entregado', '2026-07-21 06:00:00', NULL);
+('OD97294540', 'TN47025996', '55-4768-9613', 'Sucursal', 'Jessica Hernández Tejeda', 'Entregado', '2026-07-21 06:00:00', NULL),
+('OD99905005', 'TN26496107', '5532519266', 'Sucursal', 'Ximena Guadalupe Córdoba Ángeles', 'Pendiente', '2026-04-27 04:04:14', NULL);
 
 -- --------------------------------------------------------
 
@@ -1316,7 +1512,14 @@ INSERT INTO `orden_tiene_producto` (`id_orden_producto`, `ID_Orden`, `ID_Product
 (81, 'OD70559254', 'PD68787354', 1, 19.90),
 (82, 'OD18014207', 'PD12662761', 1, 51.00),
 (83, 'OD18014207', 'PD28020090', 1, 75.00),
-(84, 'OD18014207', 'PD_COMODIN', 1, 109.00);
+(84, 'OD18014207', 'PD_COMODIN', 1, 109.00),
+(85, 'OD61327051', 'PD28020090', 1, 88.00),
+(86, 'OD95000104', 'PD64070159', 1, 139.00),
+(87, 'OD23256977', 'PD62596246', 1, 67.50),
+(88, 'OD99905005', 'PD52877596', 1, 70.00),
+(89, 'OD99905005', 'PD00387421', 1, 155.00),
+(90, 'OD56710921', 'PD12662761', 1, 70.00),
+(91, 'OD56710921', 'PD88871658', 1, 87.30);
 
 -- --------------------------------------------------------
 
@@ -1525,6 +1728,7 @@ INSERT INTO `producto` (`ID_Producto`, `Tamaño`, `Categoría`, `Nombre`, `Preci
 ('PD34384229', 'Básico', 'Platillo', 'La crepa de crepas', 25.00, 1, 'Dulce', 'https://images.aws.nestle.recipes/resized/81bcf4cb38911cde6aa17357200368ba_pastel_de_crepas_de_chocolate_1200_628.jpg'),
 ('PD35805212', 'Chico', 'Platillo', 'Rol de Canela', 160.00, 0, 'Artesanal', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTEr7uwCOR_RA9vz4wLYe_-l_Phk6_zCPff3A&s'),
 ('PD36110746', 'Básico', 'Platillo', 'Crepa de Pollo', 122.00, 1, 'Dulce', 'URL'),
+('PD37804377', 'Básico', 'Crepas', 'Prueba', 109.00, 1, 'Caliente', 'https://www.cocinadelirante.com/800x600/filters:format(webp):quality(75)/sites/default/files/images/2024/04/como-hacer-crepas-con-frutas.jpg'),
 ('PD39713286', 'Chico', 'Platillo', 'Rosendo Nieblas', 170.00, 1, 'Salado', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRvwpdUSumcZbObzis337Og907iWv7AeGalaQ&s'),
 ('PD41659387', 'Básico', 'Platillo', 'Crepa Sebas ', 300.00, 1, 'Dulce', 'https://blog.renaware.com/wp-content/uploads/2023/03/Crepas-con-frutos-rojos-1111477-scaled.jpg'),
 ('PD41719989', 'Básico', 'Platillo', 'Crepa De Platano', 100.00, 1, 'Dulce', 'URL'),
@@ -1544,10 +1748,12 @@ INSERT INTO `producto` (`ID_Producto`, `Tamaño`, `Categoría`, `Nombre`, `Preci
 ('PD60185744', 'Chico', 'Platillo', 'Golden Bites', 140.00, 0, 'Artesanal', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSRIpnMo4Rp39xPMWa1FLlXR11q6tHW7eWAjA&s'),
 ('PD60339348', 'Chico', 'Platillo', 'Kit Kat', 155.00, 1, 'Artesanal', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS8Ji1HTWSQ4gmhIVCRgliuvE0NGcKAWdhing&s'),
 ('PD62154365', 'Chico', 'Bebidas', 'Iced Dirty Matcha', 105.00, 1, 'Frío', 'https://http2.mlstatic.com/D_NQ_NP_602534-MLM80622035266_112024-O.webp'),
+('PD62316585', 'Básico', 'Crepas', 'AA', 220.00, 1, 'Otros', 'https://upload.wikimedia.org/wikipedia/commons/7/71/Black.png'),
 ('PD62321669', 'Chico', 'Platillo', 'Berry Lotus', 160.00, 0, 'Artesanal', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQGlIK60yqu2i866dM9orvLUPwylIiCNv16xA&s'),
 ('PD62596246', 'Chico', 'Bebidas', 'Latte', 75.00, 1, 'Caliente', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSrc2tPztEd3gDD0g_tw2hoFgQzY6oclHt3FQ&s'),
 ('PD62833458', 'Chico', 'Platillo', 'Snickers', 155.00, 1, 'Artesanal', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRBgZ36J1BV_bl2NH4--AgCenT2hGylAviiJw&s'),
 ('PD63821765', 'Chico', 'Bebidas', 'Oreo', 99.00, 1, 'Frío', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQnIqURpZHzlti1iF4xe2If7Am3HxJ8vQKwMw&s'),
+('PD64070159', 'Básico', 'Waffles', 'WP', 120.00, 1, 'Caliente', 'https://lilluna.com/wp-content/uploads/2025/03/buttermilk-waffles-resize-17.jpg'),
 ('PD66334927', 'Chico', 'Bebidas', 'Vainilla', 99.00, 1, 'Frío', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRA3re4lXRJr_f8wr3HTkuXOi2NUbEnSFg2nA&s'),
 ('PD66451976', 'Chico', 'Bebidas', 'Motchai Frío', 89.00, 1, 'Frío', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRQlE1qLRDats1qjW5dBXtkKcYd2tZh4ihRYA&s'),
 ('PD68133903', 'Chico', 'Platillo', 'La Pizzeria', 155.00, 1, 'Salado', 'https://sabrosano.com/wp-content/uploads/2020/05/Crepas_jamon_queso_principal.jpg'),
@@ -1648,7 +1854,6 @@ INSERT INTO `producto_tiene_insumo` (`ID_Producto`, `ID_Insumo`) VALUES
 ('PD01993843', 'IN68810175'),
 ('PD02624644', 'IN20877882'),
 ('PD03687244', 'IN76382864'),
-('PD09374303', 'IN82503493'),
 ('PD12662761', 'IN63629622'),
 ('PD12929845', 'IN07050794'),
 ('PD13048411', 'IN93539227'),
@@ -1674,6 +1879,9 @@ INSERT INTO `producto_tiene_insumo` (`ID_Producto`, `ID_Insumo`) VALUES
 ('PD34384229', 'IN22197307'),
 ('PD34384229', 'IN85641851'),
 ('PD35805212', 'IN12080526'),
+('PD37804377', 'IN03374506'),
+('PD37804377', 'IN06332851'),
+('PD37804377', 'IN15204720'),
 ('PD39713286', 'IN21882955'),
 ('PD41659387', 'IN02201393'),
 ('PD41659387', 'IN13297648'),
@@ -1697,13 +1905,15 @@ INSERT INTO `producto_tiene_insumo` (`ID_Producto`, `ID_Insumo`) VALUES
 ('PD53218892', 'IN68810175'),
 ('PD57856718', 'IN58134969'),
 ('PD58041511', 'IN21585929'),
-('PD60185744', 'IN19746459'),
 ('PD60339348', 'IN56899901'),
 ('PD62154365', 'IN63793176'),
+('PD62316585', 'IN04894004'),
+('PD62316585', 'IN22595885'),
 ('PD62321669', 'IN28033998'),
 ('PD62596246', 'IN70788691'),
 ('PD62833458', 'IN13442507'),
 ('PD63821765', 'IN50256666'),
+('PD64070159', 'IN22595885'),
 ('PD66334927', 'IN02201393'),
 ('PD66451976', 'IN18968294'),
 ('PD68133903', 'IN51564559'),
@@ -1912,9 +2122,11 @@ INSERT INTO `review` (`ID_Review`, `ID_Orden`, `Puntaje`, `Comentario`, `Fecha`)
 ('RV13616182', 'OD16211107', 5, '\"El restaurante se veía descuidado. Las mesas estaban sucias y el piso tenía restos de comida. Eso genera desconfianza inmediata sobre la higiene en la cocina.\"', '2026-03-05 06:00:00'),
 ('RV15461338', 'OD34843825', 2, '\"Desde que llegamos notamos falta de organización. Tardaron en atendernos y el personal parecía confundido con las mesas. La comida no compensó la mala primera impresión.\"', '2026-09-26 06:00:00'),
 ('RV15543623', 'OD73450134', 1, '\"El restaurante se ve bonito, pero la experiencia no está a la altura de la imagen que proyecta.\"', '2026-04-03 06:00:00'),
+('RV16880275', 'OD23256977', 5, 'Porfavor funciona', '2026-04-27 02:59:16'),
 ('RV19984223', 'OD97056014', 5, '\"No hubo ninguna cortesía ni disculpa cuando cometieron errores en el pedido. La actitud fue indiferente.\"', '2026-03-25 06:00:00'),
 ('RV21373030', 'OD94187424', 3, '\"La comida estaba excesivamente salada. Intentaron justificarlo diciendo que era parte del estilo del platillo, pero claramente fue un error en la preparación.\"', '2026-09-27 06:00:00'),
 ('RV25600980', 'OD66638248', 2, '\"La carne estaba dura y difícil de cortar. No parecía un corte de buena calidad.\"', '2026-10-15 06:00:00'),
+('RV28862328', 'OD23256977', 5, 'Eldenrinngeldelling', '2026-04-27 02:44:00'),
 ('RV29498819', 'OD04094069', 4, '\"La música no iba acorde al ambiente del lugar y resultaba incómoda.\"', '2026-02-15 06:00:00'),
 ('RV30244631', 'OD68369798', 1, '\"La carne estaba sobrecocida y seca. Cuando pedí que la cambiaran, regresó igual o incluso más hecha.\"', '2026-12-22 06:00:00'),
 ('RV31683814', 'OD37925699', 2, '\"El personal parecía desorganizado. Los meseros se confundían con las mesas y varios pedidos llegaron a personas equivocadas.\"', '2026-09-04 06:00:00'),
@@ -1940,9 +2152,11 @@ INSERT INTO `review` (`ID_Review`, `ID_Orden`, `Puntaje`, `Comentario`, `Fecha`)
 ('RV67240690', 'OD96747780', 5, '\"El servicio fue extremadamente lento. Esperamos casi una hora por nuestros platillos y nadie se acercó a explicarnos la demora. La falta de comunicación fue lo más frustrante.\"', '2026-06-14 06:00:00'),
 ('RV71211324', 'OD17661841', 5, '\"El menú ofrecía muchas opciones, pero varias no estaban disponibles. Eso limitó bastante nuestra elección.\"', '2026-01-07 06:00:00'),
 ('RV73476287', 'OD54215310', 3, '\"El estacionamiento es muy limitado y no ofrecen alternativas claras\"', '2026-10-06 06:00:00'),
+('RV73832776', 'OD23256977', 5, 'papaap', '2026-04-27 03:02:08'),
 ('RV74284346', 'OD54491099', 4, '\"El menú se ve atractivo, pero los sabores no cumplen lo que prometen. Mucha expectativa y poco resultado.\"', '2026-10-22 06:00:00'),
 ('RV77126879', 'OD96155417', 4, '\"Tuvimos que esperar mucho tiempo incluso para que nos trajeran cubiertos. Son detalles pequeños que hacen ver falta de atención.\"', '2026-01-08 06:00:00'),
 ('RV77194355', 'OD23043487', 4, '\"Las porciones son muy pequeñas en comparación con el precio. La presentación es buena, pero la cantidad no justifica el costo.\"', '2026-09-08 06:00:00'),
+('RV77544422', 'OD23256977', 5, 'lalalalal', '2026-04-27 02:49:21'),
 ('RV78080393', 'OD96250697', 2, '\"La relación calidad-precio no es adecuada. Hay otros lugares con mejor sabor y mejor servicio por el mismo costo.\"', '2026-06-05 06:00:00'),
 ('RV79456498', 'OD03911196', 1, '\"La carne estaba dura y difícil de cortar. No parecía un corte de buena calidad.\"', '2026-01-17 06:00:00'),
 ('RV83171652', 'OD16481371', 4, '\"La iluminación es demasiado baja, lo que dificulta incluso leer el menú.\"', '2026-03-09 06:00:00'),
@@ -2210,6 +2424,13 @@ ALTER TABLE `cliente_canjea_promociones`
   ADD KEY `ID_Promocion` (`ID_Promocion`);
 
 --
+-- Indices de la tabla `cliente_tiene_review`
+--
+ALTER TABLE `cliente_tiene_review`
+  ADD PRIMARY KEY (`Numero_Telefonico`,`ID_Review`),
+  ADD KEY `fk_review_id` (`ID_Review`);
+
+--
 -- Indices de la tabla `codigo_verificacion`
 --
 ALTER TABLE `codigo_verificacion`
@@ -2285,6 +2506,13 @@ ALTER TABLE `historial_canjes_royalty`
 ALTER TABLE `insumo`
   ADD PRIMARY KEY (`ID_Insumo`),
   ADD KEY `Categoría` (`Categoría`);
+
+--
+-- Indices de la tabla `insumo_categoria`
+--
+ALTER TABLE `insumo_categoria`
+  ADD PRIMARY KEY (`ID_Insumo`,`Nom_Categoria`),
+  ADD KEY `fk_ic_cat_idx` (`Nom_Categoria`);
 
 --
 -- Indices de la tabla `log_accesos_otp`
@@ -2429,7 +2657,7 @@ ALTER TABLE `turno_tiene_sucursal`
 -- AUTO_INCREMENT de la tabla `detalle_orden_insumos`
 --
 ALTER TABLE `detalle_orden_insumos`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=37;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=47;
 
 --
 -- AUTO_INCREMENT de la tabla `historial_canjes_royalty`
@@ -2441,13 +2669,13 @@ ALTER TABLE `historial_canjes_royalty`
 -- AUTO_INCREMENT de la tabla `log_accesos_otp`
 --
 ALTER TABLE `log_accesos_otp`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=20;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=33;
 
 --
 -- AUTO_INCREMENT de la tabla `orden_tiene_producto`
 --
 ALTER TABLE `orden_tiene_producto`
-  MODIFY `id_orden_producto` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=85;
+  MODIFY `id_orden_producto` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=92;
 
 --
 -- Restricciones para tablas volcadas
@@ -2472,6 +2700,13 @@ ALTER TABLE `cliente`
 ALTER TABLE `cliente_canjea_promociones`
   ADD CONSTRAINT `cliente_canjea_promociones_ibfk_1` FOREIGN KEY (`Numero_Telefonico`) REFERENCES `cliente` (`Numero_Telefonico`),
   ADD CONSTRAINT `cliente_canjea_promociones_ibfk_2` FOREIGN KEY (`ID_Promocion`) REFERENCES `promocion` (`ID_Promocion`);
+
+--
+-- Filtros para la tabla `cliente_tiene_review`
+--
+ALTER TABLE `cliente_tiene_review`
+  ADD CONSTRAINT `fk_cliente_tel` FOREIGN KEY (`Numero_Telefonico`) REFERENCES `cliente` (`Numero_Telefonico`) ON DELETE CASCADE ON UPDATE CASCADE,
+  ADD CONSTRAINT `fk_review_id` FOREIGN KEY (`ID_Review`) REFERENCES `review` (`ID_Review`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 --
 -- Filtros para la tabla `codigo_verificacion`
@@ -2533,6 +2768,13 @@ ALTER TABLE `historial_canjes_royalty`
 --
 ALTER TABLE `insumo`
   ADD CONSTRAINT `insumo_ibfk_1` FOREIGN KEY (`Categoría`) REFERENCES `categoría` (`Nombre`);
+
+--
+-- Filtros para la tabla `insumo_categoria`
+--
+ALTER TABLE `insumo_categoria`
+  ADD CONSTRAINT `fk_ic_categoria` FOREIGN KEY (`Nom_Categoria`) REFERENCES `categoría` (`Nombre`) ON DELETE CASCADE ON UPDATE CASCADE,
+  ADD CONSTRAINT `fk_ic_insumo` FOREIGN KEY (`ID_Insumo`) REFERENCES `insumo` (`ID_Insumo`) ON DELETE CASCADE;
 
 --
 -- Filtros para la tabla `mensaje_notifica_cliente`

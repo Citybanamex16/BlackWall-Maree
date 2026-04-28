@@ -128,7 +128,7 @@ html {
     gap: 8px;
 }
 
-/* Botón Morado Royalty */
+/* Botón Azul Royalty */
 .btn-royalty-active {
     background: #7da6baff;
     color: white;
@@ -249,6 +249,7 @@ html {
     display: flex;
     flex-direction: column;
     line-height: 1.2;
+    align-items: flex-start; /* Esto hace que el ancho se ajuste al texto */
 }
 
 .logo-sub {
@@ -1323,5 +1324,16 @@ html {
     color: #aaa;
     font-style: italic;
     font-size: 14px;
+}
+
+
+/* ── Botón Rewards con brillo azul pastel ── */
+.btn-rewards-glow i {
+    color: #7da6ba !important;
+    filter: drop-shadow(0 0 4px rgba(125, 166, 186, 0.7));
+    transition: filter 0.3s ease;
+}
+.btn-rewards-glow:hover i {
+    filter: drop-shadow(0 0 7px rgba(125, 166, 186, 0.95));
 }
 
