@@ -59,6 +59,17 @@
                 <div class="field"><label class="auth-label">Género</label><div class="control"><div class="select is-fullwidth"><select name="genero" required><option value="" disabled selected>Selecciona</option><option value="Masculino">Hombre</option><option value="Femenino">Mujer</option><option value="Otro">Otro</option></select></div></div></div>
                 <div class="field"><label class="auth-label">Nacimiento</label><div class="control"><input class="input auth-input" type="date" name="birthday" required></div></div>
                 <div class="field"><label class="auth-label">Mail</label><div class="control"><input class="input auth-input" type="email" name="mail" required></div></div>
+                <div class="field mt-5" style="margin-bottom: 20px;">
+                    <label class="checkbox-container auth-label" style="display: flex; align-items: flex-start; cursor: pointer; font-size: 13px; text-transform: none;">
+                        <input type="checkbox" id="aceptoPrivacidad" required style="margin-top: 4px; margin-right: 10px; accent-color: #b5956a;">
+                        <span style="color: #666; line-height: 1.4;">
+                            He leído y acepto el 
+                            <a href="/cliente/aviso-simplificado" target="_blank" style="color: #b5956a; text-decoration: underline; font-weight: 500;">
+                                Aviso de Privacidad
+                            </a>
+                        </span>
+                    </label>
+                </div>
                 <button class="primary-btn mt-4" type="submit" id="btn-signup" disabled>Registrarse</button>
             </form>
 

@@ -147,35 +147,38 @@
         
         <header class="dialog-header">
             <h2 id="modal-titulo-personalizacion">Crea tu Obra Maestra</h2>
-            <p id="modal-instrucciones-personalizacion">Paso a paso: elige el corazón de tu crepa y su decoración exterior.</p>
+            <p id="modal-instrucciones-personalizacion">Elige tus untables, frutas y toppings favoritos.</p>
         </header>
 
         <section class="dialog-content">
             <div class="personalization-section">
-                <h3 class="section-subtitle">1. Ingredientes Adentro</h3>
-                <div id="contenedor-ingredientes-adentro" class="ingredientes-grid">
-                    </div>
+                <h3 class="section-subtitle">1. Untables</h3>
+                <div id="contenedor-untables" class="ingredientes-grid"></div>
             </div>
 
             <div class="personalization-section">
-                <h3 class="section-subtitle">2. Toppings (Toque Final)</h3>
-                <div id="contenedor-toppings" class="ingredientes-grid">
-                    </div>
+                <h3 class="section-subtitle">2. Fruta Fresca</h3>
+                <div id="contenedor-frutas" class="ingredientes-grid"></div>
+            </div>
+
+            <div class="personalization-section">
+                <h3 class="section-subtitle">3. Toppings</h3>
+                <div id="contenedor-toppings" class="ingredientes-grid"></div>
             </div>
         </section>
 
         <footer class="dialog-footer">
             <div class="precio-dinamico-wrapper">
                 <div class="total-label-group">
-                    <span class="label-total">Precio Estimado</span>
-                    <small>Sujeto a cambios según ingredientes extra</small>
+                    <span class="label-total">Total Personalizado</span>
+                    <small id="contador-ingredientes">0 ingredientes seleccionados</small>
                 </div>
                 <span id="placeholder-precio-total" class="precio-monto">$0.00</span>
             </div>
 
             <div class="botones-container">
                 <button id="btn-cancelar-creacion" class="btn-cancelar">Volver al Menú</button>
-                <button id="btn-confirmar-creacion" class="btn-crear-final">Agregar al Pedido</button>
+                <button id="btn-confirmar-creacion" class="btn-crear-final" disabled>Agregar al Pedido</button>
             </div>
         </footer>
     </div>
@@ -183,34 +186,34 @@
 
 
 
-<!-- Dialogo Summary de Receta Personalizada -->
 <dialog id="modal-resumen-crepa" class="maree-dialog is-large">
     <div class="dialog-container">
         
         <header class="dialog-header header-success">
-            <h2>Tu Obra Maestra</h2>
-            <p>Revisa tu receta antes de enviarla a la cocina.</p>
+            <h2>¡Casi lista!</h2>
+            <p>Revisa la composición de tu obra maestra.</p>
         </header>
 
         <section class="dialog-content flex-center">
             <div class="tarjeta-receta">
                 
                 <div class="capa-receta">
-                    <h4 class="capa-titulo">
-                        <span class="icono-capa">✨</span> Cobertura y Toppings
-                    </h4>
-                    <ul id="resumen-lista-toppings" class="lista-ingredientes-final">
-                        </ul>
+                    <h4 class="capa-titulo"><span class="icono-capa">✨</span> Toppings y Crujientes</h4>
+                    <ul id="resumen-lista-toppings" class="lista-ingredientes-final"></ul>
                 </div>
 
                 <hr class="separador-crepa">
 
                 <div class="capa-receta">
-                    <h4 class="capa-titulo">
-                        <span class="icono-capa">🥞</span> Corazón de la Crepa
-                    </h4>
-                    <ul id="resumen-lista-adentro" class="lista-ingredientes-final">
-                        </ul>
+                    <h4 class="capa-titulo"><span class="icono-capa">🍓</span> Fruta Fresca</h4>
+                    <ul id="resumen-lista-frutas" class="lista-ingredientes-final"></ul>
+                </div>
+
+                <hr class="separador-crepa">
+
+                <div class="capa-receta">
+                    <h4 class="capa-titulo"><span class="icono-capa">🥞</span> Untable (Base)</h4>
+                    <ul id="resumen-lista-untables" class="lista-ingredientes-final"></ul>
                 </div>
 
             </div>
@@ -218,7 +221,10 @@
 
         <footer class="dialog-footer">
             <div class="precio-dinamico-wrapper">
-                <span class="label-total">Total de tu creación:</span>
+                <div class="info-conteo-final">
+                    <span id="resumen-badge-conteo" class="badge-cantidad">0 ingredientes</span>
+                    <small id="resumen-leyenda-precio">Tarifa de paquete aplicada</small>
+                </div>
                 <span id="resumen-precio-total" class="precio-monto">$0.00</span>
             </div>
 

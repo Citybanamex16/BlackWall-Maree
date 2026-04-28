@@ -15,6 +15,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const btnLogin = document.getElementById('btn-login');
   const btnSignup = document.getElementById('btn-signup');
   const btnOtp = document.getElementById('btn-otp');
+  const checkPrivacidad = document.getElementById('aceptoPrivacidad');
 
 
 // LÓGICA DE VALIDACIÓN
@@ -24,6 +25,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const allFilled = inputs.every(input => {
       return input.value.trim() !== '';
     });
+
+    let privacyAccepted = true;
+    if (form.id === 'form-signup' && checkPrivacidad) {
+        privacyAccepted = checkPrivacidad.checked;
+    }
 
     submitBtn.disabled = !allFilled;
   };
@@ -36,6 +42,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
   formsToWatch.forEach(({ form, btn }) => {
     form.addEventListener('input', () => validateForm(form, btn));
+
+    if (form.id === 'form-signup' && checkPrivacidad) {
+        checkPrivacidad.addEventListener('change', () => validateForm(form, btn));
+    }
   });
 
   // Función global para mostrar alertas

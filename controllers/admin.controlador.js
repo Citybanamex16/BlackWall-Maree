@@ -468,11 +468,15 @@ exports.getIngredientes = (req, res, next) => {
 // Regresa lista de ingredientes activos (para llenar la tabla en el front yuhhhh)
 exports.getIngredientesLista = async (req, res, next) => {
   try {
-    const [ingredientes] = await Ingrediente.fetchAll()
+    const [rows] = await Ingrediente.fetchAll()
+    const data = rows.map(row => ({
+      ...row,
+      categorias: row.cats_raw ? row.cats_raw.split('|') : [row.Categoría]
+    }))
     res.status(200).json({
       success: true,
       message: 'Ingredientes recuperados',
-      data: ingredientes
+      data
     })
   } catch (error) {
     console.error('Error en getIngredientesLista:', error)
@@ -552,7 +556,7 @@ exports.validarIngrediente = async (req, res, next) => {
 exports.crearIngrediente = async (req, res, next) => {
   try {
     const { Nombre, Precio, Activo, Imagen } = req.body
-    const Categoria = req.body['Categoría']
+    const Categorias = req.body['Categorias']  // array de categorías seleccionadas
 
     // Validación de campos obligatorios
     const resultado = Ingrediente.verificarCamposVacios(req.body)
@@ -576,16 +580,15 @@ exports.crearIngrediente = async (req, res, next) => {
     const nuevoID = Ingrediente.generarID()
     console.log('Nuevo ID Ingrediente:', nuevoID)
 
-    console.log('Datos a insertar:', { nuevoID, Nombre, Categoria, Precio, Activo, Imagen })
-
     await Ingrediente.insertNuevoIngrediente(
       nuevoID,
       Nombre.trim(),
-      Categoria,
+      Categorias[0],
       parseFloat(Precio),
       Activo !== undefined ? Activo : true,
       Imagen || null
     )
+    await Ingrediente.insertCategoriasInsumo(nuevoID, Categorias)
 
     res.status(200).json({
       success: true,
@@ -635,16 +638,18 @@ exports.actualizarIngrediente = async (req, res, next) => {
   try {
     const { id } = req.params
     const { Nombre, Precio, Activo, Imagen } = req.body
-    const Categoria = req.body['Categoría']
+    const Categorias = req.body['Categorias']  // array de categorías seleccionadas
 
-    if (!id || !Nombre || !Categoria || !Precio) {
+    if (!id || !Nombre || !Categorias || !Categorias.length || !Precio) {
       return res.status(400).json({ success: false, message: 'Campos obligatorios faltantes' })
     }
 
     await Ingrediente.actualizarIngrediente(
-      id, Nombre.trim(), Categoria,
+      id, Nombre.trim(), Categorias[0],
       parseFloat(Precio), Activo, Imagen || null
     )
+    await Ingrediente.deleteCategoriasInsumo(id)
+    await Ingrediente.insertCategoriasInsumo(id, Categorias)
 
     res.status(200).json({ success: true, message: 'Ingrediente actualizado correctamente' })
   } catch (error) {

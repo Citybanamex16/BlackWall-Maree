@@ -692,7 +692,7 @@ function construirCategoria (cat, contenedorMenu) {
   // Estructura limpia: Título elegante y Grid preparado para 3 columnas
   seccionCat.innerHTML = `
     <h2 class="category-display-title">${cat.Nombre}</h2>
-    <div id="grid-principal" class="columns is-mobile is-multiline product-grid-app">
+    <div id="grid-principal">
         </div>`
 
   contenedorMenu.appendChild(seccionCat)
@@ -865,10 +865,7 @@ function renderizarVistaCategoria (categoriaObj, productos, allTypes, allPromos,
     const idGridOtros = construirSeccionTipo('Otros', mainWrapper)
     const gridOtros = document.getElementById(idGridOtros)
 
-    // Forzamos que la sección de Otros empiece colapsada para no estorbar (Opcional)
-    gridOtros.parentElement.classList.remove('is-open')
-
-    construirFichaProductos(productosRestantes, gridOtros)
+    construirFichaProductos(productosRestantes, allPromos, gridOtros, SesionData)
   }
 }
 

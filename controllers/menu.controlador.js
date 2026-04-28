@@ -6,7 +6,9 @@ const tipos = require('../models/MenuDigital/tipos.model.js')
 const promos = require('../models/promociones.model.js')
 const Pedido = require('../models/pedidos.model.js')
 const sucursal = require('../models/MenuDigital/sucursales.model.js')
+const feedback = require('../models/MenuDigital/feedback.model.js')
 const db = require('../util/database.js')
+
 
 // CU11 Vizualisar Menu
 exports.getMenu = (request, response, next) => {
@@ -111,7 +113,7 @@ exports.getOrden = async (request, response, next) => {
         const info = statusData[0]
 
         // 2. CÁLCULO DE TOKENS (Regla: Visitas/10 - Gastados)
-        const visitas = info.Visitas_Actuales || 0
+        const visitas = info.visitas|| 0
         const gastados = info.tokens_gastados || 0
         const tokensDisponibles = Math.floor(visitas / 10) - gastados
 
@@ -164,7 +166,12 @@ exports.getPlatillo = async (request, response, next) => {
       .map(r => ({ id: r.ing_id, nombre: r.ing_nombre, precio: parseFloat(r.ing_precio) }))
 
     const [catalogoRows] = await db.execute(
-      'SELECT ID_Insumo as id, Nombre as nombre, Precio as precio FROM insumo WHERE Activo = 1 ORDER BY Nombre'
+      `SELECT i.ID_Insumo as id, i.Nombre as nombre, i.Precio as precio
+       FROM insumo i
+       JOIN insumo_categoria ic ON i.ID_Insumo = ic.ID_Insumo
+       WHERE ic.Nom_Categoria = ? AND i.Activo = 1
+       ORDER BY i.Nombre`,
+      [row.base]
     )
 
     response.status(200).json({
@@ -271,7 +278,7 @@ exports.validarPedido = async (request, response, next) => {
       const [statusData] = await Royalty.fetchClientStatus(usuario.telefono);
       const info = statusData[0];
       
-      const tokensReales = Math.floor(info.Visitas_Actuales / 10) - (info.tokens_gastados || 0);
+      const tokensReales = Math.floor(info.visitas / 10) - (info.tokens_gastados || 0);
 
       if (tokensReales <= 0) {
         return response.status(200).json({ 
@@ -827,10 +834,12 @@ exports.getIngredientesActivos = async (req, res, nex) => {
   try {
     // Iniciamos la transacción
     await connection.beginTransaction()
-
-    // Ejecutamos ambas consultas usando la misma conexión
-    const result = await ingrediente.fetchAllValid(connection)
-    const resultPrecioBase = await productos.getCrepaPersoPrecioBase(connection)
+        // Ejecutamos ambas consultas usando la misma conexión
+        const categoria = req.query.categoria
+        const result = categoria
+          ? await ingrediente.fetchAllValidPorCategoria(connection, categoria)
+          : await ingrediente.fetchAllValid(connection)
+        const resultPrecioBase = await productos.getCrepaPersoPrecioBase(connection);
 
     // Si todo sale bien, confirmamos (commit)
     await connection.commit()
@@ -855,3 +864,123 @@ exports.getIngredientesActivos = async (req, res, nex) => {
     if (connection) connection.release()
   }
 }
+//Sección feedback Cliente
+exports.getReviewHistoryView = (request, response, next) => {
+  const breadcrumbs = nav.getBreadcrumbs('Menu')
+  const SesionData = request.session.cliente
+  console.log("Datos del cliente: ", SesionData)
+  response.render('cliente/historialClienteReviews', { breadcrumbs, datosCliente: SesionData})
+}
+
+
+
+exports.getClientReviewHistory = async (req, res, nex) => {
+  console.log("Getting Client's review history")
+  try{
+
+    const clienteTelefono = req.query.Numero_Telefonico;
+
+    if(clienteTelefono === undefined){
+      throw new Error("Telefono indefinido")
+    }
+
+    console.log("Teléfono recibido:", clienteTelefono);
+
+    const resultData = await feedback.getClientFeedback(clienteTelefono)
+
+    console.log("Reviews obtenidas: ", resultData)
+
+     res.status(200).json({
+          ok: true,
+          message: 'Catalogo Feedback Obtenido',
+          reviewCatalog:resultData
+                  })
+
+  } catch (err) {
+    res.status(500).json({
+          ok: false,
+          message: 'Error al obtener catalogo feedback',
+          error:err
+                  })
+
+  }
+}
+
+
+
+
+exports.postNewFeedback = async (req, res, post) => {
+  console.log("Generando nuevo feedback de cliente")
+  let resultData
+  try{
+
+    const NewReviewData = req.body
+    // Extracción tipo map
+     const {
+      ID_Orden,            // Recibir
+      Puntaje,             // Recibir
+      Comentario,          // Recibir
+      Numero_Telefonico    // Recibir para cliente_tiene_review
+  } = NewReviewData;
+
+  //Generar variables
+  const ID_Review = productos.generarID("RV")
+  console.log("ID generado para nueva review: ", ID_Review)
+
+  const now = new Date();
+  const Fecha_Hora = now.getFullYear() + '-' +
+    String(now.getMonth() + 1).padStart(2, '0') + '-' +
+    String(now.getDate()).padStart(2, '0') + ' ' +
+    String(now.getHours()).padStart(2, '0') + ':' +
+    String(now.getMinutes()).padStart(2, '0') + ':' +
+    String(now.getSeconds()).padStart(2, '0');
+
+  //Preparando paquetes de info para cada tabla:
+  // Para tabla Review
+const reviewRecord = {
+    ID_Review,
+    ID_Orden,
+    Puntaje,
+    Fecha_Hora,
+    Comentario
+};
+
+// Para tabla cliente_tiene_review
+const intermediaryData = {
+    ID_Review, // ID_Review generada arriba
+    Numero_Telefonico
+};
+
+console.log(reviewRecord);
+console.log(intermediaryData);
+
+//Ejecutando POST
+resultData = await feedback.postNewOrderFeedback(reviewRecord, intermediaryData)
+
+  console.log("Resultado SP:", JSON.stringify(resultData))
+
+  if (resultData && resultData[0]?.Estado === 'Error') {
+    throw new Error(`SP falló: ${resultData[0]?.Mensaje}`)
+  }
+
+  res.status(200).json({
+          ok: true,
+          message: 'Feedback Guardado correctamente',
+          result:resultData
+                  })
+
+
+  } catch (err){
+    console.log("Error interno en POST de feedback: ", err)
+    res.status(500).json({
+          ok: false,
+          message: 'Error al guardar feedback',
+          result:resultData
+                  })
+
+
+  }
+}
+
+
+
