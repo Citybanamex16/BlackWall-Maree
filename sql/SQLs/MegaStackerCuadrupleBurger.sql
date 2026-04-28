@@ -212,7 +212,7 @@ DROP PROCEDURE IF EXISTS `sp_fetchEventos`$$
 CREATE DEFINER=`root`@`localhost` PROCEDURE `sp_fetchEventos` (IN `p_Nombre_Royalty` VARCHAR(50))   BEGIN
     SELECT E.Nombre AS Nombre_Evento, E.Fecha_Inicio, E.Fecha_final, E.Descripcion, ER.Nombre_Royalty
     FROM evento E
-    INNER JOIN estado_royalty_da_eventos RE ON e.ID_Evento = RE.ID_Evento
+    INNER JOIN estado_royalty_da_eventos RE ON E.ID_Evento = RE.ID_Evento
     INNER JOIN estado_royalty ER ON ER.Nombre_Royalty = RE.Nombre_Royalty
     WHERE ER.Número_de_prioridad <= (
         SELECT Número_de_prioridad 
@@ -479,21 +479,26 @@ INSERT INTO `cliente` (`Numero_Telefonico`, `Nombre_Royalty`, `Nombre`, `Correo`
 --
 -- Disparadores `cliente`
 --
-DROP TRIGGER IF EXISTS `actualizar_nivel_por_visitas`;
 DELIMITER $$
-CREATE TRIGGER `actualizar_nivel_por_visitas` BEFORE UPDATE ON `cliente` FOR EACH ROW BEGIN
+
+DROP TRIGGER IF EXISTS `actualizar_nivel_por_visitas`$$
+
+CREATE TRIGGER `actualizar_nivel_por_visitas` BEFORE UPDATE ON `cliente` 
+FOR EACH ROW 
+BEGIN
+    -- Solo actuamos si el número de visitas ha cambiado
     IF OLD.Visitas_Actuales <> NEW.Visitas_Actuales THEN
         SET NEW.Nombre_Royalty = (
             SELECT Nombre_Royalty
             FROM estado_royalty
-            WHERE NEW.Visitas_Actuales BETWEEN Min_Visitas AND Max_Visitas
+            WHERE NEW.Visitas_Actuales >= Min_Visitas
+            ORDER BY Min_Visitas DESC
             LIMIT 1
         );
     END IF;
-END
-$$
-DELIMITER ;
+END$$
 
+DELIMITER ;
 -- --------------------------------------------------------
 
 --
@@ -852,17 +857,18 @@ CREATE TABLE `estado_royalty` (
   `Número_de_prioridad` int(11) NOT NULL,
   `Descripción` text NOT NULL,
   `Max_Visitas` int(11) NOT NULL,
-  `Min_Visitas` int(11) NOT NULL
+  `Min_Visitas` int(11) NOT NULL,
+  `descuento_premio` float NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish2_ci;
 
 --
 -- Volcado de datos para la tabla `estado_royalty`
 --
 
-INSERT INTO `estado_royalty` (`Nombre_Royalty`, `Número_de_prioridad`, `Descripción`, `Max_Visitas`, `Min_Visitas`) VALUES
-('Fan', 1, '\"En este nivel normalmente se ofrecen beneficios exclusivos: acceso anticipado a contenido, mercancía especial, descuentos mayores, eventos privados, interacción más directa con el creador o la marca, e incluso reconocimiento público dentro de la comunidad. La idea es premiar la lealtad y el compromiso constante.\"', 10, 5),
-('Mega Fan', 3, '\"El nivel mega fan va un paso más allá. Está pensado para quienes demuestran un compromiso más fuerte y continuo. En este nivel pueden ofrecerse ventajas más destacadas como experiencias más personalizadas, eventos exclusivos, productos especiales o menciones directas. Se convierte en un espacio más selecto dentro de la comunidad, donde el vínculo con la marca o creador es más cercano y visible.Es una especie de escalera de compromiso: cada nivel no solo ofrece beneficios, sino también mayor pertenencia y conexión.\"', 20, 16),
-('Super Fan', 2, '\"Un nivel super fan representa a quienes ya no solo siguen el contenido, sino que participan activamente en la comunidad. Aquí suele haber beneficios atractivos como acceso anticipado a publicaciones, contenido exclusivo adicional, descuentos especiales o dinámicas privadas. También puede incluir interacción más cercana con el creador o reconocimiento dentro del grupo. La intención es recompensar la constancia y el entusiasmo.\"', 15, 11);
+INSERT INTO `estado_royalty` (`Nombre_Royalty`, `Número_de_prioridad`, `Descripción`, `Max_Visitas`, `Min_Visitas`, `descuento_premio`) VALUES
+('Fan', 1, '\"En este nivel normalmente se ofrecen beneficios exclusivos: acceso anticipado a contenido, mercancía especial, descuentos mayores, eventos privados, interacción más directa con el creador o la marca, e incluso reconocimiento público dentro de la comunidad. La idea es premiar la lealtad y el compromiso constante.\"', 10, 5, 0.5),
+('Mega Fan', 3, '\"El nivel mega fan va un paso más allá. Está pensado para quienes demuestran un compromiso más fuerte y continuo. En este nivel pueden ofrecerse ventajas más destacadas como experiencias más personalizadas, eventos exclusivos, productos especiales o menciones directas. Se convierte en un espacio más selecto dentro de la comunidad, donde el vínculo con la marca o creador es más cercano y visible.Es una especie de escalera de compromiso: cada nivel no solo ofrece beneficios, sino también mayor pertenencia y conexión.\"', 20, 16, 0.75),
+('Super Fan', 2, '\"Un nivel super fan representa a quienes ya no solo siguen el contenido, sino que participan activamente en la comunidad. Aquí suele haber beneficios atractivos como acceso anticipado a publicaciones, contenido exclusivo adicional, descuentos especiales o dinámicas privadas. También puede incluir interacción más cercana con el creador o reconocimiento dentro del grupo. La intención es recompensar la constancia y el entusiasmo.\"', 15, 11, 1.0);
 
 -- --------------------------------------------------------
 

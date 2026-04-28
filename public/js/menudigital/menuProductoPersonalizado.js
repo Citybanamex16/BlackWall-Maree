@@ -15,19 +15,16 @@ async function getPersModalData () {
   try {
     const respuestaIng = await fetch('/Menu/ingActivos?categoria=Crepas')
 
-    // const respuestaCat = await fetch('/Menu/categorias')
-
-    if (!respuestaIng.ok) {
+if (!respuestaIng.ok) {
       throw new Error('Error Interno al obtener ingredientes:')
     }
 
     const ingData = await respuestaIng.json()
     console.log('ingData: ', ingData)
+    
+    // Accedemos a los datos del catálogo y al precio base
     const activeIngData = ingData.ingActiveCatalog[0]
     const basePrice = ingData.precioBasePerso[0].precioBaseCrepaPerso
-    // console.log("price recived: ", basePrice)
-
-
     // console.log("Ingredientes activos obtenidos desde menu: ", activeIngData)
     construirModalPerso(activeIngData, basePrice)
   } catch (err) {

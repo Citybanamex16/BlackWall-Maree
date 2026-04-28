@@ -29,6 +29,10 @@ router.get('/eventocCliente', clienteControlador.getEventos)
 router.get('/promosClienteData', clienteControlador.getPRsData)
 router.get('/Sesion', loginControlador.getSesion)
 
+/* Aviso de privacidad */
+router.get('/aviso-simplificado', clienteControlador.getAvisoSimplificado)
+router.get('/aviso-integral', clienteControlador.getAvisoIntegral)
+
 // Historial de pedidos del cliente
 router.get('/historial', isAuth, clienteControlador.getHistorial)
 router.get('/api/mis-ordenes', isAuth, clienteControlador.getClientOrders)

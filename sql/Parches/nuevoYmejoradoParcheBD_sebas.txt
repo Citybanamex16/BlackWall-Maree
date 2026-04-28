@@ -2,6 +2,7 @@
 
 ALTER TABLE cliente ADD COLUMN tokens_gastados INT DEFAULT 0;
 ALTER TABLE cliente ADD COLUMN username VARCHAR(20);
+ALTER TABLE estado_royalty ADD COLUMN descuento_premio FLOAT;
 
 -- Historial de canjes de premios
 CREATE TABLE historial_canjes_royalty (
@@ -12,6 +13,10 @@ CREATE TABLE historial_canjes_royalty (
     FOREIGN KEY (Numero_Telefonico) REFERENCES cliente(Numero_Telefonico),
     FOREIGN KEY (ID_Promocion) REFERENCES promocion(ID_Promocion)
 );
+
+UPDATE estado_royalty SET descuento_premio = 0.5 WHERE Nombre_Royalty = 'Fan'
+UPDATE estado_royalty SET descuento_premio = 0.75 WHERE Nombre_Royalty = 'Super Fan'
+UPDATE estado_royalty SET descuento_premio = 1.0 WHERE Nombre_Royalty = 'Mega Fan'
 
 -- Actualizacion de trigger (no se si estaba en otro parche)
 DROP TRIGGER IF EXISTS actualizar_nivel_por_visitas;
@@ -33,3 +38,22 @@ BEGIN
 END$$
 
 DELIMITER ;
+
+DROP PROCEDURE IF EXISTS sp_EstadoCliente;
+create
+    definer = root@localhost procedure sp_EstadoCliente(IN p_telefono varchar(20))
+BEGIN
+    SELECT
+        c.Nombre,
+        c.Numero_Telefonico AS telefono,
+        c.Nombre_Royalty AS nivel,
+        c.Visitas_Actuales AS visitas,
+        c.tokens_gastados,
+        r.descuento_premio
+    FROM cliente c
+    INNER JOIN estado_royalty r ON r.Nombre_Royalty = c.Nombre_Royalty
+     WHERE c.Numero_Telefonico = p_telefono COLLATE utf8mb4_spanish2_ci;
+END;
+
+
+

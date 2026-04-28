@@ -201,12 +201,10 @@ module.exports = class Pedido {
     return lista
   }
 
-
-
   /**
  * El "Cerebro" que aplica la matemática final item por item.
  */
-  static calcularPrecioRealItem (item, listaOro, compendio) {
+  static calcularPrecioRealItem (item, listaOro, compendio, descuentoRoyalty = 0) {
     let acumulado = 0
     const nombreItem = item.nombre || item.producto_base || item.id
 
@@ -253,7 +251,11 @@ module.exports = class Pedido {
     console.log(`   💰 Precio Base Unitario: $${precioBase}`)
 
     // 2. Aplicar Promoción del Compendio
-    if (compendio[item.id]) {
+    if (item.premioAplicado){
+      const descuentoEfectivo = precioBase * descuentoRoyalty
+      precioBase = precioBase - descuentoEfectivo
+      console.log(`   🏆 [PREMIO ROYALTY] Aplicando descuento de recompensa: ${descuentoRoyalty * 100}% (-$${descuentoEfectivo.toFixed(2)})`)
+    } else if (compendio[item.id]) {
       const promo = compendio[item.id]
       const descuentoEfectivo = precioBase * promo.descuento
       precioBase = precioBase - descuentoEfectivo
@@ -284,14 +286,15 @@ module.exports = class Pedido {
     }
 
     if (insumos.length > 0) {
-      console.log(`   ➕ Sumando ${insumos.length} insumos a precio de lista...`)
-      insumos.forEach(ins => {
-        const pInsumo = (listaOro.insumos[ins.id_insumo] || 0)
-        if (pInsumo > 0) {
-          console.log(`      • ${ins.nombre || ins.id_insumo}: $${pInsumo}`)
-        }
-        acumulado += pInsumo
-      })
+        console.log(`   ➕ Sumando ${insumos.length} insumos a precio de lista...`);
+        insumos.forEach(ins => {
+            const pInsumo = (listaOro.insumos[ins.id_insumo] || 0);
+            if (pInsumo > 0) {
+                // Intenta usar el nombre para el log, si no tiene, usa el ID
+                console.log(`      • ${ins.nombre || ins.id_insumo}: $${pInsumo}`);
+            }
+            acumulado += pInsumo;
+        });
     }
 
     console.log(`   ✅ [TOTAL ITEM] $${acumulado.toFixed(2)}`)
