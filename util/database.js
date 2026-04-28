@@ -22,7 +22,7 @@ Pass: CL006901!
 
 */
 
-/*
+
 // Charly
 
 // Pool de conexiones
@@ -31,13 +31,14 @@ const pool = mysql.createPool({
   user: 'root',
   database: 'mareebd',
   password: '',
+  charset: 'utf8mb4_spanish2_ci' ,
   waitForConnection: true,
   connectionLimit: 10
 
 })
-*/
+
 // Santi
-// Pool de conexiones
+/* Pool de conexiones
 
 const pool = mysql.createPool({
   host: 'mysql-maree2.alwaysdata.net',
@@ -48,6 +49,8 @@ const pool = mysql.createPool({
   connectionLimit: 10
 
 })
+
+*/
 
 /*
 // Santi
