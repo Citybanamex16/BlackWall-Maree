@@ -18,9 +18,9 @@
 
 <body>
 <% const dashboardHref = rolUsuario === 'Colaborador' ? '/colaborador' : '/admin' %>
-<% const dashboardLabel = rolUsuario === 'Colaborador' ? 'Collaborator Dashboard' : 'Admin Dashboard' %>
+<% const dashboardLabel = rolUsuario === 'Colaborador' ? 'Panel de colaborador' : 'Panel de administración' %>
 <% const canManageIngredients = rolUsuario === 'Administrador' %>
-<% const ingredientsSubtitle = canManageIngredients ? 'Catalogo de insumos del restaurante' : 'Consulta de insumos disponibles en el restaurante' %>
+<% const ingredientsSubtitle = canManageIngredients ? 'Catálogo de insumos del restaurante' : 'Consulta de insumos disponibles en el restaurante' %>
 
 <!-- NAVIGATION Bar-->
 <nav class="navbar" role="navigation">

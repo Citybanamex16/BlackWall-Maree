@@ -1,7 +1,7 @@
 exports.getHub = (req, res) => {
   const breadcrumbs = [
     { name: 'Menu Cliente', url: '/menu/menu' },
-    { name: 'Colaborador Hub', url: '' }
+    { name: 'Panel Colaborador', url: '' }
   ]
 
   const dashboardCards = [
@@ -12,7 +12,7 @@ exports.getHub = (req, res) => {
   ]
 
   res.render('colaborador/index', {
-    pageTitle: 'Colaborador Hub - Maree',
+    pageTitle: 'Panel Colaborador - Maree',
     breadcrumbs,
     dashboardCards
   })

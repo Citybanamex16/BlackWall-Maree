@@ -10,9 +10,9 @@
 </head>
 <body>
     <% const dashboardHref = rolUsuario === 'Colaborador' ? '/colaborador' : '/admin' %>
-    <% const dashboardLabel = rolUsuario === 'Colaborador' ? 'Collaborator Dashboard' : 'Admin Dashboard' %>
+    <% const dashboardLabel = rolUsuario === 'Colaborador' ? 'Panel de colaborador' : 'Panel de administración' %>
     <% const canManageProducts = rolUsuario === 'Administrador' %>
-    <% const productsSubtitle = canManageProducts ? 'Gestiona categorias, precios y disponibilidad' : 'Consulta de catalogo y disponibilidad actual' %>
+    <% const productsSubtitle = canManageProducts ? 'Gestiona categorías, precios y disponibilidad' : 'Consulta de catálogo y disponibilidad actual' %>
 
     <%- include('../partials/breadcrumbs') %>
 
