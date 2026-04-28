@@ -63,6 +63,15 @@ class Calendario {
 
     return id
   }
+
+  static async deleteById (idCalendario) {
+    const [result] = await db.execute(`
+      DELETE FROM calendario
+      WHERE ID_Calendario = ?
+    `, [idCalendario])
+
+    return result.affectedRows > 0
+  }
 }
 
 module.exports = Calendario

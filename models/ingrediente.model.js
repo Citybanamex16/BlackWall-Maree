@@ -19,6 +19,7 @@ module.exports = class Ingrediente {
     return connection.execute('SELECT * FROM insumo WHERE Activo = 1')
   }
 
+
   // Devuelve solo los insumos activos que pertenecen a una categoría específica
   static async fetchAllValidPorCategoria (connection, categoria) {
     return connection.execute(
@@ -30,6 +31,7 @@ module.exports = class Ingrediente {
       [categoria]
     )
   }
+
 
   // Busca ingrediente por nombre (para verificar duplicados)
   static async buscarPorNombre (nombre) {
@@ -164,7 +166,7 @@ module.exports = class Ingrediente {
     return { resumen, masUsados, porCategoria, afectados, sinUso }
   }
 
-  static async verificarDisponibilidad (ids) {
+    static async verificarDisponibilidad (ids) {
     if (!ids || ids.length === 0) return []
 
     try {
@@ -181,3 +183,6 @@ module.exports = class Ingrediente {
     }
   }
 }
+
+
+

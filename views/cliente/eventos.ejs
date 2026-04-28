@@ -27,7 +27,7 @@ const textoEstado = (evento) => evento.estatus === 'live' ? 'Activo ahora' : 'Mu
   <section class="events-sticky-nav" style="position:fixed;top:60px;left:0;width:100%;z-index:95;">
     <div class="events-nav-shell">
       <span class="events-page-kicker"><i class="fas fa-calendar-alt"></i> agenda Maree</span>
-      <h1 class="events-page-title">Eventos para clientes</h1>
+      <h1 class="events-page-title">Eventos</h1>
       <div class="events-summary-pills">
         <span class="events-summary-pill"><i class="fas fa-star"></i> <%= listaEventos.length %> <%= listaEventos.length === 1 ? 'evento activo' : 'eventos activos' %></span>
         <span class="events-summary-pill is-soft"><i class="fas fa-eye"></i> Solo visualizacion</span>
@@ -70,7 +70,6 @@ const textoEstado = (evento) => evento.estatus === 'live' ? 'Activo ahora' : 'Mu
       <section class="events-empty"><div class="events-empty-icon"><i class="fas fa-calendar-xmark"></i></div><h2 class="events-section-title">No hay eventos activos</h2><p class="events-copy">Cuando exista un evento vigente y marcado como activo, aparecera aqui para consulta del cliente.</p></section>
     <% } %>
 
-    <section class="events-callout"><span class="events-label"><i class="fas fa-compass"></i> accesos</span><p class="events-copy">Puedes volver al menu o revisar promociones sin salir del flujo actual del cliente.</p><div class="events-actions"><a href="/menu/menu" class="events-link is-primary">Volver al menu</a><a href="/cliente/promosCliente" class="events-link">Ver promociones</a></div></section>
   </main>
 
   <div id="sticky-bottom" class="sticky-bottom-app">

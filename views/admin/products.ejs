@@ -16,6 +16,10 @@
     <link rel="stylesheet" href="/css/moduloMenuCSS/moduloMenuAdminCSS.css">
 </head>
 <body>
+    <% const dashboardHref = rolUsuario === 'Colaborador' ? '/colaborador' : '/admin' %>
+    <% const dashboardLabel = rolUsuario === 'Colaborador' ? 'Panel de colaborador' : 'Panel de administración' %>
+    <% const canManageProducts = rolUsuario === 'Administrador' %>
+    <% const productsSubtitle = canManageProducts ? 'Gestiona categorías, precios y disponibilidad' : 'Consulta de catálogo y disponibilidad actual' %>
 
 <!-- NAVIGATION Bar-->
 <nav class="navbar" role="navigation">
@@ -31,6 +35,8 @@
 
     <section class="section">
         <div class="container">
+            <a href="<%= dashboardHref %>" class="back-link">Volver a <%= dashboardLabel %></a>
+
 
             <a href="/admin" class="back-link">← Admin Dashboard</a>
 
@@ -73,11 +79,13 @@
         </div>
     </section>
 
-     <!-- BOTÓN Registrar nuevo Producto -->
-   <a href="#" id="registrarNuevoProducto" class="fab btn-maree button-floating" style="border-radius: 50px; gap: 8px; padding: 14px 24px;">
-    <i class="fas fa-plus" style="font-size: 14px;"></i> 
-    <span>Añadir Producto</span>
-</a>
+<!-- BOTÓN Registrar nuevo Producto con Protección RBAC -->
+<% if (canManageProducts) { %>
+    <a href="#" id="registrarNuevoProducto" class="fab btn-maree button-floating" style="border-radius: 50px; gap: 8px; padding: 14px 24px; display: flex; align-items: center; text-decoration: none;">
+        <i class="fas fa-plus" style="font-size: 14px;"></i> 
+        <span>Añadir Producto</span>
+    </a>
+<% } %>
 
 
 <dialog id="TypeFormsCU04" class="mymodal">
@@ -246,9 +254,16 @@
 
 
 
+<script>
+  window.canManageProducts = <%- JSON.stringify(canManageProducts) %>
+</script>
 <script src="/js/menudigital/AdminProductsScripts/adminProducts.js"></script>
+<% if (canManageProducts) { %>
 <script src="/js/menudigital/AdminProductsScripts/ModifElimProducts.js"></script>
 <script src="/js/adminOrderNotifications.js"></script>
+
+<% } %>
+
 </body>
 </html>
 

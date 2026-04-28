@@ -136,6 +136,18 @@ const abrirModalCheckout = () => {
         </p>
       </div>
 
+      <p style="font-size:13px;font-weight:600;color:#444;margin-bottom:6px;">
+        Especificaciones extra
+      </p>
+      <textarea id="input-descripcion" maxlength="500"
+        placeholder="Ej. Menos Nutella, sin azúcar glass, partir en dos..."
+        style="width:100%;min-height:84px;padding:10px 14px;border:1px solid #ddd;border-radius:6px;
+              font-size:14px;font-family:'Jost',sans-serif;margin-bottom:4px;
+              box-sizing:border-box;outline:none;resize:vertical;"></textarea>
+      <p id="contador-descripcion" style="font-size:12px;color:#aaa;margin-bottom:16px;">
+        500 caracteres restantes
+      </p>
+
       <p id="error-servidor"
         style="display:none;color:#e74c3c;font-size:12px;margin-bottom:12px;">
         Hubo un error al procesar tu pedido. Intenta de nuevo.
@@ -151,6 +163,14 @@ const abrirModalCheckout = () => {
   `
 
   document.body.appendChild(overlay)
+
+  const inputDescripcion = document.getElementById('input-descripcion')
+  const contadorDescripcion = document.getElementById('contador-descripcion')
+
+  inputDescripcion.addEventListener('input', () => {
+    const restantes = 500 - inputDescripcion.value.length
+    contadorDescripcion.textContent = `${restantes} caracteres restantes`
+  })
 
   document.getElementById('cerrar-checkout').addEventListener('click', cerrarModal)
   overlay.addEventListener('click', (e) => {
@@ -177,6 +197,7 @@ const abrirModalCheckout = () => {
     const direccion = document.getElementById('input-direccion')?.value.trim() || ''
     const errorServ = document.getElementById('error-servidor')
     const errorDir = document.getElementById('error-direccion')
+    const descripcion = document.getElementById('input-descripcion')?.value.trim() || ''
 
     let telefono, nombre
 
@@ -222,7 +243,8 @@ const abrirModalCheckout = () => {
             forma: formaSeleccionada,
             telefono,
             nombre,
-            direccion: formaSeleccionada === 'Delivery' ? direccion : null
+            direccion: formaSeleccionada === 'Delivery' ? direccion : null,
+            descripcion
           })
         })
           .then(r => r.json())

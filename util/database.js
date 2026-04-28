@@ -10,8 +10,13 @@ const pool = mysql.createPool({
   user: 'mansi',
   database: 'mareedb',
   password: '280904',
+<<<<<<< HEAD
   waitForConnection: true,
   connectionLimit: 10
+=======
+  waitForConnections: true,
+  connectionLimit: 10 
+>>>>>>> dev
 
 })
 */
@@ -45,7 +50,7 @@ const pool = mysql.createPool({
   user: 'maree2',
   database: 'maree2_37',
   password: 'maree123',
-  waitForConnection: true,
+  waitForConnections: true,
   connectionLimit: 10
 
 })
@@ -61,7 +66,7 @@ const pool = mysql.createPool({
   user: 'maree2',
   database: 'maree2_final',
   password: 'maree123',
-  waitForConnection: true,
+  waitForConnections: true,
   connectionLimit: 10
 
 })
@@ -73,7 +78,7 @@ const pool = mysql.createPool({
   user: 'root',
   database: 'mareebd',
   password: '',
-  waitForConnection: true,
+  waitForConnections: true,
   connectionLimit: 10
 
 })

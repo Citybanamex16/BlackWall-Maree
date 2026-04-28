@@ -94,10 +94,59 @@ async function cargarPromociones () {
       `
     }
   } finally {
+    await cargarMetricasPromociones()
+
     if (spinner) {
       spinner.classList.add('is-hidden')
     }
   }
+}
+
+async function cargarMetricasPromociones () {
+  const cuerpoTabla = document.getElementById('promociones-populares-body')
+
+  if (!cuerpoTabla) {
+    return
+  }
+
+  cuerpoTabla.innerHTML = '<tr><td colspan="5">Cargando métricas...</td></tr>'
+
+  try {
+    const response = await fetch('/promos/promociones/api/metricas?limit=5')
+    const result = await leerRespuestaJson(response)
+
+    if (!response.ok || !result.success) {
+      throw new Error(result.message || 'No se pudieron cargar las métricas de promociones.')
+    }
+
+    renderizarMetricasPromociones(Array.isArray(result.data) ? result.data : [])
+  } catch (error) {
+    console.error('Error al cargar métricas de promociones:', error)
+    renderizarMetricasPromociones([], 'No se pudieron cargar las métricas de promociones.')
+  }
+}
+
+function renderizarMetricasPromociones (metricas, mensajeVacio = 'Aún no hay promociones registradas con uso.') {
+  const cuerpoTabla = document.getElementById('promociones-populares-body')
+
+  if (!cuerpoTabla) {
+    return
+  }
+
+  if (metricas.length === 0) {
+    cuerpoTabla.innerHTML = `<tr><td colspan="5">${escaparHtml(mensajeVacio)}</td></tr>`
+    return
+  }
+
+  cuerpoTabla.innerHTML = metricas.map((promocion, indice) => `
+    <tr>
+      <td><strong>#${indice + 1}</strong></td>
+      <td>${escaparHtml(promocion.Nombre)}</td>
+      <td>${escaparHtml(String(promocion.usos || 0))}</td>
+      <td>${escaparHtml(String(promocion.clientes_distintos || 0))}</td>
+      <td>${escaparHtml(String(promocion.promociones_canjeadas || 0))}</td>
+    </tr>
+  `).join('')
 }
 
 function renderizarPromociones (lista) {

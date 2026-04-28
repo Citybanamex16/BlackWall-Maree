@@ -15,6 +15,7 @@ async function getPersModalData () {
   try {
     // Nos vamos a traer las categorías y los ingredientes
     const respuestaIng = await fetch('/Menu/ingActivos?categoria=Crepas')
+
     // const respuestaCat = await fetch('/Menu/categorias')
 
     if (!respuestaIng.ok) {
@@ -86,6 +87,7 @@ function construirModalPerso (data, basePrice) {
   const insumosDisponibles = data
 
   // Creamos la primera fila obligatoria en ambas secciones
+
   crearFilaIngrediente(contenedorUntables, data, true)
   crearFilaIngrediente(contenedorFrutas, data, true)
   crearFilaIngrediente(contenedorToppings, data, true)
@@ -100,10 +102,10 @@ function construirModalPerso (data, basePrice) {
 // 2. GENERADOR DE FILAS (DROPDOWNS DINÁMICOS)
 // ==========================================
 function crearFilaIngrediente (contenedor, dataInsumos, isFirst = false) {
+  // Creamos un wrapper para la fila
   const fila = document.createElement('div')
   fila.classList.add('ingrediente-row')
   fila.style.cssText = 'display: flex; gap: 8px; margin-bottom: 12px; align-items: center; width: 100%;'
-
   const select = document.createElement('select')
   select.classList.add('input-base', 'ingrediente-select')
   select.style.flexGrow = '1'
@@ -141,6 +143,7 @@ function crearFilaIngrediente (contenedor, dataInsumos, isFirst = false) {
   fila.appendChild(btnAdd)
 
   // 🗑️ Botón de Eliminar (PROHIBIDO en la primera fila)
+
   if (!isFirst) {
     const btnRemove = document.createElement('button')
     btnRemove.innerHTML = '<i class="fas fa-trash"></i>'
@@ -154,6 +157,7 @@ function crearFilaIngrediente (contenedor, dataInsumos, isFirst = false) {
     fila.appendChild(btnRemove)
   }
 
+  // Finalmente, insertamos la fila en el contenedor (Adentro o Toppings)
   contenedor.appendChild(fila)
 }
 
@@ -318,12 +322,88 @@ function construirPersoSummary (receta) {
   modalResumenCrepa.showModal()
 }
 
-// Helper: Ya no muestra precios, solo confirma que están en el paquete
-function crearElementoListaResumen (ingrediente) {
-  const li = document.createElement('li')
+// Función auxiliar para crear los <li> de la receta (Versión Limpia)
+function crearElementoListaResumen(ingrediente) {
+  const li = document.createElement('li');
+  
+  // No mostramos precios individuales para mantener coherencia con el sistema de paquetes
   li.innerHTML = `
         <span class="ingrediente-nombre">• ${ingrediente.nombre}</span>
         <span class="ingrediente-incluido">Incluido</span>
+    `;
+  return li;
+}
+
+// Constructor de Summary
+function construirPersoSummary(receta) {
+  console.log('📝 [SUMMARY] Generando resumen visual...', receta);
+  recetaFinalPendiente = receta;
+
+  const listaUntables = document.getElementById('resumen-lista-untables');
+  const listaFrutas = document.getElementById('resumen-lista-frutas');
+  const listaToppings = document.getElementById('resumen-lista-toppings');
+
+  // Limpieza de listas previa
+  if (listaUntables) listaUntables.innerHTML = '';
+  if (listaFrutas) listaFrutas.innerHTML = '';
+  if (listaToppings) listaToppings.innerHTML = '';
+
+  const n = receta.ingredientes_adentro.length + receta.ingredientes_toppings.length;
+
+  // Llenar Listas
+  receta.ingredientes_adentro.forEach(ing => {
+    if (ing.seccion === 'untable' && listaUntables) {
+      listaUntables.appendChild(crearElementoListaResumen(ing));
+    } else if (ing.seccion === 'fruta' && listaFrutas) {
+      listaFrutas.appendChild(crearElementoListaResumen(ing));
+    }
+  });
+
+  receta.ingredientes_toppings.forEach(ing => {
+    if (listaToppings) listaToppings.appendChild(crearElementoListaResumen(ing));
+  });
+
+  // Mensajes de lista vacía
+  if (listaUntables?.innerHTML === '') listaUntables.innerHTML = '<li class="mensaje-vacio">Sin untables.</li>';
+  if (listaFrutas?.innerHTML === '') listaFrutas.innerHTML = '<li class="mensaje-vacio">Sin frutas.</li>';
+  if (listaToppings?.innerHTML === '') listaToppings.innerHTML = '<li class="mensaje-vacio">Sin toppings.</li>';
+
+  // Actualizar indicadores visuales
+  const badge = document.getElementById('resumen-badge-conteo');
+  const precioTxt = document.getElementById('resumen-precio-total');
+  const leyenda = document.getElementById('resumen-leyenda-precio');
+
+  if (badge) badge.innerText = `${n} ingredientes seleccionados`;
+  if (precioTxt) precioTxt.innerText = `$${receta.precio_total.toFixed(2)}`;
+  if (leyenda) {
+    leyenda.innerText = n <= 3 ? `Paquete Esencial (${n}/3)` : `Paquete Pro (+${n - 3} extra)`;
+  }
+
+  document.getElementById('modal-creacion-crepa').close();
+
+  // Configuración del botón final
+  btnAgregarCarrito.onclick = () => {
+    const itemFinal = {
+      ...receta,
+      nombre: `Crepa de Autor (${n} Ing.)`,
+      resumen_visual: `${n} ingredientes`
+    };
+    agregarAlCarrito(itemFinal);
+    modalResumenCrepa.close();
+  };
+
+  modalResumenCrepa.showModal();
+}
+// Función auxiliar para crear los <li> de la receta
+function crearElementoListaResumen (ingrediente) {
+  const li = document.createElement('li')
+
+  // Si el ingrediente cuesta 0 (incluido), mostramos "Incluido", si no, el precio extra.
+  const textoPrecio = ingrediente.precio > 0 ? `+$${ingrediente.precio.toFixed(2)}` : 'Incluido'
+
+  li.innerHTML = `
+        <span class="ingrediente-nombre">• ${ingrediente.nombre}</span>
+        <span class="ingrediente-precio">${textoPrecio}</span>
     `
   return li
 }

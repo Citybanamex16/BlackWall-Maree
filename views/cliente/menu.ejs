@@ -24,9 +24,9 @@
             </div>
         </div>
         <div class="royalty-actions">
-            <button type="button" class="btn-royalty-active" onclick="location.href='/cliente/perfil'">
-                <i class="fas fa-user"></i>
-            </button>
+            <a href="/cliente/perfil" class="btn-royalty-active" style="display: flex; align-items: center; justify-content: center; text-decoration: none;">
+    <i class="fas fa-user"></i>
+</a>
 
         
             <button type="button" class="btn-logout" onclick="localStorage.removeItem('pedido'); location.href='/cliente/logout';" aria-label="Cerrar Sesión">
@@ -289,7 +289,7 @@
         window.history.replaceState({}, document.title, window.location.pathname);
     }
 </script>
-<script src="/js/menudigital/menu.js"></script>
+<script src="/js/menudigital/menu.js?v=crema-visible-2"></script>
 <script src="/js/menudigital/menuProductoPersonalizado.js"></script>
 </body>
 </html>

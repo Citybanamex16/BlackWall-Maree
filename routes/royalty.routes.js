@@ -18,8 +18,8 @@ router.get('/royaltyAdmin/:nombre/promociones', isAuth, isAdmin, royaltyControla
 router.get('/royaltyAdmin/:nombre/eventos', isAuth, isAdmin, royaltyControlador.getEventosParaModal)
 
 // Metodos post
-router.post('/promociones', royaltyControlador.postRegistrarEstadoRoyalty)
-router.get('/royaltyAdmin/promocion-evento-filtro', royaltyControlador.getFilterPromocionesEventos)
+router.post('/promociones', isAuth, isAdmin, royaltyControlador.postRegistrarEstadoRoyalty)
+router.get('/royaltyAdmin/promocion-evento-filtro', isAuth, isAdmin, royaltyControlador.getFilterPromocionesEventos)
 // Agrega estas dos rutas (antes de las rutas de cliente)
 router.get('/royaltyAdmin/todas/promociones-disponibles', isAuth, isAdmin, royaltyControlador.getTodasPromociones)
 router.get('/royaltyAdmin/todas/eventos-disponibles', isAuth, isAdmin, royaltyControlador.getTodosEventos)

@@ -1,6 +1,12 @@
 const db = require('../util/database.js')
 const Royalty = require('../models/royalty.model.js')
 
+const CREMA_BATIDA_INGREDIENT_ID = 'INCRMBT001'
+
+function permiteCremaBatidaPorNombre (nombreProducto) {
+  return !String(nombreProducto || '').toLowerCase().includes('chamoyada')
+}
+
 module.exports = class Pedido {
   static fetchOrders () {
     const query = `
@@ -11,7 +17,8 @@ module.exports = class Pedido {
         o.Tipo_Orden AS tipo_orden,
         o.Estado_Orden AS estado_orden,
         o.Fecha AS fecha,
-        o.Direccion AS direccion
+        o.Direccion AS direccion,
+        o.Descripcion AS descripcion
       FROM orden o
       LEFT JOIN cliente c
         ON o.Numero_Telefonico = c.Numero_Telefonico
@@ -30,7 +37,8 @@ module.exports = class Pedido {
         o.Tipo_Orden AS tipo_orden,
         o.Estado_Orden AS estado_orden,
         o.Fecha AS fecha,
-        o.Direccion AS direccion
+        o.Direccion AS direccion,
+        o.Descripcion AS descripcion
       FROM orden o
       LEFT JOIN cliente c
         ON o.Numero_Telefonico = c.Numero_Telefonico
@@ -56,6 +64,7 @@ module.exports = class Pedido {
         c.Nombre AS nombre_cliente,
         o.Numero_Telefonico AS telefono,
         o.Tipo_Orden AS tipo_orden,
+        o.Descripcion AS descripcion,
         o.Estado_Orden AS estado_orden,
         o.Fecha AS fecha
       FROM orden o
@@ -152,20 +161,47 @@ module.exports = class Pedido {
   /**
  * Obtiene los precios base directos de la BD.
  */
-  static async obtenerListaDeOro (idsProductos, idsInsumos) {
-    console.log('\n📡 [LISTA ORO] Solicitando precios base a la DB...')
-    const [resultSets] = await db.query('CALL ObtenerPreciosBase(?, ?)', [
-      idsProductos.join(','),
-      idsInsumos.join(',')
-    ])
+    static async obtenerListaDeOro(idsProductos, idsInsumos) {
+    console.log("\n📡 [LISTA ORO] Solicitando precios base a la DB...");
+    const [resultSets] = await db.query("CALL ObtenerPreciosBase(?, ?)", [
+        idsProductos.join(','),
+        idsInsumos.join(',')
+    ]);
+    let productoMetaRows = []
 
-    const lista = { productos: {}, insumos: {} }
-    resultSets[0].forEach(p => lista.productos[p.id] = parseFloat(p.Precio))
-    resultSets[1].forEach(i => lista.insumos[i.id] = parseFloat(i.Precio))
+    if (idsProductos.length > 0) {
+      try {
+        [productoMetaRows] = await db.execute(
+          `SELECT
+            p.ID_Producto AS id,
+            p.Nombre AS nombre,
+            c.Permite_Crema_Batida AS permiteCremaBatida
+          FROM producto p
+          LEFT JOIN categoría c ON p.Categoría = c.Nombre
+          WHERE p.ID_Producto IN (${idsProductos.map(() => '?').join(',')})`,
+          idsProductos
+        )
+      } catch (error) {
+        if (error.code !== 'ER_BAD_FIELD_ERROR') throw error
+      }
+    }
+
+    const lista = { productos: {}, insumos: {}, productoMeta: {} };
+    resultSets[0].forEach(p => lista.productos[p.id] = parseFloat(p.Precio));
+    resultSets[1].forEach(i => lista.insumos[i.id] = parseFloat(i.Precio));
+    productoMetaRows.forEach(p => {
+      lista.productoMeta[p.id] = {
+        permiteCremaBatida:
+          (p.permiteCremaBatida === 1 || p.permiteCremaBatida === '1') &&
+          permiteCremaBatidaPorNombre(p.nombre)
+      };
+    });
 
     console.log(`📥 [LISTA ORO] Cargados ${Object.keys(lista.productos).length} productos y ${Object.keys(lista.insumos).length} insumos.`)
     return lista
   }
+
+
 
   /**
  * El "Cerebro" que aplica la matemática final item por item.
@@ -191,11 +227,9 @@ module.exports = class Pedido {
         console.log('   ⚠️ Sin ingredientes elegidos. Precio: $0.00')
         return 0
       } else if (n <= 3) {
-        // Lógica: 1=99, 2=109, 3=119
         acumulado = 89 + (n * 10)
         console.log(`   💸 Aplicando Tarifa Paquete Esencial: $${acumulado.toFixed(2)}`)
       } else {
-        // Lógica: Más de 3 -> 119 Base + 15 por cada extra
         const extras = n - 3
         acumulado = 119 + (extras * 15)
         console.log('   💸 Aplicando Tarifa Paquete Pro (Base 3 ing.): $119.00')
@@ -209,6 +243,7 @@ module.exports = class Pedido {
     // ==========================================
     // RAMA B: PRODUCTO DE CATÁLOGO (ESTÁNDAR)
     // ==========================================
+
     // 1. Precio Base
     let precioBase = listaOro.productos[item.id]
     if (precioBase === undefined) {
@@ -222,23 +257,37 @@ module.exports = class Pedido {
       const promo = compendio[item.id]
       const descuentoEfectivo = precioBase * promo.descuento
       precioBase = precioBase - descuentoEfectivo
-
       console.log(`   🎁 [PROMO DETECTADA] Tipo: ${promo.tipo} | Descuento: ${promo.descuento * 100}% (-$${descuentoEfectivo.toFixed(2)})`)
       console.log(`   📉 Precio con Descuento: $${precioBase.toFixed(2)}`)
     } else {
       console.log('   ⚪ [SIN PROMO] No se encontraron descuentos aplicables para este producto.')
     }
 
+    // ← LÍNEA QUE DESAPARECIÓ EN EL MERGE
     acumulado += precioBase
 
-    // 3. Sumar Insumos (Por precio individual)
+    // 3. Validaciones y suma de insumos (crema batida incluida)
     const insumos = [...(item.ingredientes_adentro || []), ...(item.ingredientes_toppings || [])]
+    const cremaBatidaCount = insumos.filter(ins => ins.id_insumo === CREMA_BATIDA_INGREDIENT_ID).length
+    const permiteCremaBatida = Boolean(listaOro.productoMeta[item.id]?.permiteCremaBatida)
+
+    if (cremaBatidaCount > 1) {
+      const error = new Error('No se puede agregar crema batida más de una vez por producto.')
+      error.code = 'INVALID_ITEM_CONFIGURATION'
+      throw error
+    }
+
+    if (cremaBatidaCount > 0 && !permiteCremaBatida) {
+      const error = new Error(`El producto ${nombreItem} no permite crema batida.`)
+      error.code = 'INVALID_ITEM_CONFIGURATION'
+      throw error
+    }
+
     if (insumos.length > 0) {
       console.log(`   ➕ Sumando ${insumos.length} insumos a precio de lista...`)
       insumos.forEach(ins => {
         const pInsumo = (listaOro.insumos[ins.id_insumo] || 0)
         if (pInsumo > 0) {
-          // Usamos el nombre si viene del frontend, si no, mostramos el ID
           console.log(`      • ${ins.nombre || ins.id_insumo}: $${pInsumo}`)
         }
         acumulado += pInsumo
@@ -248,16 +297,16 @@ module.exports = class Pedido {
     console.log(`   ✅ [TOTAL ITEM] $${acumulado.toFixed(2)}`)
     return acumulado
   }
-
-  static async guardarOrden (telefono, tipoOrden, nombreCliente, direccion = null) {
+  
+  static async guardarOrden (telefono, tipoOrden, nombreCliente, direccion = null, descripcion = null) {
     const idOrden = Pedido.generarID()
     const idTurnoFijo = 'TN26496107'
 
     await db.execute(
       `INSERT INTO orden
-       (ID_Orden, ID_Turno, Numero_Telefonico, Tipo_Orden, Nombre_cliente, Estado_Orden, Direccion)
-       VALUES (?, ?, ?, ?, ?, ?, ?)`,
-      [idOrden, idTurnoFijo, telefono, tipoOrden, nombreCliente, 'Pendiente', direccion]
+      (ID_Orden, ID_Turno, Numero_Telefonico, Tipo_Orden, Nombre_cliente, Estado_Orden, Direccion, Descripcion)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+      [idOrden, idTurnoFijo, telefono, tipoOrden, nombreCliente, 'Pendiente', direccion, descripcion]
     )
 
     return idOrden
