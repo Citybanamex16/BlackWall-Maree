@@ -1,0 +1,42 @@
+services:
+  app:
+    build: .
+    image: app
+    container_name: app
+    restart: unless-stopped
+    ports:
+      - "3005:3005"
+    depends_on:
+      - mariadb  # <--- ¡OJO AQUÍ! Asegúrate que se llame 'mariadb' o 'db' según tu servicio
+    environment:
+      DB_HOST: mariadb
+      DB_USER: root
+      DB_PASSWORD: ""
+      DB_NAME: mareebd
+
+
+  caddy:
+    image: caddy:2
+    container_name: caddy
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile
+    depends_on:
+      - app
+
+  mariadb:
+    image: mariadb:11
+    container_name: mariadb
+    restart: unless-stopped
+    environment:
+      MARIADB_ALLOW_EMPTY_ROOT_PASSWORD: true
+      MARIADB_ROOT_PASSWORD: ""
+      MARIADB_DATABASE: mareebd
+    volumes:
+      - db_data:/var/lib/mysql
+      - ./sql/SQLs/MegaStackerCuadrupleBurgerUbuntu.sql:/docker-entrypoint-initdb.d/init.sql
+volumes:
+  db_data:
