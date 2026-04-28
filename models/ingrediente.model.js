@@ -167,7 +167,6 @@ module.exports = class Ingrediente {
     return { resumen, masUsados, porCategoria, afectados, sinUso }
   }
 
-<<<<<<< HEAD
   // En tu archivo models/Insumo.js (o similar)
 
  static async verificarDisponibilidad(ids) {

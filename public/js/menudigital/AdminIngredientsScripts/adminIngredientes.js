@@ -432,16 +432,6 @@ if (canManageIngredients && btnGuardarEditar) {
 
     const nombre = editNombre.value.trim()
     const precio = parseFloat(editPrecio.value)
-<<<<<<< HEAD
-
-    // Valida campos vacios
-    if (!nombre || !editCategoria.value || !editPrecio.value) {
-      mostrarError('Campos incompletos', 'Nombre, Categoría y Precio son obligatorios.')
-      return
-    }
-
-    // Valida que el precio no sea negativo
-=======
     const categorias = Array.from(editChecksCatContainer.querySelectorAll('.cat-check-editar:checked')).map(c => c.value)
 
     // 1. Valida campos vacios
@@ -451,51 +441,10 @@ if (canManageIngredients && btnGuardarEditar) {
     }
 
     // 2. Valida que el precio no sea negativo
->>>>>>> moduloMenu
     if (isNaN(precio) || precio < 0) {
       mostrarError('Precio inválido', 'El precio debe ser un número positivo.')
       return
     }
-<<<<<<< HEAD
-
-    // Verifica duplicado solo si el nombre cambio
-    if (nombre !== nombreOriginalEditar) {
-      try {
-        const resNombre = await fetch(`/admin/api/ingredientes/verificarNombre?nombre=${encodeURIComponent(nombre)}`)
-        const objNombre = await resNombre.json()
-        if (objNombre.existe) {
-          mostrarError('Nombre duplicado', `Ya existe un ingrediente con el nombre "${nombre}".`)
-          return
-        }
-      } catch (error) {
-        mostrarError('Error de verificación', 'No se pudo verificar el nombre.')
-        return
-      }
-    }
-
-    const body = {
-      Nombre: editNombre.value.trim(),
-      Categoría: editCategoria.value,
-      Precio: editPrecio.value,
-      Activo: editActivo.checked,
-      Imagen: editImagen.value.trim()
-    }
-
-    try {
-      const res = await fetch(`/admin/api/ingredientes/${idParaEditar}/actualizar`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body)
-      })
-
-      // Si el servidor responde con error
-      if (!res.ok) {
-      // Intentamos obtener el mensaje que manda el backendsito, si no, usa uno general
-        const errorData = await res.json().catch(() => ({}))
-        throw new Error(errorData.message || 'La base de datos no está disponible.')
-      }
-
-=======
 
     // 3. Verifica duplicado solo si el nombre cambio
     if (nombre !== nombreOriginalEditar) {
@@ -533,7 +482,6 @@ if (canManageIngredients && btnGuardarEditar) {
         throw new Error(errorData.message || 'La base de datos no está disponible.')
       }
 
->>>>>>> moduloMenu
       const obj = await res.json()
 
       if (obj.success) {
@@ -546,10 +494,8 @@ if (canManageIngredients && btnGuardarEditar) {
         mostrarError('Error al actualizar', obj.message || 'Error desconocido')
       }
     } catch (error) {
-<<<<<<< HEAD
+
     // Si se cae la BD, el "throw new Error" de arriba manda la ejecucion para aca abajo
-=======
->>>>>>> moduloMenu
       mostrarError('Error al intentar modificar ingrediente', error.message)
     } finally {
       idParaEditar = null

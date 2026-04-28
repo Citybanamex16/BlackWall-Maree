@@ -283,23 +283,6 @@ module.exports = class Pedido {
       throw error
     }
 
-    // 3. Sumar Insumos
-    const insumos = [...(item.ingredientes_adentro || []), ...(item.ingredientes_toppings || [])];
-    const cremaBatidaCount = insumos.filter(ins => ins.id_insumo === CREMA_BATIDA_INGREDIENT_ID).length;
-    const permiteCremaBatida = Boolean(listaOro.productoMeta[item.id]?.permiteCremaBatida);
-
-    if (cremaBatidaCount > 1) {
-        const error = new Error('No se puede agregar crema batida más de una vez por producto.');
-        error.code = 'INVALID_ITEM_CONFIGURATION';
-        throw error;
-    }
-
-    if (cremaBatidaCount > 0 && !permiteCremaBatida) {
-        const error = new Error(`El producto ${nombreItem} no permite crema batida.`);
-        error.code = 'INVALID_ITEM_CONFIGURATION';
-        throw error;
-    }
-
     if (insumos.length > 0) {
       console.log(`   ➕ Sumando ${insumos.length} insumos a precio de lista...`)
       insumos.forEach(ins => {
@@ -311,9 +294,9 @@ module.exports = class Pedido {
       })
     }
 
-    console.log(`   ✅ [TOTAL ITEM] $${acumulado.toFixed(2)}`);
-    return acumulado;
-}
+    console.log(`   ✅ [TOTAL ITEM] $${acumulado.toFixed(2)}`)
+    return acumulado
+  }
 
   static async guardarOrden (telefono, tipoOrden, nombreCliente, direccion = null, descripcion = null) {
     const idOrden = Pedido.generarID()

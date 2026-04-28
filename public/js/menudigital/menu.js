@@ -5,13 +5,10 @@
 const platillobotones = document.getElementsByClassName('platillo-btn')
 const modalOverlay = document.getElementById('modal-overlay')
 const modalContent = document.getElementById('modal-content')
-<<<<<<< HEAD
-=======
-
 const cartToast = document.getElementById('cart-toast')
 let cartToastTimer
 
->>>>>>> moduloMenu
+
 let pedido = JSON.parse(localStorage.getItem('pedido')) || []
 
 // MODAL
@@ -963,10 +960,6 @@ function renderizarVistaCategoria (categoriaObj, productos, allTypes, allPromos,
 
     // Forzamos que la sección de Otros empiece colapsada para no estorbar (Opcional)
     gridOtros.parentElement.classList.remove('is-open')
-<<<<<<< HEAD
-
-=======
->>>>>>> moduloMenu
     construirFichaProductos(productosRestantes, allPromos, gridOtros, SesionData)
   }
 }

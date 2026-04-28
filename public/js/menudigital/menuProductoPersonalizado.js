@@ -13,22 +13,6 @@ document.getElementById('fab-personalizado')
 // Esta funcion obtiene todos los datos que el Modal de personalizacion necesita :)
 async function getPersModalData () {
   try {
-    // Nos vamos a traer las categorías y los ingredientes
-<<<<<<< HEAD
-    const respuestaIng = await fetch('/Menu/ingActivos')
-    // const respuestaCat = await fetch('/Menu/categorias')
-
-    if (!respuestaIng.ok) {
-      throw new Error('Error Interno al obtener ingredientes:')
-    }
-
-    const ingData = await respuestaIng.json()
-    console.log('ingData: ', ingData)
-    const activeIngData = ingData.ingActiveCatalog[0]
-    const basePrice = ingData.precioBasePerso[0].precioBaseCrepaPerso
-    // console.log("price recived: ", basePrice)
-
-=======
     const respuestaIng = await fetch('/Menu/ingActivos?categoria=Crepas')
 
     // const respuestaCat = await fetch('/Menu/categorias')
@@ -43,7 +27,7 @@ async function getPersModalData () {
     const basePrice = ingData.precioBasePerso[0].precioBaseCrepaPerso
     // console.log("price recived: ", basePrice)
 
->>>>>>> moduloMenu
+
     // console.log("Ingredientes activos obtenidos desde menu: ", activeIngData)
     construirModalPerso(activeIngData, basePrice)
   } catch (err) {
@@ -63,12 +47,8 @@ const btnCancelarCreacion = document.getElementById('btn-cancelar-creacion')
 const btnConfirmarCreacion = document.getElementById('btn-confirmar-creacion')
 
 // Nuevos contenedores divididos
-<<<<<<< HEAD
-const contenedorAdentro = document.getElementById('contenedor-ingredientes-adentro')
-=======
 const contenedorUntables = document.getElementById('contenedor-untables')
 const contenedorFrutas = document.getElementById('contenedor-frutas')
->>>>>>> moduloMenu
 const contenedorToppings = document.getElementById('contenedor-toppings')
 
 // --- LÓGICA DE CIERRE CON ANIMACIÓN ---
@@ -98,12 +78,8 @@ function construirModalPerso (data, basePrice) {
   PrecioBase = parseFloat(basePrice)
 
   // Limpiamos los contenedores por si se abrió antes
-<<<<<<< HEAD
-  contenedorAdentro.innerHTML = ''
-=======
   contenedorUntables.innerHTML = ''
   contenedorFrutas.innerHTML = ''
->>>>>>> moduloMenu
   contenedorToppings.innerHTML = ''
 
   // (Opcional) Aquí podrías filtrar la 'data' si en el backend tienes
@@ -111,15 +87,11 @@ function construirModalPerso (data, basePrice) {
   const insumosDisponibles = data
 
   // Creamos la primera fila obligatoria en ambas secciones
-<<<<<<< HEAD
-  crearFilaIngrediente(contenedorAdentro, insumosDisponibles, true)
-  crearFilaIngrediente(contenedorToppings, insumosDisponibles, true)
-=======
 
   crearFilaIngrediente(contenedorUntables, data, true)
   crearFilaIngrediente(contenedorFrutas, data, true)
   crearFilaIngrediente(contenedorToppings, data, true)
->>>>>>> moduloMenu
+
 
   // Calculamos el precio inicial (Base)
   calcularPrecioEnVivo()
@@ -135,33 +107,6 @@ function crearFilaIngrediente (contenedor, dataInsumos, isFirst = false) {
   const fila = document.createElement('div')
   fila.classList.add('ingrediente-row')
   fila.style.cssText = 'display: flex; gap: 8px; margin-bottom: 12px; align-items: center; width: 100%;'
-<<<<<<< HEAD
-
-  // 2.1 Crear el Select (Dropdown)
-  const select = document.createElement('select')
-  select.classList.add('input-base', 'ingrediente-select') // Usando tu clase global
-  select.style.flexGrow = '1'
-
-  // Opción por defecto
-  const defaultOption = document.createElement('option')
-  defaultOption.value = ''
-  defaultOption.textContent = 'Selecciona un ingrediente...'
-  defaultOption.dataset.precio = 0 // Precio 0 si no escoge nada
-  select.appendChild(defaultOption)
-
-  // Llenar con la data del Backend
-  dataInsumos.forEach(insumo => {
-    if (insumo.Activo == 1) { // Solo si está activo
-      const option = document.createElement('option')
-      option.value = insumo.ID_Insumo
-      option.textContent = `${insumo.Nombre} (+$${insumo.Precio})`
-
-      // ¡MAGIA!: Embebemos los datos en el HTML para recolectarlos fácil después
-      option.dataset.precio = insumo.Precio
-      option.dataset.nombre = insumo.Nombre
-      option.dataset.idInsumo = insumo.ID_Insumo
-
-=======
   const select = document.createElement('select')
   select.classList.add('input-base', 'ingrediente-select')
   select.style.flexGrow = '1'
@@ -178,40 +123,19 @@ function crearFilaIngrediente (contenedor, dataInsumos, isFirst = false) {
       option.textContent = `${insumo.Nombre}`
       option.dataset.nombre = insumo.Nombre
       option.dataset.idInsumo = insumo.ID_Insumo
->>>>>>> moduloMenu
       select.appendChild(option)
     }
   })
 
-<<<<<<< HEAD
-  // 2.2 Escuchador de cambios para el precio en vivo
-  select.addEventListener('change', calcularPrecioEnVivo)
-
-  // 2.3 Botón de Agregar [+]
-  const btnAdd = document.createElement('button')
-  btnAdd.innerHTML = '<i class="fas fa-plus"></i>' // Asumiendo que usas FontAwesome
-=======
   select.addEventListener('change', calcularPrecioEnVivo)
 
   // ➕ Botón de Agregar (Siempre presente)
   const btnAdd = document.createElement('button')
   btnAdd.innerHTML = '<i class="fas fa-plus"></i>'
->>>>>>> moduloMenu
   btnAdd.classList.add('btn-add-ingrediente')
   btnAdd.style.cssText = 'background: #9ab87a; color: white; border: none; padding: 10px 14px; border-radius: 8px; cursor: pointer;'
 
   btnAdd.addEventListener('click', () => {
-<<<<<<< HEAD
-    // Al hacer clic, crea OTRA fila en este mismo contenedor, pero isFirst es false
-    crearFilaIngrediente(contenedor, dataInsumos, false)
-  })
-
-  // Añadimos Select y Botón Add a la fila
-  fila.appendChild(select)
-  fila.appendChild(btnAdd)
-
-  // 2.4 Botón de Eliminar [-] (Solo si NO es el primero)
-=======
     // Las filas nuevas SIEMPRE nacen con isFirst = false para poder borrarse
     crearFilaIngrediente(contenedor, dataInsumos, false)
   })
@@ -221,20 +145,14 @@ function crearFilaIngrediente (contenedor, dataInsumos, isFirst = false) {
 
   // 🗑️ Botón de Eliminar (PROHIBIDO en la primera fila)
 
->>>>>>> moduloMenu
   if (!isFirst) {
     const btnRemove = document.createElement('button')
     btnRemove.innerHTML = '<i class="fas fa-trash"></i>'
     btnRemove.style.cssText = 'background: #e74c3c; color: white; border: none; padding: 10px 14px; border-radius: 8px; cursor: pointer;'
 
     btnRemove.addEventListener('click', () => {
-<<<<<<< HEAD
-      fila.remove() // Eliminamos el HTML
-      calcularPrecioEnVivo() // Recalculamos el precio al quitarlo
-=======
       fila.remove()
       calcularPrecioEnVivo()
->>>>>>> moduloMenu
     })
 
     fila.appendChild(btnRemove)
@@ -248,26 +166,6 @@ function crearFilaIngrediente (contenedor, dataInsumos, isFirst = false) {
 // 3. ACTUALIZACIÓN DE PRECIO EN VIVO
 // ==========================================
 function calcularPrecioEnVivo () {
-<<<<<<< HEAD
-  console.log('Calculando precio en vivo a partir de precio base: ', PrecioBase)
-  let total = PrecioBase
-
-  // Buscamos TODOS los selects dentro del modal
-  const todosLosSelects = modalCreacionCrepa.querySelectorAll('.ingrediente-select')
-
-  todosLosSelects.forEach(select => {
-    // Obtenemos la opción que está seleccionada actualmente
-    const opcionSeleccionada = select.options[select.selectedIndex]
-
-    // Sacamos el precio embebido en el dataset (lo pasamos a Float por si es string)
-    const precioExtra = parseFloat(opcionSeleccionada.dataset.precio) || 0
-    total += precioExtra
-  })
-
-  // Actualizamos el HTML visual
-
-  placeholderPrecioTotal.innerText = `$${total.toFixed(2)}`
-=======
   // 1. Contamos cuántos selects tienen algo seleccionado
   const todosLosSelects = modalCreacionCrepa.querySelectorAll('.ingrediente-select')
   let totalIngredientes = 0
@@ -294,51 +192,11 @@ function calcularPrecioEnVivo () {
   btnConfirmarCreacion.style.opacity = (totalIngredientes < 1) ? '0.5' : '1'
 
   placeholderPrecioTotal.innerText = `$${nuevoPrecio.toFixed(2)}`
->>>>>>> moduloMenu
 }
 // ==========================================
 // 4. RECOLECCIÓN DE DATOS (PARA EL CARRITO)
 // ==========================================
 function RecolectarDatosDeCampos () {
-<<<<<<< HEAD
-  console.log('Recolectando receta...')
-
-  const recetaFinal = {
-    	id: 'PD_COMODIN',
-    producto_base: 'Crepa Personalizada',
-    precio_total: parseFloat(placeholderPrecioTotal.innerText.replace('$', '')),
-    ingredientes_adentro: [],
-    ingredientes_toppings: []
-  }
-
-  // 4.1 Recolectar de la sección "Adentro"
-  const selectsAdentro = contenedorAdentro.querySelectorAll('.ingrediente-select')
-  selectsAdentro.forEach(select => {
-    const opt = select.options[select.selectedIndex]
-    if (opt.value !== '') { // Si no es la opción por defecto
-      recetaFinal.ingredientes_adentro.push({
-        id_insumo: opt.dataset.idInsumo,
-        nombre: opt.dataset.nombre,
-        precio: parseFloat(opt.dataset.precio)
-      })
-    }
-  })
-
-  // 4.2 Recolectar de la sección "Toppings"
-  const selectsToppings = contenedorToppings.querySelectorAll('.ingrediente-select')
-  selectsToppings.forEach(select => {
-    const opt = select.options[select.selectedIndex]
-    if (opt.value !== '') {
-      recetaFinal.ingredientes_toppings.push({
-        id_insumo: opt.dataset.idInsumo,
-        nombre: opt.dataset.nombre,
-        precio: parseFloat(opt.dataset.precio)
-      })
-    }
-  })
-
-  return recetaFinal
-=======
   console.log('🧺 Recolectando receta de autor...')
 
   const ingredientes_adentro = []
@@ -387,7 +245,6 @@ function RecolectarDatosDeCampos () {
     ingredientes_toppings,
     cantidad_total: totalIng
   }
->>>>>>> moduloMenu
 }
 
 // --- Elementos del Modal de Resumen ---
@@ -401,65 +258,6 @@ const btnAgregarCarrito = document.getElementById('btn-agregar-carrito')
 
 // Variable global para guardar la receta final en espera
 let recetaFinalPendiente = null
-<<<<<<< HEAD
-
-// Constructor de Summary
-function construirPersoSummary (receta) {
-  console.log('Construyendo tu receta Final:', receta)
-  recetaFinalPendiente = receta // Guardamos en memoria
-
-  // 1. Limpiar listas
-  listaResumenToppings.innerHTML = ''
-  listaResumenAdentro.innerHTML = ''
-
-  // 2. Llenar Toppings (¡Hasta arriba!)
-  if (receta.ingredientes_toppings.length > 0) {
-    receta.ingredientes_toppings.forEach(ing => {
-      listaResumenToppings.appendChild(crearElementoListaResumen(ing))
-    })
-  } else {
-    listaResumenToppings.innerHTML = '<li class="mensaje-vacio">Sin toppings extra.</li>'
-  }
-
-  // 3. Llenar Adentro (El corazón)
-  if (receta.ingredientes_adentro.length > 0) {
-    receta.ingredientes_adentro.forEach(ing => {
-      listaResumenAdentro.appendChild(crearElementoListaResumen(ing))
-    })
-  } else {
-    listaResumenAdentro.innerHTML = '<li class="mensaje-vacio">Sin ingredientes extra en el interior.</li>'
-  }
-
-  // 4. Actualizar Precio
-  resumenPrecioTotal.innerText = `$${receta.precio_total.toFixed(2)}`
-
-  // 5. Transición de modales
-  // Cerramos el de creación sin animación de error, solo lo cerramos
-  document.getElementById('modal-creacion-crepa').close()
-
-  // 6. conexion de boton
-  // Si el usuario confirma su creación
-  btnAgregarCarrito.addEventListener('click', () => {
-    /* formato
-
-	 const itemParaCarrito = {
-      id,
-      nombre: data.nombre,
-      precio: '$' + precioFinal.toFixed(2),
-      desc: [data.base, producto?.tipo].filter(Boolean).join(' · ')
-    }
-	*/
-
-    agregarAlCarrito(receta)
-
-    // Cerramos el modal
-    modalResumenCrepa.close()
-  }, { once: true })
-
-  // Abrimos el de resumen
-  modalResumenCrepa.showModal()
-}
-=======
 
 function construirPersoSummary (receta) {
   console.log('📝 [SUMMARY] Generando resumen visual...')
@@ -594,7 +392,6 @@ function construirPersoSummary(receta) {
     agregarAlCarrito(itemFinal);
     modalResumenCrepa.close();
   };
->>>>>>> moduloMenu
 
   modalResumenCrepa.showModal();
 }
