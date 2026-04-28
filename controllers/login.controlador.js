@@ -87,7 +87,7 @@ exports.postLogin = async (request, response, next) => {
 }
 
 exports.postSignUp = async (request, response, next) => {
-  const { telefono, nombre, genero, birthday, mail } = request.body
+  const { telefono, nombre, genero, birthday, mail, username } = request.body
   const telefonoSoloNumeros = telefono.replace(/\D/g, '')
 
   if (telefonoSoloNumeros.length !== 10) {
@@ -96,7 +96,7 @@ exports.postSignUp = async (request, response, next) => {
 
   try {
     const telefonoFormateado = formatearTelefono(telefonoSoloNumeros)
-    await Login.save({ telefono: telefonoFormateado, nombre, genero, birthday, mail })
+    await Login.save({ telefono: telefonoFormateado, nombre, genero, birthday, mail, username })
 
     const otpData = await issueOtpForClient(telefonoFormateado)
     request.session.pendingPhone = telefonoFormateado
@@ -143,9 +143,8 @@ exports.postVerifyOtp = async (request, response, next) => {
       await Login.deleteVerificationCode(telefono)
       request.session.isLoggedIn = true
       request.session.rol = client.rol
-      request.session.cliente = { nombre: client.Nombre, telefono: client.telefono, genero: client.genero, visitas: client.visitasActual || 0 }
+      request.session.cliente = { nombre: client.Nombre, telefono: client.telefono, genero: client.genero, visitas: client.visitasActual, username: client.username || 0 }
       delete request.session.pendingPhone
-
       return response.status(200).json({
         success: true,
         redirectUrl: '/menu/menu'
