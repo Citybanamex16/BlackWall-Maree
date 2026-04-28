@@ -5,6 +5,8 @@ const path = require('path')
 const router = express.Router()
 
 const evenPromoControlador = require('../controllers/promo_eventos.controlador.js')
+const isAuth = require('../middleware/isAuth.js')
+const isAdmin = require('../middleware/isAdmin.js')
 
 const carpetaImagenesEventos = path.join(__dirname, '..', 'public', 'uploads', 'eventos')
 const extensionesImagen = {
@@ -53,6 +55,8 @@ const subirImagenEvento = (req, res, next) => {
     })
   })
 }
+
+router.use(isAuth, isAdmin)
 
 router.get('/eventos', evenPromoControlador.getEvents)
 
