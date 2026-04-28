@@ -17,8 +17,14 @@ module.exports = class Royalty {
 
   // Obtenemos las promociones
   static fetchTodasPromociones () {
-    return db.execute('SELECT ID_promocion, Nombre FROM promocion')
-  }
+  return db.execute(`
+    SELECT p.ID_promocion, p.Nombre 
+    FROM promocion p
+    WHERE p.ID_promocion NOT IN (
+      SELECT ID_Promocion FROM evento_contiene_promocion
+    )
+  `)
+}
 
   // Obtenemos los eventos
   static fetchTodosEventos () {
@@ -114,13 +120,16 @@ module.exports = class Royalty {
 
   // Obtenemos las promociones de cada royalty
   static async fetchPromociones_royalties (nombre) {
-    return db.execute(
-    `SELECT p.ID_promocion, p.Nombre FROM promocion p 
-     INNER JOIN estado_royalty_da_promociones erp ON p.ID_promocion = erp.ID_Promocion 
-     WHERE erp.Nombre_Royalty = ?`,
-    [nombre]
+  return db.execute(`
+    SELECT p.ID_promocion, p.Nombre 
+    FROM promocion p
+    INNER JOIN estado_royalty_da_promociones erp ON p.ID_promocion = erp.ID_Promocion
+    WHERE erp.Nombre_Royalty = ?
+    AND p.ID_promocion NOT IN (
+      SELECT ID_Promocion FROM evento_contiene_promocion
     )
-  }
+  `, [nombre])
+}
 
   static async fetchEventos_royalty (nombre) {
     return db.execute(
