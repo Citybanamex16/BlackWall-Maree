@@ -11,14 +11,14 @@ const pool = mysql.createPool({
   database: 'mareedb',
   password: '280904',
   waitForConnection: true,
-  connectionLimit: 10 
+  connectionLimit: 10
 
 })
 */
 
 /* ==Contraseñas y usuario ==
 Usuario: CL85565990
-Pass: CL006901! 
+Pass: CL006901!
 
 */
 
@@ -35,20 +35,19 @@ const pool = mysql.createPool({
   connectionLimit: 10
 
 })
-
-/* Santi
+*/
+// Santi
 // Pool de conexiones
 
 const pool = mysql.createPool({
   host: 'mysql-maree2.alwaysdata.net',
   user: 'maree2',
-  database: 'maree2_final',
+  database: 'maree2_37',
   password: 'maree123',
   waitForConnection: true,
   connectionLimit: 10
 
 })
-*/
 
 /*
 // Santi
@@ -64,7 +63,7 @@ const pool = mysql.createPool({
 
 })
 */
-
+/*
 // Pool de conexiones - Andy :)
 const pool = mysql.createPool({
   host: 'localhost',
@@ -75,5 +74,5 @@ const pool = mysql.createPool({
   connectionLimit: 10
 
 })
-
+*/
 module.exports = pool.promise() // Habilitamos poder usar .then() & .catch() yuhhhh

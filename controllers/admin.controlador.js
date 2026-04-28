@@ -556,7 +556,7 @@ exports.validarIngrediente = async (req, res, next) => {
 exports.crearIngrediente = async (req, res, next) => {
   try {
     const { Nombre, Precio, Activo, Imagen } = req.body
-    const Categorias = req.body['Categorias']  // array de categorías seleccionadas
+    const Categorias = req.body.Categorias // array de categorías seleccionadas
 
     // Validación de campos obligatorios
     const resultado = Ingrediente.verificarCamposVacios(req.body)
@@ -638,7 +638,7 @@ exports.actualizarIngrediente = async (req, res, next) => {
   try {
     const { id } = req.params
     const { Nombre, Precio, Activo, Imagen } = req.body
-    const Categorias = req.body['Categorias']  // array de categorías seleccionadas
+    const Categorias = req.body.Categorias // array de categorías seleccionadas
 
     if (!id || !Nombre || !Categorias || !Categorias.length || !Precio) {
       return res.status(400).json({ success: false, message: 'Campos obligatorios faltantes' })

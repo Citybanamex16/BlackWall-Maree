@@ -9,7 +9,6 @@ const sucursal = require('../models/MenuDigital/sucursales.model.js')
 const feedback = require('../models/MenuDigital/feedback.model.js')
 const db = require('../util/database.js')
 
-
 // CU11 Vizualisar Menu
 exports.getMenu = (request, response, next) => {
   const breadcrumbs = nav.getBreadcrumbs('Menu')
@@ -160,7 +159,6 @@ exports.agregarItem = (request, response, next) => {
   response.status(200).json({ agregado: true, nombre, precio, desc })
 }
 
-
 /* ==== middleware de contexto de sesion ==== */
 // middlewares/contextoUsuario.middleware.js
 
@@ -181,7 +179,7 @@ exports.contextoUsuario = async (request, response, next) => {
       request.session?.rol === 'Usuario' &&
       cliente?.telefono
     ) {
-      console.log("📡 [ROYALTY] Consultando nivel del cliente...")
+      console.log('📡 [ROYALTY] Consultando nivel del cliente...')
 
       const telefono = cliente.telefono
 
@@ -191,7 +189,7 @@ exports.contextoUsuario = async (request, response, next) => {
 
       nivelRoyalty = clienteInfo?.nivel || 'CLIENTE_GENERAL'
 
-      console.log("👑 [ROYALTY] Nivel detectado:", nivelRoyalty)
+      console.log('👑 [ROYALTY] Nivel detectado:', nivelRoyalty)
     }
 
     request.usuario = {
@@ -208,14 +206,13 @@ exports.contextoUsuario = async (request, response, next) => {
       esRoyalty: nivelRoyalty !== 'CLIENTE_GENERAL'
     }
 
-    console.log("🔐 [MIDDLEWARE]");
-    console.log("   Usuario:", request.usuario.nombre);
-    console.log("   Nivel:", request.usuario.nivelRoyalty);
+    console.log('🔐 [MIDDLEWARE]')
+    console.log('   Usuario:', request.usuario.nombre)
+    console.log('   Nivel:', request.usuario.nivelRoyalty)
 
     next()
-
   } catch (error) {
-    console.error("❌ Error obteniendo contexto de usuario:", error)
+    console.error('❌ Error obteniendo contexto de usuario:', error)
 
     // Fallback seguro
     request.usuario = {
@@ -233,76 +230,72 @@ exports.contextoUsuario = async (request, response, next) => {
   }
 }
 
-
 exports.validarPedido = async (request, response, next) => {
-  const usuario = request.usuario; // Trae: nombre, esRoyalty, nivelRoyalty, etc.
+  const usuario = request.usuario // Trae: nombre, esRoyalty, nivelRoyalty, etc.
 
-  const { items } = request.body;
+  const { items } = request.body
 
   // ── Validación básica ──
   if (!Array.isArray(items) || items.length === 0) {
-    return response.status(400).json({ pedidoValido: false, mensaje: 'El pedido está vacío' });
+    return response.status(400).json({ pedidoValido: false, mensaje: 'El pedido está vacío' })
   }
 
   try {
     // ── 1. Recolección de IDs ──
-    const idsProductos = [...new Set(items.map(i => i.id))];
+    const idsProductos = [...new Set(items.map(i => i.id))]
     const idsInsumos = [...new Set(items.flatMap(i => [
-        ...(i.ingredientes_adentro || []).map(ins => ins.id_insumo),
-        ...(i.ingredientes_toppings || []).map(ins => ins.id_insumo)
-    ]))];
+      ...(i.ingredientes_adentro || []).map(ins => ins.id_insumo),
+      ...(i.ingredientes_toppings || []).map(ins => ins.id_insumo)
+    ]))]
 
     // ── 2. Disponibilidad ──
-    const idsDisponibles = await Pedido.verificarDisponibilidadPorId(idsProductos);
+    const idsDisponibles = await Pedido.verificarDisponibilidadPorId(idsProductos)
     if (!idsProductos.every(id => idsDisponibles.includes(id))) {
-      return response.status(200).json({ pedidoValido: false, mensaje: 'Algunos platillos ya no están disponibles.' });
+      return response.status(200).json({ pedidoValido: false, mensaje: 'Algunos platillos ya no están disponibles.' })
     }
 
     // ── 3. Fase de Inteligencia: El Compendio ──
     // Obtenemos precios base e ingredientes
-    const listaOro = await Pedido.obtenerListaDeOro(idsProductos, idsInsumos);
-    
+    const listaOro = await Pedido.obtenerListaDeOro(idsProductos, idsInsumos)
+
     // Armamos el compendio de promociones filtrado por el contexto del usuario
-    const compendio = await Pedido.obtenerCompendioPromociones(usuario);
+    const compendio = await Pedido.obtenerCompendioPromociones(usuario)
 
     // ── 4. Inspección del Policía (Item por Item) ──
-    let granTotalOficial = 0;
-    const erroresPrecio = [];
+    let granTotalOficial = 0
+    const erroresPrecio = []
 
     items.forEach((item, index) => {
       // Pasamos el compendio para que el cálculo sepa qué promo aplicar
-      const precioOficial = Pedido.calcularPrecioRealItem(item, listaOro, compendio);
-      
+      const precioOficial = Pedido.calcularPrecioRealItem(item, listaOro, compendio)
+
       const precioRecibido = parseFloat(
         String(item.precio_total ?? item.precio).replace(/[^0-9.]/g, '')
-      );
+      )
 
       if (Math.abs(precioOficial - precioRecibido) > 0.01) {
-        erroresPrecio.push(`Item ${index + 1}: se esperaba $${precioOficial} pero se recibió $${precioRecibido}`);
+        erroresPrecio.push(`Item ${index + 1}: se esperaba $${precioOficial} pero se recibió $${precioRecibido}`)
       }
-      granTotalOficial += precioOficial;
-    });
+      granTotalOficial += precioOficial
+    })
 
     if (erroresPrecio.length > 0) {
       return response.status(200).json({
         pedidoValido: false,
         mensaje: 'Discrepancia de precios detectada.',
         detalles: erroresPrecio
-      });
+      })
     }
 
     return response.status(200).json({
       pedidoValido: true,
       totalVerificado: granTotalOficial
-    });
-
+    })
   } catch (err) {
-    console.error('💥 Error en Policía:', err);
-    next(err);
+    console.error('💥 Error en Policía:', err)
+    next(err)
   }
-};
-
-
+}
 
 exports.confirmarPedido = async (request, response, next) => {
   const { items, forma, telefono: telefonoBody, nombre: nombreBody, direccion } = request.body
@@ -336,7 +329,6 @@ exports.confirmarPedido = async (request, response, next) => {
     response.status(500).json({ pedidoConfirmado: false, mensaje: 'Error al guardar el pedido' })
   }
 }
-
 
 /* CU 14 Visualizar Catalogo Productos */
 exports.getProducts = (req, res, next) => {
@@ -710,14 +702,11 @@ exports.putDesactivarProducto = async (req, res, next) => {
   }
 }
 
+// Seccion Personalizacion de productos
 
-
-// Seccion Personalizacion de productos 
-
-
-exports.getCategorías = async (req, res, nex) =>{
-  console.log("Obteniendo las categorías")
-  try{
+exports.getCategorías = async (req, res, nex) => {
+  console.log('Obteniendo las categorías')
+  try {
     const result = await categorías.fecthAll()
 
     res.status(200).json({
@@ -725,179 +714,156 @@ exports.getCategorías = async (req, res, nex) =>{
       message: 'Catalogo de categorías Obtenido',
       categoriasCatalog: result
     })
-
   } catch (err) {
     res.status(500).json({
       ok: false,
       message: err
     })
-
-
   }
-
 }
 
-
 exports.getIngredientesActivos = async (req, res, nex) => {
-    console.log("Obteniendo los ingredientes activos con transacción");
-    
-    // PLACEHOLDER: Obtener el objeto de conexión/pool de tu configuración de BD
-    const connection = await db.getConnection(); 
+  console.log('Obteniendo los ingredientes activos con transacción')
 
-    try {
-        // Iniciamos la transacción
-        await connection.beginTransaction();
+  // PLACEHOLDER: Obtener el objeto de conexión/pool de tu configuración de BD
+  const connection = await db.getConnection()
 
-        // Ejecutamos ambas consultas usando la misma conexión
-        const categoria = req.query.categoria
-        const result = categoria
-          ? await ingrediente.fetchAllValidPorCategoria(connection, categoria)
-          : await ingrediente.fetchAllValid(connection)
-        const resultPrecioBase = await productos.getCrepaPersoPrecioBase(connection);
+  try {
+    // Iniciamos la transacción
+    await connection.beginTransaction()
 
-        // Si todo sale bien, confirmamos (commit)
-        await connection.commit();
+    // Ejecutamos ambas consultas usando la misma conexión
+    const categoria = req.query.categoria
+    const result = categoria
+      ? await ingrediente.fetchAllValidPorCategoria(connection, categoria)
+      : await ingrediente.fetchAllValid(connection)
+    const resultPrecioBase = await productos.getCrepaPersoPrecioBase(connection)
 
-        res.status(200).json({
-            ok: true,
-            message: 'Catalogo de Ingredientes Activos Obtenido',
-            ingActiveCatalog: result,
-            precioBasePerso: resultPrecioBase
-        });
+    // Si todo sale bien, confirmamos (commit)
+    await connection.commit()
 
-    } catch (err) {
-        // Si algo falla, revertimos cualquier cambio (rollback)
-        if (connection) await connection.rollback();
-        
-        res.status(500).json({
-            ok: false,
-            message: 'Error en la transacción',
-            error: err.message || err
-        });
-    } finally {
-        // Siempre liberamos la conexión al terminar
-        if (connection) connection.release();
-    }
-};
+    res.status(200).json({
+      ok: true,
+      message: 'Catalogo de Ingredientes Activos Obtenido',
+      ingActiveCatalog: result,
+      precioBasePerso: resultPrecioBase
+    })
+  } catch (err) {
+    // Si algo falla, revertimos cualquier cambio (rollback)
+    if (connection) await connection.rollback()
 
+    res.status(500).json({
+      ok: false,
+      message: 'Error en la transacción',
+      error: err.message || err
+    })
+  } finally {
+    // Siempre liberamos la conexión al terminar
+    if (connection) connection.release()
+  }
+}
 
-//Sección feedback Cliente
+// Sección feedback Cliente
 exports.getReviewHistoryView = (request, response, next) => {
   const breadcrumbs = nav.getBreadcrumbs('Menu')
   const SesionData = request.session.cliente
-  console.log("Datos del cliente: ", SesionData)
-  response.render('cliente/historialClienteReviews', { breadcrumbs, datosCliente: SesionData})
+  console.log('Datos del cliente: ', SesionData)
+  response.render('cliente/historialClienteReviews', { breadcrumbs, datosCliente: SesionData })
 }
-
-
 
 exports.getClientReviewHistory = async (req, res, nex) => {
   console.log("Getting Client's review history")
-  try{
+  try {
+    const clienteTelefono = req.query.Numero_Telefonico
 
-    const clienteTelefono = req.query.Numero_Telefonico;
-
-    if(clienteTelefono === undefined){
-      throw new Error("Telefono indefinido")
+    if (clienteTelefono === undefined) {
+      throw new Error('Telefono indefinido')
     }
 
-    console.log("Teléfono recibido:", clienteTelefono);
+    console.log('Teléfono recibido:', clienteTelefono)
 
     const resultData = await feedback.getClientFeedback(clienteTelefono)
 
-    console.log("Reviews obtenidas: ", resultData)
+    console.log('Reviews obtenidas: ', resultData)
 
-     res.status(200).json({
-          ok: true,
-          message: 'Catalogo Feedback Obtenido',
-          reviewCatalog:resultData
-                  })
-
+    res.status(200).json({
+      ok: true,
+      message: 'Catalogo Feedback Obtenido',
+      reviewCatalog: resultData
+    })
   } catch (err) {
     res.status(500).json({
-          ok: false,
-          message: 'Error al obtener catalogo feedback',
-          error:err
-                  })
-
+      ok: false,
+      message: 'Error al obtener catalogo feedback',
+      error: err
+    })
   }
 }
 
-
-
-
 exports.postNewFeedback = async (req, res, post) => {
-  console.log("Generando nuevo feedback de cliente")
+  console.log('Generando nuevo feedback de cliente')
   let resultData
-  try{
-
+  try {
     const NewReviewData = req.body
     // Extracción tipo map
-     const {
-      ID_Orden,            // Recibir
-      Puntaje,             // Recibir
-      Comentario,          // Recibir
-      Numero_Telefonico    // Recibir para cliente_tiene_review
-  } = NewReviewData;
+    const {
+      ID_Orden, // Recibir
+      Puntaje, // Recibir
+      Comentario, // Recibir
+      Numero_Telefonico // Recibir para cliente_tiene_review
+    } = NewReviewData
 
-  //Generar variables
-  const ID_Review = productos.generarID("RV")
-  console.log("ID generado para nueva review: ", ID_Review)
+    // Generar variables
+    const ID_Review = productos.generarID('RV')
+    console.log('ID generado para nueva review: ', ID_Review)
 
-  const now = new Date();
-  const Fecha_Hora = now.getFullYear() + '-' +
+    const now = new Date()
+    const Fecha_Hora = now.getFullYear() + '-' +
     String(now.getMonth() + 1).padStart(2, '0') + '-' +
     String(now.getDate()).padStart(2, '0') + ' ' +
     String(now.getHours()).padStart(2, '0') + ':' +
     String(now.getMinutes()).padStart(2, '0') + ':' +
-    String(now.getSeconds()).padStart(2, '0');
+    String(now.getSeconds()).padStart(2, '0')
 
-  //Preparando paquetes de info para cada tabla:
-  // Para tabla Review
-const reviewRecord = {
-    ID_Review,
-    ID_Orden,
-    Puntaje,
-    Fecha_Hora,
-    Comentario
-};
+    // Preparando paquetes de info para cada tabla:
+    // Para tabla Review
+    const reviewRecord = {
+      ID_Review,
+      ID_Orden,
+      Puntaje,
+      Fecha_Hora,
+      Comentario
+    }
 
-// Para tabla cliente_tiene_review
-const intermediaryData = {
-    ID_Review, // ID_Review generada arriba
-    Numero_Telefonico
-};
+    // Para tabla cliente_tiene_review
+    const intermediaryData = {
+      ID_Review, // ID_Review generada arriba
+      Numero_Telefonico
+    }
 
-console.log(reviewRecord);
-console.log(intermediaryData);
+    console.log(reviewRecord)
+    console.log(intermediaryData)
 
-//Ejecutando POST
-resultData = await feedback.postNewOrderFeedback(reviewRecord, intermediaryData)
+    // Ejecutando POST
+    resultData = await feedback.postNewOrderFeedback(reviewRecord, intermediaryData)
 
-  console.log("Resultado SP:", JSON.stringify(resultData))
+    console.log('Resultado SP:', JSON.stringify(resultData))
 
-  if (resultData && resultData[0]?.Estado === 'Error') {
-    throw new Error(`SP falló: ${resultData[0]?.Mensaje}`)
-  }
+    if (resultData && resultData[0]?.Estado === 'Error') {
+      throw new Error(`SP falló: ${resultData[0]?.Mensaje}`)
+    }
 
-  res.status(200).json({
-          ok: true,
-          message: 'Feedback Guardado correctamente',
-          result:resultData
-                  })
-
-
-  } catch (err){
-    console.log("Error interno en POST de feedback: ", err)
+    res.status(200).json({
+      ok: true,
+      message: 'Feedback Guardado correctamente',
+      result: resultData
+    })
+  } catch (err) {
+    console.log('Error interno en POST de feedback: ', err)
     res.status(500).json({
-          ok: false,
-          message: 'Error al guardar feedback',
-          result:resultData
-                  })
-
-
+      ok: false,
+      message: 'Error al guardar feedback',
+      result: resultData
+    })
   }
 }
-
-
-
