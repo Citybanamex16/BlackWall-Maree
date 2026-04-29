@@ -15,18 +15,30 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 </head>
 <body>
+    <nav class="navbar" role="navigation">
+        <div class="navbar-brand">
+            <div class="navbar-item">
+                <div class="logo-area">
+                    <span class="logo-text">MARÉE</span>
+                    <span class="logo-sub">Love at First Crêpe</span>
+                </div>
+            </div>
+        </div>
+    </nav>
+
     <section class="section">
         <div class="container">
-            <h1 class="title">Catálogo de Royalty System</h1>
-            <!-- onclick = abrirModal()-->
-             <br>
-             <div class="button is-primary is-rounded">
-                    <!-- Agregar la funcionalidad de abrirModal-->
-                     <br>
-                        <button class="button is-primary" onclick="abrirModalNuevoEstadoRoyalty()">Nuevo Estado Royalty</button>
-                        
+            <a href="/admin" class="back-link">← Admin Dashboard</a>
+
+            <div class="royalty-shell">
+                <div>
+                    <h1 class="title">Catálogo de Royalty System</h1>
                 </div>
-                <br>
+                <div class="button is-primary is-rounded">
+                    <button class="button is-primary" onclick="abrirModalNuevoEstadoRoyalty()">Nuevo Estado Royalty</button>
+                </div>
+            </div>
+
             <section class="section">
             <div id="royaltyContainer"></div>
             </section>
