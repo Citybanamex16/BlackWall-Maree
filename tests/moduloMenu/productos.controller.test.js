@@ -43,7 +43,7 @@ describe('Pruebas de Registro de Producto Nuevo', () => {
 
     // 2. Simulamos que el modelo responde éxito (mockResolvedValue)
     // MySQL suele devolver un array donde la primera posición tiene el insertId
-    productosModel.ValidarDatosRegistro.mockReturnValue(true)
+    productosModel.ValidarDatosRegistro.mockReturnValue({ valido: true, mensaje: '' })
     productosModel.generarID.mockReturnValue('PD12345678')
     productosModel.insertNewProduct.mockResolvedValue({ affectedRows: 1, insertId: 100 })
 

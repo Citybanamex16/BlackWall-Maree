@@ -19,8 +19,8 @@ module.exports = class Producto {
       I.nombre AS insumoNombre,
       I.Precio AS precio
       FROM producto AS P
-      INNER JOIN producto_tiene_insumo AS PI ON P.ID_Producto = PI.ID_Producto
-      INNER JOIN insumo AS I ON PI.ID_Insumo = I.ID_Insumo
+      LEFT JOIN producto_tiene_insumo AS PI ON P.ID_Producto = PI.ID_Producto
+      LEFT JOIN insumo AS I ON PI.ID_Insumo = I.ID_Insumo
       ;`)
     } catch (error) {
       if (error.code !== 'ER_BAD_FIELD_ERROR') throw error
@@ -38,8 +38,8 @@ module.exports = class Producto {
       I.nombre AS insumoNombre,
       I.Precio AS precio
       FROM producto AS P
-      INNER JOIN producto_tiene_insumo AS PI ON P.ID_Producto = PI.ID_Producto
-      INNER JOIN insumo AS I ON PI.ID_Insumo = I.ID_Insumo
+      LEFT JOIN producto_tiene_insumo AS PI ON P.ID_Producto = PI.ID_Producto
+      LEFT JOIN insumo AS I ON PI.ID_Insumo = I.ID_Insumo
       ;`)
     }
 
@@ -154,11 +154,16 @@ module.exports = class Producto {
   // Función para obtener los ingredientes pertenecientes a una Categoría
   static async getCategoryIngredientes (categoria) {
     return db.execute(
-      `SELECT i.ID_Insumo as id, i.Nombre as nombre, i.Precio as precio
+      `SELECT
+         MIN(i.ID_Insumo) AS id,
+         TRIM(i.Nombre) AS nombre,
+         MIN(i.Precio) AS precio
        FROM insumo i
        JOIN insumo_categoria ic ON i.ID_Insumo = ic.ID_Insumo
        WHERE ic.Nom_Categoria = ? AND i.Activo = 1
-       ORDER BY i.Nombre`,
+         AND LOWER(TRIM(i.Nombre)) NOT IN ('pruebaallcat', 'mocha chalry', 'mocha charly')
+       GROUP BY LOWER(TRIM(i.Nombre)), TRIM(i.Nombre)
+       ORDER BY TRIM(i.Nombre)`,
       [categoria]
     )
   }
@@ -170,27 +175,54 @@ module.exports = class Producto {
   }
 
   static async insertNewProduct (connection, id, nombre, categoria, Precio, Disponible, Imagen, tipo, permiteCremaBatida) {
-    // Al usar await, recibes el resultado de la promesa
-    const [result] = await connection.execute(
-      'INSERT INTO producto VALUES (?,?,?,?,?,?,?,?,?,?)',
-      [id, 'Básico', categoria, nombre, Precio, Disponible, tipo, Imagen, permiteCremaBatida, 0]
-    )
-    return result // Este objeto contiene affectedRows e insertId
+    try {
+      const [result] = await connection.execute(
+        `INSERT INTO producto
+          (ID_Producto, Tamaño, Categoría, Nombre, Precio, Disponible, Tipo, Imagen, Permite_Crema_Batida, EsExclusivo)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        [id, 'Básico', categoria, nombre, Precio, Disponible, tipo, Imagen, permiteCremaBatida, 0]
+      )
+      return result
+    } catch (error) {
+      if (error.code !== 'ER_BAD_FIELD_ERROR') throw error
+
+      const [result] = await connection.execute(
+        `INSERT INTO producto
+          (ID_Producto, Tamaño, Categoría, Nombre, Precio, Disponible, Tipo, Imagen, EsExclusivo)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        [id, 'Básico', categoria, nombre, Precio, Disponible, tipo, Imagen, 0]
+      )
+      return result
+    }
   }
 
   static async modifyProduct (connection, id, nombre, categoria, tipo, Precio, Disponible, Imagen, permiteCremaBatida) {
-    const result = await connection.execute(`
-    UPDATE producto
-    SET 
-      Categoría = ?, 
-      Tipo = ?,
-      Nombre = ?,
-      Precio = ?,
-      Disponible = ?,
-      Imagen = ?,
-      Permite_Crema_Batida = ?
-  WHERE ID_Producto = ?;`, [categoria, tipo, nombre, Precio, Disponible, Imagen, permiteCremaBatida, id])
-    return result
+    try {
+      return await connection.execute(`
+      UPDATE producto
+      SET 
+        Categoría = ?, 
+        Tipo = ?,
+        Nombre = ?,
+        Precio = ?,
+        Disponible = ?,
+        Imagen = ?,
+        Permite_Crema_Batida = ?
+    WHERE ID_Producto = ?;`, [categoria, tipo, nombre, Precio, Disponible, Imagen, permiteCremaBatida, id])
+    } catch (error) {
+      if (error.code !== 'ER_BAD_FIELD_ERROR') throw error
+
+      return connection.execute(`
+      UPDATE producto
+      SET 
+        Categoría = ?, 
+        Tipo = ?,
+        Nombre = ?,
+        Precio = ?,
+        Disponible = ?,
+        Imagen = ?
+    WHERE ID_Producto = ?;`, [categoria, tipo, nombre, Precio, Disponible, Imagen, id])
+    }
   }
 
   static async insertNewProductIng (connection, productId, insumoId) {

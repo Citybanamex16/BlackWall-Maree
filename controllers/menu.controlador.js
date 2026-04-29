@@ -1,3 +1,5 @@
+const fs = require('fs')
+const path = require('path')
 const nav = require('../models/breadcrumbs.model.js')
 const productos = require('../models/MenuDigital/productos.model.js')
 const ingrediente = require('../models/ingrediente.model.js')
@@ -10,9 +12,48 @@ const feedback = require('../models/MenuDigital/feedback.model.js')
 const db = require('../util/database.js')
 
 const CREMA_BATIDA_INGREDIENT_ID = 'INCRMBT001'
+const directorioImagenesProductos = path.join(__dirname, '..', 'public', 'uploads', 'productos')
+const prefijoImagenesProductos = '/uploads/productos/'
 
 function parseBooleanFlag (value) {
-  return value === true || value === 'true' || value === 1 || value === '1' ? 1 : 0
+  if (typeof value === 'string') {
+    return ['true', '1', 'on', 'si'].includes(value.trim().toLowerCase()) ? 1 : 0
+  }
+
+  return value === true || value === 1 ? 1 : 0
+}
+
+function parseIngredientesPayload (value) {
+  if (Array.isArray(value)) {
+    return value
+  }
+
+  if (typeof value !== 'string' || value.trim() === '') {
+    return []
+  }
+
+  try {
+    const parsed = JSON.parse(value)
+    return Array.isArray(parsed) ? parsed : []
+  } catch (error) {
+    return []
+  }
+}
+
+function obtenerRutaImagenProducto (archivo) {
+  return archivo ? `${prefijoImagenesProductos}${archivo.filename}` : null
+}
+
+async function eliminarImagenSubidaProducto (archivo) {
+  if (!archivo) return
+
+  try {
+    await fs.promises.unlink(path.join(directorioImagenesProductos, archivo.filename))
+  } catch (error) {
+    if (error.code !== 'ENOENT') {
+      console.warn('No se pudo eliminar la imagen subida del producto:', error)
+    }
+  }
 }
 
 async function fetchPlatilloRows (id) {
@@ -584,7 +625,7 @@ const ProductFields = [
   { nombre: 'Precio', type: 'float' },
   { nombre: 'Disponible', type: 'boolean' },
   { nombre: 'permiteCremaBatida', label: 'Permitir crema batida', type: 'boolean' },
-  { nombre: 'Imagen', type: 'string' }
+  { nombre: 'ImagenArchivo', label: 'Imagen del producto', type: 'file', accept: 'image/*' }
 ]
 
 exports.getProductfieldsAndIngredientes = async (req, res, next) => {
@@ -626,16 +667,18 @@ exports.postNewProduct = async (req, res, next) => {
     connection = await pool.getConnection()
 
     const NewProductData = req.body
+    const ingredientesID = parseIngredientesPayload(NewProductData.ingredientesID)
+    const imagenProducto = obtenerRutaImagenProducto(req.file) || NewProductData.Imagen || null
+
     // Extracción tipo map
     const {
       Nombre,
       Precio,
       Disponible,
       permiteCremaBatida,
-      Imagen,
       tipo,
       categoría, // Renombramos 'type' a 'categoria'
-      ingredientesID
+      Imagen
     } = NewProductData
 
     console.log('Variables a insertar:', {
@@ -645,15 +688,23 @@ exports.postNewProduct = async (req, res, next) => {
       Precio,
       Disponible,
       permiteCremaBatida: Boolean(permiteCremaBatida),
-      Imagen,
+      Imagen: imagenProducto || Imagen,
       tipo,
-      tieneIngredientes: ingredientesID?.length > 0
+      tieneIngredientes: ingredientesID.length > 0
     })
 
-    const validation = await productos.ValidarDatosRegistro(NewProductData)
+    const validation = await productos.ValidarDatosRegistro({
+      ...NewProductData,
+      Imagen: imagenProducto
+    })
     const AutoId = productos.generarID('PD')
 
-    if (validation) {
+    if (!imagenProducto) {
+      await eliminarImagenSubidaProducto(req.file)
+      return res.status(400).json({ ok: false, message: 'Debes subir una imagen del producto.' })
+    }
+
+    if (validation.valido) {
       if (ingredientesID.length > 0) {
         // Caso producto con ingredientes (transacción)
         // 1. Iniciamos la transacción asincronica -> hasta commit
@@ -667,7 +718,7 @@ exports.postNewProduct = async (req, res, next) => {
           categoría,
           Precio,
           Disponible,
-          Imagen,
+          imagenProducto,
           tipo,
           parseBooleanFlag(permiteCremaBatida)
         )
@@ -694,7 +745,7 @@ exports.postNewProduct = async (req, res, next) => {
           categoría,
           Precio,
           Disponible,
-          Imagen,
+          imagenProducto,
           tipo,
           parseBooleanFlag(permiteCremaBatida)
         )
@@ -713,16 +764,21 @@ exports.postNewProduct = async (req, res, next) => {
         }
       }
     } else {
-      res.status(400).json({ ok: false, message: 'Datos no validos' })
+      await eliminarImagenSubidaProducto(req.file)
+      res.status(400).json({ ok: false, message: validation.mensaje || 'Datos no válidos' })
     }
   } catch (error) {
+    if (connection) {
+      await connection.rollback().catch(() => {})
+    }
+    await eliminarImagenSubidaProducto(req.file)
     console.log('Error en conexion a BD: ', error)
     res.status(500).json({
       ok: false,
       message: 'Error en conexión a BD'
     })
   } finally {
-    connection.release() // Siempre liberar la conexión
+    if (connection) connection.release() // Siempre liberar la conexión
   }
 }
 
