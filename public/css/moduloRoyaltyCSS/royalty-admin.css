@@ -14,7 +14,33 @@ body {
   padding-bottom: 3rem;
 }
 
+/* ── ENLACE DE REGRESO ── */
+.back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-body);
+  font-size: 13px;
+  color: var(--c-text-muted);
+  text-decoration: none;
+  margin-bottom: 32px;
+  transition: color 0.2s ease;
+}
+
+.back-link:hover {
+  color: var(--c-primary);
+}
+
 /* ── ENCABEZADO ── */
+.royalty-shell {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 24px;
+  flex-wrap: wrap;
+  margin-bottom: 28px;
+}
+
 .title {
   font-family: var(--font-heading) !important;
   font-size: 3rem !important;
@@ -353,6 +379,10 @@ button.button.is-primary:hover {
 
 /* ── RESPONSIVE ── */
 @media (max-width: 768px) {
+  .back-link {
+    margin-bottom: 24px;
+  }
+
   .title::after {
     width: 32px;
   }

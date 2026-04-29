@@ -42,7 +42,7 @@ SET @sql_insumo := IF(
      SELECT 1
      FROM `insumo`
      WHERE `ID_Insumo` = ''INCRMBT001''
-        OR LOWER(TRIM(``Nombre``)) = ''crema batida''
+        OR LOWER(TRIM(`Nombre`)) = ''crema batida''
    )',
   'INSERT INTO `insumo` (`ID_Insumo`, `Nombre`, `Categoría`, `Precio`, `Activo`)
    SELECT ''INCRMBT001'', ''Crema batida'', ''Platillo'', 15.00, 1
@@ -50,7 +50,7 @@ SET @sql_insumo := IF(
      SELECT 1
      FROM `insumo`
      WHERE `ID_Insumo` = ''INCRMBT001''
-        OR LOWER(TRIM(``Nombre``)) = ''crema batida''
+        OR LOWER(TRIM(`Nombre`)) = ''crema batida''
    )'
 );
 PREPARE stmt_insumo FROM @sql_insumo;

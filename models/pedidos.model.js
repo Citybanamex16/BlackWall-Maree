@@ -3,8 +3,25 @@ const Royalty = require('../models/royalty.model.js')
 
 const CREMA_BATIDA_INGREDIENT_ID = 'INCRMBT001'
 
+async function tableHasColumn (tableName, columnName) {
+  const [rows] = await db.execute(
+    `SELECT COUNT(*) AS total
+     FROM information_schema.COLUMNS
+     WHERE TABLE_SCHEMA = DATABASE()
+       AND TABLE_NAME = ?
+       AND COLUMN_NAME = ?`,
+    [tableName, columnName]
+  )
+
+  return Number(rows[0]?.total || 0) > 0
+}
+
 module.exports = class Pedido {
-  static fetchOrders () {
+  static async fetchOrders () {
+    const hasDescripcion = await tableHasColumn('orden', 'Descripcion')
+    const descripcionSelect = hasDescripcion
+      ? 'o.Descripcion AS descripcion'
+      : 'NULL AS descripcion'
     const query = `
       SELECT
         o.ID_Orden AS id_orden,
@@ -14,7 +31,7 @@ module.exports = class Pedido {
         o.Estado_Orden AS estado_orden,
         o.Fecha AS fecha,
         o.Direccion AS direccion,
-        o.Descripcion AS descripcion
+        ${descripcionSelect}
       FROM orden o
       LEFT JOIN cliente c
         ON o.Numero_Telefonico = c.Numero_Telefonico
@@ -24,7 +41,11 @@ module.exports = class Pedido {
     return db.execute(query)
   }
 
-  static fetchPendingOrders () {
+  static async fetchPendingOrders () {
+    const hasDescripcion = await tableHasColumn('orden', 'Descripcion')
+    const descripcionSelect = hasDescripcion
+      ? 'o.Descripcion AS descripcion'
+      : 'NULL AS descripcion'
     const query = `
       SELECT
         o.ID_Orden AS id_orden,
@@ -34,7 +55,7 @@ module.exports = class Pedido {
         o.Estado_Orden AS estado_orden,
         o.Fecha AS fecha,
         o.Direccion AS direccion,
-        o.Descripcion AS descripcion
+        ${descripcionSelect}
       FROM orden o
       LEFT JOIN cliente c
         ON o.Numero_Telefonico = c.Numero_Telefonico
@@ -53,14 +74,18 @@ module.exports = class Pedido {
     )
   }
 
-  static fetchOne (idOrden) {
+  static async fetchOne (idOrden) {
+    const hasDescripcion = await tableHasColumn('orden', 'Descripcion')
+    const descripcionSelect = hasDescripcion
+      ? 'o.Descripcion AS descripcion,'
+      : 'NULL AS descripcion,'
     const query = `
       SELECT
         o.ID_Orden AS id_orden,
         c.Nombre AS nombre_cliente,
         o.Numero_Telefonico AS telefono,
         o.Tipo_Orden AS tipo_orden,
-        o.Descripcion AS descripcion,
+        ${descripcionSelect}
         o.Estado_Orden AS estado_orden,
         o.Fecha AS fecha
       FROM orden o
@@ -358,12 +383,20 @@ module.exports = class Pedido {
   static async guardarOrden (telefono, tipoOrden, nombreCliente, direccion = null, descripcion = null) {
     const idOrden = Pedido.generarID()
     const idTurnoFijo = 'TN26496107'
+    const hasDescripcion = await tableHasColumn('orden', 'Descripcion')
+    const columns = ['ID_Orden', 'ID_Turno', 'Numero_Telefonico', 'Tipo_Orden', 'Nombre_cliente', 'Estado_Orden', 'Direccion']
+    const values = [idOrden, idTurnoFijo, telefono, tipoOrden, nombreCliente, 'Pendiente', direccion]
+
+    if (hasDescripcion) {
+      columns.push('Descripcion')
+      values.push(descripcion)
+    }
 
     await db.execute(
       `INSERT INTO orden
-      (ID_Orden, ID_Turno, Numero_Telefonico, Tipo_Orden, Nombre_cliente, Estado_Orden, Direccion, Descripcion)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-      [idOrden, idTurnoFijo, telefono, tipoOrden, nombreCliente, 'Pendiente', direccion, descripcion]
+      (${columns.join(', ')})
+      VALUES (${columns.map(() => '?').join(', ')})`,
+      values
     )
 
     return idOrden
