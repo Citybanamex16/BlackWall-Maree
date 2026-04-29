@@ -5,7 +5,8 @@ module.exports = class Categoria {
     return db.execute(`
       SELECT
         Nombre,
-        Permite_Crema_Batida AS permiteCremaBatida
+        Permite_Crema_Batida AS permiteCremaBatida,
+        Visible_Menu AS visibleMenu
       FROM \`categoría\`
       ORDER BY Nombre ASC
     `)
