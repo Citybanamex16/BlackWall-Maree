@@ -20,6 +20,7 @@ async function fetchPlatilloRows (id) {
     return await db.execute(
       `SELECT p.ID_Producto, p.Nombre, p.Precio, p.Disponible,
               p.Categoría as base,
+              p.Tipo as tipo,
               c.Permite_Crema_Batida as permiteCremaBatida,
               i.ID_Insumo as ing_id,
               i.Nombre    as ing_nombre,
@@ -37,6 +38,7 @@ async function fetchPlatilloRows (id) {
     return db.execute(
       `SELECT p.ID_Producto, p.Nombre, p.Precio, p.Disponible,
               p.Categoría as base,
+              p.Tipo as tipo,
               0 as permiteCremaBatida,
               i.ID_Insumo as ing_id,
               i.Nombre    as ing_nombre,
@@ -199,10 +201,10 @@ exports.getPlatillo = async (request, response, next) => {
     const [catalogoRows] = await db.execute(
       `SELECT i.ID_Insumo as id, i.Nombre as nombre, i.Precio as precio
        FROM insumo i
-       JOIN insumo_categoria ic ON i.ID_Insumo = ic.ID_Insumo
-       WHERE ic.Nom_Categoria = ? AND i.Activo = 1
+       JOIN insumo_tipo it ON i.ID_Insumo = it.ID_Insumo
+       WHERE it.Nom_Tipo = ? AND i.Activo = 1
        ORDER BY i.Nombre`,
-      [row.base]
+      [row.tipo]
     )
     const [cremaBatidaRows] = permiteCremaBatida
       ? await db.execute(
@@ -217,6 +219,7 @@ exports.getPlatillo = async (request, response, next) => {
       nombre: row.Nombre,
       precio: row.Precio,
       base: row.base,
+      tipo: row.tipo,
       permiteCremaBatida,
       cremaBatida: cremaBatida
         ? {
@@ -597,7 +600,7 @@ exports.getProductfieldsAndIngredientes = async (req, res, next) => {
     }
 
     const allIngredientes = await productos.getCategoryIngredientes(typeId)
-    const allTypes = await tipos.fetchAll()
+    const [tiposFiltrados] = await tipos.fetchByCategoria(typeId)
 
     const productFormsFields = ProductFields
     res.status(200).json({
@@ -606,7 +609,7 @@ exports.getProductfieldsAndIngredientes = async (req, res, next) => {
       data: {
         fields: productFormsFields,
         ingredientes: allIngredientes,
-        types: allTypes
+        types: tiposFiltrados
       }
     })
   } catch (error) {
@@ -618,7 +621,40 @@ exports.getProductfieldsAndIngredientes = async (req, res, next) => {
   }
 }
 
+exports.getIngredientesPorTipo = async (req, res, next) => {
+  try {
+    const { tipo } = req.query
+    if (!tipo) return res.status(400).json({ success: false, message: 'Tipo requerido' })
+    const [ingredientes] = await productos.getIngredientesPorTipo(tipo)
+    res.status(200).json({ success: true, data: ingredientes })
+  } catch (error) {
+    console.error('Error en getIngredientesPorTipo:', error)
+    res.status(500).json({ success: false, message: 'Error al obtener ingredientes' })
+  }
+}
+
+exports.getTiposByCategoria = async (req, res, next) => {
+  try {
+    const { categoria } = req.query
+    if (!categoria) {
+      return res.status(400).json({ success: false, message: 'Categoría requerida' })
+    }
+    const [tiposFiltrados] = await tipos.fetchByCategoria(categoria)
+    res.status(200).json({ success: true, data: tiposFiltrados })
+  } catch (error) {
+    console.error('Error en getTiposByCategoria:', error)
+    res.status(500).json({ success: false, message: 'Error al obtener tipos' })
+  }
+}
+
 const pool = require('../util/database.js')
+
+exports.uploadImage = (req, res) => {
+  if (!req.file) {
+    return res.status(400).json({ ok: false, message: 'No se recibió ninguna imagen' })
+  }
+  res.json({ ok: true, url: `/uploads/productos/${req.file.filename}` })
+}
 
 exports.postNewProduct = async (req, res, next) => {
   console.log('POST recibido: ', req.body)
@@ -912,9 +948,12 @@ exports.getIngredientesActivos = async (req, res, nex) => {
     await connection.beginTransaction()
         // Ejecutamos ambas consultas usando la misma conexión
         const categoria = req.query.categoria
-        const result = categoria
-          ? await ingrediente.fetchAllValidPorCategoria(connection, categoria)
-          : await ingrediente.fetchAllValid(connection)
+        const tipo = req.query.tipo
+        const result = tipo
+          ? await ingrediente.fetchAllValidPorTipo(connection, tipo)
+          : categoria
+            ? await ingrediente.fetchAllValidPorCategoria(connection, categoria)
+            : await ingrediente.fetchAllValid(connection)
         const resultPrecioBase = await productos.getCrepaPersoPrecioBase(connection);
 
     // Si todo sale bien, confirmamos (commit)

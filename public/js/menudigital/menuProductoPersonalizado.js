@@ -13,7 +13,7 @@ document.getElementById('fab-personalizado')
 // Esta funcion obtiene todos los datos que el Modal de personalizacion necesita :)
 async function getPersModalData () {
   try {
-    const respuestaIng = await fetch('/Menu/ingActivos?categoria=Crepas')
+    const respuestaIng = await fetch('/Menu/ingActivos?categoria=CrepaPerso')
 
 if (!respuestaIng.ok) {
       throw new Error('Error Interno al obtener ingredientes:')
@@ -79,15 +79,14 @@ function construirModalPerso (data, basePrice) {
   contenedorFrutas.innerHTML = ''
   contenedorToppings.innerHTML = ''
 
-  // (Opcional) Aquí podrías filtrar la 'data' si en el backend tienes
-  // categorías como 'Relleno' o 'Topping'. Por ahora, pasamos toda la data.
-  const insumosDisponibles = data
+  // Filtramos por tipo usando el nombre del tipo (insensible a mayúsculas)
+  const untables = data.filter(i => (i.tipo || '').toLowerCase().includes('untable'))
+  const frutas = data.filter(i => (i.tipo || '').toLowerCase().includes('fruta'))
+  const toppings = data.filter(i => (i.tipo || '').toLowerCase().includes('topping'))
 
-  // Creamos la primera fila obligatoria en ambas secciones
-
-  crearFilaIngrediente(contenedorUntables, data, true)
-  crearFilaIngrediente(contenedorFrutas, data, true)
-  crearFilaIngrediente(contenedorToppings, data, true)
+  crearFilaIngrediente(contenedorUntables, untables, true)
+  crearFilaIngrediente(contenedorFrutas, frutas, true)
+  crearFilaIngrediente(contenedorToppings, toppings, true)
 
 
   // Calculamos el precio inicial (Base)

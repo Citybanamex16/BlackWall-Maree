@@ -44,6 +44,7 @@ router.get('/mensajes', isAuth, isAdmin, adminControlador.getMensajes)
 
 router.get('/api/ingredientes', isAdminOrCollaborator, adminControlador.getIngredientesLista)
 router.get('/api/ingredientes/categorias', isAdminOrCollaborator, adminControlador.getCategorias)
+router.get('/api/ingredientes/tiposPorCategorias', isAdmin, adminControlador.getTiposParaCategorias)
 router.get('/api/ingredientes/verificarNombre', isAdmin, adminControlador.verificarNombreIngrediente)
 router.post('/api/ingredientes/validar', isAdmin, adminControlador.validarIngrediente)
 router.post('/api/ingredientes/crear', isAdmin, adminControlador.crearIngrediente)

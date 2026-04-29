@@ -139,6 +139,18 @@ module.exports = class Producto {
     )
   }
 
+  // Ingredientes activos que pertenecen a un tipo específico
+  static async getIngredientesPorTipo (tipo) {
+    return db.execute(
+      `SELECT i.ID_Insumo as id, i.Nombre as nombre, i.Precio as precio
+       FROM insumo i
+       JOIN insumo_tipo it ON i.ID_Insumo = it.ID_Insumo
+       WHERE it.Nom_Tipo = ? AND i.Activo = 1
+       ORDER BY i.Nombre`,
+      [tipo]
+    )
+  }
+
   static generarID (prefijo) {
   // 10 dígitos aleatorios → colisión prácticamente imposible (1 en 10,000,000,000)
     const numero = Math.floor(Math.random() * 90_000_000 + 10_000_000)

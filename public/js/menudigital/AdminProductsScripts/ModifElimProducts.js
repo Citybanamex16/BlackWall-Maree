@@ -19,18 +19,42 @@ async function getAllIngredientesCatalog () {
   }
 }
 
-async function getAllTypesCatalog () {
+async function getIngredientesPorTipoEdit (tipo) {
+  if (!tipo) return []
   try {
-    const response = await fetch('/Menu/productosTipos')
+    const response = await fetch(`/menu/ingredientesPorTipo?tipo=${encodeURIComponent(tipo)}`)
+    if (!response.ok) throw new Error('Error al obtener ingredientes por tipo')
+    const data = await response.json()
+    return data.success ? data.data : []
+  } catch (error) {
+    ShowErrorModal('Error', 'No se pudieron obtener los ingredientes para este tipo')
+    return []
+  }
+}
+
+function refreshModifIngredientDropdowns () {
+  document.querySelectorAll('#ingredientsList .ing-dropdown').forEach(select => {
+    const valorActual = select.value
+    populateDropdown(select)
+    if (valorActual && select.querySelector(`option[value="${valorActual}"]`)) {
+      select.value = valorActual
+    }
+  })
+}
+
+async function getTiposByCategoria (categoria) {
+  try {
+    const response = await fetch(`/menu/tiposByCategoria?categoria=${encodeURIComponent(categoria)}`)
 
     if (!response.ok) {
       throw new Error('Error al obtener tipos de BD')
     }
 
     const tiposCatalogData = await response.json()
-    return tiposCatalogData.data
+    return tiposCatalogData.data || []
   } catch (error) {
     ShowErrorModal('Error en funcion global', 'No es posible obtener tipos')
+    return []
   }
 }
 
@@ -51,9 +75,9 @@ async function ConstruirModifModal (productData, AllCategorys) {
   console.log('Ingrediente data: ', ingData)
 
   console.log('Obteniendo catalogo global de ingredientes ')
-  catalogoIng = await getAllIngredientesCatalog()
+  catalogoIng = await getIngredientesPorTipoEdit(productData.tipo)
 
-  catalogTipos = await getAllTypesCatalog()
+  catalogTipos = await getTiposByCategoria(productData.categoria)
   console.log('Tipos obtenidos: ', catalogTipos)
 
   // 1. Limpieza
@@ -107,6 +131,15 @@ async function ConstruirModifModal (productData, AllCategorys) {
   tipoField.classList.add('is-dynamic')
   ModifForm.appendChild(tipoField)
 
+  // Cuando cambia el tipo, recargar ingredientes disponibles
+  const selectTipoEl = ModifForm.querySelector('#selectTipo')
+  if (selectTipoEl) {
+    selectTipoEl.addEventListener('change', async () => {
+      catalogoIng = await getIngredientesPorTipoEdit(selectTipoEl.value)
+      refreshModifIngredientDropdowns()
+    })
+  }
+
   // 5. Pre-seleccionar ingredientes actuales en los dropdowns
   precargarIngredientes(ingData, productData)
 
@@ -134,6 +167,25 @@ function buildCategoriaDropdown (categorias, valorActual) {
         </select>
       </div>
     </div>`
+
+  // Cuando el usuario cambia la categoría, recargar los tipos disponibles
+  const select = wrapper.querySelector('#selectCategoria')
+  select.addEventListener('change', async () => {
+    const nuevaCategoria = select.value
+    const nuevosTipos = await getTiposByCategoria(nuevaCategoria)
+    catalogTipos = nuevosTipos
+    const selectTipo = document.getElementById('selectTipo')
+    if (selectTipo) {
+      selectTipo.innerHTML = '<option value="" disabled selected>Selecciona un tipo...</option>'
+      nuevosTipos.forEach(t => {
+        const opt = document.createElement('option')
+        opt.value = t.nombre
+        opt.textContent = t.nombre
+        selectTipo.appendChild(opt)
+      })
+    }
+  })
+
   return wrapper
 }
 

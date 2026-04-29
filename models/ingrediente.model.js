@@ -1,16 +1,18 @@
 const db = require('../util/database.js')
 
 module.exports = class Ingrediente {
-  // Devuelve todos los ingredientes con sus categorías (lista en cats_raw separada por |)
+  // Devuelve todos los ingredientes con sus categorías y tipos
   static async fetchAll () {
     return db.execute(`
       SELECT i.ID_Insumo, i.Nombre, i.\`Categoría\`, i.Precio, i.Activo, i.Imagen,
         IFNULL(
-          GROUP_CONCAT(ic.Nom_Categoria ORDER BY ic.Nom_Categoria SEPARATOR '|'),
+          GROUP_CONCAT(DISTINCT ic.Nom_Categoria ORDER BY ic.Nom_Categoria SEPARATOR '|'),
           i.\`Categoría\`
-        ) AS cats_raw
+        ) AS cats_raw,
+        GROUP_CONCAT(DISTINCT it.Nom_Tipo ORDER BY it.Nom_Tipo SEPARATOR '|') AS tipos_raw
       FROM insumo i
       LEFT JOIN insumo_categoria ic ON i.ID_Insumo = ic.ID_Insumo
+      LEFT JOIN insumo_tipo it ON i.ID_Insumo = it.ID_Insumo
       GROUP BY i.ID_Insumo, i.Nombre, i.\`Categoría\`, i.Precio, i.Activo, i.Imagen
     `)
   }
@@ -23,12 +25,26 @@ module.exports = class Ingrediente {
   // Devuelve solo los insumos activos que pertenecen a una categoría específica
   static async fetchAllValidPorCategoria (connection, categoria) {
     return connection.execute(
-      `SELECT i.ID_Insumo, i.Nombre, i.\`Categoría\`, i.Precio, i.Activo, i.Imagen
+      `SELECT i.ID_Insumo, i.Nombre, i.\`Categoría\`, i.Precio, i.Activo, i.Imagen,
+              it.Nom_Tipo AS tipo
        FROM insumo i
        JOIN insumo_categoria ic ON i.ID_Insumo = ic.ID_Insumo
+       LEFT JOIN insumo_tipo it ON i.ID_Insumo = it.ID_Insumo
        WHERE ic.Nom_Categoria = ? AND i.Activo = 1
        ORDER BY i.Nombre`,
       [categoria]
+    )
+  }
+
+  // Devuelve solo los insumos activos que pertenecen a un tipo específico
+  static async fetchAllValidPorTipo (connection, tipo) {
+    return connection.execute(
+      `SELECT i.ID_Insumo, i.Nombre, i.\`Categoría\`, i.Precio, i.Activo, i.Imagen
+       FROM insumo i
+       JOIN insumo_tipo it ON i.ID_Insumo = it.ID_Insumo
+       WHERE it.Nom_Tipo = ? AND i.Activo = 1
+       ORDER BY i.Nombre`,
+      [tipo]
     )
   }
 
@@ -89,6 +105,32 @@ module.exports = class Ingrediente {
   // Elimina todas las categorías de un insumo (para reemplazarlas al actualizar)
   static async deleteCategoriasInsumo (idInsumo) {
     return db.execute('DELETE FROM insumo_categoria WHERE ID_Insumo = ?', [idInsumo])
+  }
+
+  // Inserta los tipos del insumo en la tabla junction
+  static async insertTiposInsumo (idInsumo, tipos) {
+    if (!tipos || tipos.length === 0) return
+    const placeholders = tipos.map(() => '(?, ?)').join(', ')
+    const values = tipos.flatMap(t => [idInsumo, t])
+    return db.execute(
+      `INSERT IGNORE INTO insumo_tipo (ID_Insumo, Nom_Tipo) VALUES ${placeholders}`,
+      values
+    )
+  }
+
+  // Elimina todos los tipos de un insumo (para reemplazarlos al actualizar)
+  static async deleteTiposInsumo (idInsumo) {
+    return db.execute('DELETE FROM insumo_tipo WHERE ID_Insumo = ?', [idInsumo])
+  }
+
+  // Devuelve los tipos que pertenecen a alguna de las categorías dadas
+  static async getTiposPorCategorias (categorias) {
+    if (!categorias || categorias.length === 0) return [[], []]
+    const placeholders = categorias.map(() => '?').join(', ')
+    return db.execute(
+      `SELECT nombre, categoria FROM tipos WHERE categoria IN (${placeholders}) ORDER BY categoria ASC, nombre ASC`,
+      categorias
+    )
   }
 
   // Obtiene las categorías disponibles

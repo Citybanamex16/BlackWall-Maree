@@ -352,6 +352,69 @@ function createFieldElement (field) {
   const control = document.createElement('div')
   // No necesitamos la clase 'control' de Bulma, usamos la estructura de la Biblia
 
+  // Campo Imagen: file picker con preview y upload automático
+  if (field.nombre.toLowerCase() === 'imagen') {
+    const hiddenInput = document.createElement('input')
+    hiddenInput.type = 'hidden'
+    hiddenInput.name = field.nombre // 'Imagen' en registro, 'imagen' en modificar
+    hiddenInput.id = `field-${field.nombre}`
+
+    const fileInput = document.createElement('input')
+    fileInput.type = 'file'
+    fileInput.accept = 'image/*'
+    fileInput.classList.add('maree-input')
+
+    const statusText = document.createElement('span')
+    statusText.style.cssText = 'font-size:12px;color:#888;font-family:Jost,sans-serif;display:block;margin-top:4px;'
+
+    const preview = document.createElement('img')
+    preview.style.cssText = 'display:none;max-width:100%;max-height:140px;border-radius:8px;margin-top:8px;object-fit:cover;'
+
+    // Si hay imagen actual (modal de modificar), mostrarla
+    if (field.value) {
+      hiddenInput.value = field.value
+      preview.src = field.value
+      preview.style.display = 'block'
+      statusText.textContent = 'Imagen actual (puedes cambiarla)'
+      statusText.style.color = '#888'
+    } else {
+      statusText.textContent = 'Sin imagen seleccionada'
+    }
+
+    fileInput.addEventListener('change', async () => {
+      const file = fileInput.files[0]
+      if (!file) return
+      statusText.textContent = 'Subiendo imagen...'
+      statusText.style.color = '#b5956a'
+      const fd = new FormData()
+      fd.append('imagen', file)
+      try {
+        const res = await fetch('/menu/uploadImage', { method: 'POST', body: fd })
+        const data = await res.json()
+        if (data.ok) {
+          hiddenInput.value = data.url
+          preview.src = data.url
+          preview.style.display = 'block'
+          statusText.textContent = '✓ Imagen subida'
+          statusText.style.color = '#3a7d52'
+        } else {
+          statusText.textContent = 'Error al subir imagen'
+          statusText.style.color = '#c0392b'
+        }
+      } catch (err) {
+        statusText.textContent = 'Error de conexión'
+        statusText.style.color = '#c0392b'
+      }
+    })
+
+    wrapper.appendChild(label)
+    wrapper.appendChild(hiddenInput) // primero, para que querySelector('input') lo encuentre y no el file input
+    wrapper.appendChild(fileInput)
+    wrapper.appendChild(statusText)
+    wrapper.appendChild(preview)
+    return wrapper
+  }
+
   const typeMap = {
     string: 'text',
     int: 'number',
@@ -609,12 +672,39 @@ function getIngredientesSeleccionados () {
     .filter(item => item !== null && item.id !== '')
 }
 
+// Carga ingredientes para un tipo y refresca todos los dropdowns existentes
+async function fetchIngredientesPorTipo (tipo) {
+  if (!tipo) {
+    catalogoIng = []
+    refreshIngredientDropdowns()
+    return
+  }
+  try {
+    const res = await fetch(`/menu/ingredientesPorTipo?tipo=${encodeURIComponent(tipo)}`)
+    const obj = await res.json()
+    catalogoIng = obj.success ? obj.data : []
+  } catch (error) {
+    console.error('Error cargando ingredientes por tipo:', error)
+    catalogoIng = []
+  }
+  refreshIngredientDropdowns()
+}
+
+function refreshIngredientDropdowns () {
+  document.querySelectorAll('#ingredientsList .ing-dropdown').forEach(select => {
+    const valorActual = select.value
+    populateDropdown(select)
+    // Restaurar selección si el ingrediente sigue disponible
+    if (valorActual && select.querySelector(`option[value="${valorActual}"]`)) {
+      select.value = valorActual
+    }
+  })
+}
+
 /* == Funcion Central == */
 function createProductRegisterForms (Fields, Ingredientes, type, tiposData) {
   // Type == Categoría
-  // Guardar catálogo para usarlo en cada nueva fila
-  console.log('Catalogo de Ingredientes: ', Ingredientes)
-  catalogoIng = Ingredientes // Indispensable
+  catalogoIng = [] // Empieza vacío; se llena cuando el usuario selecciona un tipo
 
   // Limpieza del modal
   limpiarModal(RegisterFormModal)
@@ -631,7 +721,15 @@ function createProductRegisterForms (Fields, Ingredientes, type, tiposData) {
   // Construir la sección de tipos
   registerForm.appendChild(buildTypeSection(tiposData))
 
-  // Construir e inyectar la sección de ingredientes
+  // Listener: cuando cambia el tipo, recargar ingredientes
+  const tipoSelectEl = registerForm.querySelector('#productTypeSelect')
+  if (tipoSelectEl) {
+    tipoSelectEl.addEventListener('change', () => {
+      fetchIngredientesPorTipo(tipoSelectEl.value)
+    })
+  }
+
+  // Construir e inyectar la sección de ingredientes (vacía hasta que se elija tipo)
   registerForm.appendChild(buildIngredientsSection({ mostrarCantidad: false }))
 
   SetRegisterButtons('POST', Ingredientes, type)
@@ -716,8 +814,8 @@ function PostNewProduct (BackupIngredientes, ProductType) {
   // 4.5 Añadir Tipo
   data.categoría = ProductType
 
-  // 5. Validación de Reglas de negocio
-  const validacion = validarDatosRegistro(data, BackupIngredientes)
+  // 5. Validación de Reglas de negocio (usa catalogoIng actual — filtrado por tipo)
+  const validacion = validarDatosRegistro(data, catalogoIng)
 
   if (validacion) {
     console.log('Datos válidos :)')
