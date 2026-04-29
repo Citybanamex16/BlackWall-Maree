@@ -22,6 +22,8 @@ function configurarEventosBase () {
   const nuevaPromocionBtn = document.getElementById('btn-nueva-promocion')
   const filtroCategoria = document.getElementById('filtro-categoria')
   const filtroTipo = document.getElementById('filtro-tipo')
+  const fechaInicioInput = document.getElementById('fecha_de_Inicio')
+  const fechaFinInput = document.getElementById('fecha_de_Fin')
   const botonResultado = document.getElementById('boton-modal-resultado')
   const botonConfirmarEliminar = document.getElementById('boton-confirmar-eliminar')
   const botonConfirmarDesactivar = document.getElementById('boton-confirmar-desactivar')
@@ -46,6 +48,14 @@ function configurarEventosBase () {
     filtroTipo.addEventListener('change', actualizarProductos)
   }
 
+  if (fechaInicioInput) {
+    fechaInicioInput.addEventListener('change', configurarRestriccionesFechas)
+  }
+
+  if (fechaFinInput) {
+    fechaFinInput.addEventListener('change', configurarRestriccionesFechas)
+  }
+
   if (botonResultado) {
     botonResultado.addEventListener('click', () => cerrarModal('modal-resultado'))
   }
@@ -61,6 +71,23 @@ function configurarEventosBase () {
   document.querySelectorAll('[data-close-modal]').forEach(elemento => {
     elemento.addEventListener('click', () => cerrarModal(elemento.dataset.closeModal))
   })
+
+  configurarRestriccionesFechas()
+}
+
+function configurarRestriccionesFechas () {
+  const fechaInicioInput = document.getElementById('fecha_de_Inicio')
+  const fechaFinInput = document.getElementById('fecha_de_Fin')
+
+  if (!fechaInicioInput || !fechaFinInput) {
+    return
+  }
+
+  const hoy = obtenerFechaActualLocal()
+  fechaInicioInput.min = hoy
+  fechaFinInput.min = fechaInicioInput.value && fechaInicioInput.value > hoy
+    ? fechaInicioInput.value
+    : hoy
 }
 
 async function cargarPromociones () {
@@ -355,6 +382,7 @@ async function prepararModificacion (idPromocion) {
     document.getElementById('condiciones').value = promocion.Condiciones || ''
     document.getElementById('fecha_de_Inicio').value = normalizarFechaInput(promocion.Fecha_inicio)
     document.getElementById('fecha_de_Fin').value = normalizarFechaInput(promocion.Fecha_final)
+    configurarRestriccionesFechas()
     document.getElementById('activo').checked = estaActiva(promocion.Activo)
     document.getElementById('check-descuento').checked = tieneDescuento
     document.getElementById('descuento').value = tieneDescuento ? formatearDescuentoInput(descuentoPorcentaje) : ''
@@ -725,6 +753,7 @@ function obtenerDatosFormulario () {
 
 function validarFormulario (datos) {
   let esValido = true
+  const hoy = obtenerFechaActualLocal()
   const descuentoNumero = Number(datos.descuento || 0)
 
   if (!datos.nombre) {
@@ -744,6 +773,16 @@ function validarFormulario (datos) {
 
   if (!datos.fechaFinal) {
     marcarError('fecha_de_Fin', 'La fecha final es obligatoria.')
+    esValido = false
+  }
+
+  if (datos.fechaInicio && datos.fechaInicio < hoy) {
+    marcarError('fecha_de_Inicio', 'La fecha de inicio debe ser actual o futura.')
+    esValido = false
+  }
+
+  if (datos.fechaFinal && datos.fechaFinal < hoy) {
+    marcarError('fecha_de_Fin', 'La fecha final debe ser actual o futura.')
     esValido = false
   }
 
@@ -848,6 +887,7 @@ function limpiarFormulario () {
   resetearFiltrosProductos()
   mostrarPlaceholderProductos('Activa el descuento para cargar los productos del catálogo.')
   renderizarResumenProductos()
+  configurarRestriccionesFechas()
   limpiarErroresFormulario()
 }
 
