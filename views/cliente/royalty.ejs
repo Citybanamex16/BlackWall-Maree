@@ -1,9 +1,6 @@
 <%- include('../partials/header_cliente', { pageTitle: 'Menu - Maree' }) %>
 <link rel="stylesheet" href="/css/moduloRoyaltyCSS/royalty-cliente.css">
 <body>
-    <div class="container-fluid bg-white border-bottom">
-        <%- include('../partials/breadcrumbs') %>
-    </div>
     
     <main class="container-fluid container-md my-3 my-md-5 royalty-dashboard">
         <div class="row mb-4">
@@ -96,6 +93,38 @@
 
 </section>
 </div>
+</div>
+
+
+
+<div id="sticky-bottom" class="sticky-bottom-app">
+
+    <a href="/menu/sucursales" class="btn btn-icon search-side-btn" aria-label="Mapa">
+        <i class="fas fa-map-marker-alt is-size-4"></i>
+    </a>
+
+    <a href="/cliente/eventosCliente" class="btn btn-icon search-side-btn" aria-label="Eventos">
+        <i class="fas fa-calendar-alt is-size-4"></i>
+    </a>
+
+    <a href="/" class="btn btn-icon search-side-btn" aria-label="Inicio">
+        <i class="fas fa-house is-size-4"></i>
+    </a>
+
+    <div class="search-bar-wrapper control has-icons-left" id="search-expanded" style="display:none;flex:1;">
+        <input id="search-input" class="input is-rounded" type="text" placeholder="Buscar...">
+        <span class="icon is-left">
+            <i class="fas fa-search"></i>
+        </span>
+    </div>
+
+    <a href="/menu/orden" class="btn btn-icon search-side-btn" aria-label="Carrito">
+        <span style="position:relative;display:inline-flex;">
+            <i class="fas fa-shopping-cart is-size-4"></i>
+            <span class="fab-badge">0</span>
+        </span>
+    </a>
+
 </div>
 
 <script>

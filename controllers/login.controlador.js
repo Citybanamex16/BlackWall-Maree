@@ -1,5 +1,8 @@
 const Login = require('../models/login.model.js')
 const nav = require('../models/breadcrumbs.model.js')
+const bcrypt = require('bcryptjs')
+
+const isBcryptHash = (value = '') => /^\$2[aby]\$\d{2}\$/.test(value)
 
 const formatearTelefono = (tel) => {
   const soloNumeros = tel.replace(/\D/g, '')
@@ -70,7 +73,18 @@ exports.postLogin = async (request, response, next) => {
       }
 
       if (password) {
-        if (password === colaborador.password) {
+        let passwordValido = false
+
+        if (isBcryptHash(colaborador.password)) {
+          passwordValido = await bcrypt.compare(password, colaborador.password)
+        } else if (password === colaborador.password) {
+          passwordValido = true
+
+          const nuevoHash = await bcrypt.hash(password, 12)
+          await Login.updateColaboradorPasswordHash(colaborador.id_colaborador, nuevoHash)
+        }
+
+        if (passwordValido) {
           setEmployeeSession(request, colaborador)
 
           const redirectUrl = colaborador.id_rol === 'Administrador'

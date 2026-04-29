@@ -1,6 +1,7 @@
-const { PKPass } = require('passkit-generator')
 const path = require('path')
 const fs = require('fs')
+
+let PKPass
 
 const CERT_PASSWORD = 'm5GloACQ28XQaWh%cS7p'
 const wwdrPath = path.resolve('./util/AppleCredentials/wwdr.pem')
@@ -9,6 +10,19 @@ const signerKeyPath = path.resolve('./util/AppleCredentials/signerKey.pem')
 const passPath = path.resolve('./util/AppleCredentials/Passes/royalty.pass')
 
 async function generarApplePass (telefono, nombreCliente, nombreRoyalty, visitasActuales, maxVisitas) {
+  if (!PKPass) {
+    try {
+      ({ PKPass } = require('passkit-generator'))
+    } catch (error) {
+      if (error.code === 'MODULE_NOT_FOUND' && error.message.includes('passkit-generator')) {
+        const dependencyError = new Error('Apple Wallet no esta disponible en este entorno porque falta passkit-generator.')
+        dependencyError.code = 'APPLE_WALLET_DEPENDENCY_MISSING'
+        throw dependencyError
+      }
+      throw error
+    }
+  }
+
   const pass = await PKPass.from({
     model: passPath,
     certificates: {

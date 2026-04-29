@@ -72,4 +72,15 @@ module.exports = class Cliente {
     `
     return db.execute(query, [idColaborador])
   }
+
+  static updateColaboradorPasswordHash (idColaborador, passwordHash) {
+    return db.execute(
+      `
+        UPDATE colaborador
+        SET Contraseña = ?
+        WHERE ID_Colaborador = ?
+      `,
+      [passwordHash, idColaborador]
+    )
+  }
 }
