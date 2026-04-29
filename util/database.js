@@ -37,7 +37,7 @@ const pool = mysql.createPool({
   database: 'mareebd',
   password: '',
   charset: 'utf8mb4_spanish2_ci' ,
-  waitForConnection: true,
+  waitForConnections: true,
   connectionLimit: 10
 
 })

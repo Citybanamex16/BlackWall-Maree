@@ -14,6 +14,18 @@ module.exports = class Producto {
     return Number(rows[0]?.total || 0) > 0
   }
 
+  static async hasTable (executor, tableName) {
+    const [rows] = await executor.execute(
+      `SELECT COUNT(*) AS total
+       FROM information_schema.TABLES
+       WHERE TABLE_SCHEMA = DATABASE()
+         AND TABLE_NAME = ?`,
+      [tableName]
+    )
+
+    return Number(rows[0]?.total || 0) > 0
+  }
+
   // Obtiene todos los productos y sus ingredientes correspondientes disponibles y no disponibles
   static async getAllProductsInfo () {
     const hasProductWhippedCream = await Producto.hasColumn(db, 'producto', 'Permite_Crema_Batida')
@@ -88,25 +100,13 @@ module.exports = class Producto {
   }
 
   static async getValidProductData () {
-    // 1. ejecutamos Consulta
-    const [rows] = await db.execute(`
-    SELECT
-      P.ID_Producto AS productoID,
-      P.Nombre AS productoNombre,
-      P.Precio AS productoPrecio,
-      P.Categoría AS productoCategoria,
-      P.Tipo AS productoTipo,
-      P.Imagen AS productoImagen,
-      P.EsExclusivo AS esExclusivo,
-      I.ID_Insumo AS insumoID,
-      I.Nombre AS insumoNombre
-    FROM producto AS P
-    -- CAMBIO AQUÍ: LEFT JOIN en lugar de INNER JOIN
-    LEFT JOIN producto_tiene_insumo AS PI
-      ON P.ID_Producto = PI.ID_Producto
-    LEFT JOIN insumo AS I
-      ON PI.ID_Insumo = I.ID_Insumo
-    WHERE P.Disponible = 1
+    const hasExclusiveProducts = await Producto.hasColumn(db, 'producto', 'EsExclusivo')
+    const supportsEventExclusivity = hasExclusiveProducts && await Producto.hasTable(db, 'producto_pertenece_evento') && await Producto.hasTable(db, 'evento')
+    const exclusiveSelect = hasExclusiveProducts
+      ? 'P.EsExclusivo AS esExclusivo,'
+      : '0 AS esExclusivo,'
+    const exclusiveFilter = supportsEventExclusivity
+      ? `
       AND (
         P.EsExclusivo = 0
         OR (
@@ -121,7 +121,29 @@ module.exports = class Producto {
               AND CURDATE() BETWEEN e.Fecha_Inicio AND COALESCE(e.Fecha_Final, e.Fecha_Inicio)
           )
         )
-      )
+      )`
+      : ''
+
+    // 1. ejecutamos Consulta
+    const [rows] = await db.execute(`
+    SELECT
+      P.ID_Producto AS productoID,
+      P.Nombre AS productoNombre,
+      P.Precio AS productoPrecio,
+      P.Categoría AS productoCategoria,
+      P.Tipo AS productoTipo,
+      P.Imagen AS productoImagen,
+      ${exclusiveSelect}
+      I.ID_Insumo AS insumoID,
+      I.Nombre AS insumoNombre
+    FROM producto AS P
+    -- CAMBIO AQUÍ: LEFT JOIN en lugar de INNER JOIN
+    LEFT JOIN producto_tiene_insumo AS PI
+      ON P.ID_Producto = PI.ID_Producto
+    LEFT JOIN insumo AS I
+      ON PI.ID_Insumo = I.ID_Insumo
+    WHERE P.Disponible = 1
+      ${exclusiveFilter}
   `)
 
     // console.log('Rows: ', rows)
@@ -197,17 +219,22 @@ module.exports = class Producto {
   }
 
   static async insertNewProduct (connection, id, nombre, categoria, Precio, Disponible, Imagen, tipo, permiteCremaBatida, permiteModificarIngredientes) {
-    const columns = ['ID_Producto', 'Tamaño', 'Categoría', 'Nombre', 'Precio', 'Disponible', 'Tipo', 'Imagen', 'EsExclusivo']
-    const values = [id, 'Básico', categoria, nombre, Precio, Disponible, tipo, Imagen, 0]
+    const columns = ['ID_Producto', 'Tamaño', 'Categoría', 'Nombre', 'Precio', 'Disponible', 'Tipo', 'Imagen']
+    const values = [id, 'Básico', categoria, nombre, Precio, Disponible, tipo, Imagen]
+
+    if (await Producto.hasColumn(connection, 'producto', 'EsExclusivo')) {
+      columns.push('EsExclusivo')
+      values.push(0)
+    }
 
     if (await Producto.hasColumn(connection, 'producto', 'Permite_Crema_Batida')) {
-      columns.splice(8, 0, 'Permite_Crema_Batida')
-      values.splice(8, 0, permiteCremaBatida)
+      columns.push('Permite_Crema_Batida')
+      values.push(permiteCremaBatida)
     }
 
     if (await Producto.hasColumn(connection, 'producto', 'Permite_Modificar_Ingredientes')) {
-      columns.splice(8, 0, 'Permite_Modificar_Ingredientes')
-      values.splice(8, 0, permiteModificarIngredientes)
+      columns.push('Permite_Modificar_Ingredientes')
+      values.push(permiteModificarIngredientes)
     }
 
     const [result] = await connection.execute(
@@ -324,7 +351,9 @@ module.exports = class Producto {
   static async eliminarProducto (connection, id) {
     await connection.execute('DELETE FROM producto_tiene_insumo WHERE ID_Producto = ?', [id])
     await connection.execute('DELETE FROM orden_tiene_producto WHERE ID_Producto = ?', [id])
-    await connection.execute('DELETE FROM producto_pertenece_evento WHERE ID_Producto = ?', [id])
+    if (await Producto.hasTable(connection, 'producto_pertenece_evento')) {
+      await connection.execute('DELETE FROM producto_pertenece_evento WHERE ID_Producto = ?', [id])
+    }
     await connection.execute('DELETE FROM producto_tiene_promocion WHERE ID_Producto = ?', [id])
     const [result] = await connection.execute('DELETE FROM producto WHERE ID_Producto = ?', [id])
     return result

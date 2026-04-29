@@ -10,8 +10,21 @@
     <link rel="stylesheet" href="/css/moduloPromosCSS/module-promos.css">
 </head>
 <body>
+    <nav class="navbar" role="navigation">
+        <div class="navbar-brand">
+            <div class="navbar-item">
+                <div class="logo-area">
+                    <span class="logo-text">MARÉE</span>
+                    <span class="logo-sub">Love at First Crêpe</span>
+                </div>
+            </div>
+        </div>
+    </nav>
+
     <section class="section">
         <div class="container">
+            <a href="/admin" class="back-link">← Admin Dashboard</a>
+
             <div class="promotions-shell">
                 <div>
                     <span class="promotions-kicker">Promociones y beneficios</span>
@@ -22,9 +35,6 @@
                     </p>
                 </div>
                 <div class="promotion-toolbar">
-                    <a href="/admin" class="button maree-ghost is-medium" type="button">
-                        Volver al dashboard
-                    </a>
                     <div id="loading-spinner" class="button is-loading is-ghost is-hidden"></div>
                     <button id="btn-nueva-promocion" class="button maree-action-button is-rounded is-medium" type="button">
                         Nueva promoción
