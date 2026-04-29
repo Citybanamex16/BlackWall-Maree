@@ -127,6 +127,7 @@ async function fetchPlatilloRows (id) {
   return db.execute(
     `SELECT p.ID_Producto, p.Nombre, p.Precio, p.Disponible,
             p.Categoría as base,
+            p.Categoría as tipo,
             ${cremaBatidaSelect}
             ${ingredientCustomizationSelect}
             i.ID_Insumo as ing_id,
@@ -280,9 +281,7 @@ exports.getPlatillo = async (request, response, next) => {
 
     const row = rows[0]
 
-     if (!row) {
-        return response.status(404).json({ mensaje: 'No hay datos para este platillo' });
-    }
+
 
 
     const disponible = row.Disponible === 1 || row.Disponible === '1'
@@ -341,8 +340,9 @@ exports.getPlatillo = async (request, response, next) => {
 }
 
 exports.agregarItem = (request, response, next) => {
-  const { nombre, precio, desc } = request.body
-  console.log(`Item agregado: ${nombre} - $${precio}`)
+ const { nombre, precio, precio_total, desc } = request.body
+  const precioFinal = precio ?? precio_total ?? 0
+  console.log(`Item agregado: ${nombre} - $${precioFinal}`)
   response.status(200).json({ agregado: true, nombre, precio, desc })
 }
 
