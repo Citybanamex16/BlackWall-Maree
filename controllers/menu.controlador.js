@@ -78,19 +78,38 @@ async function fetchPlatilloRows (id) {
   } catch (error) {
     if (error.code !== 'ER_BAD_FIELD_ERROR') throw error
 
-    return db.execute(
-      `SELECT p.ID_Producto, p.Nombre, p.Precio, p.Disponible,
-              p.Categoría as base,
-              0 as permiteCremaBatida,
-              i.ID_Insumo as ing_id,
-              i.Nombre    as ing_nombre,
-              i.Precio    as ing_precio
-       FROM producto p
-       LEFT JOIN producto_tiene_insumo pti ON p.ID_Producto = pti.ID_Producto
-       LEFT JOIN insumo i ON pti.ID_Insumo = i.ID_Insumo
-       WHERE p.ID_Producto = ?`,
-      [id]
-    )
+    try {
+      return await db.execute(
+        `SELECT p.ID_Producto, p.Nombre, p.Precio, p.Disponible,
+                p.Categoría as base,
+                c.Permite_Crema_Batida as permiteCremaBatida,
+                i.ID_Insumo as ing_id,
+                i.Nombre    as ing_nombre,
+                i.Precio    as ing_precio
+         FROM producto p
+         LEFT JOIN categoría c ON c.Nombre = p.Categoría
+         LEFT JOIN producto_tiene_insumo pti ON p.ID_Producto = pti.ID_Producto
+         LEFT JOIN insumo i ON pti.ID_Insumo = i.ID_Insumo
+         WHERE p.ID_Producto = ?`,
+        [id]
+      )
+    } catch (fallbackError) {
+      if (fallbackError.code !== 'ER_BAD_FIELD_ERROR') throw fallbackError
+
+      return db.execute(
+        `SELECT p.ID_Producto, p.Nombre, p.Precio, p.Disponible,
+                p.Categoría as base,
+                0 as permiteCremaBatida,
+                i.ID_Insumo as ing_id,
+                i.Nombre    as ing_nombre,
+                i.Precio    as ing_precio
+         FROM producto p
+         LEFT JOIN producto_tiene_insumo pti ON p.ID_Producto = pti.ID_Producto
+         LEFT JOIN insumo i ON pti.ID_Insumo = i.ID_Insumo
+         WHERE p.ID_Producto = ?`,
+        [id]
+      )
+    }
   }
 }
 
@@ -249,8 +268,13 @@ exports.getPlatillo = async (request, response, next) => {
     )
     const [cremaBatidaRows] = permiteCremaBatida
       ? await db.execute(
-          'SELECT ID_Insumo as id, Nombre as nombre, Precio as precio FROM insumo WHERE Activo = 1 AND ID_Insumo = ? LIMIT 1',
-          [CREMA_BATIDA_INGREDIENT_ID]
+          `SELECT ID_Insumo as id, Nombre as nombre, Precio as precio
+           FROM insumo
+           WHERE Activo = 1
+             AND (ID_Insumo = ? OR LOWER(TRIM(Nombre)) = 'crema batida')
+           ORDER BY ID_Insumo = ? DESC
+           LIMIT 1`,
+          [CREMA_BATIDA_INGREDIENT_ID, CREMA_BATIDA_INGREDIENT_ID]
         )
       : [[]]
     const cremaBatida = cremaBatidaRows[0] || null

@@ -178,16 +178,26 @@ module.exports = class Pedido {
         productoMetaRows = result[0]
       } catch (error) {
         if (error.code !== 'ER_BAD_FIELD_ERROR') throw error
-        const fallbackResult = await db.execute(
-          `SELECT
-            p.ID_Producto AS id,
-            c.Permite_Crema_Batida AS permiteCremaBatida
-          FROM producto p
-          LEFT JOIN categoría c ON p.Categoría = c.Nombre
-          WHERE p.ID_Producto IN (${idsProductos.map(() => '?').join(',')})`,
-          idsProductos
-        )
-        productoMetaRows = fallbackResult[0]
+
+        try {
+          const fallbackResult = await db.execute(
+            `SELECT
+              p.ID_Producto AS id,
+              c.Permite_Crema_Batida AS permiteCremaBatida
+            FROM producto p
+            LEFT JOIN categoría c ON p.Categoría = c.Nombre
+            WHERE p.ID_Producto IN (${idsProductos.map(() => '?').join(',')})`,
+            idsProductos
+          )
+          productoMetaRows = fallbackResult[0]
+        } catch (categoryFallbackError) {
+          if (categoryFallbackError.code !== 'ER_BAD_FIELD_ERROR') throw categoryFallbackError
+
+          productoMetaRows = idsProductos.map(id => ({
+            id,
+            permiteCremaBatida: 0
+          }))
+        }
       }
     }
 
