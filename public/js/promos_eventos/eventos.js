@@ -131,6 +131,7 @@ function renderizarEventos (lista) {
 
   lista.forEach(evento => {
     const activo = estaActivo(evento.Activo)
+    const vigencia = obtenerEstadoVigencia(evento.Fecha_Inicio, evento.Fecha_Final)
     const totalPromociones = Number(evento.TotalPromociones || 0)
     const totalProductos = Number(evento.TotalProductos || 0)
     const imagenEvento = evento.Imagen || '/img/placeholder.webp'
@@ -148,10 +149,14 @@ function renderizarEventos (lista) {
                 <p class="event-card-label">${escaparHtml(evento.ID_Evento)}</p>
                 <p class="title is-4">${escaparHtml(evento.Nombre)}</p>
               </div>
-              <div class="has-text-right">
+              <div class="has-text-right event-status-stack">
                 <p class="event-card-label">Estado</p>
                 <span class="event-status-pill ${activo ? 'is-active' : 'is-inactive'}">
                   ${activo ? 'Activo' : 'Inactivo'}
+                </span>
+                <p class="event-card-label">Vigencia actual</p>
+                <span class="event-validity-pill ${vigencia.clase}">
+                  ${vigencia.texto}
                 </span>
               </div>
             </div>
@@ -841,6 +846,35 @@ function normalizarFechaInput (fecha) {
   }
 
   return fechaObjeto.toISOString().slice(0, 10)
+}
+
+function obtenerFechaActualLocal () {
+  const hoy = new Date()
+  const anio = hoy.getFullYear()
+  const mes = String(hoy.getMonth() + 1).padStart(2, '0')
+  const dia = String(hoy.getDate()).padStart(2, '0')
+
+  return `${anio}-${mes}-${dia}`
+}
+
+function obtenerEstadoVigencia (fechaInicio, fechaFinal) {
+  const inicio = normalizarFechaInput(fechaInicio)
+  const fin = normalizarFechaInput(fechaFinal)
+  const hoy = obtenerFechaActualLocal()
+
+  if (!inicio && !fin) {
+    return { texto: 'Sin fechas', clase: 'is-undated' }
+  }
+
+  if (inicio && hoy < inicio) {
+    return { texto: 'Próxima', clase: 'is-upcoming' }
+  }
+
+  if (fin && hoy > fin) {
+    return { texto: 'Vencida', clase: 'is-expired' }
+  }
+
+  return { texto: 'Vigente', clase: 'is-current' }
 }
 
 function formatearRangoFechas (fechaInicio, fechaFinal) {
