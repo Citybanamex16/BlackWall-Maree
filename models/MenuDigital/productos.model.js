@@ -3,23 +3,45 @@ const db = require('../../util/database.js')
 module.exports = class Producto {
   // Obtiene todos los productos y sus ingredientes correspondientes disponibles y no disponibles
   static async getAllProductsInfo () {
-    // 1. ejecutamos Consulta
-    const [rows] = await db.execute(`SELECT 
-    P.ID_Producto AS productoID,
-    P.nombre AS productoNombre, 
-    P.precio AS productoPrecio, 
-    P.categoría AS productoCategoria,
-    P.Tipo AS productoType, 
-    P.imagen AS productoImagen,
-    P.Disponible AS productoActivo,
-    P.Permite_Crema_Batida AS productoPermiteCremaBatida,
-    I.ID_Insumo AS insumoID,
-    I.nombre AS insumoNombre,
-    I.Precio AS precio
-    FROM producto AS P
-    INNER JOIN producto_tiene_insumo AS PI ON P.ID_Producto = PI.ID_Producto
-    INNER JOIN insumo AS I ON PI.ID_Insumo = I.ID_Insumo
-    ;`)
+    let rows
+
+    try {
+      [rows] = await db.execute(`SELECT 
+      P.ID_Producto AS productoID,
+      P.nombre AS productoNombre, 
+      P.precio AS productoPrecio, 
+      P.categoría AS productoCategoria,
+      P.Tipo AS productoType, 
+      P.imagen AS productoImagen,
+      P.Disponible AS productoActivo,
+      P.Permite_Crema_Batida AS productoPermiteCremaBatida,
+      I.ID_Insumo AS insumoID,
+      I.nombre AS insumoNombre,
+      I.Precio AS precio
+      FROM producto AS P
+      INNER JOIN producto_tiene_insumo AS PI ON P.ID_Producto = PI.ID_Producto
+      INNER JOIN insumo AS I ON PI.ID_Insumo = I.ID_Insumo
+      ;`)
+    } catch (error) {
+      if (error.code !== 'ER_BAD_FIELD_ERROR') throw error
+
+      [rows] = await db.execute(`SELECT 
+      P.ID_Producto AS productoID,
+      P.nombre AS productoNombre, 
+      P.precio AS productoPrecio, 
+      P.categoría AS productoCategoria,
+      P.Tipo AS productoType, 
+      P.imagen AS productoImagen,
+      P.Disponible AS productoActivo,
+      0 AS productoPermiteCremaBatida,
+      I.ID_Insumo AS insumoID,
+      I.nombre AS insumoNombre,
+      I.Precio AS precio
+      FROM producto AS P
+      INNER JOIN producto_tiene_insumo AS PI ON P.ID_Producto = PI.ID_Producto
+      INNER JOIN insumo AS I ON PI.ID_Insumo = I.ID_Insumo
+      ;`)
+    }
 
     console.log('Rows: ', rows)
 
