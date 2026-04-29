@@ -62,10 +62,11 @@ async function modificarRoyalty (nombre) {
     contenedorEventos.appendChild(label)
   })
   const recordatorio = document.getElementById('recordatorio-visitas')
+  const minActual = document.getElementById('input-minVisitas').value
   const otrosPrioridad = royaltiesData.filter(r => r.Nombre_Royalty !== nombre)
   if (otrosPrioridad.length > 0) {
     const maxActual = Math.max(...otrosPrioridad.map(r => Number(r.Max_Visitas)))
-    recordatorio.textContent = `Tu mínimo debe ser mayor a ${maxActual}`
+    recordatorio.textContent = `Tu mínimo debe ser igual a ${minActual} o mayor a ${maxActual}`
   } else {
     recordatorio.textContent = ''
   }
@@ -73,7 +74,8 @@ async function modificarRoyalty (nombre) {
   const otros = royaltiesData.filter(r => r.Nombre_Royalty !== nombre)
   if (otros.length > 0) {
     const maxPrioridad = Math.max(...otros.map(r => Number(r.Número_de_prioridad)))
-    recordatorioPrioridad.textContent = `La prioridad más alta actual es ${maxPrioridad}`
+    const prioridadActual = document.getElementById('input-prioridad')
+    recordatorioPrioridad.textContent = `La prioridad actual debe ser igual a ${prioridadActual} o mayor a ${maxPrioridad}`
   } else {
     recordatorioPrioridad.textContent = ''
   }
@@ -372,6 +374,9 @@ function validarFormulario (datos) {
   document.querySelectorAll('.input, .select').forEach(el => el.classList.remove('is-danger'))
   document.querySelectorAll('.help.is-danger').forEach(el => el.remove())
   const minNuevo = Number(datos.minVisitas)
+  const minActual = Number(document.getElementById('input-minVisitas').value)
+  const maxActual = Number(document.getElementById('input-maxVisitas').value)
+  const prioridadActual = Number(document.getElementById('input-prioridad').value)
   const maxNuevo = Number(datos.maxVisitas)
   const prioridadNueva = Number(datos.prioridad)
   const prioridadDuplicada = royaltiesData.find(r => Number(r.Número_de_prioridad) === prioridadNueva)
@@ -406,22 +411,24 @@ function validarFormulario (datos) {
   if(minNuevo === maxNuevo) {
     marcarError ('input-minVisitas', `El valor minimo y maximo no pueden ser iguales`)
   }
-  for (const royalty of royaltiesData) {
-  if (royalty.Nombre_Royalty === nombreOriginal) continue 
-  const minExistente = Number(royalty.Min_Visitas)
-  const maxExistente = Number(royalty.Max_Visitas)
-  if (minNuevo <= maxExistente && maxNuevo >= minExistente) {
-    marcarError('input-minVisitas', `Rango traslapa con "${royalty.Nombre_Royalty}" (${minExistente}-${maxExistente})`)
-    marcarError('input-maxVisitas', `Rango traslapa con "${royalty.Nombre_Royalty}" (${minExistente}-${maxExistente})`)
-    esValido = false
-    break
+  //Para el valor minimo
+  if (minActual != minNuevo){
+    for (const royalty of royaltiesData) {
+      if (royalty.Nombre_Royalty === nombreOriginal) continue
+      const maxExistente = Number(royalty.Max_Visitas)
+      const minExistente = Number(royalty.Min_Visitas)
+      if (minNuevo <= maxExistente && maxNuevo >= minExistente) {
+        marcarError('input-maxVisitas', `Rango traslapa con "${royalty.Nombre_Royalty}" (${minExistente}-${maxExistente})`)
+        esValido = false
+        break
+      }
+    }
   }
-}
-
-
-  if (prioridadDuplicada) {
-    marcarError('input-prioridad', `La prioridad ${prioridadNueva} ya la tiene "${prioridadDuplicada.Nombre_Royalty}"`)
-    esValido = false
+  if(prioridadActual != prioridadNueva){
+    if (prioridadDuplicada) {
+      marcarError('input-prioridad', `La prioridad ${prioridadNueva} ya la tiene "${prioridadDuplicada.Nombre_Royalty}"`)
+      esValido = false
+    }
   }
 
   const nombreDuplicado = royaltiesData.find(r => 

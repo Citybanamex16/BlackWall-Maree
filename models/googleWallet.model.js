@@ -220,13 +220,14 @@ async function crearLoyaltyObject (telefono, nombreCliente, nombreRoyalty, punto
 
 // Actualiza la tarjeta cuandoo cambia el nivel del cliente
 async function actualizarLoyaltyObject (telefono, nombreCliente, nombreRoyalty, puntosActuales, maxPuntos) {
+  
   if (!googleWalletConfigurado()) {
     advertirGoogleWalletNoDisponible()
     return null
   }
   const classId = getClassId(nombreRoyalty)
   const objectId = `${ISSUER_ID}.cliente_${limpiarTelefono(telefono)}`
-
+  try{
   await walletClient.loyaltyobject.patch({
     resourceId: objectId,
     requestBody: {
@@ -256,6 +257,14 @@ async function actualizarLoyaltyObject (telefono, nombreCliente, nombreRoyalty, 
     }
   })
   console.log(`Tarjeta actualizada para cliente ${telefono}`)
+} catch (error) {
+    if (error.code === 404) {
+      // ✅ Cliente nunca agregó su tarjeta — se omite silenciosamente
+      console.log(`Cliente ${telefono} no tiene tarjeta en Wallet, se omite`)
+    } else {
+      throw error
+    }
+  }
 }
 
 // Actualiza todos los clientes de un nivel cuando el admin modifica ese estado royalty
@@ -271,17 +280,18 @@ async function actualizarTarjetaPorNivel (nombreRoyalty, nuevoNombre, nuevoDescr
     [nombreRoyalty]
   )
 
-  const promesas = clientes.map(cliente =>
-    actualizarLoyaltyObject(
-      cliente.telefono,
-      cliente.Nombre,
-      nuevoNombre || nombreRoyalty,
-      cliente.visitas ?? 0,
-      maxVisitasFinal ?? 0
+  const resultados = await Promise.allSettled(
+    clientes.map(cliente =>
+      actualizarLoyaltyObject(
+        cliente.Numero_Telefonico,
+        cliente.Nombre,
+        nuevoNombre || nombreRoyalty,
+        cliente.Visitas_Actuales,
+        maxVisitas
+      )
     )
   )
-
-  await Promise.all(promesas)
+  const fallidos = resultados.filter(r => r.status === 'rejected')
   console.log(`${clientes.length} tarjetas actualizadas para nivel ${nombreRoyalty}`)
 }
 

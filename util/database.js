@@ -2,6 +2,7 @@ const mysql = require('mysql2')
 
 // Pool de conexiones
 
+/*
 const pool = mysql.createPool({
   // host: 'localhost',
   host: '172.20.98.47', // NO LO BORREN SOLO COMENTENLO
@@ -14,6 +15,7 @@ const pool = mysql.createPool({
   connectionLimit: 10
 
 })
+*/
 
 /* ==Contraseñas y usuario ==
 Usuario: CL85565990
@@ -74,7 +76,7 @@ const pool = mysql.createPool({
 
 })
 */
-/*
+
 // Pool de conexiones - Andy :)
 const pool = mysql.createPool({
   host: 'localhost',
@@ -85,5 +87,5 @@ const pool = mysql.createPool({
   connectionLimit: 10
 
 })
-*/
+
 module.exports = pool.promise() // Habilitamos poder usar .then() & .catch() yuhhhh
