@@ -127,7 +127,7 @@ async function fetchPlatilloRows (id) {
   return db.execute(
     `SELECT p.ID_Producto, p.Nombre, p.Precio, p.Disponible,
             p.Categoría as base,
-            p.Categoría as tipo,
+            p.Tipo as tipo,
             ${cremaBatidaSelect}
             ${ingredientCustomizationSelect}
             i.ID_Insumo as ing_id,
