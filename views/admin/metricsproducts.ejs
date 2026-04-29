@@ -16,22 +16,20 @@
 
 </head>
 <body>
-  <nav class="navbar">
+  <nav class="navbar" role="navigation">
     <div class="navbar-brand">
-      <div class="navbar-item" style="display:flex; flex-direction:column; align-items:flex-start;">
-        <div class="logo-text">MARÉE</div>
-        <div class="logo-sub">Admin</div>
+      <div class="navbar-item">
+        <div class="logo-area">
+          <span class="logo-text">MARÉE</span>
+          <span class="logo-sub">Love at First Crêpe</span>
+        </div>
       </div>
-    </div>
-    <div class="navbar-end" style="display:flex;">
-      <a href="/admin" class="navbar-item">Dashboard</a>
-      <a href="/admin/metricas-productos" class="navbar-item" style="color: var(--gold);">
-        Métricas productos
-      </a>
     </div>
   </nav>
 
   <section class="page-wrap">
+    <a href="/admin" class="back-link">← Admin Dashboard</a>
+
     <h1 class="page-title">Métricas de productos e ingredientes</h1>
     <p class="page-subtitle">
       Visualiza productos más vendidos, ingresos por categoría, ingredientes más usados,
