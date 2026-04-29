@@ -1,4 +1,4 @@
-/* global ShowErrorModal, showSuccessModal, catalogoIng:writable , catalogTipos:writable , limpiarModal, createFieldElement, buildIngredientsSection, SetRegisterButtons, onBtnIngNewClick, getIngredientesSeleccionados, validarDatosRegistro */
+/* global ShowErrorModal, showSuccessModal, refreshProductsCatalog, catalogoIng:writable , catalogTipos:writable , limpiarModal, createFieldElement, buildIngredientsSection, SetRegisterButtons, onBtnIngNewClick, getIngredientesSeleccionados, validarDatosRegistro */
 /* exported ConstruirModifModal, ModifyProduct */
 
 /* CU05 Modificar Platillo Existente */
@@ -382,7 +382,11 @@ async function postModifiedProduct (data) {
     }
 
     // Exito
-    showSuccessModal('Modificaciones Exitosas', 'Modificacion en la Base de Datos')
+    showSuccessModal(
+      'Modificaciones exitosas',
+      'La modificación del producto se guardó correctamente.',
+      refreshProductsCatalog
+    )
   } catch (error) {
 
   }
@@ -565,7 +569,11 @@ async function eliminarProducto (idProd, nombreProd) {
     }
 
     // Exito en la consulta
-    showSuccessModal('Eliminación realizada con exito', `${nombreProd} fue eliminado con exito`)
+    showSuccessModal(
+      'Eliminación realizada con éxito',
+      `${nombreProd} fue eliminado con éxito.`,
+      refreshProductsCatalog
+    )
   } catch (error) {
     ShowErrorModal('Error en eliminación', error.message || 'La conexión con la BD a fallado. Favor de intentarlo mas tarde')
   }
@@ -592,7 +600,11 @@ async function desactivarProd (idProd, nombreProd) {
     }
 
     // Exito en la consulta
-    showSuccessModal('Desactivación realizada con exito', `${nombreProd} fue desactivado con exito`)
+    showSuccessModal(
+      'Desactivación realizada con éxito',
+      `${nombreProd} fue desactivado con éxito.`,
+      refreshProductsCatalog
+    )
   } catch (error) {
     ShowErrorModal('Error en Desactivación', error.message || 'La conexión con la BD a fallado. Favor de intentarlo mas tarde')
   }

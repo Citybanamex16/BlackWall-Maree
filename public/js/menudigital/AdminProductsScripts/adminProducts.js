@@ -58,6 +58,11 @@ async function getCatalogoProductos () {
 }
 getCatalogoProductos()
 
+function refreshProductsCatalog () {
+  catalogoProductosMap.clear()
+  getCatalogoProductos()
+}
+
 /* == Construcción de Catálogo Admin == */
 
 // Estructuras de Datos
@@ -110,6 +115,8 @@ function construirFichaProductos (datosProducto, datosCategorias) {
 function renderProductoAdmin (prod) {
   // Verificamos si tiene tipo, si no, ponemos un placeholder
   const tipoTexto = prod.tipo ? prod.tipo : 'Otro'
+  const estadoTexto = prod.activo ? 'Activo' : 'Inactivo'
+  const estadoClase = prod.activo ? 'is-success' : 'is-inactive'
 
   return `
     <div class="admin-prod-row" data-id="${prod.id}">
@@ -122,6 +129,7 @@ function renderProductoAdmin (prod) {
           
           <div class="admin-prod-meta">
             <span class="admin-tag-tipo">${tipoTexto}</span>
+            <span class="status-pill ${estadoClase}">${estadoTexto}</span>
             <span class="admin-prod-price">$${prod.precio}</span>
           </div>
         </div>
@@ -209,6 +217,7 @@ function construirCatalogoAdmin (datos) {
   const productosInfo = datos.arrayProductsCatalog
 
   const contenedor = document.getElementById('admin-catalogo')
+  catalogoProductosMap.clear()
   contenedor.innerHTML = ''
 
   const categoriasInfo = []
@@ -930,7 +939,11 @@ async function registerNewProduct (NewProductData, ProductType) {
     if (postrequest.ok && response.ok) {
       console.log('¡Exito!')
       // Mostramos modal de exito
-      showSuccessModal(nombre, ProductType)
+      showSuccessModal(
+        `Registro de ${nombre} exitoso`,
+        `¡Tu ${ProductType} fue registrado de manera exitosa!`,
+        refreshProductsCatalog
+      )
     } else {
       ShowErrorModal(`Error al registrar ${ProductType}`, response.message || 'No se pudo registrar el producto.')
     }
@@ -944,19 +957,27 @@ async function registerNewProduct (NewProductData, ProductType) {
 const SuccessModal = document.getElementById('ModalExito')
 const Successitle = document.getElementById('TituloExito')
 const SuccessContent = document.getElementById('exitoContent')
+const Successbtn = document.getElementById('closeExito')
+let successCloseHandler = null
 
-function showSuccessModal (productName, productType) {
-  Successitle.innerText = `Registro de ${productName} exitoso`
-  SuccessContent.innerText = `¡Tu ${productType} fue registrado de manera exitosa!`
+function showSuccessModal (title, message, onClose = null) {
+  Successitle.innerText = title
+  SuccessContent.innerText = message
+
+  if (successCloseHandler) {
+    Successbtn.removeEventListener('click', successCloseHandler)
+  }
+
+  successCloseHandler = (event) => {
+    event.preventDefault()
+    SuccessModal.close()
+    closeAllModals()
+    if (typeof onClose === 'function') onClose()
+  }
+
+  Successbtn.addEventListener('click', successCloseHandler)
   SuccessModal.showModal()
 }
-
-const Successbtn = document.getElementById('closeExito')
-Successbtn.addEventListener('click', (event) => {
-  event.preventDefault()
-  closeAllModals()
-  window.location.reload() // Fuerza la recarga manualmente
-}, { once: true })
 
 // Funcion validar datos de Formulario
 function validarDatosRegistro (Formsdata, catalogoIngredientes) {
@@ -1048,7 +1069,8 @@ document.getElementById('closeSummaryModifX')?.addEventListener('click', () => {
 
 // 5. Modal: ModalExito
 document.getElementById('closeExito')?.addEventListener('click', () => {
-  document.getElementById('ModalExito').close()
+  const successModal = document.getElementById('ModalExito')
+  if (successModal?.open) successModal.close()
 })
 
 // 6. Modal: ErrorModal
