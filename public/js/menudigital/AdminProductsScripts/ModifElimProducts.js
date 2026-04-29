@@ -1,4 +1,4 @@
-/* global ShowErrorModal, showSuccessModal, refreshProductsCatalog, catalogoIng:writable , catalogTipos:writable , limpiarModal, createFieldElement, buildIngredientsSection, SetRegisterButtons, onBtnIngNewClick, getIngredientesSeleccionados, validarDatosRegistro */
+/* global ShowErrorModal, showSuccessModal, refreshProductsCatalog, buildWhippedCreamSupportNotice, catalogoIng:writable , catalogTipos:writable , limpiarModal, createFieldElement, buildIngredientsSection, SetRegisterButtons, onBtnIngNewClick, getIngredientesSeleccionados, validarDatosRegistro */
 /* exported ConstruirModifModal, ModifyProduct */
 
 /* CU05 Modificar Platillo Existente */
@@ -113,9 +113,15 @@ async function ConstruirModifModal (productData, AllCategorys) {
   activoField.classList.add('is-dynamic')
   ModifForm.appendChild(activoField)
 
-  const cremaBatidaField = buildPermiteCremaBatidaField(productData.permiteCremaBatida)
-  cremaBatidaField.classList.add('is-dynamic')
-  ModifForm.appendChild(cremaBatidaField)
+  if (window.supportsProductWhippedCream === true) {
+    const cremaBatidaField = buildPermiteCremaBatidaField(productData.permiteCremaBatida)
+    cremaBatidaField.classList.add('is-dynamic')
+    ModifForm.appendChild(cremaBatidaField)
+  } else {
+    const cremaBatidaNotice = buildWhippedCreamSupportNotice()
+    cremaBatidaNotice.classList.add('is-dynamic')
+    ModifForm.appendChild(cremaBatidaNotice)
+  }
 
   // 5. Pre-seleccionar ingredientes actuales en los dropdowns
   precargarIngredientes(ingData, productData)

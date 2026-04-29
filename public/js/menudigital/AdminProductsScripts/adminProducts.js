@@ -1,6 +1,7 @@
 /* global ConstruirModifModal, ModifyProduct, eliminarDesactivarModal */
 // JS FRONTEND de la vista de Productos del Admin
 const canManageProducts = window.canManageProducts === true
+window.supportsProductWhippedCream = false
 
 // Funciones Globales
 
@@ -237,6 +238,7 @@ function construirCatalogoAdmin (datos) {
   const categorias = datos.arrayCategorías[0]
   const productosInfo = datos.arrayProductsCatalog
   const duplicateMap = createDuplicateMap(productosInfo)
+  window.supportsProductWhippedCream = datos.supportsProductWhippedCream === true
 
   const contenedor = document.getElementById('admin-catalogo')
   catalogoProductosMap.clear()
@@ -359,6 +361,7 @@ async function seleccionarTipoProducto (id) {
     const ProductFields = object.data.fields
     const AllIngredientes = object.data.ingredientes[0]
     const AllTypes = object.data.types
+    window.supportsProductWhippedCream = object.data.supportsProductWhippedCream === true
     console.log('Types recvieves: ', AllTypes)
     createProductRegisterForms(ProductFields, AllIngredientes, id, AllTypes)
   } catch (error) {
@@ -658,10 +661,17 @@ function createProductRegisterForms (Fields, Ingredientes, type, tiposData) {
 
   // Inyectar campos dinámicos (nombre, precio, etc.)
   Fields.forEach((field, index) => {
+    if (field.nombre === 'permiteCremaBatida' && window.supportsProductWhippedCream !== true) {
+      return
+    }
     const fieldEl = createFieldElement(field)
     fieldEl.style.animationDelay = `${index * 0.05}s`
     registerForm.appendChild(fieldEl)
   })
+
+  if (window.supportsProductWhippedCream !== true) {
+    registerForm.appendChild(buildWhippedCreamSupportNotice())
+  }
 
   // Construir la sección de tipos
   registerForm.appendChild(buildTypeSection(tiposData))
@@ -800,6 +810,17 @@ function ShowErrorModal (title, content) {
       ErrorModal.close()
     }, { once: true })
   ErrorModal.showModal()
+}
+
+function buildWhippedCreamSupportNotice () {
+  const wrapper = document.createElement('div')
+  wrapper.classList.add('maree-field', 'is-dynamic')
+  wrapper.innerHTML = `
+    <div class="maree-summary-row" style="border-style:dashed;">
+      <span class="maree-summary-label">Permitir crema batida</span>
+      <span class="maree-summary-value">Disponible cuando se aplique el parche SQL de crema batida por producto.</span>
+    </div>`
+  return wrapper
 }
 
 /* == Creación de Modal de Resumen de Datos */

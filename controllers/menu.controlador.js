@@ -624,9 +624,10 @@ exports.getProductsCatalog = async (req, res, next) => {
   console.log('Backend obteniendo todos los Productos, ingredientes & catalogos')
   try {
     // 1. Llamado en paralelo de consultas con Promise.all()
-    const [Allcategories, allProductsData] = await Promise.all([
+    const [Allcategories, allProductsData, supportsProductWhippedCream] = await Promise.all([
       categorías.fecthAll(), // Async BD call 1.
-      productos.getAllProductsInfo() // async BD call
+      productos.getAllProductsInfo(), // async BD call
+      tableHasColumn('producto', 'Permite_Crema_Batida')
     ])
 
     // console.log('Categorías catalog: ', Allcategories)
@@ -636,7 +637,8 @@ exports.getProductsCatalog = async (req, res, next) => {
       ok: true,
       message: 'Catalogos Obtenido con exito',
       arrayCategorías: Allcategories,
-      arrayProductsCatalog: allProductsData
+      arrayProductsCatalog: allProductsData,
+      supportsProductWhippedCream
     })
     console.log('Catalogos obtenidos con exito')
   } catch (err) {
@@ -704,6 +706,7 @@ exports.getProductfieldsAndIngredientes = async (req, res, next) => {
 
     const allIngredientes = await productos.getCategoryIngredientes(typeId)
     const allTypes = await tipos.fetchAll()
+    const supportsProductWhippedCream = await tableHasColumn('producto', 'Permite_Crema_Batida')
 
     const productFormsFields = ProductFields
     res.status(200).json({
@@ -712,7 +715,8 @@ exports.getProductfieldsAndIngredientes = async (req, res, next) => {
       data: {
         fields: productFormsFields,
         ingredientes: allIngredientes,
-        types: allTypes
+        types: allTypes,
+        supportsProductWhippedCream
       }
     })
   } catch (error) {
