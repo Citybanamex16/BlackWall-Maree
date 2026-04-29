@@ -61,16 +61,16 @@ exports.getApplePass = async (request, response) => {
 
 exports.postRegistrarEstadoRoyalty = async (request, response, next) => {
   console.log('Body recibido:', request.body)
-  const { nombre, prioridad, descripcion, minVisitas, maxVisitas, promociones, eventos } = request.body
+  const { nombre, prioridad, descripcion, minVisitas, maxVisitas, descuento_premio, promociones, eventos } = request.body
 
-  if (!nombre || prioridad === undefined || !descripcion || !minVisitas || !maxVisitas) {
+  if (!nombre || prioridad === undefined || !descripcion || !minVisitas || !maxVisitas || !descuento_premio) {
     return response.status(400).json({
       success: false,
       message: 'Faltan datos obligatorios para registrar Estado Royalty'
     })
   }
   try {
-    const nuevoEstadoRoyalty = new Royalty(nombre, prioridad, descripcion, maxVisitas, minVisitas)
+    const nuevoEstadoRoyalty = new Royalty(nombre, prioridad, descripcion, maxVisitas, minVisitas, descuento_premio)
     await nuevoEstadoRoyalty.save()
     const promesas = []
     if (promociones && promociones.length > 0) {
@@ -172,8 +172,8 @@ exports.deleteRoyalty = async (request, response, next) => {
 exports.updateRoyalty = async (request, response, next) => {
   try {
     const nombreOriginal = request.params.nombre
-    const { nombre, prioridad, descripcion, minVisitas, maxVisitas, promociones, eventos } = request.body
-    await Royalty.updateEstadoRoyalty(nombreOriginal, nombre, prioridad, descripcion, minVisitas, maxVisitas)
+    const { nombre, prioridad, descripcion, minVisitas, maxVisitas, descuento_premio, promociones, eventos } = request.body
+    await Royalty.updateEstadoRoyalty(nombreOriginal, nombre, prioridad, descripcion, minVisitas, maxVisitas, descuento_premio)
     await Royalty.updatePromocionesRoyalty(nombre, promociones)
     await Royalty.updateEventosRoyalty(nombre, eventos)
     await WalletModel.actualizarLoyaltyClass(nombreOriginal, nombre, maxVisitas)
