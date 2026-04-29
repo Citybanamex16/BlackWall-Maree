@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Servidor: localhost
--- Tiempo de generación: 29-04-2026 a las 18:17:21
+-- Tiempo de generación: 29-04-2026 a las 18:34:02
 -- Versión del servidor: 10.4.28-MariaDB
 -- Versión de PHP: 8.2.4
 
@@ -201,9 +201,12 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `sp_EstadoCliente` (IN `p_telefono` 
         c.Nombre, 
         c.Numero_Telefonico AS telefono, 
         c.Nombre_Royalty AS nivel, 
-        c.Visitas_Actuales AS visitas
+        c.Visitas_Actuales AS visitas, 
+        c.tokens_gastados, 
+        r.descuento_premio
     FROM cliente c
-     WHERE c.Numero_Telefonico = p_telefono COLLATE utf8mb4_spanish2_ci;
+    INNER JOIN estado_royalty r ON r.Nombre_Royalty = c.Nombre_Royalty
+    WHERE c.Numero_Telefonico = p_telefono COLLATE utf8mb4_spanish2_ci;
 END$$
 
 DROP PROCEDURE IF EXISTS `sp_fetchEventos`$$
@@ -471,6 +474,7 @@ INSERT INTO `cliente` (`Numero_Telefonico`, `Nombre_Royalty`, `Nombre`, `Correo`
 ('55-9862-4951', 'Super Fan', 'Ramón Eliezer De Santos García', 'rgarcia@gmail.com', 'm', '1962-01-17', 6, 'Usuario', 0, 'ramon_91705'),
 ('55-9956-8802', 'Super Fan', 'Rodrigo Alejandro Hurtado Cortés', 'rhurtado@gmail.com', 'm', '1983-02-25', 2, 'Usuario', 0, 'rodrigo_79637'),
 ('5511569800', NULL, 'Andrea Iliana Cantú Mayorga', NULL, NULL, NULL, 0, 'Usuario', 0, 'andrea_23070'),
+('5515796753', NULL, 'Eduardo Daniel Juárez Pineda', NULL, NULL, NULL, 0, 'Usuario', 1, NULL),
 ('5532519266', NULL, 'Ximena Guadalupe Córdoba Ángeles', NULL, NULL, NULL, 0, 'Usuario', 0, 'ximena_46438'),
 ('81-3104-6812', 'Fan', 'Carlos Delgado Contreras', 'A01712819@tec.mx', 'Masculino', '2005-08-16', 0, 'Usuario', 0, 'carlos_62983'),
 ('8131046812', NULL, 'Cliente', NULL, NULL, NULL, 0, 'Usuario', 0, 'cliente_75598'),
@@ -599,6 +603,7 @@ CREATE TABLE `codigo_verificacion` (
 --
 
 INSERT INTO `codigo_verificacion` (`Numero_Telefonico`, `Codigo`, `Fecha_Creacion`, `Fecha_Expiracion`, `Usado`) VALUES
+('55-1156-9800', '381845', '2026-04-29 16:27:21', '2026-04-29 10:42:21', 0),
 ('55-3225-9858', '889-50', '2026-09-10 06:00:00', '2026-09-10 00:00:00', 1),
 ('55-3885-6878', '183-38', '2026-04-25 06:00:00', '2026-04-25 00:00:00', 0),
 ('55-4606-3624', '697-13', '2026-06-30 06:00:00', '2026-06-30 00:00:00', 1),
@@ -875,7 +880,9 @@ INSERT INTO `detalle_orden_insumos` (`id`, `id_orden_producto`, `ID_Insumo`, `ID
 (97, 116, 'IN87022030', 'OD91866409', 'base', 0.00),
 (98, 117, 'IN06332851', 'OD91866409', 'extra', 0.00),
 (99, 117, 'IN15500744', 'OD91866409', 'extra', 0.00),
-(100, 117, 'IN07050794', 'OD91866409', 'extra', 0.00);
+(100, 117, 'IN07050794', 'OD91866409', 'extra', 0.00),
+(101, 118, 'IN09927406', 'OD35641095', 'base', 0.00),
+(102, 119, 'IN09927406', 'OD45426269', 'base', 0.00);
 
 -- --------------------------------------------------------
 
@@ -1027,6 +1034,13 @@ CREATE TABLE `historial_canjes_royalty` (
   `Nombre_Royalty` varchar(50) DEFAULT NULL,
   `Fecha_canje` datetime DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish2_ci;
+
+--
+-- Volcado de datos para la tabla `historial_canjes_royalty`
+--
+
+INSERT INTO `historial_canjes_royalty` (`ID_canje`, `Numero_Telefonico`, `Nombre_Royalty`, `Fecha_canje`) VALUES
+(1, '5515796753', 'Super Fan', '2026-04-29 10:33:07');
 
 -- --------------------------------------------------------
 
@@ -1383,7 +1397,8 @@ INSERT INTO `log_accesos_otp` (`id`, `telefono`, `accion`, `fecha`) VALUES
 (44, '55-1156-9800', 'OTP_ELIMINADO', '2026-04-28 18:32:48'),
 (45, '55-1156-9800', 'OTP_ELIMINADO', '2026-04-29 13:33:04'),
 (46, '55-1156-9800', 'OTP_ELIMINADO', '2026-04-29 14:44:57'),
-(47, '55-1156-9800', 'OTP_ELIMINADO', '2026-04-29 15:05:24');
+(47, '55-1156-9800', 'OTP_ELIMINADO', '2026-04-29 15:05:24'),
+(48, '55-1579-6753', 'OTP_ELIMINADO', '2026-04-29 16:27:51');
 
 -- --------------------------------------------------------
 
@@ -1495,6 +1510,7 @@ INSERT INTO `orden` (`ID_Orden`, `ID_Turno`, `Numero_Telefonico`, `Tipo_Orden`, 
 ('OD33951115', 'TN47025996', '55-2006-6063', 'Sucursal', NULL, 'Isabela Ruiz Velasco Angeles', 'Listo', '2026-09-21 06:00:00', NULL),
 ('OD34843825', 'TN46937585', '55-8069-3709', 'Pick-up', NULL, 'Jesús Osvaldo Ramos Pérez', 'Listo', '2026-07-04 06:00:00', NULL),
 ('OD35079193', 'TN26496107', '5511569800', 'Pick-up', NULL, 'Andrea Iliana Cantú Mayorga', 'Cancelado', '2026-04-24 03:40:32', NULL),
+('OD35641095', 'TN26496107', '5515796753', 'Pick-up', 'Hola', 'Eduardo Daniel Juárez Pineda', 'Pendiente', '2026-04-29 16:28:35', NULL),
 ('OD36841880', 'TN26496107', '8131046812', 'Delivery', NULL, 'Cliente', 'Cancelado', '2026-04-22 03:22:29', NULL),
 ('OD37616868', 'TN46937585', '55-6624-7720', 'Delivery', NULL, 'Mariangel Aguirre Magallanes', 'Entregado', '2026-12-22 06:00:00', NULL),
 ('OD37925699', 'TN26496107', '55-4606-3624', 'Sucursal', NULL, 'Héctor Alejandro Barrón Tamayo', 'Entregado', '2026-05-22 06:00:00', NULL),
@@ -1503,6 +1519,7 @@ INSERT INTO `orden` (`ID_Orden`, `ID_Turno`, `Numero_Telefonico`, `Tipo_Orden`, 
 ('OD41009687', 'TN26496107', '8134556800', 'Pick-up', NULL, 'Juan Pablo Juarez', 'Cancelado', '2026-04-23 04:53:41', NULL),
 ('OD43056671', 'TN26496107', '8131046813', 'Pick-up', 'Hola', 'Juan Pablo Juarez', 'Pendiente', '2026-04-28 19:09:49', NULL),
 ('OD43904707', 'TN26496107', '8131046813', 'Pick-up', NULL, 'Juan Pablo Juarez', 'Pendiente', '2026-04-29 13:55:31', NULL),
+('OD45426269', 'TN26496107', '5515796753', 'Pick-up', NULL, 'Eduardo Daniel Juárez Pineda', 'Pendiente', '2026-04-29 16:33:07', NULL),
 ('OD45723683', 'TN47025996', '55-5018-5507', 'Sucursal', NULL, 'Armando Montealegre Villagrán', 'Cancelado', '2026-12-02 06:00:00', NULL),
 ('OD45999906', 'TN26496107', '4428199000', 'Pick-up', NULL, 'Juan Pablo Juarez', 'Cancelado', '2026-04-23 04:56:04', NULL),
 ('OD46400505', 'TN26496107', '8131046813', 'Pick-up', NULL, 'Cliente', 'Cancelado', '2026-04-22 14:58:48', NULL),
@@ -1680,7 +1697,9 @@ INSERT INTO `orden_tiene_producto` (`id_orden_producto`, `ID_Orden`, `ID_Product
 (114, 'OD91866409', 'PD12662761', 1, 70.00),
 (115, 'OD91866409', 'PD66451976', 1, 104.00),
 (116, 'OD91866409', 'PD01400719', 1, 154.50),
-(117, 'OD91866409', 'PD_COMODIN', 1, 119.00);
+(117, 'OD91866409', 'PD_COMODIN', 1, 119.00),
+(118, 'OD35641095', 'PD28020090', 1, 0.00),
+(119, 'OD45426269', 'PD28020090', 1, 0.00);
 
 -- --------------------------------------------------------
 
@@ -2678,8 +2697,8 @@ ALTER TABLE `evento_contiene_promocion`
 --
 ALTER TABLE `historial_canjes_royalty`
   ADD PRIMARY KEY (`ID_canje`),
-  ADD KEY `Numero_Telefonico` (`Numero_Telefonico`),
-  ADD KEY `Nombre_Royalty` (`Nombre_Royalty`);
+  ADD KEY `idx_numero_telefono` (`Numero_Telefonico`),
+  ADD KEY `idx_nombre_royalty` (`Nombre_Royalty`);
 
 --
 -- Indices de la tabla `insumo`
@@ -2848,25 +2867,25 @@ ALTER TABLE `turno_tiene_sucursal`
 -- AUTO_INCREMENT de la tabla `detalle_orden_insumos`
 --
 ALTER TABLE `detalle_orden_insumos`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=101;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=103;
 
 --
 -- AUTO_INCREMENT de la tabla `historial_canjes_royalty`
 --
 ALTER TABLE `historial_canjes_royalty`
-  MODIFY `ID_canje` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `ID_canje` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
 -- AUTO_INCREMENT de la tabla `log_accesos_otp`
 --
 ALTER TABLE `log_accesos_otp`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=48;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=49;
 
 --
 -- AUTO_INCREMENT de la tabla `orden_tiene_producto`
 --
 ALTER TABLE `orden_tiene_producto`
-  MODIFY `id_orden_producto` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=118;
+  MODIFY `id_orden_producto` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=120;
 
 --
 -- Restricciones para tablas volcadas
@@ -2951,8 +2970,8 @@ ALTER TABLE `evento_contiene_promocion`
 -- Filtros para la tabla `historial_canjes_royalty`
 --
 ALTER TABLE `historial_canjes_royalty`
-  ADD CONSTRAINT `historial_canjes_royalty_ibfk_1` FOREIGN KEY (`Numero_Telefonico`) REFERENCES `cliente` (`Numero_Telefonico`),
-  ADD CONSTRAINT `historial_canjes_royalty_ibfk_2` FOREIGN KEY (`Nombre_Royalty`) REFERENCES `estado_royalty` (`Nombre_Royalty`);
+  ADD CONSTRAINT `fk_historial_cliente` FOREIGN KEY (`Numero_Telefonico`) REFERENCES `cliente` (`Numero_Telefonico`),
+  ADD CONSTRAINT `fk_historial_royalty` FOREIGN KEY (`Nombre_Royalty`) REFERENCES `estado_royalty` (`Nombre_Royalty`);
 
 --
 -- Filtros para la tabla `insumo`
