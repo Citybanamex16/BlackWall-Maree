@@ -1,12 +1,40 @@
 const db = require('../../util/database.js')
 
 module.exports = class Producto {
+  static async hasColumn (executor, tableName, columnName) {
+    const [rows] = await executor.execute(
+      `SELECT COUNT(*) AS total
+       FROM information_schema.COLUMNS
+       WHERE TABLE_SCHEMA = DATABASE()
+         AND TABLE_NAME = ?
+         AND COLUMN_NAME = ?`,
+      [tableName, columnName]
+    )
+
+    return Number(rows[0]?.total || 0) > 0
+  }
+
   // Obtiene todos los productos y sus ingredientes correspondientes disponibles y no disponibles
   static async getAllProductsInfo () {
-    let rows
+    const hasProductWhippedCream = await Producto.hasColumn(db, 'producto', 'Permite_Crema_Batida')
+    const hasCategoryWhippedCream = hasProductWhippedCream
+      ? false
+      : await Producto.hasColumn(db, 'categoría', 'Permite_Crema_Batida')
+    const hasIngredientCustomization = await Producto.hasColumn(db, 'producto', 'Permite_Modificar_Ingredientes')
 
-    try {
-      const result = await db.execute(`SELECT 
+    const cremaBatidaSelect = hasProductWhippedCream
+      ? 'P.Permite_Crema_Batida AS productoPermiteCremaBatida,'
+      : hasCategoryWhippedCream
+        ? 'C.Permite_Crema_Batida AS productoPermiteCremaBatida,'
+        : '0 AS productoPermiteCremaBatida,'
+    const ingredientCustomizationSelect = hasIngredientCustomization
+      ? 'P.Permite_Modificar_Ingredientes AS productoPermiteModificarIngredientes,'
+      : '1 AS productoPermiteModificarIngredientes,'
+    const categoryJoin = hasCategoryWhippedCream
+      ? 'LEFT JOIN categoría AS C ON P.Categoría = C.Nombre'
+      : ''
+
+    const [rows] = await db.execute(`SELECT 
       P.ID_Producto AS productoID,
       P.nombre AS productoNombre, 
       P.precio AS productoPrecio, 
@@ -14,59 +42,16 @@ module.exports = class Producto {
       P.Tipo AS productoType, 
       P.imagen AS productoImagen,
       P.Disponible AS productoActivo,
-      P.Permite_Crema_Batida AS productoPermiteCremaBatida,
+      ${cremaBatidaSelect}
+      ${ingredientCustomizationSelect}
       I.ID_Insumo AS insumoID,
       I.nombre AS insumoNombre,
       I.Precio AS precio
       FROM producto AS P
+      ${categoryJoin}
       LEFT JOIN producto_tiene_insumo AS PI ON P.ID_Producto = PI.ID_Producto
       LEFT JOIN insumo AS I ON PI.ID_Insumo = I.ID_Insumo
       ;`)
-      rows = result[0]
-    } catch (error) {
-      if (error.code !== 'ER_BAD_FIELD_ERROR') throw error
-
-      try {
-        const fallbackResult = await db.execute(`SELECT 
-        P.ID_Producto AS productoID,
-        P.nombre AS productoNombre, 
-        P.precio AS productoPrecio, 
-        P.categoría AS productoCategoria,
-        P.Tipo AS productoType, 
-        P.imagen AS productoImagen,
-        P.Disponible AS productoActivo,
-        C.Permite_Crema_Batida AS productoPermiteCremaBatida,
-        I.ID_Insumo AS insumoID,
-        I.nombre AS insumoNombre,
-        I.Precio AS precio
-        FROM producto AS P
-        LEFT JOIN categoría AS C ON P.Categoría = C.Nombre
-        LEFT JOIN producto_tiene_insumo AS PI ON P.ID_Producto = PI.ID_Producto
-        LEFT JOIN insumo AS I ON PI.ID_Insumo = I.ID_Insumo
-        ;`)
-        rows = fallbackResult[0]
-      } catch (fallbackError) {
-        if (fallbackError.code !== 'ER_BAD_FIELD_ERROR') throw fallbackError
-
-        const safeFallbackResult = await db.execute(`SELECT 
-        P.ID_Producto AS productoID,
-        P.nombre AS productoNombre, 
-        P.precio AS productoPrecio, 
-        P.categoría AS productoCategoria,
-        P.Tipo AS productoType, 
-        P.imagen AS productoImagen,
-        P.Disponible AS productoActivo,
-        0 AS productoPermiteCremaBatida,
-        I.ID_Insumo AS insumoID,
-        I.nombre AS insumoNombre,
-        I.Precio AS precio
-        FROM producto AS P
-        LEFT JOIN producto_tiene_insumo AS PI ON P.ID_Producto = PI.ID_Producto
-        LEFT JOIN insumo AS I ON PI.ID_Insumo = I.ID_Insumo
-        ;`)
-        rows = safeFallbackResult[0]
-      }
-    }
 
     // 2. Agrupamos utilizando Mapping
     const productosMap = {}
@@ -82,6 +67,7 @@ module.exports = class Producto {
           tipo: fila.productoType,
           activo: fila.productoActivo,
           permiteCremaBatida: fila.productoPermiteCremaBatida === 1 || fila.productoPermiteCremaBatida === '1',
+          permiteModificarIngredientes: fila.productoPermiteModificarIngredientes === 1 || fila.productoPermiteModificarIngredientes === '1',
           imagen: fila.productoImagen,
           ingredientes: [] // Inicializamos el array de ingredientes
         }
@@ -197,55 +183,54 @@ module.exports = class Producto {
     return `${prefijo}${numero}` // "PD1823049231" — 12 chars, bien dentro del varchar(10)...
   }
 
-  static async insertNewProduct (connection, id, nombre, categoria, Precio, Disponible, Imagen, tipo, permiteCremaBatida) {
-    try {
-      const [result] = await connection.execute(
-        `INSERT INTO producto
-          (ID_Producto, Tamaño, Categoría, Nombre, Precio, Disponible, Tipo, Imagen, Permite_Crema_Batida, EsExclusivo)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-        [id, 'Básico', categoria, nombre, Precio, Disponible, tipo, Imagen, permiteCremaBatida, 0]
-      )
-      return result
-    } catch (error) {
-      if (error.code !== 'ER_BAD_FIELD_ERROR') throw error
+  static async insertNewProduct (connection, id, nombre, categoria, Precio, Disponible, Imagen, tipo, permiteCremaBatida, permiteModificarIngredientes) {
+    const columns = ['ID_Producto', 'Tamaño', 'Categoría', 'Nombre', 'Precio', 'Disponible', 'Tipo', 'Imagen', 'EsExclusivo']
+    const values = [id, 'Básico', categoria, nombre, Precio, Disponible, tipo, Imagen, 0]
 
-      const [result] = await connection.execute(
-        `INSERT INTO producto
-          (ID_Producto, Tamaño, Categoría, Nombre, Precio, Disponible, Tipo, Imagen, EsExclusivo)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-        [id, 'Básico', categoria, nombre, Precio, Disponible, tipo, Imagen, 0]
-      )
-      return result
+    if (await Producto.hasColumn(connection, 'producto', 'Permite_Crema_Batida')) {
+      columns.splice(8, 0, 'Permite_Crema_Batida')
+      values.splice(8, 0, permiteCremaBatida)
     }
+
+    if (await Producto.hasColumn(connection, 'producto', 'Permite_Modificar_Ingredientes')) {
+      columns.splice(8, 0, 'Permite_Modificar_Ingredientes')
+      values.splice(8, 0, permiteModificarIngredientes)
+    }
+
+    const [result] = await connection.execute(
+      `INSERT INTO producto (${columns.join(', ')})
+       VALUES (${columns.map(() => '?').join(', ')})`,
+      values
+    )
+    return result
   }
 
-  static async modifyProduct (connection, id, nombre, categoria, tipo, Precio, Disponible, Imagen, permiteCremaBatida) {
-    try {
-      return await connection.execute(`
-      UPDATE producto
-      SET 
-        Categoría = ?, 
-        Tipo = ?,
-        Nombre = ?,
-        Precio = ?,
-        Disponible = ?,
-        Imagen = ?,
-        Permite_Crema_Batida = ?
-    WHERE ID_Producto = ?;`, [categoria, tipo, nombre, Precio, Disponible, Imagen, permiteCremaBatida, id])
-    } catch (error) {
-      if (error.code !== 'ER_BAD_FIELD_ERROR') throw error
+  static async modifyProduct (connection, id, nombre, categoria, tipo, Precio, Disponible, Imagen, permiteCremaBatida, permiteModificarIngredientes) {
+    const sets = [
+      'Categoría = ?',
+      'Tipo = ?',
+      'Nombre = ?',
+      'Precio = ?',
+      'Disponible = ?',
+      'Imagen = ?'
+    ]
+    const values = [categoria, tipo, nombre, Precio, Disponible, Imagen]
 
-      return connection.execute(`
-      UPDATE producto
-      SET 
-        Categoría = ?, 
-        Tipo = ?,
-        Nombre = ?,
-        Precio = ?,
-        Disponible = ?,
-        Imagen = ?
-    WHERE ID_Producto = ?;`, [categoria, tipo, nombre, Precio, Disponible, Imagen, id])
+    if (await Producto.hasColumn(connection, 'producto', 'Permite_Crema_Batida')) {
+      sets.push('Permite_Crema_Batida = ?')
+      values.push(permiteCremaBatida)
     }
+
+    if (await Producto.hasColumn(connection, 'producto', 'Permite_Modificar_Ingredientes')) {
+      sets.push('Permite_Modificar_Ingredientes = ?')
+      values.push(permiteModificarIngredientes)
+    }
+
+    values.push(id)
+    return connection.execute(`
+      UPDATE producto
+      SET ${sets.join(', ')}
+      WHERE ID_Producto = ?;`, values)
   }
 
   static async insertNewProductIng (connection, productId, insumoId) {
