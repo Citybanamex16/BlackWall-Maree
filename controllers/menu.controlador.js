@@ -162,6 +162,8 @@ exports.getMenuData = async (request, response, next) => {
     // console.log('Categorías Info: ', Allcategories)
     // console.log('Products Info: ', productsData)
 
+    console.log("productos obtenidos: ", productsData.length , " vs los 81 disponibles : ", productsData)
+
     response.status(200).json({
       ok: true,
       message: 'Consultas realizadas con exito',

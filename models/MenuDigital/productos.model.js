@@ -90,38 +90,39 @@ module.exports = class Producto {
   static async getValidProductData () {
     // 1. ejecutamos Consulta
     const [rows] = await db.execute(`
-  SELECT
-    P.ID_Producto AS productoID,
-    P.Nombre AS productoNombre,
-    P.Precio AS productoPrecio,
-    P.Categoría AS productoCategoria,
-    P.Tipo AS productoTipo,
-    P.Imagen AS productoImagen,
-    P.EsExclusivo AS esExclusivo,
-    I.ID_Insumo AS insumoID,
-    I.Nombre AS insumoNombre
-  FROM producto AS P
-  INNER JOIN producto_tiene_insumo AS PI
-    ON P.ID_Producto = PI.ID_Producto
-  INNER JOIN insumo AS I
-    ON PI.ID_Insumo = I.ID_Insumo
-  WHERE P.Disponible = 1
-    AND (
-      P.EsExclusivo = 0
-      OR (
-        P.EsExclusivo = 1
-        AND EXISTS (
-          SELECT 1
-          FROM producto_pertenece_evento AS ppe
-          INNER JOIN evento AS e
-            ON e.ID_Evento = ppe.ID_Evento
-          WHERE ppe.ID_Producto = P.ID_Producto
-            AND e.Activo = 1
-            AND CURDATE() BETWEEN e.Fecha_Inicio AND COALESCE(e.Fecha_Final, e.Fecha_Inicio)
+    SELECT
+      P.ID_Producto AS productoID,
+      P.Nombre AS productoNombre,
+      P.Precio AS productoPrecio,
+      P.Categoría AS productoCategoria,
+      P.Tipo AS productoTipo,
+      P.Imagen AS productoImagen,
+      P.EsExclusivo AS esExclusivo,
+      I.ID_Insumo AS insumoID,
+      I.Nombre AS insumoNombre
+    FROM producto AS P
+    -- CAMBIO AQUÍ: LEFT JOIN en lugar de INNER JOIN
+    LEFT JOIN producto_tiene_insumo AS PI
+      ON P.ID_Producto = PI.ID_Producto
+    LEFT JOIN insumo AS I
+      ON PI.ID_Insumo = I.ID_Insumo
+    WHERE P.Disponible = 1
+      AND (
+        P.EsExclusivo = 0
+        OR (
+          P.EsExclusivo = 1
+          AND EXISTS (
+            SELECT 1
+            FROM producto_pertenece_evento AS ppe
+            INNER JOIN evento AS e
+              ON e.ID_Evento = ppe.ID_Evento
+            WHERE ppe.ID_Producto = P.ID_Producto
+              AND e.Activo = 1
+              AND CURDATE() BETWEEN e.Fecha_Inicio AND COALESCE(e.Fecha_Final, e.Fecha_Inicio)
+          )
         )
       )
-    )
-`)
+  `)
 
     // console.log('Rows: ', rows)
 
