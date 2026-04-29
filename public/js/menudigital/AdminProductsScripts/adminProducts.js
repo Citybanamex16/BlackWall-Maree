@@ -718,7 +718,7 @@ function PostNewProduct (BackupIngredientes, ProductType) {
   console.log('Ingredientes Get: ', ingredientes)
 
   // 4.5 Añadir Tipo
-  data.categoría = ProductType
+  data.categoria = ProductType
 
   // 5. Validación de Reglas de negocio
   const validacion = validarDatosRegistro(data, BackupIngredientes)
@@ -791,7 +791,7 @@ function getSummaryLabel (key) {
     ImagenArchivo: 'Imagen',
     Imagen: 'Imagen',
     tipo: 'Tipo',
-    categoría: 'Categoría'
+    categoria: 'Categoría'
   }
 
   return labels[key] || key

@@ -23,6 +23,10 @@ function parseBooleanFlag (value) {
   return value === true || value === 1 ? 1 : 0
 }
 
+function firstDefined (...values) {
+  return values.find(value => value !== undefined)
+}
+
 function parseIngredientesPayload (value) {
   if (Array.isArray(value)) {
     return value
@@ -668,33 +672,42 @@ exports.postNewProduct = async (req, res, next) => {
 
     const NewProductData = req.body
     const ingredientesID = parseIngredientesPayload(NewProductData.ingredientesID)
-    const imagenProducto = obtenerRutaImagenProducto(req.file) || NewProductData.Imagen || null
-
-    // Extracción tipo map
-    const {
-      Nombre,
-      Precio,
-      Disponible,
-      permiteCremaBatida,
-      tipo,
-      categoría, // Renombramos 'type' a 'categoria'
-      Imagen
-    } = NewProductData
+    const nombreProducto = firstDefined(NewProductData.Nombre, NewProductData.nombre) ?? null
+    const precioProducto = firstDefined(NewProductData.Precio, NewProductData.precio) ?? null
+    const categoriaProducto = firstDefined(
+      NewProductData.categoria,
+      NewProductData.Categoria,
+      NewProductData['Categoría'],
+      NewProductData['categoría'],
+      NewProductData['categorÃ­a']
+    ) ?? null
+    const disponibleProducto = parseBooleanFlag(firstDefined(NewProductData.Disponible, NewProductData.disponible))
+    const tipoProducto = firstDefined(NewProductData.tipo, NewProductData.Tipo) ?? null
+    const permiteCremaBatidaProducto = parseBooleanFlag(
+      firstDefined(NewProductData.permiteCremaBatida, NewProductData.Permite_Crema_Batida)
+    )
+    const imagenProducto = obtenerRutaImagenProducto(req.file) ||
+      firstDefined(NewProductData.Imagen, NewProductData.imagen) ||
+      null
 
     console.log('Variables a insertar:', {
       AutoId: 'Generando...',
-      Nombre,
-      categoría,
-      Precio,
-      Disponible,
-      permiteCremaBatida: Boolean(permiteCremaBatida),
-      Imagen: imagenProducto || Imagen,
-      tipo,
+      Nombre: nombreProducto,
+      categoria: categoriaProducto,
+      Precio: precioProducto,
+      Disponible: disponibleProducto,
+      permiteCremaBatida: Boolean(permiteCremaBatidaProducto),
+      Imagen: imagenProducto,
+      tipo: tipoProducto,
       tieneIngredientes: ingredientesID.length > 0
     })
 
-    const validation = await productos.ValidarDatosRegistro({
-      ...NewProductData,
+    const validation = productos.ValidarDatosRegistro({
+      Nombre: nombreProducto,
+      Precio: precioProducto,
+      Disponible: disponibleProducto,
+      categoria: categoriaProducto,
+      tipo: tipoProducto,
       Imagen: imagenProducto
     })
     const AutoId = productos.generarID('PD')
@@ -714,13 +727,13 @@ exports.postNewProduct = async (req, res, next) => {
         await productos.insertNewProduct(
           connection,
           AutoId,
-          Nombre,
-          categoría,
-          Precio,
-          Disponible,
+          nombreProducto,
+          categoriaProducto,
+          precioProducto,
+          disponibleProducto,
           imagenProducto,
-          tipo,
-          parseBooleanFlag(permiteCremaBatida)
+          tipoProducto,
+          permiteCremaBatidaProducto
         )
 
         // 3. Inserciones en Ingrediente-Producto
@@ -741,13 +754,13 @@ exports.postNewProduct = async (req, res, next) => {
         const postResult = await productos.insertNewProduct(
           connection,
           AutoId,
-          Nombre,
-          categoría,
-          Precio,
-          Disponible,
+          nombreProducto,
+          categoriaProducto,
+          precioProducto,
+          disponibleProducto,
           imagenProducto,
-          tipo,
-          parseBooleanFlag(permiteCremaBatida)
+          tipoProducto,
+          permiteCremaBatidaProducto
         )
 
         if (postResult.affectedRows > 0) {
@@ -788,8 +801,20 @@ exports.postModifProduct = async (req, res, next) => {
 
   try {
     const newdata = req.body
+    const idProducto = firstDefined(newdata.id, req.params.id)
+    const nombreProducto = firstDefined(newdata.nombre, newdata.Nombre) ?? null
+    const categoriaProducto = firstDefined(
+      newdata.categoria,
+      newdata.Categoria,
+      newdata['Categoría'],
+      newdata['categoría']
+    ) ?? null
+    const tipoProducto = firstDefined(newdata.tipo, newdata.Tipo) ?? null
+    const precioProducto = firstDefined(newdata.precio, newdata.Precio) ?? null
+    const disponibleProducto = parseBooleanFlag(firstDefined(newdata.activo, newdata.Disponible, newdata.disponible))
+    const imagenProducto = firstDefined(newdata.imagen, newdata.Imagen) ?? null
     const newIngredientesRaw = newdata.ingredientes || [] // Evitamos fallos si viene vacío
-    const oldIngredientesRaw = await productos.fetchOneProductIngredientes(newdata.id)
+    const oldIngredientesRaw = await productos.fetchOneProductIngredientes(idProducto)
 
     // 1. LIMPIEZA DE DATOS: Convertimos los objetos complejos en arrays de IDs simples
     // newIds quedará como: ['IN37891778', 'IN12345678']
@@ -818,13 +843,13 @@ exports.postModifProduct = async (req, res, next) => {
     // A. Cambio de datos en el Producto
     const modifyResult = await productos.modifyProduct(
       connection,
-      newdata.id,
-      newdata.nombre,
-      newdata.Categoria,
-      newdata.tipo,
-      newdata.precio,
-      newdata.activo,
-      newdata.imagen,
+      idProducto,
+      nombreProducto,
+      categoriaProducto,
+      tipoProducto,
+      precioProducto,
+      disponibleProducto,
+      imagenProducto,
       parseBooleanFlag(newdata.permiteCremaBatida)
     )
     console.log(modifyResult)
@@ -833,7 +858,7 @@ exports.postModifProduct = async (req, res, next) => {
       console.log(`Eliminando ${aEliminar.length} relaciones obsoletas...`)
       // TODO: Placeholder para Modelo
       for (const ingElim of aEliminar) {
-        await productos.eliminateIngProduct(connection, newdata.id, ingElim)
+        await productos.eliminateIngProduct(connection, idProducto, ingElim)
       }
     }
     // C. Insercion de ingredientes nuevos :)
@@ -841,7 +866,7 @@ exports.postModifProduct = async (req, res, next) => {
       console.log(`Insertando ${aInsertar.length} relaciones nuevas...`)
       // TODO: Placeholder para Modelo
       for (const ingInsert of aInsertar) {
-        await productos.insertNewProductIng(connection, newdata.id, ingInsert)
+        await productos.insertNewProductIng(connection, idProducto, ingInsert)
       }
     }
 
@@ -880,7 +905,7 @@ exports.getIngredientesFullCatalog = async (req, res, next) => {
     console.log('Error en get Ingredientes: ', err)
     res.status(500).json({
       ok: false,
-      message: err
+      message: err.message || 'No es posible obtener ingredientes'
     })
   }
 }
@@ -888,6 +913,7 @@ exports.getIngredientesFullCatalog = async (req, res, next) => {
 /* Eliminar/Desactivar Producto */
 exports.deleteProducto = async (req, res, next) => {
   const { id } = req.body // Más limpio
+  let connection
 
   // Validar entrada
   if (!id) {
@@ -898,10 +924,13 @@ exports.deleteProducto = async (req, res, next) => {
   }
 
   try {
+    connection = await pool.getConnection()
+    await connection.beginTransaction()
     console.log('Eliminando producto con id: ', id)
-    const productoEliminado = await productos.eliminarProducto(id)
+    const productoEliminado = await productos.eliminarProducto(connection, id)
 
-    if (!productoEliminado) {
+    if (productoEliminado.affectedRows === 0) {
+      await connection.rollback()
       console.log('Error producto no encontrado')
       return res.status(404).json({
         ok: false,
@@ -909,21 +938,26 @@ exports.deleteProducto = async (req, res, next) => {
       })
     }
 
+    await connection.commit()
     console.log('Producto Eliminado con exito: ', productoEliminado)
     res.status(200).json({
       ok: true,
-      message: 'Producto Eliminado con éxito', // Mensaje preciso
-      data: productoEliminado // Opcional: devolver el objeto
+      message: 'Producto eliminado con éxito',
+      data: { id }
     })
   } catch (err) {
+    if (connection) {
+      await connection.rollback().catch(() => {})
+    }
     // 3. Logear el error real para debugging
     console.error('Error al eliminar producto:', err)
 
     res.status(500).json({
       ok: false,
-      message: 'Error interno del servidor', // Mensaje seguro para el cliente
-      error: process.env.NODE_ENV === 'development' ? err.message : {}
+      message: err.message || 'Error interno del servidor'
     })
+  } finally {
+    if (connection) connection.release()
   }
 }
 
@@ -942,7 +976,7 @@ exports.putDesactivarProducto = async (req, res, next) => {
     // 2. Asumimos que desactivarProducto devuelve el producto actualizado o null
     const productoDesactivado = await productos.desactivarProducto(id)
 
-    if (!productoDesactivado) {
+    if (productoDesactivado.affectedRows === 0) {
       console.log('Error producto no desactivado')
       return res.status(404).json({
         ok: false,
@@ -953,8 +987,8 @@ exports.putDesactivarProducto = async (req, res, next) => {
     console.log('Producto desactivado con exito')
     res.status(200).json({
       ok: true,
-      message: 'Producto desactivado con éxito', // Mensaje preciso
-      data: productoDesactivado // Opcional: devolver el objeto
+      message: 'Producto desactivado con éxito',
+      data: { id }
     })
   } catch (err) {
     // 3. Logear el error real para debugging
@@ -962,8 +996,7 @@ exports.putDesactivarProducto = async (req, res, next) => {
 
     res.status(500).json({
       ok: false,
-      message: 'Error interno del servidor', // Mensaje seguro para el cliente
-      error: process.env.NODE_ENV === 'development' ? err.message : {}
+      message: err.message || 'Error interno del servidor'
     })
   }
 }

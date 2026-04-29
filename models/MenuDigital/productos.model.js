@@ -269,13 +269,13 @@ module.exports = class Producto {
   }
 
   static async getAllIngredientes () {
-    return db.execute('SELECT Nombre as nombre, ID_Insumo as id, Precio as precio FROM INSUMO')
+    return db.execute('SELECT Nombre as nombre, ID_Insumo as id, Precio as precio FROM insumo WHERE Activo = 1 ORDER BY Nombre')
   }
 
   /* Modificar Un producto */
 
   static async fecthOneProduct (id) {
-    return db.execute('SELECT * FROM PRODUCTO WHERE ID_Producto = ?', [id])
+    return db.execute('SELECT * FROM producto WHERE ID_Producto = ?', [id])
   }
 
   static async fetchOneProductIngredientes (id) {
@@ -284,8 +284,12 @@ module.exports = class Producto {
 
   /* EliminarDesactivar producto PD30576515 */
 
-  static async eliminarProducto (id) {
-    const [result] = await db.execute('CALL eliminarProducto(?)', [id])
+  static async eliminarProducto (connection, id) {
+    await connection.execute('DELETE FROM producto_tiene_insumo WHERE ID_Producto = ?', [id])
+    await connection.execute('DELETE FROM orden_tiene_producto WHERE ID_Producto = ?', [id])
+    await connection.execute('DELETE FROM producto_pertenece_evento WHERE ID_Producto = ?', [id])
+    await connection.execute('DELETE FROM producto_tiene_promocion WHERE ID_Producto = ?', [id])
+    const [result] = await connection.execute('DELETE FROM producto WHERE ID_Producto = ?', [id])
     return result
   }
 

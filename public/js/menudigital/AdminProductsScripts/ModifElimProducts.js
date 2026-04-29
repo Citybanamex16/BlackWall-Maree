@@ -5,10 +5,11 @@
 
 async function getAllIngredientesCatalog () {
   try {
-    const response = await fetch('/Menu/globalAdminIngredientes')
+    const response = await fetch('/menu/globalAdminIngredientes')
 
     if (!response.ok) {
-      ShowErrorModal('Error en Backend global', 'No es posible obtener ingredientes')
+      const errorData = await response.json().catch(() => ({}))
+      ShowErrorModal('Error en Backend global', errorData.message || 'No es posible obtener ingredientes')
       return
     }
 
@@ -21,10 +22,11 @@ async function getAllIngredientesCatalog () {
 
 async function getAllTypesCatalog () {
   try {
-    const response = await fetch('/Menu/productosTipos')
+    const response = await fetch('/menu/productosTipos')
 
     if (!response.ok) {
-      throw new Error('Error al obtener tipos de BD')
+      const errorData = await response.json().catch(() => ({}))
+      throw new Error(errorData.message || 'Error al obtener tipos de BD')
     }
 
     const tiposCatalogData = await response.json()
@@ -52,8 +54,8 @@ async function ConstruirModifModal (productData, AllCategorys) {
 
   console.log('Obteniendo catalogo global de ingredientes ')
   catalogoIng = await getAllIngredientesCatalog()
-
   catalogTipos = await getAllTypesCatalog()
+  if (!catalogoIng || !catalogTipos) return
   console.log('Tipos obtenidos: ', catalogTipos)
 
   // 1. Limpieza
@@ -181,7 +183,7 @@ function buildPermiteCremaBatidaField (checked = false) {
 
 // ── Pre-seleccionar ingredientes en los dropdowns ──────────
 function precargarIngredientes (ingData) {
-  const rows = document.querySelectorAll('#ingredientsList .ingredient-row')
+  const rows = document.querySelectorAll('#ingredientsList .maree-ing-row')
   ingData.forEach((ing, i) => {
     if (!rows[i]) {
       onBtnIngNewClick() // crea la fila si no existe
@@ -374,8 +376,8 @@ async function postModifiedProduct (data) {
     })
     const response = await postrequest.json()
 
-    if (!response.ok) {
-      ShowErrorModal('Error Registrar Modificacion', 'La modificacion no se pudo registrar en la base de datos')
+    if (!postrequest.ok || !response.ok) {
+      ShowErrorModal('Error Registrar Modificacion', response.message || response.error || 'La modificacion no se pudo registrar en la base de datos')
       return
     }
 
@@ -555,17 +557,17 @@ async function eliminarProducto (idProd, nombreProd) {
       })
     })
 
-    const res = await response.json()
+    const res = await response.json().catch(() => ({}))
 
-    if (!res.ok) {
+    if (!response.ok || !res.ok) {
       console.log('Error desde backend')
-      throw new Error('Error al eliminar')
+      throw new Error(res.message || 'Error al eliminar')
     }
 
     // Exito en la consulta
     showSuccessModal('Eliminación realizada con exito', `${nombreProd} fue eliminado con exito`)
   } catch (error) {
-    ShowErrorModal('Error en eliminación', 'La conexión con la BD a fallado. Favor de intentarlo mas tarde')
+    ShowErrorModal('Error en eliminación', error.message || 'La conexión con la BD a fallado. Favor de intentarlo mas tarde')
   }
 }
 
@@ -582,16 +584,16 @@ async function desactivarProd (idProd, nombreProd) {
       })
     })
 
-    const res = await response.json()
+    const res = await response.json().catch(() => ({}))
 
-    if (!res.ok) {
+    if (!response.ok || !res.ok) {
       console.log('Error desde backend')
-      throw new Error('Error al Desactivar')
+      throw new Error(res.message || 'Error al desactivar')
     }
 
     // Exito en la consulta
     showSuccessModal('Desactivación realizada con exito', `${nombreProd} fue desactivado con exito`)
   } catch (error) {
-    ShowErrorModal('Error en Desactivación', 'La conexión con la BD a fallado. Favor de intentarlo mas tarde')
+    ShowErrorModal('Error en Desactivación', error.message || 'La conexión con la BD a fallado. Favor de intentarlo mas tarde')
   }
 }
