@@ -825,6 +825,7 @@ exports.getDiasHabiles = async (req, res, next) => {
 
 exports.postDiasHabiles = async (req, res, next) => {
   try {
+    console.log('BODY DIAS HABILES:', req.body)
     const idCalendario = String(req.body.id_calendario || '').trim()
     const idSucursal = String(req.body.id_sucursal || '').trim()
     const fecha = String(req.body.fecha || '').trim()
