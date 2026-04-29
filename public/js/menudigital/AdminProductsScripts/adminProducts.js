@@ -341,13 +341,15 @@ async function seleccionarTipoProducto (id) {
 
 /* ── Helper de campo por tipo ── */
 function createFieldElement (field) {
+  const fieldName = field.name ?? field.nombre
+  const fieldLabel = field.label ?? field.nombre
   const wrapper = document.createElement('div')
   wrapper.classList.add('maree-field', 'is-dynamic') // Usamos maree-field
 
   const label = document.createElement('label')
   label.classList.add('maree-label', 'is-dynamic') // Usamos maree-label
-  label.textContent = field.nombre
-  label.setAttribute('for', `field-${field.nombre}`)
+  label.textContent = fieldLabel
+  label.setAttribute('for', `field-${fieldName}`)
 
   const control = document.createElement('div')
   // No necesitamos la clase 'control' de Bulma, usamos la estructura de la Biblia
@@ -368,11 +370,11 @@ function createFieldElement (field) {
 
     const input = document.createElement('input')
     input.type = 'checkbox'
-    input.id = `field-${field.nombre}`
-    input.name = field.nombre
+    input.id = `field-${fieldName}`
+    input.name = fieldName
 
     checkRow.appendChild(input)
-    checkRow.append(` ${field.nombre}`)
+    checkRow.append(` ${fieldLabel}`)
 
     label.style.display = 'none' // El label de arriba no se usa en checkbox
     wrapper.appendChild(checkRow)
@@ -380,8 +382,8 @@ function createFieldElement (field) {
     const input = document.createElement('input')
     input.classList.add('maree-input') // Usamos maree-input de la Biblia
     input.type = mappedType
-    input.id = `field-${field.nombre}`
-    input.name = field.nombre
+    input.id = `field-${fieldName}`
+    input.name = fieldName
     input.required = true
 
     if (field.type === 'float') input.step = 'any'
@@ -803,7 +805,7 @@ function createSummaryElement (title, content) {
   } else {
     value = document.createElement('span')
     value.classList.add('maree-summary-value')
-    value.textContent = content || '—'
+    value.textContent = typeof content === 'boolean' ? (content ? 'Sí' : 'No') : (content || '—')
 
     // Si el contenido es un número con $, le damos un toque dorado
     if (String(content).includes('$')) {

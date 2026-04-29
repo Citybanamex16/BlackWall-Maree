@@ -66,7 +66,7 @@ async function ConstruirModifModal (productData, AllCategorys) {
 
   // 2. Construir fields desde productData
   // Keys que tienen tratamiento especial — se excluyen del loop general
-  const KEYS_EXCLUIDAS = ['id', 'ingredientes', 'categoria', 'tipo'] // Nombres Sincronizados con Backend
+  const KEYS_EXCLUIDAS = ['id', 'ingredientes', 'categoria', 'tipo', 'permiteCremaBatida'] // Nombres Sincronizados con Backend
 
   Object.entries(productData).forEach(([key, value]) => {
     if (KEYS_EXCLUIDAS.includes(key)) return
@@ -106,6 +106,10 @@ async function ConstruirModifModal (productData, AllCategorys) {
   const tipoField = buildTipoDropdown(catalogTipos, productData.tipo)
   tipoField.classList.add('is-dynamic')
   ModifForm.appendChild(tipoField)
+
+  const cremaBatidaField = buildPermiteCremaBatidaField(productData.permiteCremaBatida)
+  cremaBatidaField.classList.add('is-dynamic')
+  ModifForm.appendChild(cremaBatidaField)
 
   // 5. Pre-seleccionar ingredientes actuales en los dropdowns
   precargarIngredientes(ingData, productData)
@@ -161,6 +165,17 @@ function buildTipoDropdown (tipos, valorActual) {
         </select>
       </div>
     </div>`
+  return wrapper
+}
+
+function buildPermiteCremaBatidaField (checked = false) {
+  const wrapper = document.createElement('div')
+  wrapper.classList.add('maree-field', 'is-dynamic')
+  wrapper.innerHTML = `
+    <label class="maree-checkbox-row">
+      <input type="checkbox" id="field-permiteCremaBatida" name="permiteCremaBatida" ${checked ? 'checked' : ''}>
+      Permitir crema batida
+    </label>`
   return wrapper
 }
 
@@ -276,13 +291,16 @@ function conectarBotonesSummaryModif (modifiedData) {
 }
 
 // ── Normaliza cualquier valor a string legible para el usuario ──
-function formatearValor (valor) {
+function formatearValor (valor, key = '') {
   if (Array.isArray(valor)) {
     // Array de ingredientes [{id, nombre}] → "Bubulubu, Mocha"
     return valor.map(v => v.nombre ?? v).join(', ') || '—'
   }
   if (valor === null || valor === undefined || valor === '') return '—'
   if (typeof valor === 'boolean' || valor === '1' || valor === '0') {
+    if (String(key).toLowerCase() === 'permitecremabatida') {
+      return valor === '1' || valor === true ? 'Sí' : 'No'
+    }
     return valor === '1' || valor === true ? 'Activo' : 'Inactivo'
   }
   return String(valor)
@@ -291,8 +309,8 @@ function formatearValor (valor) {
 // ── Construye una fila de la tabla comparativa ──
 function crearFilaComparativa (key, valorOld, valorNew, huboCambio) {
   const clase = huboCambio ? 'con-cambio' : 'sin-cambio'
-  const oldTexto = formatearValor(valorOld)
-  const newTexto = formatearValor(valorNew)
+  const oldTexto = formatearValor(valorOld, key)
+  const newTexto = formatearValor(valorNew, key)
 
   return `
     <div class="modif-summary-row ${clase}">

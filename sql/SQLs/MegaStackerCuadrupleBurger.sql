@@ -1748,6 +1748,7 @@ CREATE TABLE `producto` (
   `Disponible` tinyint(1) DEFAULT 1,
   `Tipo` varchar(50) NOT NULL,
   `Imagen` text DEFAULT NULL,
+  `Permite_Crema_Batida` tinyint(1) NOT NULL DEFAULT 0,
   `EsExclusivo` tinyint(1) NOT NULL DEFAULT 0 COMMENT '0 = producto normal; 1 = producto exclusivo de evento'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish2_ci;
 
@@ -2915,6 +2916,10 @@ ALTER TABLE `rol_tiene_privilegio`
 ALTER TABLE `turno_tiene_sucursal`
   ADD CONSTRAINT `turno_tiene_sucursal_ibfk_1` FOREIGN KEY (`ID_Turno`) REFERENCES `turno` (`ID_Turno`),
   ADD CONSTRAINT `turno_tiene_sucursal_ibfk_2` FOREIGN KEY (`ID_Sucursal`) REFERENCES `sucursal` (`ID_Sucursal`);
+
+UPDATE `producto` p
+LEFT JOIN `categoría` c ON c.Nombre = p.`Categoría`
+SET p.`Permite_Crema_Batida` = COALESCE(c.`Permite_Crema_Batida`, 0);
 COMMIT;
 
 

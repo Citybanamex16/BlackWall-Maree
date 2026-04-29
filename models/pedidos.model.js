@@ -3,10 +3,6 @@ const Royalty = require('../models/royalty.model.js')
 
 const CREMA_BATIDA_INGREDIENT_ID = 'INCRMBT001'
 
-function permiteCremaBatidaPorNombre (nombreProducto) {
-  return !String(nombreProducto || '').toLowerCase().includes('chamoyada')
-}
-
 module.exports = class Pedido {
   static fetchOrders () {
     const query = `
@@ -174,15 +170,22 @@ module.exports = class Pedido {
         [productoMetaRows] = await db.execute(
           `SELECT
             p.ID_Producto AS id,
-            p.Nombre AS nombre,
+            p.Permite_Crema_Batida AS permiteCremaBatida
+          FROM producto p
+          WHERE p.ID_Producto IN (${idsProductos.map(() => '?').join(',')})`,
+          idsProductos
+        )
+      } catch (error) {
+        if (error.code !== 'ER_BAD_FIELD_ERROR') throw error
+        [productoMetaRows] = await db.execute(
+          `SELECT
+            p.ID_Producto AS id,
             c.Permite_Crema_Batida AS permiteCremaBatida
           FROM producto p
           LEFT JOIN categoría c ON p.Categoría = c.Nombre
           WHERE p.ID_Producto IN (${idsProductos.map(() => '?').join(',')})`,
           idsProductos
         )
-      } catch (error) {
-        if (error.code !== 'ER_BAD_FIELD_ERROR') throw error
       }
     }
 
@@ -191,9 +194,7 @@ module.exports = class Pedido {
     resultSets[1].forEach(i => lista.insumos[i.id] = parseFloat(i.Precio));
     productoMetaRows.forEach(p => {
       lista.productoMeta[p.id] = {
-        permiteCremaBatida:
-          (p.permiteCremaBatida === 1 || p.permiteCremaBatida === '1') &&
-          permiteCremaBatidaPorNombre(p.nombre)
+        permiteCremaBatida: p.permiteCremaBatida === 1 || p.permiteCremaBatida === '1'
       };
     });
 

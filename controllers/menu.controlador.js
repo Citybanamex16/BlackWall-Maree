@@ -11,8 +11,8 @@ const db = require('../util/database.js')
 
 const CREMA_BATIDA_INGREDIENT_ID = 'INCRMBT001'
 
-function permiteCremaBatidaPorNombre (nombreProducto) {
-  return !String(nombreProducto || '').toLowerCase().includes('chamoyada')
+function parseBooleanFlag (value) {
+  return value === true || value === 'true' || value === 1 || value === '1' ? 1 : 0
 }
 
 async function fetchPlatilloRows (id) {
@@ -20,12 +20,11 @@ async function fetchPlatilloRows (id) {
     return await db.execute(
       `SELECT p.ID_Producto, p.Nombre, p.Precio, p.Disponible,
               p.Categoría as base,
-              c.Permite_Crema_Batida as permiteCremaBatida,
+              p.Permite_Crema_Batida as permiteCremaBatida,
               i.ID_Insumo as ing_id,
               i.Nombre    as ing_nombre,
               i.Precio    as ing_precio
        FROM producto p
-       LEFT JOIN categoría c ON p.Categoría = c.Nombre
        LEFT JOIN producto_tiene_insumo pti ON p.ID_Producto = pti.ID_Producto
        LEFT JOIN insumo i ON pti.ID_Insumo = i.ID_Insumo
        WHERE p.ID_Producto = ?`,
@@ -194,8 +193,7 @@ exports.getPlatillo = async (request, response, next) => {
       .filter(r => r.ing_id)
       .map(r => ({ id: r.ing_id, nombre: r.ing_nombre, precio: parseFloat(r.ing_precio) }))
 
-    const permiteCremaBatidaCategoria = row.permiteCremaBatida === 1 || row.permiteCremaBatida === '1'
-    const permiteCremaBatida = permiteCremaBatidaCategoria && permiteCremaBatidaPorNombre(row.Nombre)
+    const permiteCremaBatida = row.permiteCremaBatida === 1 || row.permiteCremaBatida === '1'
     const [catalogoRows] = await db.execute(
       `SELECT i.ID_Insumo as id, i.Nombre as nombre, i.Precio as precio
        FROM insumo i
@@ -585,6 +583,7 @@ const ProductFields = [
   { nombre: 'Nombre', type: 'string' },
   { nombre: 'Precio', type: 'float' },
   { nombre: 'Disponible', type: 'boolean' },
+  { nombre: 'permiteCremaBatida', label: 'Permitir crema batida', type: 'boolean' },
   { nombre: 'Imagen', type: 'string' }
 ]
 
@@ -632,6 +631,7 @@ exports.postNewProduct = async (req, res, next) => {
       Nombre,
       Precio,
       Disponible,
+      permiteCremaBatida,
       Imagen,
       tipo,
       categoría, // Renombramos 'type' a 'categoria'
@@ -644,6 +644,7 @@ exports.postNewProduct = async (req, res, next) => {
       categoría,
       Precio,
       Disponible,
+      permiteCremaBatida: Boolean(permiteCremaBatida),
       Imagen,
       tipo,
       tieneIngredientes: ingredientesID?.length > 0
@@ -659,7 +660,17 @@ exports.postNewProduct = async (req, res, next) => {
         await connection.beginTransaction()
 
         // 2. Inserción en Producto
-        await productos.insertNewProduct(connection, AutoId, Nombre, categoría, Precio, Disponible, Imagen, tipo)
+        await productos.insertNewProduct(
+          connection,
+          AutoId,
+          Nombre,
+          categoría,
+          Precio,
+          Disponible,
+          Imagen,
+          tipo,
+          parseBooleanFlag(permiteCremaBatida)
+        )
 
         // 3. Inserciones en Ingrediente-Producto
         for (const ing of ingredientesID) {
@@ -676,7 +687,17 @@ exports.postNewProduct = async (req, res, next) => {
         })
       } else {
         // Caso producto Sin ingredientes
-        const postResult = await productos.insertNewProduct(connection, AutoId, Nombre, categoría, Precio, Disponible, Imagen, tipo)
+        const postResult = await productos.insertNewProduct(
+          connection,
+          AutoId,
+          Nombre,
+          categoría,
+          Precio,
+          Disponible,
+          Imagen,
+          tipo,
+          parseBooleanFlag(permiteCremaBatida)
+        )
 
         if (postResult.affectedRows > 0) {
           console.log('Producto Insertado con exito')
@@ -739,7 +760,17 @@ exports.postModifProduct = async (req, res, next) => {
     await connection.beginTransaction()
 
     // A. Cambio de datos en el Producto
-    const modifyResult = await productos.modifyProduct(connection, newdata.id, newdata.nombre, newdata.Categoria, newdata.tipo, newdata.precio, newdata.activo, newdata.imagen)
+    const modifyResult = await productos.modifyProduct(
+      connection,
+      newdata.id,
+      newdata.nombre,
+      newdata.Categoria,
+      newdata.tipo,
+      newdata.precio,
+      newdata.activo,
+      newdata.imagen,
+      parseBooleanFlag(newdata.permiteCremaBatida)
+    )
     console.log(modifyResult)
     // B. Eliminacion de ingredientes removidos
     if (aEliminar.length > 0) {

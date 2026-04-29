@@ -1,10 +1,18 @@
 /* global jest, describe, test, expect, beforeEach */
 
+jest.mock('../../util/database.js', () => ({
+  getConnection: jest.fn().mockResolvedValue({
+    beginTransaction: jest.fn(),
+    commit: jest.fn(),
+    release: jest.fn(),
+    execute: jest.fn()
+  })
+}))
+
+jest.mock('../../models/MenuDigital/productos.model.js')
+
 const productosController = require('../../controllers/menu.controlador.js')
 const productosModel = require('../../models/MenuDigital/productos.model.js')
-
-// 1. Le decimos a Jest que intercepte el modelo
-jest.mock('../../models/MenuDigital/productos.model.js')
 
 describe('Pruebas de Registro de Producto Nuevo', () => {
   let req, res
@@ -26,15 +34,18 @@ describe('Pruebas de Registro de Producto Nuevo', () => {
       Nombre: 'Crepa Mareé',
       Precio: 145,
       Disponible: true,
+      permiteCremaBatida: false,
       Imagen: 'URL-de-imagen',
-      type: 'Platillo',
-      Categoría: 'dulce',
+      tipo: 'Artesanal',
+      categoría: 'Platillo',
       ingredientesID: []
     }
 
     // 2. Simulamos que el modelo responde éxito (mockResolvedValue)
     // MySQL suele devolver un array donde la primera posición tiene el insertId
-    productosModel.insertNewProduct.mockResolvedValue([{ insertId: 100 }])
+    productosModel.ValidarDatosRegistro.mockReturnValue(true)
+    productosModel.generarID.mockReturnValue('PD12345678')
+    productosModel.insertNewProduct.mockResolvedValue({ affectedRows: 1, insertId: 100 })
 
     // 3. Ejecutamos la función del controlador
     await productosController.postNewProduct(req, res)
@@ -46,7 +57,9 @@ describe('Pruebas de Registro de Producto Nuevo', () => {
       expect.any(String), // Categoría
       145, // Precio (puedes poner el valor exacto)
       true, // Disponible
-      expect.any(String) // Imagen
+      expect.any(String), // Imagen
+      expect.any(String), // Tipo
+      0 // Permite crema batida
     )
 
     // 4. VERIFICACIONES (Assertions)
