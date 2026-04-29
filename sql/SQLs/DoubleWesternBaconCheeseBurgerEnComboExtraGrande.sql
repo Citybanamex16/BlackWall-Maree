@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Servidor: localhost
--- Tiempo de generación: 29-04-2026 a las 18:34:02
+-- Tiempo de generación: 29-04-2026 a las 20:40:31
 -- Versión del servidor: 10.4.28-MariaDB
 -- Versión de PHP: 8.2.4
 
@@ -306,9 +306,9 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `SP_GuardarItemHibrido` (IN `p_idOrd
 END$$
 
 DROP PROCEDURE IF EXISTS `sp_GuardarRoyaltyPromocion`$$
-CREATE DEFINER=`root`@`localhost` PROCEDURE `sp_GuardarRoyaltyPromocion` (IN `p_NombreRoyalty` VARCHAR(100), IN `p_IDPromocion` INT)   BEGIN
-  INSERT INTO estado_royalty_da_promociones (Nombre_Royalty, ID_Promocion)
-  VALUES (p_NombreRoyalty, p_IDPromocion);
+CREATE DEFINER=`root`@`localhost` PROCEDURE `sp_GuardarRoyaltyPromocion` (IN `p_NombreRoyalty` VARCHAR(100), IN `p_IDPromocion` VARCHAR(20))   BEGIN
+    INSERT INTO estado_royalty_da_promociones (Nombre_Royalty, ID_Promocion)
+    VALUES (p_NombreRoyalty, p_IDPromocion);
 END$$
 
 DROP PROCEDURE IF EXISTS `sp_RegistrarReview`$$
@@ -603,7 +603,6 @@ CREATE TABLE `codigo_verificacion` (
 --
 
 INSERT INTO `codigo_verificacion` (`Numero_Telefonico`, `Codigo`, `Fecha_Creacion`, `Fecha_Expiracion`, `Usado`) VALUES
-('55-1156-9800', '381845', '2026-04-29 16:27:21', '2026-04-29 10:42:21', 0),
 ('55-3225-9858', '889-50', '2026-09-10 06:00:00', '2026-09-10 00:00:00', 1),
 ('55-3885-6878', '183-38', '2026-04-25 06:00:00', '2026-04-25 00:00:00', 0),
 ('55-4606-3624', '697-13', '2026-06-30 06:00:00', '2026-06-30 00:00:00', 1),
@@ -690,7 +689,7 @@ INSERT INTO `colaborador` (`ID_Colaborador`, `ID_Rol`, `Nombre`, `Contraseña`) 
 ('CL78145878', 'Colaborador', 'David Alejandro Robles Camacho', 'CL034953!'),
 ('CL80532101', 'Colaborador', 'Ana Paula Ortega', 'CL030421!'),
 ('CL85062921', 'Colaborador', 'Daniela Suarez Loy', 'CL017635!'),
-('CL85565990', 'Administrador', 'Juan Pablo Cedillo Peréz', 'CL006901!'),
+('CL85565990', 'Administrador', 'Juan Pablo Cedillo Peréz', '$2b$10$zm7tJhuPFqHbOys.vhYqpOVzBi0FlGEQBEZgK5jyt6W'),
 ('CL85772520', 'Colaborador', 'Sara Flores Gonzalez', 'CL026063!'),
 ('CL94221819', 'Colaborador', 'Grezia Trujillo', 'CL027249!'),
 ('CL95096755', 'Colaborador', 'Betzabeth Durán Solorza', 'CL039025!');
@@ -1398,7 +1397,10 @@ INSERT INTO `log_accesos_otp` (`id`, `telefono`, `accion`, `fecha`) VALUES
 (45, '55-1156-9800', 'OTP_ELIMINADO', '2026-04-29 13:33:04'),
 (46, '55-1156-9800', 'OTP_ELIMINADO', '2026-04-29 14:44:57'),
 (47, '55-1156-9800', 'OTP_ELIMINADO', '2026-04-29 15:05:24'),
-(48, '55-1579-6753', 'OTP_ELIMINADO', '2026-04-29 16:27:51');
+(48, '55-1579-6753', 'OTP_ELIMINADO', '2026-04-29 16:27:51'),
+(49, '55-1156-9800', 'OTP_ELIMINADO', '2026-04-29 16:37:52'),
+(50, '55-1156-9800', 'OTP_ELIMINADO', '2026-04-29 16:37:52'),
+(51, '55-1156-9800', 'OTP_ELIMINADO', '2026-04-29 16:49:21');
 
 -- --------------------------------------------------------
 
@@ -2879,7 +2881,7 @@ ALTER TABLE `historial_canjes_royalty`
 -- AUTO_INCREMENT de la tabla `log_accesos_otp`
 --
 ALTER TABLE `log_accesos_otp`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=49;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=52;
 
 --
 -- AUTO_INCREMENT de la tabla `orden_tiene_producto`
