@@ -6,7 +6,7 @@ module.exports = class Producto {
     let rows
 
     try {
-      [rows] = await db.execute(`SELECT 
+      const result = await db.execute(`SELECT 
       P.ID_Producto AS productoID,
       P.nombre AS productoNombre, 
       P.precio AS productoPrecio, 
@@ -22,10 +22,11 @@ module.exports = class Producto {
       LEFT JOIN producto_tiene_insumo AS PI ON P.ID_Producto = PI.ID_Producto
       LEFT JOIN insumo AS I ON PI.ID_Insumo = I.ID_Insumo
       ;`)
+      rows = result[0]
     } catch (error) {
       if (error.code !== 'ER_BAD_FIELD_ERROR') throw error
 
-      [rows] = await db.execute(`SELECT 
+      const fallbackResult = await db.execute(`SELECT 
       P.ID_Producto AS productoID,
       P.nombre AS productoNombre, 
       P.precio AS productoPrecio, 
@@ -41,9 +42,8 @@ module.exports = class Producto {
       LEFT JOIN producto_tiene_insumo AS PI ON P.ID_Producto = PI.ID_Producto
       LEFT JOIN insumo AS I ON PI.ID_Insumo = I.ID_Insumo
       ;`)
+      rows = fallbackResult[0]
     }
-
-    console.log('Rows: ', rows)
 
     // 2. Agrupamos utilizando Mapping
     const productosMap = {}

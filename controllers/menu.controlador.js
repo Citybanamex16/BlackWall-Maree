@@ -577,7 +577,7 @@ exports.getProductsCatalog = async (req, res, next) => {
     console.log('Error en get Menu: ', err)
     res.status(500).json({
       ok: false,
-      message: err
+      message: err.message || 'Error al obtener catalogos de productos'
     })
   }
 }
@@ -775,7 +775,7 @@ exports.postNewProduct = async (req, res, next) => {
     console.log('Error en conexion a BD: ', error)
     res.status(500).json({
       ok: false,
-      message: 'Error en conexión a BD'
+      message: error.message || 'Error en conexión a BD'
     })
   } finally {
     if (connection) connection.release() // Siempre liberar la conexión

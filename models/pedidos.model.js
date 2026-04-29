@@ -167,7 +167,7 @@ module.exports = class Pedido {
 
     if (idsProductos.length > 0) {
       try {
-        [productoMetaRows] = await db.execute(
+        const result = await db.execute(
           `SELECT
             p.ID_Producto AS id,
             p.Permite_Crema_Batida AS permiteCremaBatida
@@ -175,9 +175,10 @@ module.exports = class Pedido {
           WHERE p.ID_Producto IN (${idsProductos.map(() => '?').join(',')})`,
           idsProductos
         )
+        productoMetaRows = result[0]
       } catch (error) {
         if (error.code !== 'ER_BAD_FIELD_ERROR') throw error
-        [productoMetaRows] = await db.execute(
+        const fallbackResult = await db.execute(
           `SELECT
             p.ID_Producto AS id,
             c.Permite_Crema_Batida AS permiteCremaBatida
@@ -186,6 +187,7 @@ module.exports = class Pedido {
           WHERE p.ID_Producto IN (${idsProductos.map(() => '?').join(',')})`,
           idsProductos
         )
+        productoMetaRows = fallbackResult[0]
       }
     }
 
