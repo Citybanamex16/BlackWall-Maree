@@ -154,7 +154,6 @@ async function crearLoyaltyObject (telefono, nombreCliente, nombreRoyalty, punto
           balance: { int: maxPuntos ?? 0 },
           label: 'Meta de visitas'
         },
-        stampInfos: generarStampInfos(puntosActuales ?? 0, maxPuntos ?? 0),
         textModulesData: [
           {
             id: 'nivel',
@@ -179,6 +178,7 @@ async function crearLoyaltyObject (telefono, nombreCliente, nombreRoyalty, punto
 async function actualizarLoyaltyObject (telefono, nombreCliente, nombreRoyalty, puntosActuales, maxPuntos) {
   const classId = getClassId(nombreRoyalty)
   const objectId = `${ISSUER_ID}.cliente_${limpiarTelefono(telefono)}`
+  const sellosUrl = `https://res.cloudinary.com/dvbrrtput/image/upload/sellos/stamp_${Math.min(puntosActuales, 8)}.png`;
 
   await walletClient.loyaltyobject.patch({
     resourceId: objectId,
@@ -198,7 +198,13 @@ async function actualizarLoyaltyObject (telefono, nombreCliente, nombreRoyalty, 
         balance: { int: maxPuntos },
         label: 'Meta'
       },
-      stampInfos: generarStampInfos(puntosActuales ?? 0, maxPuntos ?? 0),
+      // Reemplaza tu bloque anterior por este:
+      heroImage: {
+        sourceUri: {
+          uri: sellosUrl 
+        }
+      },
+      imageModulesData: [],
       textModulesData: [
         {
           id: 'nivel',
