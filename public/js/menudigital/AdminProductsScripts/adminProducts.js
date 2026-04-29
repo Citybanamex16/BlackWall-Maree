@@ -1034,12 +1034,11 @@ function limpiarModal (contenedor) {
 
 // Funcion para cerrar TODOS los modals
 function closeAllModals () {
-  // 1. Recolecta todos los <dialog> que tienen la clase 'modal'
-  const modales = document.querySelectorAll('dialog.mymodal')
+  // Cierra cualquier dialog abierto para evitar que quede el resumen detrás del modal de éxito.
+  const modales = document.querySelectorAll('dialog[open]')
 
   // 2. Itera sobre cada modal encontrado
   modales.forEach(modal => {
-    // 3. Cierra el modal usando el método nativo del DOM
     modal.close()
   })
 

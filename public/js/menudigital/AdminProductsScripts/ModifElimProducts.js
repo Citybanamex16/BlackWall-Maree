@@ -68,7 +68,7 @@ async function ConstruirModifModal (productData, AllCategorys) {
 
   // 2. Construir fields desde productData
   // Keys que tienen tratamiento especial — se excluyen del loop general
-  const KEYS_EXCLUIDAS = ['id', 'ingredientes', 'categoria', 'tipo', 'permiteCremaBatida'] // Nombres Sincronizados con Backend
+  const KEYS_EXCLUIDAS = ['id', 'ingredientes', 'categoria', 'tipo', 'activo', 'permiteCremaBatida'] // Nombres Sincronizados con Backend
 
   Object.entries(productData).forEach(([key, value]) => {
     if (KEYS_EXCLUIDAS.includes(key)) return
@@ -108,6 +108,10 @@ async function ConstruirModifModal (productData, AllCategorys) {
   const tipoField = buildTipoDropdown(catalogTipos, productData.tipo)
   tipoField.classList.add('is-dynamic')
   ModifForm.appendChild(tipoField)
+
+  const activoField = buildActivoDropdown(productData.activo)
+  activoField.classList.add('is-dynamic')
+  ModifForm.appendChild(activoField)
 
   const cremaBatidaField = buildPermiteCremaBatidaField(productData.permiteCremaBatida)
   cremaBatidaField.classList.add('is-dynamic')
@@ -167,6 +171,25 @@ function buildTipoDropdown (tipos, valorActual) {
         </select>
       </div>
     </div>`
+  return wrapper
+}
+
+function buildActivoDropdown (valorActual) {
+  const valorSeleccionado = String(valorActual ? 1 : 0)
+  const wrapper = document.createElement('div')
+  wrapper.classList.add('field', 'is-dynamic')
+
+  wrapper.innerHTML = `
+    <label class="label">Disponibilidad</label>
+    <div class="control">
+      <div class="select is-fullwidth">
+        <select id="selectActivo" name="activo">
+          <option value="1" ${valorSeleccionado === '1' ? 'selected' : ''}>Activo</option>
+          <option value="0" ${valorSeleccionado === '0' ? 'selected' : ''}>Desactivado</option>
+        </select>
+      </div>
+    </div>`
+
   return wrapper
 }
 
