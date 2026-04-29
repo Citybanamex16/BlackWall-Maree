@@ -547,6 +547,8 @@ exports.confirmarPedido = async (request, response, next) => {
     })
   }
 
+  let royalty
+
   try {
     // --- INICIO DEL POLICÍA DE ROYALTY ---
     const itemConPremio = items.find(i => i.premioAplicado === true)
@@ -623,6 +625,7 @@ exports.getProducts = (req, res, next) => {
   const breadcrumbs = nav.getBreadcrumbs('AdminSection')
   res.render('admin/products', { breadcrumbs })
 }
+
 
 exports.getProductsCatalog = async (req, res, next) => {
   console.log('Backend obteniendo todos los Productos, ingredientes & catalogos')
