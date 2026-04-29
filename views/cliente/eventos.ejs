@@ -15,15 +15,14 @@ const textoEstado = (evento) => evento.estatus === 'live' ? 'Activo ahora' : 'Mu
 %>
 <body class="eventos-cliente-page">
   <div id="sticky-top" class="sticky-top-app">
-    <% if (!datosCliente) { %>
-      <button type="button" class="user-profile events-logo-button" onclick="location.href='/menu/menu';" aria-label="Volver al menu"><div class="logo-area"><span class="logo-text">MAREE</span><span class="logo-sub">Eventos activos</span></div></button>
-      <button type="button" class="royalty-badge" onclick="location.href='/cliente/login';" aria-label="Iniciar sesion"><i class="fas fa-crown"></i><span>Iniciar sesion</span></button>
-    <% } else { %>
-      <div class="user-profile"><div class="logo-area"><span class="logo-text">MAREE</span><span class="logo-sub">Bienvenido, <%= datosCliente.nombre %></span></div></div>
-      <div class="royalty-actions"><button type="button" class="btn-royalty-active" onclick="location.href='/royalty/royaltyUser'"><i class="fas fa-crown"></i> Rewards</button><button type="button" class="btn-logout" onclick="location.href='/cliente/logout';" aria-label="Cerrar sesion">Logout</button></div>
-    <% } %>
+    <div class="user-profile" style="cursor: pointer;" onclick="location.href='/';">
+      <div class="logo-area">
+        <span class="logo-text">MAREE</span>
+        <span class="logo-sub">Eventos activos</span>
+      </div>
+    </div>
   </div>
-
+  
   <section class="events-sticky-nav" style="position:fixed;top:60px;left:0;width:100%;z-index:95;">
     <div class="events-nav-shell">
       <span class="events-page-kicker"><i class="fas fa-calendar-alt"></i> agenda Maree</span>
