@@ -9,8 +9,6 @@ const Categoria = require('../models/categoria.model.js')
 const Tipo = require('../models/tipo.model.js')
 const Sucursal = require('../models/sucursal.model.js')
 
-// const bcrypt = require('bcryptjs')
-
 // const path = require('path')
 
 // Exports
@@ -756,8 +754,6 @@ exports.postNewCollaborator = async (req, res, next) => {
         }
       })
     }
-
-    // const contrasenaHasheada = await bcrypt.hash(contrasena, 12)
 
     await Colaborador.create(
       idColaborador,
