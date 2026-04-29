@@ -20,9 +20,9 @@ Pass: CL006901!
 
 */
 
-/*
+
 // Charly
-/*
+
 // Pool de conexiones
 const pool = mysql.createPool({
   host: 'localhost',
@@ -34,7 +34,7 @@ const pool = mysql.createPool({
   connectionLimit: 10
 
 })
-*/
+/*
 // Santi
 // Pool de conexiones
 
@@ -47,6 +47,8 @@ const pool = mysql.createPool({
   connectionLimit: 10
 
 })
+
+*/
 
 
 /*
