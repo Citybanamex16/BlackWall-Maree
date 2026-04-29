@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Servidor: localhost
--- Tiempo de generación: 28-04-2026 a las 21:25:54
+-- Tiempo de generación: 29-04-2026 a las 18:17:21
 -- Versión del servidor: 10.4.28-MariaDB
 -- Versión de PHP: 8.2.4
 
@@ -20,8 +20,6 @@ SET time_zone = "+00:00";
 --
 -- Base de datos: `mareebd`
 --
-CREATE DATABASE IF NOT EXISTS `mareebd` DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish2_ci;
-USE `mareebd`;
 
 DELIMITER $$
 --
@@ -68,20 +66,20 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `ActualizarIngrediente` (IN `p_idIns
 END$$
 
 DROP PROCEDURE IF EXISTS `ActualizarTipo`$$
-CREATE DEFINER=`root`@`localhost` PROCEDURE `ActualizarTipo` (IN `oldNombre` VARCHAR(50) CHARSET utf8mb4 COLLATE utf8mb4_spanish2_ci, IN `newNombre` VARCHAR(50) CHARSET utf8mb4 COLLATE utf8mb4_spanish2_ci)   BEGIN
-    DECLARE EXIT HANDLER FOR SQLEXCEPTION
-    BEGIN
-        SET FOREIGN_KEY_CHECKS = 1;
-        ROLLBACK;
-        RESIGNAL;
-    END;
+CREATE DEFINER=`root`@`localhost` PROCEDURE `ActualizarTipo` (IN `oldNombre` VARCHAR(50) CHARSET utf8mb4 COLLATE utf8mb4_spanish2_ci, IN `newNombre` VARCHAR(50) CHARSET utf8mb4 COLLATE utf8mb4_spanish2_ci, IN `newCategoria` VARCHAR(50) CHARSET utf8mb4 COLLATE utf8mb4_spanish2_ci)   BEGIN
+  DECLARE EXIT HANDLER FOR SQLEXCEPTION
+  BEGIN
+    SET FOREIGN_KEY_CHECKS = 1;
+    ROLLBACK;
+    RESIGNAL;
+  END;
 
-    START TRANSACTION;
-        SET FOREIGN_KEY_CHECKS = 0;
-        UPDATE `tipos` SET nombre = newNombre WHERE nombre = oldNombre;
-        UPDATE `producto` SET `Tipo` = newNombre WHERE `Tipo` = oldNombre;
-        SET FOREIGN_KEY_CHECKS = 1;
-    COMMIT;
+  START TRANSACTION;
+    SET FOREIGN_KEY_CHECKS = 0;
+    UPDATE `tipos` SET nombre = newNombre, categoria = newCategoria WHERE nombre = oldNombre;
+    UPDATE `producto` SET `Tipo` = newNombre WHERE `Tipo` = oldNombre;
+    SET FOREIGN_KEY_CHECKS = 1;
+  COMMIT;
 END$$
 
 DROP PROCEDURE IF EXISTS `EliminarIngrediente`$$
@@ -375,19 +373,21 @@ INSERT INTO `calendario` (`ID_Calendario`, `ID_Sucursal`, `Fecha`, `Es_Laboral`,
 DROP TABLE IF EXISTS `categoría`;
 CREATE TABLE `categoría` (
   `Nombre` varchar(50) NOT NULL,
-  `Permite_Crema_Batida` tinyint(1) NOT NULL DEFAULT 0
+  `Permite_Crema_Batida` tinyint(1) NOT NULL DEFAULT 0,
+  `Visible_Menu` tinyint(1) NOT NULL DEFAULT 1
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish2_ci;
 
 --
 -- Volcado de datos para la tabla `categoría`
 --
 
-INSERT INTO `categoría` (`Nombre`, `Permite_Crema_Batida`) VALUES
-('Bebidas', 1),
-('Crepas', 1),
-('Otros', 0),
-('Platillo', 0),
-('Waffles', 1);
+INSERT INTO `categoría` (`Nombre`, `Permite_Crema_Batida`, `Visible_Menu`) VALUES
+('Bebidas', 1, 1),
+('CrepaPerso', 0, 0),
+('Crepas', 1, 1),
+('Otros', 0, 1),
+('Platillo', 0, 1),
+('Waffles', 1, 1);
 
 -- --------------------------------------------------------
 
@@ -415,6 +415,7 @@ CREATE TABLE `cliente` (
 
 INSERT INTO `cliente` (`Numero_Telefonico`, `Nombre_Royalty`, `Nombre`, `Correo`, `Genero`, `Fecha_Nacimiento`, `Visitas_Actuales`, `ID_Rol`, `tokens_gastados`, `username`) VALUES
 ('11111113', NULL, 'AAAAA', NULL, NULL, NULL, 0, 'Usuario', 0, 'aaaaa_79075'),
+('23003224', NULL, 'alskdfjlas', NULL, NULL, NULL, 0, 'Usuario', 0, NULL),
 ('442134789', NULL, 'Lalo', NULL, NULL, NULL, 0, 'Usuario', 0, 'lalo_82252'),
 ('4428199000', NULL, 'Juan Pablo Juarez', NULL, NULL, NULL, 0, 'Usuario', 0, 'juan_74039'),
 ('44294924', NULL, 'RN', NULL, NULL, NULL, 0, 'Usuario', 0, 'rn_23437'),
@@ -474,18 +475,15 @@ INSERT INTO `cliente` (`Numero_Telefonico`, `Nombre_Royalty`, `Nombre`, `Correo`
 ('81-3104-6812', 'Fan', 'Carlos Delgado Contreras', 'A01712819@tec.mx', 'Masculino', '2005-08-16', 0, 'Usuario', 0, 'carlos_62983'),
 ('8131046812', NULL, 'Cliente', NULL, NULL, NULL, 0, 'Usuario', 0, 'cliente_75598'),
 ('8131046813', NULL, 'Cliente', NULL, NULL, NULL, 0, 'Usuario', 0, 'cliente_89045'),
-('8134556800', NULL, 'Juan Pablo Juarez', NULL, NULL, NULL, 0, 'Usuario', 0, 'juan_28430');
+('8134556800', NULL, 'Juan Pablo Juarez', NULL, NULL, NULL, 0, 'Usuario', 0, 'juan_28430'),
+('8787698698', NULL, 'klkhjglk', NULL, NULL, NULL, 0, 'Usuario', 0, NULL);
 
 --
 -- Disparadores `cliente`
 --
+DROP TRIGGER IF EXISTS `actualizar_nivel_por_visitas`;
 DELIMITER $$
-
-DROP TRIGGER IF EXISTS `actualizar_nivel_por_visitas`$$
-
-CREATE TRIGGER `actualizar_nivel_por_visitas` BEFORE UPDATE ON `cliente` 
-FOR EACH ROW 
-BEGIN
+CREATE TRIGGER `actualizar_nivel_por_visitas` BEFORE UPDATE ON `cliente` FOR EACH ROW BEGIN
     -- Solo actuamos si el número de visitas ha cambiado
     IF OLD.Visitas_Actuales <> NEW.Visitas_Actuales THEN
         SET NEW.Nombre_Royalty = (
@@ -496,9 +494,10 @@ BEGIN
             LIMIT 1
         );
     END IF;
-END$$
-
+END
+$$
 DELIMITER ;
+
 -- --------------------------------------------------------
 
 --
@@ -817,8 +816,6 @@ INSERT INTO `detalle_orden_insumos` (`id`, `id_orden_producto`, `ID_Insumo`, `ID
 (36, 84, 'IN18602747', 'OD18014207', 'extra', 10.00),
 (37, 85, 'IN97359153', 'OD61327051', 'extra', 13.00),
 (38, 85, 'IN09927406', 'OD61327051', 'base', 0.00),
-(39, 86, 'IN04894004', 'OD95000104', 'extra', 19.00),
-(40, 86, 'IN22595885', 'OD95000104', 'base', 0.00),
 (41, 87, 'IN70788691', 'OD23256977', 'base', 0.00),
 (42, 88, 'IN52715589', 'OD99905005', 'base', 0.00),
 (43, 89, 'IN33700399', 'OD99905005', 'base', 0.00),
@@ -843,7 +840,42 @@ INSERT INTO `detalle_orden_insumos` (`id`, `id_orden_producto`, `ID_Insumo`, `ID
 (62, 100, 'IN68496031', 'OD43056671', 'base', 0.00),
 (63, 101, 'IN84763568', 'OD43056671', 'base', 0.00),
 (64, 102, 'IN07275176', 'OD52065130', 'extra', 15.00),
-(65, 102, 'IN63629622', 'OD52065130', 'base', 0.00);
+(65, 102, 'IN63629622', 'OD52065130', 'base', 0.00),
+(66, 103, 'IN68496031', 'OD51057080', 'base', 0.00),
+(67, 104, 'IN59087286', 'OD24603256', 'extra', 18.00),
+(68, 104, 'IN02803814', 'OD24603256', 'base', 0.00),
+(69, 104, 'IN21585929', 'OD24603256', 'base', 0.00),
+(70, 105, 'INCRMBT001', 'OD55743192', 'extra', 15.00),
+(71, 105, 'IN63629622', 'OD55743192', 'base', 0.00),
+(72, 106, 'IN06332851', 'OD55743192', 'extra', 0.00),
+(73, 106, 'IN70367614', 'OD55743192', 'extra', 0.00),
+(74, 106, 'IN93539227', 'OD55743192', 'extra', 0.00),
+(75, 107, 'IN36386148', 'OD43904707', 'extra', 18.00),
+(76, 107, 'IN63629622', 'OD43904707', 'base', 0.00),
+(77, 108, 'IN15204720', 'OD43904707', 'extra', 0.00),
+(78, 108, 'IN06332851', 'OD43904707', 'extra', 0.00),
+(79, 108, 'IN18968294', 'OD43904707', 'extra', 0.00),
+(80, 109, 'IN65885034', 'OD43904707', 'base', 0.00),
+(81, 110, 'INCRMBT001', 'OD82375787', 'extra', 15.00),
+(82, 110, 'IN07275176', 'OD82375787', 'base', 0.00),
+(83, 110, 'IN84763568', 'OD82375787', 'base', 0.00),
+(84, 111, 'IN02201393', 'OD60548358', 'extra', 15.00),
+(85, 111, 'IN84763568', 'OD60548358', 'base', 0.00),
+(86, 112, 'INCRMBT001', 'OD60548358', 'extra', 15.00),
+(87, 112, 'IN07275176', 'OD60548358', 'base', 0.00),
+(88, 112, 'IN84763568', 'OD60548358', 'base', 0.00),
+(89, 113, 'IN06332851', 'OD60548358', 'extra', 0.00),
+(90, 113, 'IN28033998', 'OD60548358', 'extra', 0.00),
+(91, 113, 'IN15500744', 'OD60548358', 'extra', 0.00),
+(92, 113, 'IN07050794', 'OD60548358', 'extra', 0.00),
+(93, 114, 'IN63629622', 'OD91866409', 'base', 0.00),
+(94, 115, 'IN02201393', 'OD91866409', 'extra', 15.00),
+(95, 115, 'IN18968294', 'OD91866409', 'base', 0.00),
+(96, 116, 'IN02803814', 'OD91866409', 'extra', 15.00),
+(97, 116, 'IN87022030', 'OD91866409', 'base', 0.00),
+(98, 117, 'IN06332851', 'OD91866409', 'extra', 0.00),
+(99, 117, 'IN15500744', 'OD91866409', 'extra', 0.00),
+(100, 117, 'IN07050794', 'OD91866409', 'extra', 0.00);
 
 -- --------------------------------------------------------
 
@@ -868,7 +900,7 @@ CREATE TABLE `estado_royalty` (
 INSERT INTO `estado_royalty` (`Nombre_Royalty`, `Número_de_prioridad`, `Descripción`, `Max_Visitas`, `Min_Visitas`, `descuento_premio`) VALUES
 ('Fan', 1, '\"En este nivel normalmente se ofrecen beneficios exclusivos: acceso anticipado a contenido, mercancía especial, descuentos mayores, eventos privados, interacción más directa con el creador o la marca, e incluso reconocimiento público dentro de la comunidad. La idea es premiar la lealtad y el compromiso constante.\"', 10, 5, 0.5),
 ('Mega Fan', 3, '\"El nivel mega fan va un paso más allá. Está pensado para quienes demuestran un compromiso más fuerte y continuo. En este nivel pueden ofrecerse ventajas más destacadas como experiencias más personalizadas, eventos exclusivos, productos especiales o menciones directas. Se convierte en un espacio más selecto dentro de la comunidad, donde el vínculo con la marca o creador es más cercano y visible.Es una especie de escalera de compromiso: cada nivel no solo ofrece beneficios, sino también mayor pertenencia y conexión.\"', 20, 16, 0.75),
-('Super Fan', 2, '\"Un nivel super fan representa a quienes ya no solo siguen el contenido, sino que participan activamente en la comunidad. Aquí suele haber beneficios atractivos como acceso anticipado a publicaciones, contenido exclusivo adicional, descuentos especiales o dinámicas privadas. También puede incluir interacción más cercana con el creador o reconocimiento dentro del grupo. La intención es recompensar la constancia y el entusiasmo.\"', 15, 11, 1.0);
+('Super Fan', 2, '\"Un nivel super fan representa a quienes ya no solo siguen el contenido, sino que participan activamente en la comunidad. Aquí suele haber beneficios atractivos como acceso anticipado a publicaciones, contenido exclusivo adicional, descuentos especiales o dinámicas privadas. También puede incluir interacción más cercana con el creador o reconocimiento dentro del grupo. La intención es recompensar la constancia y el entusiasmo.\"', 15, 11, 1);
 
 -- --------------------------------------------------------
 
@@ -1022,16 +1054,17 @@ INSERT INTO `insumo` (`ID_Insumo`, `Nombre`, `Categoría`, `Precio`, `Activo`, `
 ('IN03374506', 'arugula', 'Crepas', 15.00, 1, '15'),
 ('IN04894004', 'Kinder Delice', 'Crepas', 15.00, 1, '15'),
 ('IN05269621', 'Cajeta de la casa', 'Platillo', 15.00, 1, '15'),
-('IN06332851', 'Nutella', 'Crepas', 15.00, 1, '20'),
-('IN07050794', 'Nuez', 'Platillo', 15.00, 1, '15'),
+('IN06332851', 'Nutella', 'CrepaPerso', 15.00, 1, '20'),
+('IN07050794', 'Nuez', 'CrepaPerso', 15.00, 1, '15'),
 ('IN07275176', 'Chai', 'Bebidas', 15.00, 1, '15'),
 ('IN09130588', 'Mermelada de fresa', 'Platillo', 15.00, 0, '15'),
 ('IN09927406', 'Fresa ', 'Platillo', 18.00, 1, '15'),
+('IN11447684', 'BaseWAF', 'Waffles', 0.00, 1, NULL),
 ('IN12080526', 'Miel de maple', 'Platillo', 15.00, 0, '15'),
 ('IN13297648', 'Mocha Chalry', 'Bebidas', 15.00, 1, NULL),
 ('IN13442507', 'Coco Tostado', 'Platillo', 14.00, 1, '15'),
 ('IN15204720', 'Albahaca', 'Crepas', 12.00, 1, '15'),
-('IN15500744', 'Zarzamora', 'Platillo', 15.00, 1, '15'),
+('IN15500744', 'Zarzamora', 'CrepaPerso', 15.00, 1, '15'),
 ('IN16420525', 'Avellana', 'Platillo', 17.00, 1, '15'),
 ('IN18602747', 'queso parmesano', 'Platillo', 10.00, 1, '15'),
 ('IN18968294', 'Pesto', 'Crepas', 12.00, 1, '15'),
@@ -1041,10 +1074,10 @@ INSERT INTO `insumo` (`ID_Insumo`, `Nombre`, `Categoría`, `Precio`, `Activo`, `
 ('IN21585929', 'Oreo', 'Platillo', 10.00, 1, '15'),
 ('IN21882955', 'Fresas naturales', 'Platillo', 23.00, 1, '15'),
 ('IN22197307', 'Lechera', 'Platillo', 23.00, 0, '15'),
-('IN22595885', 'jamón', 'Crepas', 21.00, 1, '15'),
+('IN22595885', 'jamón', 'Waffles', 21.00, 1, '15'),
 ('IN24527442', 'Crema de cacahuate', 'Platillo', 22.00, 0, '15'),
 ('IN25799043', 'tres quesos', 'Platillo', 10.00, 1, '15'),
-('IN28033998', 'Plátano', 'Platillo', 24.00, 0, '15'),
+('IN28033998', 'Plátano', 'CrepaPerso', 24.00, 1, '15'),
 ('IN29033240', 'Chai', 'Platillo', 21.00, 1, '15'),
 ('IN29165394', 'Philadelphia', 'Platillo', 11.00, 0, '15'),
 ('IN33700399', 'Arándanos', 'Platillo', 22.00, 1, '15'),
@@ -1108,9 +1141,10 @@ INSERT INTO `insumo` (`ID_Insumo`, `Nombre`, `Categoría`, `Precio`, `Activo`, `
 ('IN90060430', 'Mocha', 'Platillo', 11.00, 1, '15'),
 ('IN90562067', 'Flor de naranja', 'Platillo', 24.00, 1, '15'),
 ('IN93347807', 'Caramelo', 'Platillo', 15.00, 1, '15'),
-('IN93539227', 'M&M\'s', 'Platillo', 15.00, 1, '15'),
+('IN93539227', 'M&M\'s', 'CrepaPerso', 15.00, 1, '15'),
 ('IN97359153', 'Cebolla', 'Platillo', 15.00, 1, '15'),
 ('IN98136923', 'Mermelada de zarzamora', 'Platillo', 15.00, 0, '15'),
+('IN98930776', 'PruebaTIPO', 'Platillo', 10.00, 1, NULL),
 ('IN99852788', 'Vainilla', 'Platillo', 15.00, 1, '15'),
 ('INCRMBT001', 'Crema batida', 'Platillo', 15.00, 1, '15');
 
@@ -1133,24 +1167,29 @@ CREATE TABLE `insumo_categoria` (
 INSERT INTO `insumo_categoria` (`ID_Insumo`, `Nom_Categoria`) VALUES
 ('IN02201393', 'Bebidas'),
 ('IN02803814', 'Platillo'),
+('IN02803814', 'Waffles'),
 ('IN03374506', 'Crepas'),
 ('IN03374506', 'Platillo'),
 ('IN04894004', 'Crepas'),
 ('IN04894004', 'Platillo'),
 ('IN04894004', 'Waffles'),
 ('IN05269621', 'Platillo'),
+('IN06332851', 'CrepaPerso'),
 ('IN06332851', 'Crepas'),
 ('IN06332851', 'Platillo'),
+('IN07050794', 'CrepaPerso'),
 ('IN07050794', 'Platillo'),
 ('IN07275176', 'Bebidas'),
 ('IN07275176', 'Platillo'),
 ('IN09130588', 'Platillo'),
 ('IN09927406', 'Platillo'),
+('IN11447684', 'Waffles'),
 ('IN12080526', 'Platillo'),
 ('IN13297648', 'Bebidas'),
 ('IN13442507', 'Platillo'),
 ('IN15204720', 'Crepas'),
 ('IN15204720', 'Platillo'),
+('IN15500744', 'CrepaPerso'),
 ('IN15500744', 'Platillo'),
 ('IN16420525', 'Platillo'),
 ('IN18602747', 'Platillo'),
@@ -1160,14 +1199,13 @@ INSERT INTO `insumo_categoria` (`ID_Insumo`, `Nom_Categoria`) VALUES
 ('IN20877882', 'Platillo'),
 ('IN21283895', 'Platillo'),
 ('IN21585929', 'Platillo'),
+('IN21585929', 'Waffles'),
 ('IN21882955', 'Platillo'),
 ('IN22197307', 'Platillo'),
-('IN22595885', 'Crepas'),
-('IN22595885', 'Platillo'),
 ('IN22595885', 'Waffles'),
 ('IN24527442', 'Platillo'),
 ('IN25799043', 'Platillo'),
-('IN28033998', 'Platillo'),
+('IN28033998', 'CrepaPerso'),
 ('IN29033240', 'Platillo'),
 ('IN29165394', 'Platillo'),
 ('IN33700399', 'Platillo'),
@@ -1194,6 +1232,7 @@ INSERT INTO `insumo_categoria` (`ID_Insumo`, `Nom_Categoria`) VALUES
 ('IN58688454', 'Platillo'),
 ('IN58759482', 'Platillo'),
 ('IN59087286', 'Platillo'),
+('IN59087286', 'Waffles'),
 ('IN59824502', 'Platillo'),
 ('IN60313355', 'Platillo'),
 ('IN61916404', 'Platillo'),
@@ -1234,10 +1273,50 @@ INSERT INTO `insumo_categoria` (`ID_Insumo`, `Nom_Categoria`) VALUES
 ('IN90060430', 'Platillo'),
 ('IN90562067', 'Platillo'),
 ('IN93347807', 'Platillo'),
+('IN93539227', 'CrepaPerso'),
 ('IN93539227', 'Platillo'),
 ('IN97359153', 'Platillo'),
 ('IN98136923', 'Platillo'),
+('IN98930776', 'Platillo'),
 ('IN99852788', 'Platillo');
+
+-- --------------------------------------------------------
+
+--
+-- Estructura de tabla para la tabla `insumo_tipo`
+--
+
+DROP TABLE IF EXISTS `insumo_tipo`;
+CREATE TABLE `insumo_tipo` (
+  `ID_Insumo` varchar(10) NOT NULL,
+  `Nom_Tipo` varchar(50) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish2_ci;
+
+--
+-- Volcado de datos para la tabla `insumo_tipo`
+--
+
+INSERT INTO `insumo_tipo` (`ID_Insumo`, `Nom_Tipo`) VALUES
+('IN02201393', 'Frío'),
+('IN02803814', 'Artesanal'),
+('IN02803814', 'PruebasWAFFLE'),
+('IN02803814', 'Salado'),
+('IN03374506', 'Salado'),
+('IN03374506', 'Vegano'),
+('IN04894004', 'PruebasWAFFLE'),
+('IN05269621', 'Dulce'),
+('IN05269621', 'Salado'),
+('IN06332851', 'Dulce'),
+('IN06332851', 'Untable'),
+('IN07050794', 'Topping'),
+('IN11447684', 'PruebasWAFFLE'),
+('IN15500744', 'Fruta'),
+('IN21585929', 'PruebasWAFFLE'),
+('IN21585929', 'w2'),
+('IN22595885', 'PruebasWAFFLE'),
+('IN28033998', 'Fruta'),
+('IN59087286', 'w2'),
+('IN93539227', 'Topping');
 
 -- --------------------------------------------------------
 
@@ -1301,7 +1380,10 @@ INSERT INTO `log_accesos_otp` (`id`, `telefono`, `accion`, `fecha`) VALUES
 (41, '55-1156-9800', 'OTP_ELIMINADO', '2026-04-28 18:23:53'),
 (42, '55-1156-9800', 'OTP_ELIMINADO', '2026-04-28 18:27:03'),
 (43, '55-1156-9800', 'OTP_ELIMINADO', '2026-04-28 18:31:05'),
-(44, '55-1156-9800', 'OTP_ELIMINADO', '2026-04-28 18:32:48');
+(44, '55-1156-9800', 'OTP_ELIMINADO', '2026-04-28 18:32:48'),
+(45, '55-1156-9800', 'OTP_ELIMINADO', '2026-04-29 13:33:04'),
+(46, '55-1156-9800', 'OTP_ELIMINADO', '2026-04-29 14:44:57'),
+(47, '55-1156-9800', 'OTP_ELIMINADO', '2026-04-29 15:05:24');
 
 -- --------------------------------------------------------
 
@@ -1402,6 +1484,7 @@ INSERT INTO `orden` (`ID_Orden`, `ID_Turno`, `Numero_Telefonico`, `Tipo_Orden`, 
 ('OD20045010', 'TN26496107', '55-3885-6878', 'Sucursal', NULL, 'Mariana Frías Olguín', 'Entregado', '2026-09-15 06:00:00', NULL),
 ('OD23043487', 'TN26496107', '55-9297-8935', 'Pick-up', NULL, 'Juan Pablo Domínguez Ángel', 'Listo', '2026-01-27 06:00:00', NULL),
 ('OD23256977', 'TN26496107', '5532519266', 'Sucursal', NULL, 'Ximena Guadalupe Córdoba Ángeles', 'Entregado', '2026-04-27 02:25:41', NULL),
+('OD24603256', 'TN26496107', '8787698698', 'Pick-up', NULL, 'klkhjglk', 'Pendiente', '2026-04-29 03:29:21', NULL),
 ('OD27810441', 'TN26496107', '8131046813', 'Pick-up', NULL, 'Juan Pablo Juarez', 'Cancelado', '2026-04-23 05:00:46', NULL),
 ('OD29743595', 'TN26496107', '8131046813', 'Pick-up', NULL, 'Pepe', 'Pendiente', '2026-04-28 17:08:49', NULL),
 ('OD29765935', 'TN26496107', '5511569800', 'Pick-up', NULL, 'Andrea Iliana Cantú Mayorga', 'Cancelado', '2026-04-24 03:35:41', NULL),
@@ -1419,19 +1502,23 @@ INSERT INTO `orden` (`ID_Orden`, `ID_Turno`, `Numero_Telefonico`, `Tipo_Orden`, 
 ('OD39256016', 'TN26496107', '8131046812', 'Pick-up', NULL, 'Cliente', 'Cancelado', '2026-04-22 03:19:18', NULL),
 ('OD41009687', 'TN26496107', '8134556800', 'Pick-up', NULL, 'Juan Pablo Juarez', 'Cancelado', '2026-04-23 04:53:41', NULL),
 ('OD43056671', 'TN26496107', '8131046813', 'Pick-up', 'Hola', 'Juan Pablo Juarez', 'Pendiente', '2026-04-28 19:09:49', NULL),
+('OD43904707', 'TN26496107', '8131046813', 'Pick-up', NULL, 'Juan Pablo Juarez', 'Pendiente', '2026-04-29 13:55:31', NULL),
 ('OD45723683', 'TN47025996', '55-5018-5507', 'Sucursal', NULL, 'Armando Montealegre Villagrán', 'Cancelado', '2026-12-02 06:00:00', NULL),
 ('OD45999906', 'TN26496107', '4428199000', 'Pick-up', NULL, 'Juan Pablo Juarez', 'Cancelado', '2026-04-23 04:56:04', NULL),
 ('OD46400505', 'TN26496107', '8131046813', 'Pick-up', NULL, 'Cliente', 'Cancelado', '2026-04-22 14:58:48', NULL),
 ('OD48634931', 'TN26496107', '55-3672-3148', 'Delivery', NULL, 'Alejandro Contreras Magallanes', 'Preparando', '2026-06-18 06:00:00', NULL),
+('OD51057080', 'TN26496107', '23003224', 'Sucursal', 'Quiero alzheim', 'alskdfjlas', 'Pendiente', '2026-04-29 01:51:06', NULL),
 ('OD51835069', 'TN46937585', '55-8616-1973', 'Pick-up', NULL, 'Alberto Barba Arroyo', 'Preparando', '2026-10-25 06:00:00', NULL),
 ('OD52065130', 'TN26496107', '8131046813', 'Pick-up', 'Pepe', 'Pepe', 'Pendiente', '2026-04-28 19:23:50', NULL),
 ('OD52937565', 'TN26496107', '55-2884-7043', 'Sucursal', NULL, 'Eduardo Hernández Alonso', 'Listo', '2026-11-15 06:00:00', NULL),
 ('OD54215310', 'TN47025996', '55-8361-8067', 'Delivery', NULL, 'Katya Jiménez Antonio', 'Listo', '2026-01-07 06:00:00', NULL),
 ('OD54491099', 'TN26496107', '55-6788-4484', 'Sucursal', NULL, 'Víctor Hugo Esquivel Feregrino', 'Preparando', '2026-05-22 06:00:00', NULL),
 ('OD55639966', 'TN47025996', '55-7731-4202', 'Delivery', NULL, 'Renata Martínez Ozumbilla', 'Entregado', '2026-07-08 06:00:00', NULL),
+('OD55743192', 'TN26496107', '5511569800', 'Pick-up', 'Canela a parte', 'Andrea Iliana Cantú Mayorga', 'Pendiente', '2026-04-29 13:34:26', NULL),
 ('OD56710921', 'TN26496107', '5532519266', 'Sucursal', NULL, 'Ximena Guadalupe Córdoba Ángeles', 'Pendiente', '2026-04-27 13:16:47', NULL),
 ('OD58196492', 'TN47025996', '55-3938-1454', 'Pick-up', NULL, 'Hannah Carolina Hernández Reyes', 'Preparando', '2026-08-15 06:00:00', NULL),
 ('OD59250531', 'TN47025996', '55-3647-8536', 'Pick-up', NULL, 'Dana Izel Martínez García', 'Preparando', '2026-05-13 06:00:00', NULL),
+('OD60548358', 'TN26496107', '5511569800', 'Pick-up', 'Crema batida en un vasito por favor', 'Andrea Iliana Cantú Mayorga', 'Pendiente', '2026-04-29 15:06:42', NULL),
 ('OD61327051', 'TN26496107', '11111113', 'Sucursal', NULL, 'AAAAA', 'Preparando', '2026-04-25 00:11:12', NULL),
 ('OD61352807', 'TN26496107', '5511569800', 'Pick-up', NULL, 'Andrea Iliana Cantú Mayorga', 'Pendiente', '2026-04-28 17:16:21', NULL),
 ('OD62481224', 'TN26496107', '55-1156-9800', 'Pick-up', NULL, 'Andrea Iliana Cantú Mayorga', 'Preparando', '2026-08-06 06:00:00', NULL),
@@ -1450,7 +1537,9 @@ INSERT INTO `orden` (`ID_Orden`, `ID_Turno`, `Numero_Telefonico`, `Tipo_Orden`, 
 ('OD77070485', 'TN26496107', '8131046812', 'Pick-up', NULL, 'Pepe', 'Cancelado', '2026-04-23 03:18:28', NULL),
 ('OD81178473', 'TN46937585', '55-7378-3019', 'Delivery', NULL, 'Jonathan de Jesús Anaya Correa', 'Listo', '2026-06-23 06:00:00', NULL),
 ('OD81537460', 'TN26496107', '55-2669-1307', 'Pick-up', NULL, 'Ana Camila Cuevas González', 'Listo', '2026-04-06 06:00:00', NULL),
+('OD82375787', 'TN26496107', '8131046813', 'Pick-up', 'Lo logro hector', 'Hector Tamayo', 'Pendiente', '2026-04-29 14:01:09', NULL),
 ('OD82644084', 'TN26496107', '55-1579-6753', 'Pick-up', NULL, 'Eduardo Daniel Juárez Pineda', 'Entregado', '2026-07-26 06:00:00', NULL),
+('OD91866409', 'TN26496107', '8131046813', 'Pick-up', '¡Ganamos!', 'Jhonathan Lugo', 'Pendiente', '2026-04-29 15:31:39', NULL),
 ('OD94187424', 'TN26496107', '55-1827-6651', 'Sucursal', NULL, 'David Antonio Gandara Ruiz', 'Entregado', '2026-05-17 06:00:00', NULL),
 ('OD95000104', 'TN26496107', '44294924', 'Sucursal', NULL, 'RN', 'Cancelado', '2026-04-25 01:08:13', NULL),
 ('OD96155417', 'TN46937585', '55-3251-9266', 'Pick-up', NULL, 'Ximena Guadalupe Córdoba Ángeles', 'Entregado', '2026-05-21 06:00:00', NULL),
@@ -1561,7 +1650,6 @@ INSERT INTO `orden_tiene_producto` (`id_orden_producto`, `ID_Orden`, `ID_Product
 (83, 'OD18014207', 'PD28020090', 1, 75.00),
 (84, 'OD18014207', 'PD_COMODIN', 1, 109.00),
 (85, 'OD61327051', 'PD28020090', 1, 88.00),
-(86, 'OD95000104', 'PD64070159', 1, 139.00),
 (87, 'OD23256977', 'PD62596246', 1, 67.50),
 (88, 'OD99905005', 'PD52877596', 1, 70.00),
 (89, 'OD99905005', 'PD00387421', 1, 155.00),
@@ -1577,7 +1665,22 @@ INSERT INTO `orden_tiene_producto` (`id_orden_producto`, `ID_Orden`, `ID_Product
 (99, 'OD43056671', 'PD_COMODIN', 1, 119.00),
 (100, 'OD43056671', 'PD43258149', 1, 58.50),
 (101, 'OD43056671', 'PD22069675', 1, 79.20),
-(102, 'OD52065130', 'PD12662761', 1, 85.00);
+(102, 'OD52065130', 'PD12662761', 1, 85.00),
+(103, 'OD51057080', 'PD43258149', 1, 58.50),
+(104, 'OD24603256', 'PD44830249', 1, 138.00),
+(105, 'OD55743192', 'PD12662761', 1, 50.00),
+(106, 'OD55743192', 'PD_COMODIN', 1, 119.00),
+(107, 'OD43904707', 'PD12662761', 1, 88.00),
+(108, 'OD43904707', 'PD_COMODIN', 1, 119.00),
+(109, 'OD43904707', 'PD72174317', 1, 48.00),
+(110, 'OD82375787', 'PD85731838', 1, 85.00),
+(111, 'OD60548358', 'PD22069675', 1, 94.20),
+(112, 'OD60548358', 'PD85731838', 1, 85.00),
+(113, 'OD60548358', 'PD_COMODIN', 1, 134.00),
+(114, 'OD91866409', 'PD12662761', 1, 70.00),
+(115, 'OD91866409', 'PD66451976', 1, 104.00),
+(116, 'OD91866409', 'PD01400719', 1, 154.50),
+(117, 'OD91866409', 'PD_COMODIN', 1, 119.00);
 
 -- --------------------------------------------------------
 
@@ -1748,107 +1851,110 @@ CREATE TABLE `producto` (
   `Disponible` tinyint(1) DEFAULT 1,
   `Tipo` varchar(50) NOT NULL,
   `Imagen` text DEFAULT NULL,
-  `Permite_Crema_Batida` tinyint(1) NOT NULL DEFAULT 0,
   `Permite_Modificar_Ingredientes` tinyint(1) NOT NULL DEFAULT 1,
-  `EsExclusivo` tinyint(1) NOT NULL DEFAULT 0 COMMENT '0 = producto normal; 1 = producto exclusivo de evento'
+  `EsExclusivo` tinyint(1) NOT NULL DEFAULT 0 COMMENT '0 = producto normal; 1 = producto exclusivo de evento',
+  `Permite_Crema_Batida` tinyint(1) NOT NULL DEFAULT 0
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish2_ci;
 
 --
 -- Volcado de datos para la tabla `producto`
 --
 
-INSERT INTO `producto` (`ID_Producto`, `Tamaño`, `Categoría`, `Nombre`, `Precio`, `Disponible`, `Tipo`, `Imagen`, `EsExclusivo`) VALUES
-('PD_COMODIN', 'Básico', 'Otros', 'Crepa Personalizada', 50.00, 1, 'Otros', NULL, 0),
-('PD00387421', 'Chico', 'Platillo', 'Oreo', 155.00, 1, 'Artesanal', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSQdyxtqipw0WM6la2yQR9S8zAPHpytii7cIw&s', 0),
-('PD01400719', 'Chico', 'Platillo', 'Cookies N\' Cream', 155.00, 1, 'Artesanal', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRDPLJEYcnQ4U-l-lfscAIBi1troxfm3uEEmA&s', 0),
-('PD01887055', 'Chico', 'Platillo', '4 Quesos', 155.00, 1, 'Salado', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQbEZwXDbBsJy80jBGwxHhB04UgEuJ2Z95zmg&s', 0),
-('PD01993843', 'Chico', 'Bebidas', 'Espresso con soya', 25.00, 0, 'Caliente', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSxxdoFNAcppkd8DKoyJ9X1ppnP5pIlScEHJA&s', 0),
-('PD02624644', 'Chico', 'Platillo', 'M&M´s', 155.00, 1, 'Artesanal', 'https://www.cocinadelirante.com/800x600/filters:format(webp):quality(75)/sites/default/files/images/2025/04/receta-de-crepas-con-queso-y-platano.jpg', 0),
-('PD03687244', 'Chico', 'Platillo', 'Mazapán', 140.00, 0, 'Artesanal', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQNmO4dfIq0PDJ7w8b4llpPzSmRef3nZKn15g&s', 0),
-('PD09374303', 'Chico', 'Bebidas', 'Iced Latte', 85.00, 0, 'Frío', 'https://myeverydaytable.com/iced-latte/', 0),
-('PD10782835', 'Chico', 'Bebidas', 'Refresco', 45.00, 1, 'Otros', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQocj0qc80fSGx0_CzOd5nU3AfC4eDh8NuXCw&s', 0),
-('PD12662761', 'Chico', 'Bebidas', 'Jamaica con arándanos, lima y madreselva', 70.00, 1, 'Caliente', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS_5wgNA6S_FGDGyR3WYZwiY5O23QrHfU9Lrg&s', 0),
-('PD12929845', 'Chico', 'Bebidas', 'Mocha', 99.00, 1, 'Frío', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSdeikbrU4NecryZO5GX72Ps13tZM2rns4Z2Q&s', 0),
-('PD13048411', 'Chico', 'Platillo', 'La Champi', 155.00, 1, 'Salado', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQpF5f5ZsW28SGIE8Igp1zibfeHx6ax2EHtag&s', 0),
-('PD14332305', 'Chico', 'Bebidas', 'Matcha', 99.00, 1, 'Frío', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQywjNVWD6kkk6bBLkEhDKyKbmXkVRQ_pfknA&s', 0),
-('PD16012525', 'Chico', 'Bebidas', 'Frapuccino', 99.00, 1, 'Frío', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQjgDUxsc0OW5htUWs0YXGcJ0szHOrTtoTx_w&s', 0),
-('PD18516039', 'Chico', 'Platillo', 'Coco Almond', 150.00, 1, 'Artesanal', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTHATP_XWITucUtg6r4y4IYcxCrCVDpmEY0Sg&s', 0),
-('PD18785978', 'Chico', 'Platillo', 'Dos ingredientes', 105.00, 1, 'Otros', 'https://www.directoalpaladar.com.mx/postres/como-hacer-masa-para-crepas-muy-ligeras-finitas-jugosas-ideal-para-hacer-crepas-dulces-saladas', 0),
-('PD19634039', 'Chico', 'Bebidas', 'Matchai', 99.00, 1, 'Frío', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR2XabaGar5zJxmaTKTPZHhB5kuJhrUxWTZlA&s', 0),
-('PD20020753', 'Chico', 'Bebidas', 'Chai', 99.00, 1, 'Frío', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTYbghvQZMQZiZwQyq4mahtzAnQcv0u-qaxgQ&s', 0),
-('PD21109349', 'Chico', 'Platillo', 'Magnum', 155.00, 1, 'Artesanal', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS4pAf7n3wHyF1F1DhJN9WZaGxr5ripsFZUXA&s', 0),
-('PD22069675', 'Chico', 'Bebidas', 'Chocolate', 99.00, 1, 'Frío', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQxqzWVbW43H-jfkxBGNHU8MGa1sN-Xbe3adg&s', 0),
-('PD23031389', 'Chico', 'Platillo', 'La Dolce Phila', 109.00, 1, 'Artesanal', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSm7jFEBlC1JoRUIQwaZ4KAX4BhDuznYB6e-A&s', 0),
-('PD27175068', 'Chico', 'Platillo', 'Rajas', 160.00, 1, 'Salado', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRX6B4tiaR3T6Ca3hGLra6B-yKPw0MsDb13ZQ&s', 0),
-('PD27496576', 'Chico', 'Bebidas', 'Chamoyada Mango', 90.00, 1, 'Frío', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTdmUFNnfEze_LjNdXoyBHTK_LfxCiCBpLxIg&s', 0),
-('PD28020090', 'Chico', 'Bebidas', 'Flat Whiite', 75.00, 1, 'Caliente', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTod1nJcAwKG6BWdSpGAGmccz_Izh8D1S7Agw&s', 0),
-('PD28985193', 'Chico', 'Bebidas', 'Carlos V', 99.00, 1, 'Frío', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQFlI7CKVM0EqyWJxfTJn9wG0CQNXOFLkqGFw&s', 0),
-('PD30843175', 'Chico', 'Bebidas', 'Chai Latte', 80.00, 1, 'Caliente', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQDXlnqFGW57ScvZmnMq9d5AVe7f3qfw49KAg&s', 0),
-('PD30894780', 'Chico', 'Platillo', 'White Pistachio', 160.00, 0, 'Artesanal', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ-oOvHgSqNhQ90eLgrNy9ysZRzKaBFBDkyZw&s', 0),
-('PD33834469', 'Chico', 'Bebidas', 'Oreo', 99.00, 1, 'Frío', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTX6mqLk65Z1VzgUa-Jp8ERgSaLdm03wQx1XQ&s', 0),
-('PD34384229', 'Básico', 'Platillo', 'La crepa de crepas', 25.00, 1, 'Dulce', 'https://images.aws.nestle.recipes/resized/81bcf4cb38911cde6aa17357200368ba_pastel_de_crepas_de_chocolate_1200_628.jpg', 0),
-('PD35805212', 'Chico', 'Platillo', 'Rol de Canela', 160.00, 0, 'Artesanal', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTEr7uwCOR_RA9vz4wLYe_-l_Phk6_zCPff3A&s', 0),
-('PD36110746', 'Básico', 'Platillo', 'Crepa de Pollo', 122.00, 1, 'Dulce', 'URL', 0),
-('PD37804377', 'Básico', 'Crepas', 'Prueba', 109.00, 1, 'Caliente', 'https://www.cocinadelirante.com/800x600/filters:format(webp):quality(75)/sites/default/files/images/2024/04/como-hacer-crepas-con-frutas.jpg', 0),
-('PD39713286', 'Chico', 'Platillo', 'Rosendo Nieblas', 170.00, 1, 'Salado', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRvwpdUSumcZbObzis337Og907iWv7AeGalaQ&s', 0),
-('PD41659387', 'Básico', 'Platillo', 'Crepa Sebas ', 300.00, 1, 'Dulce', 'https://blog.renaware.com/wp-content/uploads/2023/03/Crepas-con-frutos-rojos-1111477-scaled.jpg', 0),
-('PD41719989', 'Básico', 'Platillo', 'Crepa De Platano', 100.00, 1, 'Dulce', 'URL', 0),
-('PD42166765', 'Básico', 'Platillo', 'Smoothie Bowl Fresa', 122.00, 1, 'Dulce', 'URL', 0),
-('PD43258149', 'Chico', 'Bebidas', 'Americano', 65.00, 1, 'Caliente', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSxra9UmQTaLETHKRBIU29BR-Ae72sJW47L5w&s', 0),
-('PD44220776', 'Chico', 'Bebidas', 'Mocha Latte', 80.00, 1, 'Caliente', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQOy3668eBzYkJxeU7ltAs36hL7Xpj1jJedHA&s', 0),
-('PD45693038', 'Chico', 'Platillo', 'Honey Honey', 135.00, 1, 'Artesanal', 'https://buenprovecho.hn/wp-content/uploads/2019/01/Crepas-de-fresa-1.jpg', 0),
-('PD46783344', 'Chico', 'Bebidas', 'Mazapán', 95.00, 1, 'Frío', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSnawgStunMhXfQQEmJ2SASocJm6e97QGGHlw&s', 0),
-('PD47763167', 'Chico', 'Platillo', 'Maree Crepe', 160.00, 1, 'Salado', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS_aO99Ddg3gA4Fr-dU5xZOwVOY9TOyx6L32w&s', 0),
-('PD48593340', 'Chico', 'Platillo', 'Un ingrediente', 99.00, 1, 'Otros', 'https://www.cocinafacil.com.mx/recetas/crepas-con-frutas', 0),
-('PD48628594', 'Chico', 'Platillo', 'Cinn-Almond Crepe', 145.00, 0, 'Artesanal', 'https://www.instagram.com/p/DOfBkVpjdBa/', 0),
-('PD52816612', 'Chico', 'Bebidas', 'Nutella', 99.00, 1, 'Frío', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTNwSeeZA_CqEouT5EN5W3bxIqrjCcRSsIx5Q&s', 0),
-('PD52877596', 'Chico', 'Bebidas', 'Manzanilla con moras zules y albahaca', 70.00, 1, 'Caliente', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSKHhRYPy6tcNXXSsLGU-cCF7HER2bPz4F0ig&s', 0),
-('PD53218892', 'Chico', 'Bebidas', 'Dirty Chai Frappe', 109.00, 1, 'Frío', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQoD2HGHi85Q8KG6CXwq_Up07nmoubrSA_e0g&s', 0),
-('PD57856718', 'Chico', 'Platillo', 'Kinder Delice', 155.00, 0, 'Artesanal', 'https://revistamolcajete.com/wp-content/uploads/2019/03/IMG_9765-1.jpg', 0),
-('PD58041511', 'Chico', 'Platillo', 'La Española', 155.00, 1, 'Salado', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTkRuiFsXGBC9TZSeWDbTVjhMd-HVO85sBKow&s', 0),
-('PD60185744', 'Chico', 'Platillo', 'Golden Bites', 140.00, 0, 'Artesanal', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSRIpnMo4Rp39xPMWa1FLlXR11q6tHW7eWAjA&s', 0),
-('PD60339348', 'Chico', 'Platillo', 'Kit Kat', 155.00, 1, 'Artesanal', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS8Ji1HTWSQ4gmhIVCRgliuvE0NGcKAWdhing&s', 0),
-('PD62154365', 'Chico', 'Bebidas', 'Iced Dirty Matcha', 105.00, 1, 'Frío', 'https://http2.mlstatic.com/D_NQ_NP_602534-MLM80622035266_112024-O.webp', 0),
-('PD62316585', 'Básico', 'Crepas', 'AA', 220.00, 1, 'Otros', 'https://upload.wikimedia.org/wikipedia/commons/7/71/Black.png', 0),
-('PD62321669', 'Chico', 'Platillo', 'Berry Lotus', 160.00, 0, 'Artesanal', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQGlIK60yqu2i866dM9orvLUPwylIiCNv16xA&s', 0),
-('PD62596246', 'Chico', 'Bebidas', 'Latte', 75.00, 1, 'Caliente', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSrc2tPztEd3gDD0g_tw2hoFgQzY6oclHt3FQ&s', 0),
-('PD62833458', 'Chico', 'Platillo', 'Snickers', 155.00, 1, 'Artesanal', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRBgZ36J1BV_bl2NH4--AgCenT2hGylAviiJw&s', 0),
-('PD63821765', 'Chico', 'Bebidas', 'Oreo', 99.00, 1, 'Frío', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQnIqURpZHzlti1iF4xe2If7Am3HxJ8vQKwMw&s', 0),
-('PD64070159', 'Básico', 'Waffles', 'WP', 120.00, 1, 'Caliente', 'https://lilluna.com/wp-content/uploads/2025/03/buttermilk-waffles-resize-17.jpg', 0),
-('PD66334927', 'Chico', 'Bebidas', 'Vainilla', 99.00, 1, 'Frío', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRA3re4lXRJr_f8wr3HTkuXOi2NUbEnSFg2nA&s', 0),
-('PD66451976', 'Chico', 'Bebidas', 'Motchai Frío', 89.00, 1, 'Frío', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRQlE1qLRDats1qjW5dBXtkKcYd2tZh4ihRYA&s', 0),
-('PD68133903', 'Chico', 'Platillo', 'La Pizzeria', 155.00, 1, 'Salado', 'https://sabrosano.com/wp-content/uploads/2020/05/Crepas_jamon_queso_principal.jpg', 0),
-('PD68599017', 'Chico', 'Platillo', 'Manzane', 155.00, 1, 'Artesanal', 'https://lomaculinaria.com/wp-content/uploads/2023/03/Crepas-Loma-Culinaria-1200x800-1.jpg', 0),
-('PD68787354', 'Chico', 'Bebidas', 'Chai Frío', 89.00, 1, 'Frío', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRQlE1qLRDats1qjW5dBXtkKcYd2tZh4ihRYA&s', 0),
-('PD69673358', 'Chico', 'Bebidas', 'Macchiato', 50.00, 1, 'Caliente', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQGfcxDnQWVvTH1ycIUXZpNtd8TkPf-11oiRw&s', 0),
-('PD71724278', 'Chico', 'Platillo', 'Cinn-Apple', 150.00, 0, 'Artesanal', 'https://www.laylita.com/recetas/wp-content/uploads/2017/04/Receta-de-las-crepas-francesas.jpg', 0),
-('PD72174317', 'Chico', 'Bebidas', 'Té Verde Jazmín', 60.00, 1, 'Caliente', 'https://blogs.unitec.mx/hubfs/Imported_Blog_Media/cosas-que-debes-saber-del-cafe-1-Dec-17-2022-07-16-41-5859-PM.jpg', 0),
-('PD72945147', 'Chico', 'Platillo', 'La Verde', 155.00, 1, 'Salado', 'https://editorialtelevisa.brightspotcdn.com/dims4/default/a5b31ad/2147483647/strip/true/crop/995x560+3+0/resize/1000x563!/quality/90/?url=https%3A%2F%2Fk2-prod-editorial-televisa.s3.us-east-1.amazonaws.com%2Fbrightspot%2Fwp-content%2Fuploads%2F2019%2F01%2Fcrepas-espinacas-consentir-paladar.jpg', 0),
-('PD76693622', 'Chico', 'Bebidas', 'Matcha Frío', 89.00, 1, 'Frío', 'https://http2.mlstatic.com/D_NQ_NP_780150-MLM100986687321_122025-O.webp', 0),
-('PD77126100', 'Chico', 'Bebidas', 'Dirty Matcha Frappe', 109.00, 1, 'Frío', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS_Z7vVaeSVKy-lJ2S7VAO4sln1hHher0PdTg&s', 0),
-('PD77411067', 'Básico', 'Platillo', 'Crepa CSS', 100.00, 1, 'Dulce', 'URL', 0),
-('PD77475653', 'Chico', 'Platillo', 'Gansito', 155.00, 0, 'Artesanal', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSYx0yyZD3mvwe1_wMSHsKGSH-6sz82D9PdoA&s', 0),
-('PD79889565', 'Chico', 'Platillo', 'Poblana', 160.00, 1, 'Salado', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSs8l_-zvcAVaji7WJXPTliXRbQFDkqhzrzcw&s', 0),
-('PD80503802', 'Chico', 'Bebidas', 'Cajeta', 99.00, 1, 'Frío', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR1oayZLDSevinYYDe2FxteeZhq0DbQTCDFZA&s', 0),
-('PD80603665', 'Chico', 'Bebidas', 'Fresa', 99.00, 1, 'Frío', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQxqzWVbW43H-jfkxBGNHU8MGa1sN-Xbe3adg&s', 0),
-('PD81370959', 'Chico', 'Platillo', 'Reese\'s', 155.00, 1, 'Artesanal', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSE_dc4i2TENpte8hxjVKtds0kOz2qj7I9oEw&s', 0),
-('PD83401881', 'Chico', 'Bebidas', 'Americano Frío', 75.00, 1, 'Frío', 'https://thumbs.dreamstime.com/b/caf%C3%A9-de-americano-o-fr%C3%ADo-152844660.jpg', 0),
-('PD84176755', 'Chico', 'Bebidas', 'Cappuccino', 75.00, 1, 'Caliente', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSHMDzwvg_QgORdgVseVpUqGsqOnWE84bdZZw&ss', 0),
-('PD84630803', 'Chico', 'Platillo', 'Bubulubu', 155.00, 1, 'Artesanal', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQk0i1_C3uCVTS8eZ9yaV4WJRlEWUEXRB1qfQ&s', 0),
-('PD85252812', 'Chico', 'Platillo', 'Lotus de Nuez', 160.00, 0, 'Artesanal', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRuNAWoxe4-U8ZuUNT2xmlononuW5dQUSntgg&s', 0),
-('PD86903926', 'Chico', 'Platillo', 'Ferrero Rocher', 160.00, 0, 'Artesanal', 'https://cdn0.recetasgratis.net/es/posts/3/4/4/crepas_de_fresa_con_queso_crema_57443_orig.jpg', 0),
-('PD87643434', 'Chico', 'Bebidas', 'Jamaica con fresa, limón y flor de naranja', 70.00, 1, 'Caliente', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ2P-RIJ6PQkzxr_F5b9S65qYv-pvAzgKKwcw&s', 0),
-('PD87820692', 'Básico', 'Platillo', 'Crepa Juarez ', 250.00, 1, 'Dulce', 'https://laespanolameats.com/img/cms/nocilla_1.jpg', 0),
-('PD88828639', 'Chico', 'Platillo', 'Choco Berries', 145.00, 1, 'Artesanal', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQRPgmlt1HohAFzJ1E7a5dQqmQTSAvb2LX2ww&s', 0),
-('PD88871658', 'Chico', 'Platillo', 'Tres ingredientes', 109.00, 1, 'Otros', 'https://peopleenespanol.com/recetas/10075-masa-para-crepas-b-sica/', 0),
-('PD88949720', 'Chico', 'Bebidas', 'Manzanilla con zarzamora, frambuesa y jamaica', 70.00, 1, 'Caliente', 'https://tofuu.getjusto.com/orioneat-local/resized2/nFs4qZ6WEoaNw8v8b-300-x.webp', 0),
-('PD91949758', 'Básico', 'Platillo', 'Platillo Prueba de Unidad', 100.00, 1, 'Dulce', 'URL', 0),
-('PD93614794', 'Básico', 'Platillo', 'Smoothie Bowl de Plátano ', 100.00, 1, 'Dulce', 'URL', 0),
-('PD96171348', 'Chico', 'Bebidas', 'Iced Dirty Chai', 105.00, 1, 'Frío', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRWkqU1Y47HvI9PdCuD0u_rWyDOM0gUMhqdLQ&s', 0),
-('PD96745922', 'Chico', 'Bebidas', 'Té Verde Clásico', 60.00, 1, 'Caliente', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRBy0eJCNbaXWLZYe2DMAF8fsrMXrByb109GA&s', 0),
-('PD97764058', 'Chico', 'Bebidas', 'Chamoyada Jamaica', 90.00, 1, 'Frío', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ_MhuGUKsc5AH44EDjIvPXoj_MQvwItHcexw&s', 0),
-('PD99200939', 'Chico', 'Bebidas', 'Mocha Frío', 89.00, 1, 'Frío', 'https://images.sabroson.com.mx/insecure/fit/1000/1000/ce/0/plain/https://sabroson-assests.s3.us-west-2.amazonaws.com/af268c/prods/EhUJ8Es8eLkTBHguQPs7IoZ683xwohKsTDfpBkWX.png@webp', 0),
-('PD99905805', 'Chico', 'Bebidas', 'Agua', 30.00, 1, 'Otros', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQIROd_m5TqdXbs60Y_ajK7p9pygWly6Y3zVA&s', 0);
+INSERT INTO `producto` (`ID_Producto`, `Tamaño`, `Categoría`, `Nombre`, `Precio`, `Disponible`, `Tipo`, `Imagen`, `Permite_Modificar_Ingredientes`, `EsExclusivo`, `Permite_Crema_Batida`) VALUES
+('PD_COMODIN', 'Básico', 'Otros', 'Crepa Personalizada', 50.00, 1, 'Otros', NULL, 1, 0, 0),
+('PD00387421', 'Chico', 'Platillo', 'Oreo', 155.00, 1, 'Artesanal', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSQdyxtqipw0WM6la2yQR9S8zAPHpytii7cIw&s', 1, 0, 0),
+('PD01400719', 'Chico', 'Platillo', 'Cookies N\' Cream', 155.00, 1, 'Artesanal', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRDPLJEYcnQ4U-l-lfscAIBi1troxfm3uEEmA&s', 1, 0, 0),
+('PD01887055', 'Chico', 'Platillo', '4 Quesos', 155.00, 1, 'Salado', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQbEZwXDbBsJy80jBGwxHhB04UgEuJ2Z95zmg&s', 1, 0, 0),
+('PD01993843', 'Chico', 'Bebidas', 'Espresso con soya Charly', 25.00, 0, 'Caliente', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSxxdoFNAcppkd8DKoyJ9X1ppnP5pIlScEHJA&s', 1, 0, 0),
+('PD02624644', 'Chico', 'Platillo', 'M&M´s', 155.00, 1, 'Artesanal', 'https://www.cocinadelirante.com/800x600/filters:format(webp):quality(75)/sites/default/files/images/2025/04/receta-de-crepas-con-queso-y-platano.jpg', 1, 0, 0),
+('PD03687244', 'Chico', 'Platillo', 'Mazapán', 140.00, 0, 'Artesanal', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQNmO4dfIq0PDJ7w8b4llpPzSmRef3nZKn15g&s', 1, 0, 0),
+('PD09374303', 'Chico', 'Bebidas', 'Iced Latte', 85.00, 0, 'Frío', 'https://myeverydaytable.com/iced-latte/', 1, 0, 0),
+('PD10251685', 'Básico', 'Waffles', 'Prueba Imagen', 100.00, 1, 'PruebasWAFFLE', '/uploads/productos/prod_1777434661734.jpg', 1, 0, 0),
+('PD10782835', 'Chico', 'Bebidas', 'Refresco', 45.00, 1, 'Otros', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQocj0qc80fSGx0_CzOd5nU3AfC4eDh8NuXCw&s', 1, 0, 0),
+('PD12662761', 'Chico', 'Bebidas', 'Jamaica con arándanos, lima y madreselva', 70.00, 1, 'Caliente', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS_5wgNA6S_FGDGyR3WYZwiY5O23QrHfU9Lrg&s', 1, 0, 0),
+('PD12929845', 'Chico', 'Bebidas', 'Mocha', 99.00, 1, 'Frío', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSdeikbrU4NecryZO5GX72Ps13tZM2rns4Z2Q&s', 1, 0, 0),
+('PD13048411', 'Chico', 'Platillo', 'La Champi', 155.00, 1, 'Salado', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQpF5f5ZsW28SGIE8Igp1zibfeHx6ax2EHtag&s', 1, 0, 0),
+('PD13424235', 'Básico', 'Waffles', 'WAFF1', 109.00, 1, 'PruebasWAFFLE', 'https://www.cocinadelirante.com/800x600/filters:format(webp):quality(75)/sites/default/files/images/2024/04/como-hacer-crepas-con-frutas.jpg', 1, 0, 0),
+('PD14332305', 'Chico', 'Bebidas', 'Matcha', 99.00, 1, 'Frío', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQywjNVWD6kkk6bBLkEhDKyKbmXkVRQ_pfknA&s', 1, 0, 0),
+('PD16012525', 'Chico', 'Bebidas', 'Frapuccino', 99.00, 1, 'Frío', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQjgDUxsc0OW5htUWs0YXGcJ0szHOrTtoTx_w&s', 1, 0, 0),
+('PD18516039', 'Chico', 'Platillo', 'Coco Almond', 150.00, 1, 'Artesanal', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTHATP_XWITucUtg6r4y4IYcxCrCVDpmEY0Sg&s', 1, 0, 0),
+('PD18785978', 'Chico', 'Platillo', 'Dos ingredientes', 105.00, 1, 'Otros', 'https://www.directoalpaladar.com.mx/postres/como-hacer-masa-para-crepas-muy-ligeras-finitas-jugosas-ideal-para-hacer-crepas-dulces-saladas', 1, 0, 0),
+('PD19634039', 'Chico', 'Bebidas', 'Matchai', 99.00, 1, 'Frío', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR2XabaGar5zJxmaTKTPZHhB5kuJhrUxWTZlA&s', 1, 0, 0),
+('PD20020753', 'Chico', 'Bebidas', 'Chai', 99.00, 1, 'Frío', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTYbghvQZMQZiZwQyq4mahtzAnQcv0u-qaxgQ&s', 1, 0, 0),
+('PD21109349', 'Chico', 'Platillo', 'Magnum', 155.00, 1, 'Artesanal', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS4pAf7n3wHyF1F1DhJN9WZaGxr5ripsFZUXA&s', 1, 0, 0),
+('PD22069675', 'Chico', 'Bebidas', 'Chocolate', 99.00, 1, 'Frío', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQxqzWVbW43H-jfkxBGNHU8MGa1sN-Xbe3adg&s', 1, 0, 0),
+('PD23031389', 'Chico', 'Platillo', 'La Dolce Phila', 109.00, 1, 'Artesanal', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSm7jFEBlC1JoRUIQwaZ4KAX4BhDuznYB6e-A&s', 1, 0, 0),
+('PD27175068', 'Chico', 'Platillo', 'Rajas', 160.00, 1, 'Salado', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRX6B4tiaR3T6Ca3hGLra6B-yKPw0MsDb13ZQ&s', 1, 0, 0),
+('PD27496576', 'Chico', 'Bebidas', 'Chamoyada Mango', 90.00, 1, 'Frío', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTdmUFNnfEze_LjNdXoyBHTK_LfxCiCBpLxIg&s', 1, 0, 0),
+('PD28020090', 'Chico', 'Bebidas', 'Flat Whiite', 75.00, 1, 'Caliente', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTod1nJcAwKG6BWdSpGAGmccz_Izh8D1S7Agw&s', 1, 0, 0),
+('PD28985193', 'Chico', 'Bebidas', 'Carlos V', 99.00, 1, 'Frío', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQFlI7CKVM0EqyWJxfTJn9wG0CQNXOFLkqGFw&s', 1, 0, 0),
+('PD30843175', 'Chico', 'Bebidas', 'Chai Latte', 80.00, 1, 'Caliente', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQDXlnqFGW57ScvZmnMq9d5AVe7f3qfw49KAg&s', 1, 0, 0),
+('PD30894780', 'Chico', 'Platillo', 'White Pistachio', 160.00, 0, 'Artesanal', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ-oOvHgSqNhQ90eLgrNy9ysZRzKaBFBDkyZw&s', 1, 0, 0),
+('PD33834469', 'Chico', 'Bebidas', 'Oreo', 99.00, 1, 'Frío', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTX6mqLk65Z1VzgUa-Jp8ERgSaLdm03wQx1XQ&s', 1, 0, 0),
+('PD34384229', 'Básico', 'Platillo', 'La crepa de crepas', 25.00, 1, 'Dulce', 'https://images.aws.nestle.recipes/resized/81bcf4cb38911cde6aa17357200368ba_pastel_de_crepas_de_chocolate_1200_628.jpg', 1, 0, 0),
+('PD35805212', 'Chico', 'Platillo', 'Rol de Canela', 160.00, 0, 'Artesanal', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTEr7uwCOR_RA9vz4wLYe_-l_Phk6_zCPff3A&s', 1, 0, 0),
+('PD36110746', 'Básico', 'Platillo', 'Crepa de Pollo', 122.00, 1, 'Dulce', 'URL', 1, 0, 0),
+('PD37804377', 'Básico', 'Crepas', 'Prueba', 109.00, 1, 'PruebaCrep', 'https://www.cocinadelirante.com/800x600/filters:format(webp):quality(75)/sites/default/files/images/2024/04/como-hacer-crepas-con-frutas.jpg', 1, 0, 0),
+('PD39713286', 'Chico', 'Platillo', 'Rosendo Nieblas', 170.00, 1, 'Salado', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRvwpdUSumcZbObzis337Og907iWv7AeGalaQ&s', 1, 0, 0),
+('PD41659387', 'Básico', 'Platillo', 'Crepa Sebas ', 300.00, 1, 'Dulce', 'https://blog.renaware.com/wp-content/uploads/2023/03/Crepas-con-frutos-rojos-1111477-scaled.jpg', 1, 0, 0),
+('PD41719989', 'Básico', 'Platillo', 'Crepa De Platano', 100.00, 1, 'Dulce', 'URL', 1, 0, 0),
+('PD42166765', 'Básico', 'Platillo', 'Smoothie Bowl Fresa', 122.00, 1, 'Dulce', 'URL', 1, 0, 0),
+('PD43258149', 'Chico', 'Bebidas', 'Americano', 65.00, 1, 'Caliente', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSxra9UmQTaLETHKRBIU29BR-Ae72sJW47L5w&s', 1, 0, 0),
+('PD44220776', 'Chico', 'Bebidas', 'Mocha Latte', 80.00, 1, 'Caliente', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQOy3668eBzYkJxeU7ltAs36hL7Xpj1jJedHA&s', 1, 0, 0),
+('PD44830249', 'Básico', 'Waffles', 'wp2', 120.00, 1, 'w2', 'https://lilluna.com/wp-content/uploads/2025/03/buttermilk-waffles-resize-17.jpg', 1, 0, 0),
+('PD45693038', 'Chico', 'Platillo', 'Honey Honey', 135.00, 1, 'Artesanal', 'https://buenprovecho.hn/wp-content/uploads/2019/01/Crepas-de-fresa-1.jpg', 1, 0, 0),
+('PD46783344', 'Chico', 'Bebidas', 'Mazapán', 95.00, 1, 'Frío', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSnawgStunMhXfQQEmJ2SASocJm6e97QGGHlw&s', 1, 0, 0),
+('PD47763167', 'Chico', 'Platillo', 'Maree Crepe', 160.00, 1, 'Salado', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS_aO99Ddg3gA4Fr-dU5xZOwVOY9TOyx6L32w&s', 1, 0, 0),
+('PD48593340', 'Chico', 'Platillo', 'Un ingrediente', 99.00, 1, 'Otros', 'https://www.cocinafacil.com.mx/recetas/crepas-con-frutas', 1, 0, 0),
+('PD48628594', 'Chico', 'Platillo', 'Cinn-Almond Crepe', 145.00, 0, 'Artesanal', 'https://www.instagram.com/p/DOfBkVpjdBa/', 1, 0, 0),
+('PD52816612', 'Chico', 'Bebidas', 'Nutella', 99.00, 1, 'Frío', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTNwSeeZA_CqEouT5EN5W3bxIqrjCcRSsIx5Q&s', 1, 0, 0),
+('PD52877596', 'Chico', 'Bebidas', 'Manzanilla con moras zules y albahaca', 70.00, 1, 'Caliente', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSKHhRYPy6tcNXXSsLGU-cCF7HER2bPz4F0ig&s', 1, 0, 0),
+('PD53218892', 'Chico', 'Bebidas', 'Dirty Chai Frappe', 109.00, 1, 'Frío', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQoD2HGHi85Q8KG6CXwq_Up07nmoubrSA_e0g&s', 1, 0, 0),
+('PD57856718', 'Chico', 'Platillo', 'Kinder Delice', 155.00, 0, 'Artesanal', 'https://revistamolcajete.com/wp-content/uploads/2019/03/IMG_9765-1.jpg', 1, 0, 0),
+('PD58041511', 'Chico', 'Platillo', 'La Española', 155.00, 1, 'Salado', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTkRuiFsXGBC9TZSeWDbTVjhMd-HVO85sBKow&s', 1, 0, 0),
+('PD60185744', 'Chico', 'Platillo', 'Golden Bites', 140.00, 0, 'Artesanal', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSRIpnMo4Rp39xPMWa1FLlXR11q6tHW7eWAjA&s', 1, 0, 0),
+('PD60339348', 'Chico', 'Platillo', 'Kit Kat', 155.00, 1, 'Artesanal', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS8Ji1HTWSQ4gmhIVCRgliuvE0NGcKAWdhing&s', 1, 0, 0),
+('PD62154365', 'Chico', 'Bebidas', 'Iced Dirty Matcha', 105.00, 1, 'Frío', 'https://http2.mlstatic.com/D_NQ_NP_602534-MLM80622035266_112024-O.webp', 1, 0, 0),
+('PD62321669', 'Chico', 'Platillo', 'Berry Lotus', 160.00, 0, 'Artesanal', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQGlIK60yqu2i866dM9orvLUPwylIiCNv16xA&s', 1, 0, 0),
+('PD62596246', 'Chico', 'Bebidas', 'Latte', 75.00, 1, 'Caliente', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSrc2tPztEd3gDD0g_tw2hoFgQzY6oclHt3FQ&s', 1, 0, 0),
+('PD62833458', 'Chico', 'Platillo', 'Snickers', 155.00, 1, 'Artesanal', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRBgZ36J1BV_bl2NH4--AgCenT2hGylAviiJw&s', 1, 0, 0),
+('PD63821765', 'Chico', 'Bebidas', 'Oreo', 99.00, 1, 'Frío', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQnIqURpZHzlti1iF4xe2If7Am3HxJ8vQKwMw&s', 1, 0, 0),
+('PD66334927', 'Chico', 'Bebidas', 'Vainilla', 99.00, 1, 'Frío', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRA3re4lXRJr_f8wr3HTkuXOi2NUbEnSFg2nA&s', 1, 0, 0),
+('PD66451976', 'Chico', 'Bebidas', 'Motchai Frío', 89.00, 1, 'Frío', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRQlE1qLRDats1qjW5dBXtkKcYd2tZh4ihRYA&s', 1, 0, 0),
+('PD68133903', 'Chico', 'Platillo', 'La Pizzeria', 155.00, 1, 'Salado', 'https://sabrosano.com/wp-content/uploads/2020/05/Crepas_jamon_queso_principal.jpg', 1, 0, 0),
+('PD68599017', 'Chico', 'Platillo', 'Manzane', 155.00, 1, 'Artesanal', 'https://lomaculinaria.com/wp-content/uploads/2023/03/Crepas-Loma-Culinaria-1200x800-1.jpg', 1, 0, 0),
+('PD68787354', 'Chico', 'Bebidas', 'Chai Frío', 89.00, 1, 'Frío', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRQlE1qLRDats1qjW5dBXtkKcYd2tZh4ihRYA&s', 1, 0, 0),
+('PD69673358', 'Chico', 'Bebidas', 'Macchiato', 50.00, 1, 'Caliente', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQGfcxDnQWVvTH1ycIUXZpNtd8TkPf-11oiRw&s', 1, 0, 0),
+('PD71724278', 'Chico', 'Platillo', 'Cinn-Apple', 150.00, 0, 'Artesanal', 'https://www.laylita.com/recetas/wp-content/uploads/2017/04/Receta-de-las-crepas-francesas.jpg', 1, 0, 0),
+('PD72174317', 'Chico', 'Bebidas', 'Té Verde Jazmín', 60.00, 1, 'Caliente', 'https://blogs.unitec.mx/hubfs/Imported_Blog_Media/cosas-que-debes-saber-del-cafe-1-Dec-17-2022-07-16-41-5859-PM.jpg', 1, 0, 0),
+('PD72945147', 'Chico', 'Platillo', 'La Verde', 155.00, 1, 'Salado', 'https://editorialtelevisa.brightspotcdn.com/dims4/default/a5b31ad/2147483647/strip/true/crop/995x560+3+0/resize/1000x563!/quality/90/?url=https%3A%2F%2Fk2-prod-editorial-televisa.s3.us-east-1.amazonaws.com%2Fbrightspot%2Fwp-content%2Fuploads%2F2019%2F01%2Fcrepas-espinacas-consentir-paladar.jpg', 1, 0, 0),
+('PD76693622', 'Chico', 'Bebidas', 'Matcha Frío', 89.00, 1, 'Frío', 'https://http2.mlstatic.com/D_NQ_NP_780150-MLM100986687321_122025-O.webp', 1, 0, 0),
+('PD77126100', 'Chico', 'Bebidas', 'Dirty Matcha Frappe', 109.00, 1, 'Frío', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS_Z7vVaeSVKy-lJ2S7VAO4sln1hHher0PdTg&s', 1, 0, 0),
+('PD77411067', 'Básico', 'Platillo', 'Crepa CSS', 100.00, 1, 'Dulce', 'URL', 1, 0, 0),
+('PD77475653', 'Chico', 'Platillo', 'Gansito', 155.00, 0, 'Artesanal', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSYx0yyZD3mvwe1_wMSHsKGSH-6sz82D9PdoA&s', 1, 0, 0),
+('PD79889565', 'Chico', 'Platillo', 'Poblana', 160.00, 1, 'Salado', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSs8l_-zvcAVaji7WJXPTliXRbQFDkqhzrzcw&s', 1, 0, 0),
+('PD80503802', 'Chico', 'Bebidas', 'Cajeta', 99.00, 1, 'Frío', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR1oayZLDSevinYYDe2FxteeZhq0DbQTCDFZA&s', 1, 0, 0),
+('PD80603665', 'Chico', 'Bebidas', 'Fresa', 99.00, 1, 'Frío', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQxqzWVbW43H-jfkxBGNHU8MGa1sN-Xbe3adg&s', 1, 0, 0),
+('PD81370959', 'Chico', 'Platillo', 'Reese\'s', 155.00, 1, 'Artesanal', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSE_dc4i2TENpte8hxjVKtds0kOz2qj7I9oEw&s', 1, 0, 0),
+('PD83401881', 'Chico', 'Bebidas', 'Americano Frío', 75.00, 1, 'Frío', 'https://thumbs.dreamstime.com/b/caf%C3%A9-de-americano-o-fr%C3%ADo-152844660.jpg', 1, 0, 0),
+('PD84176755', 'Chico', 'Bebidas', 'Cappuccino', 75.00, 1, 'Caliente', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSHMDzwvg_QgORdgVseVpUqGsqOnWE84bdZZw&ss', 1, 0, 0),
+('PD84630803', 'Chico', 'Platillo', 'Bubulubu', 155.00, 1, 'Artesanal', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQk0i1_C3uCVTS8eZ9yaV4WJRlEWUEXRB1qfQ&s', 1, 0, 0),
+('PD85252812', 'Chico', 'Platillo', 'Lotus de Nuez', 160.00, 0, 'Artesanal', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRuNAWoxe4-U8ZuUNT2xmlononuW5dQUSntgg&s', 1, 0, 0),
+('PD85731838', 'Básico', 'Bebidas', 'Caffe Dragon', 70.00, 1, 'Caliente', '/uploads/productos/producto-1777471173392-298306831.jpg', 0, 0, 1),
+('PD86903926', 'Chico', 'Platillo', 'Ferrero Rocher', 160.00, 0, 'Artesanal', 'https://cdn0.recetasgratis.net/es/posts/3/4/4/crepas_de_fresa_con_queso_crema_57443_orig.jpg', 1, 0, 0),
+('PD87643434', 'Chico', 'Bebidas', 'Jamaica con fresa, limón y flor de naranja', 70.00, 1, 'Caliente', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ2P-RIJ6PQkzxr_F5b9S65qYv-pvAzgKKwcw&s', 1, 0, 0),
+('PD87820692', 'Básico', 'Platillo', 'Crepa Juarez ', 250.00, 1, 'Dulce', 'https://laespanolameats.com/img/cms/nocilla_1.jpg', 1, 0, 0),
+('PD88828639', 'Chico', 'Platillo', 'Choco Berries', 145.00, 1, 'Artesanal', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQRPgmlt1HohAFzJ1E7a5dQqmQTSAvb2LX2ww&s', 1, 0, 0),
+('PD88871658', 'Chico', 'Platillo', 'Tres ingredientes', 109.00, 1, 'Otros', 'https://peopleenespanol.com/recetas/10075-masa-para-crepas-b-sica/', 1, 0, 0),
+('PD88949720', 'Chico', 'Bebidas', 'Manzanilla con zarzamora, frambuesa y jamaica', 70.00, 1, 'Caliente', 'https://tofuu.getjusto.com/orioneat-local/resized2/nFs4qZ6WEoaNw8v8b-300-x.webp', 1, 0, 0),
+('PD91949758', 'Básico', 'Platillo', 'Platillo Prueba de Unidad', 100.00, 1, 'Dulce', 'URL', 1, 0, 0),
+('PD93614794', 'Básico', 'Platillo', 'Smoothie Bowl de Plátano ', 100.00, 1, 'Dulce', 'URL', 1, 0, 0),
+('PD96171348', 'Chico', 'Bebidas', 'Iced Dirty Chai', 105.00, 1, 'Frío', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRWkqU1Y47HvI9PdCuD0u_rWyDOM0gUMhqdLQ&s', 1, 0, 0),
+('PD96644306', 'Básico', 'Crepas', 'Crepa Suprema ', 250.00, 1, 'PruebaCrep', '/uploads/productos/producto-1777475545813-587168288.jpg', 1, 0, 1),
+('PD96745922', 'Chico', 'Bebidas', 'Té Verde Clásico', 60.00, 1, 'Caliente', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRBy0eJCNbaXWLZYe2DMAF8fsrMXrByb109GA&s', 1, 0, 0),
+('PD97764058', 'Chico', 'Bebidas', 'Chamoyada Jamaica', 90.00, 1, 'Frío', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ_MhuGUKsc5AH44EDjIvPXoj_MQvwItHcexw&s', 1, 0, 0),
+('PD99200939', 'Chico', 'Bebidas', 'Mocha Frío', 89.00, 1, 'Frío', 'https://images.sabroson.com.mx/insecure/fit/1000/1000/ce/0/plain/https://sabroson-assests.s3.us-west-2.amazonaws.com/af268c/prods/EhUJ8Es8eLkTBHguQPs7IoZ683xwohKsTDfpBkWX.png@webp', 1, 0, 0),
+('PD99905805', 'Chico', 'Bebidas', 'Agua', 30.00, 1, 'Otros', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQIROd_m5TqdXbs60Y_ajK7p9pygWly6Y3zVA&s', 1, 0, 0);
 
 -- --------------------------------------------------------
 
@@ -1915,9 +2021,12 @@ INSERT INTO `producto_tiene_insumo` (`ID_Producto`, `ID_Insumo`) VALUES
 ('PD01993843', 'IN68810175'),
 ('PD02624644', 'IN20877882'),
 ('PD03687244', 'IN76382864'),
+('PD10251685', 'IN11447684'),
+('PD10251685', 'IN21585929'),
 ('PD12662761', 'IN63629622'),
 ('PD12929845', 'IN07050794'),
 ('PD13048411', 'IN93539227'),
+('PD13424235', 'IN04894004'),
 ('PD14332305', 'IN59824502'),
 ('PD16012525', 'IN03374506'),
 ('PD18516039', 'IN98136923'),
@@ -1956,6 +2065,8 @@ INSERT INTO `producto_tiene_insumo` (`ID_Producto`, `ID_Insumo`) VALUES
 ('PD42166765', 'IN15500744'),
 ('PD43258149', 'IN68496031'),
 ('PD44220776', 'IN85641851'),
+('PD44830249', 'IN02803814'),
+('PD44830249', 'IN21585929'),
 ('PD45693038', 'IN59087286'),
 ('PD46783344', 'IN53190866'),
 ('PD47763167', 'IN38338698'),
@@ -1968,13 +2079,10 @@ INSERT INTO `producto_tiene_insumo` (`ID_Producto`, `ID_Insumo`) VALUES
 ('PD58041511', 'IN21585929'),
 ('PD60339348', 'IN56899901'),
 ('PD62154365', 'IN63793176'),
-('PD62316585', 'IN04894004'),
-('PD62316585', 'IN22595885'),
 ('PD62321669', 'IN28033998'),
 ('PD62596246', 'IN70788691'),
 ('PD62833458', 'IN13442507'),
 ('PD63821765', 'IN50256666'),
-('PD64070159', 'IN22595885'),
 ('PD66334927', 'IN02201393'),
 ('PD66451976', 'IN18968294'),
 ('PD68133903', 'IN51564559'),
@@ -1996,6 +2104,8 @@ INSERT INTO `producto_tiene_insumo` (`ID_Producto`, `ID_Insumo`) VALUES
 ('PD84176755', 'IN82598534'),
 ('PD84630803', 'IN74201967'),
 ('PD85252812', 'IN73813019'),
+('PD85731838', 'IN07275176'),
+('PD85731838', 'IN84763568'),
 ('PD86903926', 'IN07050794'),
 ('PD87643434', 'IN74817391'),
 ('PD87820692', 'IN03374506'),
@@ -2389,21 +2499,28 @@ INSERT INTO `tamaño` (`Nombre`, `MultiplicadorPrecio`) VALUES
 
 DROP TABLE IF EXISTS `tipos`;
 CREATE TABLE `tipos` (
-  `nombre` varchar(50) NOT NULL
+  `nombre` varchar(50) NOT NULL,
+  `categoria` varchar(50) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish2_ci;
 
 --
 -- Volcado de datos para la tabla `tipos`
 --
 
-INSERT INTO `tipos` (`nombre`) VALUES
-('Artesanal'),
-('Caliente'),
-('Dulce'),
-('Frío'),
-('Otros'),
-('Salado'),
-('Vegano');
+INSERT INTO `tipos` (`nombre`, `categoria`) VALUES
+('Caliente', 'Bebidas'),
+('Frío', 'Bebidas'),
+('Fruta', 'CrepaPerso'),
+('Topping', 'CrepaPerso'),
+('Untable', 'CrepaPerso'),
+('PruebaCrep', 'Crepas'),
+('Artesanal', 'Platillo'),
+('Dulce', 'Platillo'),
+('Otros', 'Platillo'),
+('Salado', 'Platillo'),
+('Vegano', 'Platillo'),
+('PruebasWAFFLE', 'Waffles'),
+('w2', 'Waffles');
 
 -- --------------------------------------------------------
 
@@ -2579,6 +2696,13 @@ ALTER TABLE `insumo_categoria`
   ADD KEY `fk_ic_cat_idx` (`Nom_Categoria`);
 
 --
+-- Indices de la tabla `insumo_tipo`
+--
+ALTER TABLE `insumo_tipo`
+  ADD PRIMARY KEY (`ID_Insumo`,`Nom_Tipo`),
+  ADD KEY `fk_it_tipo` (`Nom_Tipo`);
+
+--
 -- Indices de la tabla `log_accesos_otp`
 --
 ALTER TABLE `log_accesos_otp`
@@ -2700,7 +2824,8 @@ ALTER TABLE `tamaño`
 -- Indices de la tabla `tipos`
 --
 ALTER TABLE `tipos`
-  ADD PRIMARY KEY (`nombre`);
+  ADD PRIMARY KEY (`nombre`),
+  ADD KEY `fk_tipo_categoria` (`categoria`);
 
 --
 -- Indices de la tabla `turno`
@@ -2723,7 +2848,7 @@ ALTER TABLE `turno_tiene_sucursal`
 -- AUTO_INCREMENT de la tabla `detalle_orden_insumos`
 --
 ALTER TABLE `detalle_orden_insumos`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=66;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=101;
 
 --
 -- AUTO_INCREMENT de la tabla `historial_canjes_royalty`
@@ -2735,13 +2860,13 @@ ALTER TABLE `historial_canjes_royalty`
 -- AUTO_INCREMENT de la tabla `log_accesos_otp`
 --
 ALTER TABLE `log_accesos_otp`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=45;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=48;
 
 --
 -- AUTO_INCREMENT de la tabla `orden_tiene_producto`
 --
 ALTER TABLE `orden_tiene_producto`
-  MODIFY `id_orden_producto` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=103;
+  MODIFY `id_orden_producto` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=118;
 
 --
 -- Restricciones para tablas volcadas
@@ -2843,6 +2968,13 @@ ALTER TABLE `insumo_categoria`
   ADD CONSTRAINT `fk_ic_insumo` FOREIGN KEY (`ID_Insumo`) REFERENCES `insumo` (`ID_Insumo`) ON DELETE CASCADE;
 
 --
+-- Filtros para la tabla `insumo_tipo`
+--
+ALTER TABLE `insumo_tipo`
+  ADD CONSTRAINT `fk_it_insumo` FOREIGN KEY (`ID_Insumo`) REFERENCES `insumo` (`ID_Insumo`) ON DELETE CASCADE,
+  ADD CONSTRAINT `fk_it_tipo` FOREIGN KEY (`Nom_Tipo`) REFERENCES `tipos` (`nombre`);
+
+--
 -- Filtros para la tabla `mensaje_notifica_cliente`
 --
 ALTER TABLE `mensaje_notifica_cliente`
@@ -2912,54 +3044,17 @@ ALTER TABLE `rol_tiene_privilegio`
   ADD CONSTRAINT `rol_tiene_privilegio_ibfk_2` FOREIGN KEY (`ID_Privilegio`) REFERENCES `privilegio` (`Privilegio`) ON DELETE CASCADE;
 
 --
+-- Filtros para la tabla `tipos`
+--
+ALTER TABLE `tipos`
+  ADD CONSTRAINT `fk_tipo_categoria` FOREIGN KEY (`categoria`) REFERENCES `categoría` (`Nombre`);
+
+--
 -- Filtros para la tabla `turno_tiene_sucursal`
 --
 ALTER TABLE `turno_tiene_sucursal`
   ADD CONSTRAINT `turno_tiene_sucursal_ibfk_1` FOREIGN KEY (`ID_Turno`) REFERENCES `turno` (`ID_Turno`),
   ADD CONSTRAINT `turno_tiene_sucursal_ibfk_2` FOREIGN KEY (`ID_Sucursal`) REFERENCES `sucursal` (`ID_Sucursal`);
-
-UPDATE `producto` p
-LEFT JOIN `categoría` c ON c.Nombre = p.`Categoría`
-SET p.`Permite_Crema_Batida` = COALESCE(c.`Permite_Crema_Batida`, 0);
-COMMIT;
-
-
-START TRANSACTION;
-
--- 1. Forzamos la existencia de los padres exactos que necesitamos
-INSERT INTO `tamaño` (`Nombre`) 
-SELECT 'Básico' WHERE NOT EXISTS (SELECT 1 FROM `tamaño` WHERE `Nombre` = 'Básico');
-
-INSERT INTO `categoría` (`Nombre`) 
-SELECT 'Otros' WHERE NOT EXISTS (SELECT 1 FROM `categoría` WHERE `Nombre` = 'Otros');
-
-INSERT INTO `tipos` (`nombre`) 
-SELECT 'Otros' WHERE NOT EXISTS (SELECT 1 FROM `tipos` WHERE `nombre` = 'Otros');
-
--- 2. Insertar el Producto Comodín
--- Usamos subconsultas para que, si por algún milagro el INSERT anterior falló,
--- este INSERT también falle y no cree un producto con datos huérfanos.
-INSERT INTO `producto` (`ID_Producto`, `Tamaño`, `Categoría`, `Nombre`, `Precio`, `Disponible`, `Tipo`, `Imagen`)
-SELECT 
-    'PD_COMODIN', 
-    t.Nombre, 
-    c.Nombre, 
-    'Crepa Personalizada', 
-    25.00, 
-    1, 
-    tp.nombre, 
-    NULL
-FROM 
-    (SELECT 'Básico' as Nombre) temp_t 
-    JOIN `tamaño` t ON t.Nombre = temp_t.Nombre
-    CROSS JOIN (SELECT 'Otros' as Nombre) temp_c
-    JOIN `categoría` c ON c.Nombre = temp_c.Nombre
-    CROSS JOIN (SELECT 'Otros' as nombre) temp_tp
-    JOIN `tipos` tp ON tp.nombre = temp_tp.nombre
-WHERE NOT EXISTS (
-    SELECT 1 FROM `producto` WHERE `ID_Producto` = 'PD_COMODIN'
-);
-
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
