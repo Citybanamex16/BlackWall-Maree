@@ -59,6 +59,22 @@ async function modificarRoyalty (nombre) {
     label.appendChild(document.createTextNode(' ' + evento.Nombre))
     contenedorEventos.appendChild(label)
   })
+  const recordatorio = document.getElementById('recordatorio-visitas')
+  const otrosPrioridad = royaltiesData.filter(r => r.Nombre_Royalty !== nombre)
+  if (otrosPrioridad.length > 0) {
+    const maxActual = Math.max(...otrosPrioridad.map(r => Number(r.Max_Visitas)))
+    recordatorio.textContent = `Tu mínimo debe ser mayor a ${maxActual}`
+  } else {
+    recordatorio.textContent = ''
+  }
+  const recordatorioPrioridad = document.getElementById('recordatorio-prioridad')
+  const otros = royaltiesData.filter(r => r.Nombre_Royalty !== nombre)
+  if (otros.length > 0) {
+    const maxPrioridad = Math.max(...otros.map(r => Number(r.Número_de_prioridad)))
+    recordatorioPrioridad.textContent = `La prioridad más alta actual es ${maxPrioridad}`
+  } else {
+    recordatorioPrioridad.textContent = ''
+  }
 
   document.getElementById('modal-modificarRoyalty').classList.add('is-active')
 }
@@ -194,6 +210,21 @@ const abrirModalNuevoEstadoRoyalty = async () => {
     contenedorEventos.appendChild(label)
   })
 
+  const recordatorio = document.getElementById('add-recordatorio-visitas')
+  if (royaltiesData.length > 0) {
+    const maxActual = Math.max(...royaltiesData.map(r => Number(r.Max_Visitas)))
+    recordatorio.textContent = `Tu mínimo debe ser mayor a ${maxActual}`
+  } else {
+    recordatorio.textContent = ''
+  }
+  const recordatorioPrioridad = document.getElementById('add-recordatorio-prioridad')
+  if (royaltiesData.length > 0) {
+    const maxPrioridad = Math.max(...royaltiesData.map(r => Number(r.Número_de_prioridad)))
+    recordatorioPrioridad.textContent = `La prioridad más alta actual es ${maxPrioridad}`
+  } else {
+  recordatorioPrioridad.textContent = ''
+  }
+
   document.getElementById('modalAgregarRoyalty').classList.add('is-active')
 }
 
@@ -254,6 +285,11 @@ const actualizarProductos = async () => {
 function agregarValidarFormulario (datos) {
   document.querySelectorAll('.input, .select').forEach(el => el.classList.remove('is-danger'))
   document.querySelectorAll('.help.is-danger').forEach(el => el.remove())
+  const minNuevo = Number(datos.minVisitas)
+  const maxNuevo = Number(datos.maxVisitas)
+  const prioridadNueva = Number(datos.prioridad)
+  const prioridadDuplicada = royaltiesData.find(r => 
+  Number(r.Número_de_prioridad) === prioridadNueva && r.Nombre_Royalty !== nombreOriginal)
 
   let esValido = true
   if (!datos.nombre.trim()) { marcarError('add-input-nombre', 'Obligatorio'); esValido = false }
@@ -291,6 +327,36 @@ function agregarValidarFormulario (datos) {
     marcarError('contenedor-eventos-nuevo', 'Debes de registrar un evento')
     esValido = false
   }
+  if (minNuevo === maxNuevo) {
+  marcarError('add-input-minVisitas', 'Min y Max no pueden ser iguales')
+  marcarError('add-input-maxVisitas', 'Min y Max no pueden ser iguales')
+  esValido = false
+}
+
+for (const royalty of royaltiesData) {
+  if (royalty.Nombre_Royalty === nombreOriginal) continue
+
+  const minExistente = Number(royalty.Min_Visitas)
+  const maxExistente = Number(royalty.Max_Visitas)
+
+  if (minNuevo <= maxExistente && maxNuevo >= minExistente) {
+    marcarError('add-input-minVisitas', `Rango traslapa con "${royalty.Nombre_Royalty}" (${minExistente}-${maxExistente})`)
+    marcarError('add-input-maxVisitas', `Rango traslapa con "${royalty.Nombre_Royalty}" (${minExistente}-${maxExistente})`)
+    esValido = false
+    break
+  }
+}
+if (prioridadDuplicada) {
+  marcarError('add-input-prioridad', `La prioridad ${prioridadNueva} ya la tiene "${prioridadDuplicada.Nombre_Royalty}"`)
+  esValido = false
+}
+const nombreDuplicado = royaltiesData.find(r => 
+  r.Nombre_Royalty.toLowerCase() === datos.nombre.toLowerCase()
+)
+if (nombreDuplicado) {
+  marcarError('add-input-nombre', 'Ya existe un estado royalty con ese nombre')
+  esValido = false
+}
 
   return esValido
 }
@@ -298,7 +364,10 @@ function agregarValidarFormulario (datos) {
 function validarFormulario (datos) {
   document.querySelectorAll('.input, .select').forEach(el => el.classList.remove('is-danger'))
   document.querySelectorAll('.help.is-danger').forEach(el => el.remove())
-
+  const minNuevo = Number(datos.minVisitas)
+  const maxNuevo = Number(datos.maxVisitas)
+  const prioridadNueva = Number(datos.prioridad)
+  const prioridadDuplicada = royaltiesData.find(r => Number(r.Número_de_prioridad) === prioridadNueva)
   let esValido = true
   if (!datos.nombre.trim()) { marcarError('input-nombre', 'Obligatorio'); esValido = false }
   if (!datos.prioridad.trim()) { marcarError('input-prioridad', 'Obligatorio'); esValido = false }
@@ -325,6 +394,34 @@ function validarFormulario (datos) {
   }
   if (Number(datos.maxVisitas) < 0) {
     marcarError('input-maxVisitas', 'Debe ser mayor que cero')
+    esValido = false
+  }
+  if(minNuevo === maxNuevo) {
+    marcarError ('input-minVisitas', `El valor minimo y maximo no pueden ser iguales`)
+  }
+  for (const royalty of royaltiesData) {
+  if (royalty.Nombre_Royalty === nombreOriginal) continue 
+  const minExistente = Number(royalty.Min_Visitas)
+  const maxExistente = Number(royalty.Max_Visitas)
+  if (minNuevo <= maxExistente && maxNuevo >= minExistente) {
+    marcarError('input-minVisitas', `Rango traslapa con "${royalty.Nombre_Royalty}" (${minExistente}-${maxExistente})`)
+    marcarError('input-maxVisitas', `Rango traslapa con "${royalty.Nombre_Royalty}" (${minExistente}-${maxExistente})`)
+    esValido = false
+    break
+  }
+}
+
+
+  if (prioridadDuplicada) {
+    marcarError('input-prioridad', `La prioridad ${prioridadNueva} ya la tiene "${prioridadDuplicada.Nombre_Royalty}"`)
+    esValido = false
+  }
+
+  const nombreDuplicado = royaltiesData.find(r => 
+  r.Nombre_Royalty.toLowerCase() === datos.nombre.toLowerCase() && 
+  r.Nombre_Royalty !== nombreOriginal)
+  if (nombreDuplicado) {
+    marcarError('input-nombre', 'Ya existe un estado royalty con ese nombre')
     esValido = false
   }
 
@@ -425,36 +522,31 @@ async function cargarRoyalty () {
       }
       // Añadimos en la vista
       container.innerHTML += `
-        <div class="column is-half">
-          <div class="card">
-            <div class="card-content">
-              <p class="title is-5">${royalty.Nombre_Royalty}</p>
-              <div class="content">
-                <p><strong>Prioridad:</strong> ${royalty.Número_de_prioridad}</p>
-                <p><strong>Descripción:</strong> ${royalty.Descripción}</p>
-                <p><strong>Visitas mínimas:</strong> ${royalty.Min_Visitas}</p>
-                <p><strong>Visitas máximas:</strong> ${royalty.Max_Visitas}</p>
-                <hr>
-                <strong> Promociones: </strong>
-                ${promocionesHTML}
-              </div>
-                <strong> Eventos: </strong>
-                ${eventosHTML}
-                <br>
-              <footer class="card-footer">
-                <button class="button is-warning card-footer-item" onclick="modificarRoyalty('${royalty.Nombre_Royalty}')">
-                  <span class="icon"><i class="fas fa-pen"></i></span>
-                  <span>Modificar</span>
-                </button>
-                <button class="button is-danger card-footer-item" onclick="borrarRoyalty('${royalty.Nombre_Royalty}')">
-                  <span class="icon"><i class="fas fa-trash"></i></span>
-                  <span>Borrar</span>
-                </button>
-              </footer>
-            </div>
-          </div>
-        </div>
-      `
+  <div class="royalty-card">
+    <p class="royalty-card-name">${royalty.Nombre_Royalty}</p>
+    <div class="royalty-card-meta">
+      <span class="royalty-meta-pill"><i class="fas fa-star"></i> Prioridad ${royalty.Número_de_prioridad}</span>
+      <span class="royalty-meta-pill"><i class="fas fa-arrow-up"></i> Min ${royalty.Min_Visitas}</span>
+      <span class="royalty-meta-pill"><i class="fas fa-arrow-down"></i> Max ${royalty.Max_Visitas}</span>
+    </div>
+    <p class="royalty-card-desc">${royalty.Descripción}</p>
+    <hr style="margin: 4px 0; border-color: var(--c-border);">
+    <div style="font-size:13px; color: var(--c-text-soft);">
+      <strong>Promociones:</strong> ${promocionesHTML}
+      <strong>Eventos:</strong> ${eventosHTML}
+    </div>
+    <div class="royalty-card-actions">
+      <button class="button" onclick="modificarRoyalty('${royalty.Nombre_Royalty}')">
+        <span class="icon"><i class="fas fa-pen"></i></span>
+        <span>Modificar</span>
+      </button>
+      <button class="button is-danger" onclick="borrarRoyalty('${royalty.Nombre_Royalty}')">
+        <span class="icon"><i class="fas fa-trash"></i></span>
+        <span>Borrar</span>
+      </button>
+    </div>
+  </div>
+`
     })
     // Si no se logra añadir a la vista
   } catch (error) {

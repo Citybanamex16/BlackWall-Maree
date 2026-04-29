@@ -115,7 +115,7 @@ exports.postLogin = async (request, response, next) => {
 }
 
 exports.postSignUp = async (request, response, next) => {
-  const { telefono, nombre, genero, birthday, mail } = request.body
+  const { telefono, nombre, genero, birthday, mail, username } = request.body
   const telefonoSoloNumeros = telefono.replace(/\D/g, '')
 
   if (telefonoSoloNumeros.length !== 10) {
@@ -124,7 +124,7 @@ exports.postSignUp = async (request, response, next) => {
 
   try {
     const telefonoFormateado = formatearTelefono(telefonoSoloNumeros)
-    await Login.save({ telefono: telefonoFormateado, nombre, genero, birthday, mail })
+    await Login.save({ telefono: telefonoFormateado, nombre, genero, birthday, mail, username })
 
     const otpData = await issueOtpForClient(telefonoFormateado)
     request.session.pendingPhone = telefonoFormateado

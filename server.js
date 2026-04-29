@@ -3,6 +3,20 @@ const path = require('path')
 const session = require('express-session')
 const appServer = express()
 
+// Apple Wallet
+appServer.get('/passes/:filename', (req, res) => {
+  console.log('Sirviendo pass:', req.params.filename)
+  const filePath = path.join(__dirname, 'passes', req.params.filename)
+  res.setHeader('Content-Type', 'application/vnd.apple.pkpass')
+  res.setHeader('Content-Disposition', `attachment; filename="${req.params.filename}"`)
+  res.sendFile(filePath, (err) => {
+    if (err) {
+      console.log('Error enviando pass:', err)
+      res.status(404).send('Pass no encontrado')
+    }
+  })
+})
+
 // Sección: Configuración de Carpetas Estaticas
 appServer.use(express.static(path.join(__dirname, 'public')))
 
