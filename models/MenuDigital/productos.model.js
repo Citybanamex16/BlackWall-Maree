@@ -26,23 +26,46 @@ module.exports = class Producto {
     } catch (error) {
       if (error.code !== 'ER_BAD_FIELD_ERROR') throw error
 
-      const fallbackResult = await db.execute(`SELECT 
-      P.ID_Producto AS productoID,
-      P.nombre AS productoNombre, 
-      P.precio AS productoPrecio, 
-      P.categoría AS productoCategoria,
-      P.Tipo AS productoType, 
-      P.imagen AS productoImagen,
-      P.Disponible AS productoActivo,
-      0 AS productoPermiteCremaBatida,
-      I.ID_Insumo AS insumoID,
-      I.nombre AS insumoNombre,
-      I.Precio AS precio
-      FROM producto AS P
-      LEFT JOIN producto_tiene_insumo AS PI ON P.ID_Producto = PI.ID_Producto
-      LEFT JOIN insumo AS I ON PI.ID_Insumo = I.ID_Insumo
-      ;`)
-      rows = fallbackResult[0]
+      try {
+        const fallbackResult = await db.execute(`SELECT 
+        P.ID_Producto AS productoID,
+        P.nombre AS productoNombre, 
+        P.precio AS productoPrecio, 
+        P.categoría AS productoCategoria,
+        P.Tipo AS productoType, 
+        P.imagen AS productoImagen,
+        P.Disponible AS productoActivo,
+        C.Permite_Crema_Batida AS productoPermiteCremaBatida,
+        I.ID_Insumo AS insumoID,
+        I.nombre AS insumoNombre,
+        I.Precio AS precio
+        FROM producto AS P
+        LEFT JOIN categoría AS C ON P.Categoría = C.Nombre
+        LEFT JOIN producto_tiene_insumo AS PI ON P.ID_Producto = PI.ID_Producto
+        LEFT JOIN insumo AS I ON PI.ID_Insumo = I.ID_Insumo
+        ;`)
+        rows = fallbackResult[0]
+      } catch (fallbackError) {
+        if (fallbackError.code !== 'ER_BAD_FIELD_ERROR') throw fallbackError
+
+        const safeFallbackResult = await db.execute(`SELECT 
+        P.ID_Producto AS productoID,
+        P.nombre AS productoNombre, 
+        P.precio AS productoPrecio, 
+        P.categoría AS productoCategoria,
+        P.Tipo AS productoType, 
+        P.imagen AS productoImagen,
+        P.Disponible AS productoActivo,
+        0 AS productoPermiteCremaBatida,
+        I.ID_Insumo AS insumoID,
+        I.nombre AS insumoNombre,
+        I.Precio AS precio
+        FROM producto AS P
+        LEFT JOIN producto_tiene_insumo AS PI ON P.ID_Producto = PI.ID_Producto
+        LEFT JOIN insumo AS I ON PI.ID_Insumo = I.ID_Insumo
+        ;`)
+        rows = safeFallbackResult[0]
+      }
     }
 
     // 2. Agrupamos utilizando Mapping

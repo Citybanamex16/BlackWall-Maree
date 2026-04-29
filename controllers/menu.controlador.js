@@ -27,6 +27,44 @@ function firstDefined (...values) {
   return values.find(value => value !== undefined)
 }
 
+async function tableHasColumn (tableName, columnName) {
+  const [rows] = await db.execute(
+    `SELECT COUNT(*) AS total
+     FROM information_schema.COLUMNS
+     WHERE TABLE_SCHEMA = DATABASE()
+       AND TABLE_NAME = ?
+       AND COLUMN_NAME = ?`,
+    [tableName, columnName]
+  )
+
+  return Number(rows[0]?.total || 0) > 0
+}
+
+async function getCategoryWhippedCreamPermission (categoryName) {
+  if (!categoryName) return 0
+
+  const hasCategoryColumn = await tableHasColumn('categoría', 'Permite_Crema_Batida')
+  if (!hasCategoryColumn) return 0
+
+  const [rows] = await db.execute(
+    'SELECT Permite_Crema_Batida AS permiteCremaBatida FROM categoría WHERE Nombre = ? LIMIT 1',
+    [categoryName]
+  )
+
+  const value = rows[0]?.permiteCremaBatida
+  return value === 1 || value === '1' ? 1 : 0
+}
+
+async function validateWhippedCreamPersistence ({ categoryName, requestedValue }) {
+  const hasProductColumn = await tableHasColumn('producto', 'Permite_Crema_Batida')
+  if (hasProductColumn) return null
+
+  const fallbackValue = await getCategoryWhippedCreamPermission(categoryName)
+  if (Number(requestedValue) === Number(fallbackValue)) return null
+
+  return 'No se puede guardar "Permitir crema batida" en esta base todavía. Aplica sql/Parches/parche_crema_batida_por_producto.sql y vuelve a intentarlo.'
+}
+
 function parseIngredientesPayload (value) {
   if (Array.isArray(value)) {
     return value
@@ -755,6 +793,19 @@ exports.postNewProduct = async (req, res, next) => {
       })
     }
 
+    const whippedCreamPersistenceError = await validateWhippedCreamPersistence({
+      categoryName: categoriaProducto,
+      requestedValue: permiteCremaBatidaProducto
+    })
+
+    if (whippedCreamPersistenceError) {
+      await eliminarImagenSubidaProducto(req.file)
+      return res.status(400).json({
+        ok: false,
+        message: whippedCreamPersistenceError
+      })
+    }
+
     if (validation.valido) {
       if (ingredientesID.length > 0) {
         // Caso producto con ingredientes (transacción)
@@ -864,6 +915,18 @@ exports.postModifProduct = async (req, res, next) => {
       return res.status(400).json({
         ok: false,
         message: 'Ya existe otro producto con el mismo nombre, categoría y tipo.'
+      })
+    }
+
+    const whippedCreamPersistenceError = await validateWhippedCreamPersistence({
+      categoryName: categoriaProducto,
+      requestedValue: parseBooleanFlag(newdata.permiteCremaBatida)
+    })
+
+    if (whippedCreamPersistenceError) {
+      return res.status(400).json({
+        ok: false,
+        message: whippedCreamPersistenceError
       })
     }
 
