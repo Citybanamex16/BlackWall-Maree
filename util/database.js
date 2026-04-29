@@ -1,5 +1,5 @@
 const mysql = require('mysql2')
-/*
+
 // Pool de conexiones
 /*
 const pool = mysql.createPool({
@@ -16,6 +16,7 @@ const pool = mysql.createPool({
 })
 */
 
+
 /* ==Contraseñas y usuario ==
 Usuario: CL85565990
 Pass: CL006901!
@@ -27,7 +28,7 @@ Pass: CL006901!
 // Charly
 
 
-
+/*
 // Pool de conexiones
 
 const pool = mysql.createPool({
@@ -36,7 +37,7 @@ const pool = mysql.createPool({
   database: 'mareebd',
   password: '',
   charset: 'utf8mb4_spanish2_ci' ,
-  waitForConnection: true,
+  waitForConnections: true,
   connectionLimit: 10
 
 })

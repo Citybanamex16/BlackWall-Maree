@@ -11,8 +11,21 @@
 
 </head>
 <body>
+    <nav class="navbar" role="navigation">
+        <div class="navbar-brand">
+            <div class="navbar-item">
+                <div class="logo-area">
+                    <span class="logo-text">MARÉE</span>
+                    <span class="logo-sub">Love at First Crêpe</span>
+                </div>
+            </div>
+        </div>
+    </nav>
+
     <section class="section">
         <div class="container">
+            <a href="/admin" class="back-link">← Admin Dashboard</a>
+
             <div class="events-shell">
                 <div>
                     <span class="events-kicker">Eventos, promociones y catalogo</span>
@@ -23,11 +36,8 @@
                     </p>
                 </div>
                 <div class="events-toolbar">
-                    <a href="/admin" class="button event-ghost is-medium" type="button">
-                        Volver al dashboard
-                    </a>
                     <div id="loading-spinner" class="button is-loading is-ghost is-hidden"></div>
-                    <button id="btn-nuevo-evento" class="button event-primary-button is-rounded is-medium" type="button">
+                    <button id="btn-nuevo-evento" class="button event-primary-button is-rounded is-medium">
                         Nuevo evento
                     </button>
                 </div>

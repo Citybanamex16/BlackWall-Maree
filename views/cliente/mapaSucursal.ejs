@@ -3,10 +3,7 @@
 <body>
   <div class="mapa-page">
     <header class="mapa-header">
-      <a href="/menu/menu" class="mapa-back">
-        <i class="fa-solid fa-arrow-left"></i>
-        Volver al menú
-      </a>
+    
 
       <h1>Mapa Interactivo</h1>
       <p>Selecciona una sucursal para verla en el mapa</p>
@@ -23,11 +20,58 @@
               Usar mi ubicación
             </button>
 
-            <a id="btnAbrirMapa" class="button is-dark" target="_blank" rel="noopener">
-              <i class="fa-solid fa-map-location-dot"></i>
-              Abrir ruta
-            </a>
-          </div>
+                <!-- COLUMNA IZQUIERDA: Mapa -->
+                <div class="mapa-columna">
+                    <div id="contenedor-mapa">
+                        <img id="google-static-map" src="" alt="Mapa de ubicación">
+                    </div>
+                </div>
+
+                <!-- COLUMNA DERECHA: Dirección (salvavidas) -->
+                <aside class="direccion-columna">
+
+                    <!-- JS inyecta una tarjeta por sucursal aquí -->
+                    <div id="contenedor-sucursales">
+
+                        <!-- Skeleton visible mientras JS carga -->
+                        <div class="direccion-skeleton">
+                            <div class="skeleton-linea skeleton-titulo"></div>
+                            <div class="skeleton-linea"></div>
+                            <div class="skeleton-linea skeleton-corta"></div>
+                        </div>
+
+                    </div>
+<style>
+    .boton-insta {
+        background: linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%);
+        color: white !important; /* El !important asegura que no lo sobrescriba otro estilo */
+        padding: 12px 24px;
+        text-decoration: none;
+        border-radius: 8px;
+        font-weight: bold;
+        display: inline-block;
+        transition: transform 0.2s;
+        border: none;
+        cursor: pointer;
+    }
+
+    .boton-insta:hover {
+        transform: scale(1.05);
+        color: white;
+        text-decoration: none;
+    }
+</style>
+    <a href="https://www.instagram.com/mareecrepe/" 
+   target="_blank" 
+   rel="noopener noreferrer">
+   <img src="https://img.freepik.com/vector-premium/icono-instagram-logotipo-insignia-moderna_578229-124.jpg?semt=ais_hybrid&w=740&q=80" 
+        alt="Instagram" 
+        style="height: 44px; width: 44px; border-radius: 12px;">
+</a>
+
+                </aside>
+
+            </div>
 
           <p id="mapaMensaje" class="mapa-mensaje"></p>
         </div>
@@ -37,6 +81,42 @@
         </aside>
       </section>
     </main>
+  </div>
+
+  <div id="sticky-bottom" class="sticky-bottom-app">
+
+    <a href="/cliente/eventosCliente" class="btn btn-icon search-side-btn" aria-label="Eventos">
+        <i class="fas fa-calendar-alt is-size-4"></i>
+    </a>
+
+    <% if (datosCliente) { %>
+    <a href="/royalty/royaltyUser" class="btn btn-icon search-side-btn btn-rewards-glow" aria-label="Rewards">
+        <i class="fas fa-crown is-size-4"></i>
+    </a>
+    <% } %>
+
+    <a href="/" class="btn btn-icon search-side-btn" aria-label="Inicio">
+        <i class="fas fa-house is-size-4"></i>
+    </a>
+
+    <button id="btn-search-toggle" class="btn btn-icon" aria-label="Buscar">
+        <i class="fas fa-search is-size-4"></i>
+    </button>
+
+    <div class="search-bar-wrapper control has-icons-left" id="search-expanded" style="display:none;flex:1;">
+        <input id="search-input" class="input is-rounded" type="text" placeholder="Buscar...">
+        <span class="icon is-left">
+            <i class="fas fa-search"></i>
+        </span>
+    </div>
+
+    <a href="/menu/orden" class="btn btn-icon search-side-btn" aria-label="Carrito">
+        <span style="position:relative;display:inline-flex;">
+            <i class="fas fa-shopping-cart is-size-4"></i>
+            <span class="fab-badge">0</span>
+        </span>
+    </a>
+
   </div>
 
   <script src="/js/menudigital/mapaScript.js"></script>

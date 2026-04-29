@@ -1,0 +1,33 @@
+-- ============================================================
+-- Script: Asignar usernames aleatorios a todos los clientes
+-- Base de datos: mareebd
+-- Tabla: cliente (columna: username VARCHAR(20))
+-- ============================================================
+-- Estrategia: nombre en minúsculas + número aleatorio de 3 dígitos
+-- Ejemplo: "Andrea Cantú" → "andrea_cantu_472"
+-- Se omiten acentos y caracteres especiales para compatibilidad
+-- ============================================================
+ 
+UPDATE `cliente` SET `username` = CONCAT(
+    -- Primer nombre en minúsculas, sin acentos, máx 10 chars
+    LOWER(SUBSTRING(
+        REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(
+        REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(
+        REPLACE(REPLACE(REPLACE(REPLACE(
+            SUBSTRING_INDEX(`Nombre`, ' ', 1),
+        'á','a'),'é','e'),'í','i'),'ó','o'),'ú','u'),
+        'Á','a'),'É','e'),'Í','i'),'Ó','o'),'Ú','u'),
+        'ñ','n'),'Ñ','n'),'ü','u'),'Ü','u')
+    , 1, 10)),
+    '_',
+    -- Número aleatorio de 3 dígitos para evitar duplicados
+    LPAD(FLOOR(RAND() * 900) + 100, 3, '0')
+)
+WHERE `username` IS NULL;
+ 
+-- ============================================================
+-- Verificación: ver los usernames asignados
+-- ============================================================
+SELECT `Numero_Telefonico`, `Nombre`, `username`
+FROM `cliente`
+ORDER BY `Nombre`;
