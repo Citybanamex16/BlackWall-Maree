@@ -42,7 +42,8 @@ async function getCatalogoProductos () {
     showSpinner('Obteniendo Catalogo de Productos')
     const response = await fetch('/menu/productosCatalog')
     if (!response.ok) {
-      ShowErrorModal('Error Interno', 'Error en Obtener Catalogo')
+      const errorData = await response.json().catch(() => ({}))
+      ShowErrorModal('Error Interno', errorData.message || 'Error en Obtener Catalogo')
       throw new Error('Error en Register Button Click')
     }
 
@@ -50,7 +51,7 @@ async function getCatalogoProductos () {
     console.log('object: ', object)
     construirCatalogoAdmin(object)
   } catch (error) {
-    console.log('Error obteniendo Catalogo: '.error)
+    console.log('Error obteniendo Catalogo:', error)
   } finally {
     hideSpinner()
   }
@@ -358,6 +359,7 @@ function createFieldElement (field) {
     string: 'text',
     int: 'number',
     float: 'number',
+    file: 'file',
     bool: 'checkbox',
     boolean: 'checkbox'
   }
@@ -387,6 +389,7 @@ function createFieldElement (field) {
     input.required = true
 
     if (field.type === 'float') input.step = 'any'
+    if (mappedType === 'file') input.accept = field.accept || 'image/*'
     if (field.placeholder) input.placeholder = field.placeholder
 
     wrapper.appendChild(label)
@@ -510,7 +513,6 @@ function buildIngredientsSection ({ mostrarCantidad = false } = {}) {
   section.innerHTML = `
     <div class="ingredients-header is-dynamic">
       <div class="ingredients-title-wrapper">
-        <span class="ing-icon">✨</span>
         <h4 class="ingredients-premium-title">Composición del Platillo</h4>
       </div>
       <span id="ingCounter" class="maree-badge-gold">1 / ${MAX_INGREDIENTES}</span>
@@ -728,7 +730,7 @@ function PostNewProduct (BackupIngredientes, ProductType) {
     // Construir array para ShowProductSummary incluyendo ingredientes
     const summaryData = Object.entries(data)
       .filter(([key]) => key !== 'ingredientes') // los ingredientes se muestran aparte
-      .map(([key, value]) => ({ key, value }))
+      .map(([key, value]) => ({ key: getSummaryLabel(key), value }))
 
     ingredientes.forEach((ing, i) => {
       summaryData.push({ key: `Ingrediente ${i + 1}`, value: ing.nombre })
@@ -776,6 +778,52 @@ const SummaryFormTitle = document.getElementById('SummaryTitleModal')
 const SummaryFormClose = document.getElementById('cerrarSummaryModal')
 const SummaryRegisterbtn = document.getElementById('RegisterProduct')
 
+function isFileValue (content) {
+  return typeof File !== 'undefined' && content instanceof File
+}
+
+function getSummaryLabel (key) {
+  const labels = {
+    Nombre: 'Nombre',
+    Precio: 'Precio',
+    Disponible: 'Disponible',
+    permiteCremaBatida: 'Permitir crema batida',
+    ImagenArchivo: 'Imagen',
+    Imagen: 'Imagen',
+    tipo: 'Tipo',
+    categoría: 'Categoría'
+  }
+
+  return labels[key] || key
+}
+
+function buildProductRequestFormData (productData) {
+  const requestData = new FormData()
+
+  Object.entries(productData).forEach(([key, value]) => {
+    if (key === 'ingredientesID') {
+      requestData.append(key, JSON.stringify(value))
+      return
+    }
+
+    if (isFileValue(value)) {
+      if (value.size > 0) requestData.append(key, value)
+      return
+    }
+
+    if (typeof value === 'boolean') {
+      requestData.append(key, value ? 'true' : 'false')
+      return
+    }
+
+    if (value !== null && value !== undefined) {
+      requestData.append(key, value)
+    }
+  })
+
+  return requestData
+}
+
 function createSummaryElement (title, content) {
   const wrapper = document.createElement('div')
   wrapper.classList.add('maree-summary-row', 'is-dynamic')
@@ -789,7 +837,11 @@ function createSummaryElement (title, content) {
   const isImageKey = title.toLowerCase().includes('imagen') || title.toLowerCase().includes('img')
 
   let value
-  if (isImageKey && content && (content.startsWith('http') || content.startsWith('/'))) {
+  if (isFileValue(content)) {
+    value = document.createElement('span')
+    value.classList.add('maree-summary-value')
+    value.textContent = content.name || 'Imagen seleccionada'
+  } else if (isImageKey && content && (content.startsWith('http') || content.startsWith('/'))) {
     value = document.createElement('div')
     value.classList.add('maree-summary-img-wrapper')
 
@@ -868,23 +920,22 @@ async function registerNewProduct (NewProductData, ProductType) {
     console.log('POST NEW PRODUCT')
 
     showSpinner('Guardando Producto')
+    const requestBody = buildProductRequestFormData(NewProductData)
     const postrequest = await fetch('/menu/registerNewProduct', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/JSON' },
-      body: JSON.stringify(NewProductData)
+      body: requestBody
     })
 
-    const response = await postrequest.json()
-    if (response.ok) {
+    const response = await postrequest.json().catch(() => ({}))
+    if (postrequest.ok && response.ok) {
       console.log('¡Exito!')
       // Mostramos modal de exito
       showSuccessModal(nombre, ProductType)
     } else {
-      ShowErrorModal(`Error al Registrar ${ProductType}`, response.message || 'Error Desconocido')
-      throw new Error('Error Registrar nuevo Producto')
+      ShowErrorModal(`Error al registrar ${ProductType}`, response.message || 'No se pudo registrar el producto.')
     }
   } catch (error) {
-    ShowErrorModal(`Error al intentar Registrar ${ProductType}`, 'Hubo in fallo en la conexión con la BD. Favor de intentarlo mas tarde')
+    ShowErrorModal(`Error al intentar registrar ${ProductType}`, 'Hubo un fallo en la conexión con la BD. Favor de intentarlo más tarde.')
   } finally {
     hideSpinner()
   }
@@ -916,6 +967,11 @@ function validarDatosRegistro (Formsdata, catalogoIngredientes) {
   const nombresValidos = new Set(catalogoIngredientes.map(ing => ing.nombre))
 
   for (const field of data) {
+    if (isFileValue(field[1]) && field[1].size === 0) {
+      console.warn(`Archivo faltante: ${field[0]}`)
+      return false
+    }
+
     if (field[1] === null || field[1] === undefined || field[1] === '') {
       console.warn(`Campo vacío: ${field[0]}`)
       return false
