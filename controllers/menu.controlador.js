@@ -210,7 +210,8 @@ exports.getMenuPromos = async (req, res, nex) => {
 
 exports.getMapaSucursales = (req, res, nex) => {
   const breadcrumbs = nav.getBreadcrumbs('Menu')
-  res.render('cliente/mapaSucursal', { breadcrumbs })
+  const SesionData = req.session.cliente
+  res.render('cliente/mapaSucursal', { breadcrumbs, datosCliente: SesionData})
 }
 
 exports.getAllSucursales = async (req, res, nex) => {

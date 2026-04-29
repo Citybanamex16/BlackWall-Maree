@@ -70,14 +70,47 @@ const textoEstado = (evento) => evento.estatus === 'live' ? 'Activo ahora' : 'Mu
       <section class="events-empty"><div class="events-empty-icon"><i class="fas fa-calendar-xmark"></i></div><h2 class="events-section-title">No hay eventos activos</h2><p class="events-copy">Cuando exista un evento vigente y marcado como activo, aparecera aqui para consulta del cliente.</p></section>
     <% } %>
 
+
+    <div id="sticky-bottom" class="sticky-bottom-app">
+
+    <a href="/menu/sucursales" class="btn btn-icon search-side-btn" aria-label="Mapa">
+        <i class="fas fa-map-marker-alt is-size-4"></i>
+    </a>
+
+    <% if (datosCliente) { %>
+    <a href="/royalty/royaltyUser" class="btn btn-icon search-side-btn btn-rewards-glow" aria-label="Rewards">
+        <i class="fas fa-crown is-size-4"></i>
+    </a>
+    <% } %>
+
+    <a href="/" class="btn btn-icon search-side-btn" aria-label="Inicio">
+        <i class="fas fa-house is-size-4"></i>
+    </a>
+
+    <button id="btn-search-toggle" class="btn btn-icon" aria-label="Buscar">
+        <i class="fas fa-search is-size-4"></i>
+    </button>
+
+    <div class="search-bar-wrapper control has-icons-left" id="search-expanded" style="display:none;flex:1;">
+        <input id="search-input" class="input is-rounded" type="text" placeholder="Buscar...">
+        <span class="icon is-left">
+            <i class="fas fa-search"></i>
+        </span>
+    </div>
+
+    <a href="/menu/orden" class="btn btn-icon search-side-btn" aria-label="Carrito">
+        <span style="position:relative;display:inline-flex;">
+            <i class="fas fa-shopping-cart is-size-4"></i>
+            <span class="fab-badge">0</span>
+        </span>
+    </a>
+
+</div>
+
   </main>
 
-  <div id="sticky-bottom" class="sticky-bottom-app">
-    <a href="/menu/sucursales" class="btn btn-icon search-side-btn" aria-label="Mapa"><i class="fas fa-map-marker-alt is-size-4"></i></a>
-    <a href="/cliente/promosCliente" class="btn btn-icon search-side-btn" aria-label="Promos"><i class="fas fa-gift is-size-4"></i></a>
-    <a href="/menu/menu" class="btn btn-icon search-side-btn events-home-btn" aria-label="Menu"><i class="fas fa-house is-size-4"></i></a>
-    <a href="/cliente/eventosCliente" class="btn btn-icon search-side-btn is-current" aria-label="Eventos"><i class="fas fa-calendar-alt is-size-4"></i></a>
-    <a href="/menu/orden" class="btn btn-icon search-side-btn" aria-label="Carrito"><i class="fas fa-shopping-cart is-size-4"></i></a>
-  </div>
+
+
+
 </body>
 </html>

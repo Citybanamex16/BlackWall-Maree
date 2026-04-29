@@ -5,7 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Order - Marée</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@1.0.4/css/bulma.min.css">
+    <link rel="stylesheet" href="/css/moduloMenuCSS/moduloMenuCliente.css">
     <link rel="stylesheet" href="/css/moduloMenuCSS/menustyle.css">
+
     <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=Jost:wght@300;400;500&display=swap" rel="stylesheet">
 </head>
 <body>
@@ -90,19 +92,5 @@
         </div>
         <% } %>
 
-
-        <script>
-            window.datosRoyalty = {
-                tokens: <%= (datosCliente && datosCliente.tokensDisponibles) ? datosCliente.tokensDisponibles : 0 %>,
-                descuento: <%= (datosCliente && datosCliente.descuentoRoyalty) ? datosCliente.descuentoRoyalty : 0 %>,
-                nivel: "<%= (datosCliente) ? datosCliente.nivel : '' %>"
-            };
-        </script>
-    </section>
-
-    <script>
-        const sesionCliente = <%- JSON.stringify(datosCliente || null) %>;
-    </script>
-    <script src="/js/menudigital/order.js"></script>
 </body>
 </html>
