@@ -68,7 +68,23 @@ function refreshProductsCatalog () {
 // Estructuras de Datos
 const catalogoProductosMap = new Map()
 
-function construirFichaProductos (datosProducto, datosCategorias) {
+function createDuplicateMap (productos) {
+  const duplicates = new Map()
+
+  productos.forEach(prod => {
+    const key = `${prod.categoria}::${prod.tipo}::${String(prod.nombre).trim().toLowerCase()}`
+    duplicates.set(key, (duplicates.get(key) || 0) + 1)
+  })
+
+  return duplicates
+}
+
+function getIngredientesResumen (ingredientes) {
+  if (!Array.isArray(ingredientes) || ingredientes.length === 0) return 'Sin ingredientes vinculados'
+  return ingredientes.map(ing => ing.nombre).join(', ')
+}
+
+function construirFichaProductos (datosProducto, datosCategorias, duplicateMap) {
   console.log('Repartiendo productos en sus categorías...')
   datosCategorias.forEach(cat => {
     const sectionPrincipal = document.getElementById(cat.id)
@@ -86,7 +102,7 @@ function construirFichaProductos (datosProducto, datosCategorias) {
 
     productosFiltrados.forEach(prod => {
       catalogoProductosMap.set(String(prod.id), prod) // Guardamos la info en la memoria
-      const fichaHTML = renderProductoAdmin(prod)
+      const fichaHTML = renderProductoAdmin(prod, duplicateMap)
       gridDestino.insertAdjacentHTML('beforeend', fichaHTML)
     })
 
@@ -112,11 +128,14 @@ function construirFichaProductos (datosProducto, datosCategorias) {
 }
 
 // Render de fila compacta
-function renderProductoAdmin (prod) {
+function renderProductoAdmin (prod, duplicateMap) {
   // Verificamos si tiene tipo, si no, ponemos un placeholder
   const tipoTexto = prod.tipo ? prod.tipo : 'Otro'
   const estadoTexto = prod.activo ? 'Activo' : 'Inactivo'
   const estadoClase = prod.activo ? 'is-success' : 'is-inactive'
+  const productKey = `${prod.categoria}::${prod.tipo}::${String(prod.nombre).trim().toLowerCase()}`
+  const duplicateCount = duplicateMap.get(productKey) || 0
+  const ingredientesResumen = getIngredientesResumen(prod.ingredientes)
 
   return `
     <div class="admin-prod-row" data-id="${prod.id}">
@@ -126,10 +145,12 @@ function renderProductoAdmin (prod) {
         </div>
         <div class="admin-prod-texts">
           <h4 class="admin-prod-name">${prod.nombre}</h4>
+          <p class="admin-prod-helper">ID: ${prod.id} · ${ingredientesResumen}</p>
           
           <div class="admin-prod-meta">
             <span class="admin-tag-tipo">${tipoTexto}</span>
             <span class="status-pill ${estadoClase}">${estadoTexto}</span>
+            ${duplicateCount > 1 ? '<span class="status-pill is-neutral">Duplicado</span>' : ''}
             <span class="admin-prod-price">$${prod.precio}</span>
           </div>
         </div>
@@ -215,6 +236,7 @@ function construirCatalogoAdmin (datos) {
   console.log('Construyendo catálogo admin...')
   const categorias = datos.arrayCategorías[0]
   const productosInfo = datos.arrayProductsCatalog
+  const duplicateMap = createDuplicateMap(productosInfo)
 
   const contenedor = document.getElementById('admin-catalogo')
   catalogoProductosMap.clear()
@@ -225,7 +247,7 @@ function construirCatalogoAdmin (datos) {
     categoriasInfo.push(construirCategoria(cat, contenedor))
   })
 
-  construirFichaProductos(productosInfo, categoriasInfo)
+  construirFichaProductos(productosInfo, categoriasInfo, duplicateMap)
 
   // Stats del encabezado
   animarContador('statTotal', productosInfo.length)

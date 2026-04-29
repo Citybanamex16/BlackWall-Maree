@@ -282,6 +282,22 @@ module.exports = class Producto {
     return db.execute('SELECT ID_Insumo as id FROM producto_tiene_insumo WHERE ID_Producto = ?', [id])
   }
 
+  static async existeProductoDuplicado (nombre, categoria, tipo, idExcluir = null) {
+    const query = `
+      SELECT COUNT(*) AS total
+      FROM producto
+      WHERE LOWER(TRIM(Nombre)) = LOWER(TRIM(?))
+        AND Categoría = ?
+        AND Tipo = ?
+        ${idExcluir ? 'AND ID_Producto <> ?' : ''}
+    `
+    const params = idExcluir
+      ? [nombre, categoria, tipo, idExcluir]
+      : [nombre, categoria, tipo]
+    const [rows] = await db.execute(query, params)
+    return Number(rows[0]?.total || 0) > 0
+  }
+
   /* EliminarDesactivar producto PD30576515 */
 
   static async eliminarProducto (connection, id) {

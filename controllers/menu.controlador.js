@@ -717,6 +717,20 @@ exports.postNewProduct = async (req, res, next) => {
       return res.status(400).json({ ok: false, message: 'Debes subir una imagen del producto.' })
     }
 
+    const productoDuplicado = await productos.existeProductoDuplicado(
+      nombreProducto,
+      categoriaProducto,
+      tipoProducto
+    )
+
+    if (productoDuplicado) {
+      await eliminarImagenSubidaProducto(req.file)
+      return res.status(400).json({
+        ok: false,
+        message: 'Ya existe un producto con el mismo nombre, categoría y tipo.'
+      })
+    }
+
     if (validation.valido) {
       if (ingredientesID.length > 0) {
         // Caso producto con ingredientes (transacción)
@@ -815,6 +829,19 @@ exports.postModifProduct = async (req, res, next) => {
     const imagenProducto = firstDefined(newdata.imagen, newdata.Imagen) ?? null
     const newIngredientesRaw = newdata.ingredientes || [] // Evitamos fallos si viene vacío
     const oldIngredientesRaw = await productos.fetchOneProductIngredientes(idProducto)
+    const productoDuplicado = await productos.existeProductoDuplicado(
+      nombreProducto,
+      categoriaProducto,
+      tipoProducto,
+      idProducto
+    )
+
+    if (productoDuplicado) {
+      return res.status(400).json({
+        ok: false,
+        message: 'Ya existe otro producto con el mismo nombre, categoría y tipo.'
+      })
+    }
 
     // 1. LIMPIEZA DE DATOS: Convertimos los objetos complejos en arrays de IDs simples
     // newIds quedará como: ['IN37891778', 'IN12345678']
