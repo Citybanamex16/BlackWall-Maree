@@ -2,6 +2,7 @@
 // JS FRONTEND de la vista de Productos del Admin
 const canManageProducts = window.canManageProducts === true
 window.supportsProductWhippedCream = false
+window.supportsProductIngredientCustomization = false
 
 // Funciones Globales
 
@@ -239,6 +240,7 @@ function construirCatalogoAdmin (datos) {
   const productosInfo = datos.arrayProductsCatalog
   const duplicateMap = createDuplicateMap(productosInfo)
   window.supportsProductWhippedCream = datos.supportsProductWhippedCream === true
+  window.supportsProductIngredientCustomization = datos.supportsProductIngredientCustomization === true
 
   const contenedor = document.getElementById('admin-catalogo')
   catalogoProductosMap.clear()
@@ -362,6 +364,7 @@ async function seleccionarTipoProducto (id) {
     const AllIngredientes = object.data.ingredientes[0]
     const AllTypes = object.data.types
     window.supportsProductWhippedCream = object.data.supportsProductWhippedCream === true
+    window.supportsProductIngredientCustomization = object.data.supportsProductIngredientCustomization === true
     console.log('Types recvieves: ', AllTypes)
     createProductRegisterForms(ProductFields, AllIngredientes, id, AllTypes)
   } catch (error) {
@@ -408,6 +411,7 @@ function createFieldElement (field) {
     input.type = 'checkbox'
     input.id = `field-${fieldName}`
     input.name = fieldName
+    input.checked = field.checked === true
 
     checkRow.appendChild(input)
     checkRow.append(` ${fieldLabel}`)
@@ -664,6 +668,9 @@ function createProductRegisterForms (Fields, Ingredientes, type, tiposData) {
     if (field.nombre === 'permiteCremaBatida' && window.supportsProductWhippedCream !== true) {
       return
     }
+    if (field.nombre === 'permiteModificarIngredientes' && window.supportsProductIngredientCustomization !== true) {
+      return
+    }
     const fieldEl = createFieldElement(field)
     fieldEl.style.animationDelay = `${index * 0.05}s`
     registerForm.appendChild(fieldEl)
@@ -671,6 +678,10 @@ function createProductRegisterForms (Fields, Ingredientes, type, tiposData) {
 
   if (window.supportsProductWhippedCream !== true) {
     registerForm.appendChild(buildWhippedCreamSupportNotice())
+  }
+
+  if (window.supportsProductIngredientCustomization !== true) {
+    registerForm.appendChild(buildIngredientCustomizationSupportNotice())
   }
 
   // Construir la sección de tipos
@@ -823,6 +834,17 @@ function buildWhippedCreamSupportNotice () {
   return wrapper
 }
 
+function buildIngredientCustomizationSupportNotice () {
+  const wrapper = document.createElement('div')
+  wrapper.classList.add('maree-field', 'is-dynamic')
+  wrapper.innerHTML = `
+    <div class="maree-summary-row" style="border-style:dashed;">
+      <span class="maree-summary-label">Permitir modificar ingredientes</span>
+      <span class="maree-summary-value">Disponible cuando se aplique el parche SQL de modificación por producto.</span>
+    </div>`
+  return wrapper
+}
+
 /* == Creación de Modal de Resumen de Datos */
 
 const SummaryModal = document.getElementById('SummaryCU04')
@@ -840,6 +862,7 @@ function getSummaryLabel (key) {
     Precio: 'Precio',
     Disponible: 'Disponible',
     permiteCremaBatida: 'Permitir crema batida',
+    permiteModificarIngredientes: 'Permitir modificar ingredientes',
     ImagenArchivo: 'Imagen',
     Imagen: 'Imagen',
     tipo: 'Tipo',

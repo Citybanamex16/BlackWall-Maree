@@ -1,4 +1,4 @@
-/* global ShowErrorModal, showSuccessModal, refreshProductsCatalog, buildWhippedCreamSupportNotice, catalogoIng:writable , catalogTipos:writable , limpiarModal, createFieldElement, buildIngredientsSection, SetRegisterButtons, onBtnIngNewClick, getIngredientesSeleccionados, validarDatosRegistro */
+/* global ShowErrorModal, showSuccessModal, refreshProductsCatalog, buildWhippedCreamSupportNotice, buildIngredientCustomizationSupportNotice, catalogoIng:writable , catalogTipos:writable , limpiarModal, createFieldElement, buildIngredientsSection, SetRegisterButtons, onBtnIngNewClick, getIngredientesSeleccionados, validarDatosRegistro */
 /* exported ConstruirModifModal, ModifyProduct */
 
 /* CU05 Modificar Platillo Existente */
@@ -68,7 +68,7 @@ async function ConstruirModifModal (productData, AllCategorys) {
 
   // 2. Construir fields desde productData
   // Keys que tienen tratamiento especial — se excluyen del loop general
-  const KEYS_EXCLUIDAS = ['id', 'ingredientes', 'categoria', 'tipo', 'activo', 'permiteCremaBatida'] // Nombres Sincronizados con Backend
+  const KEYS_EXCLUIDAS = ['id', 'ingredientes', 'categoria', 'tipo', 'activo', 'permiteCremaBatida', 'permiteModificarIngredientes'] // Nombres Sincronizados con Backend
 
   Object.entries(productData).forEach(([key, value]) => {
     if (KEYS_EXCLUIDAS.includes(key)) return
@@ -121,6 +121,16 @@ async function ConstruirModifModal (productData, AllCategorys) {
     const cremaBatidaNotice = buildWhippedCreamSupportNotice()
     cremaBatidaNotice.classList.add('is-dynamic')
     ModifForm.appendChild(cremaBatidaNotice)
+  }
+
+  if (window.supportsProductIngredientCustomization === true) {
+    const ingredientesField = buildPermiteModificarIngredientesField(productData.permiteModificarIngredientes)
+    ingredientesField.classList.add('is-dynamic')
+    ModifForm.appendChild(ingredientesField)
+  } else {
+    const ingredientesNotice = buildIngredientCustomizationSupportNotice()
+    ingredientesNotice.classList.add('is-dynamic')
+    ModifForm.appendChild(ingredientesNotice)
   }
 
   // 5. Pre-seleccionar ingredientes actuales en los dropdowns
@@ -206,6 +216,17 @@ function buildPermiteCremaBatidaField (checked = false) {
     <label class="maree-checkbox-row">
       <input type="checkbox" id="field-permiteCremaBatida" name="permiteCremaBatida" ${checked ? 'checked' : ''}>
       Permitir crema batida
+    </label>`
+  return wrapper
+}
+
+function buildPermiteModificarIngredientesField (checked = true) {
+  const wrapper = document.createElement('div')
+  wrapper.classList.add('maree-field', 'is-dynamic')
+  wrapper.innerHTML = `
+    <label class="maree-checkbox-row">
+      <input type="checkbox" id="field-permiteModificarIngredientes" name="permiteModificarIngredientes" ${checked ? 'checked' : ''}>
+      Permitir modificar ingredientes
     </label>`
   return wrapper
 }
@@ -329,7 +350,7 @@ function formatearValor (valor, key = '') {
   }
   if (valor === null || valor === undefined || valor === '') return '—'
   if (typeof valor === 'boolean' || valor === '1' || valor === '0') {
-    if (String(key).toLowerCase() === 'permitecremabatida') {
+    if (['permitecremabatida', 'permitemodificaringredientes'].includes(String(key).toLowerCase())) {
       return valor === '1' || valor === true ? 'Sí' : 'No'
     }
     return valor === '1' || valor === true ? 'Activo' : 'Inactivo'
