@@ -1,9 +1,60 @@
 const express = require('express')
+const fs = require('fs')
+const multer = require('multer')
+const path = require('path')
 const router = express.Router()
 const menuControlador = require('../controllers/menu.controlador.js')
 const isAdmin = require('../middleware/isAdmin.js')
 const isAdminOrCollaborator = require('../middleware/isAdminOrCollaborator.js')
 const uploadProductos = require('../middleware/uploadProductos.js')
+
+const carpetaImagenesProductos = path.join(__dirname, '..', 'public', 'uploads', 'productos')
+const extensionesImagen = {
+  'image/jpeg': '.jpg',
+  'image/png': '.png',
+  'image/webp': '.webp',
+  'image/gif': '.gif'
+}
+
+const cargaImagenProducto = multer({
+  storage: multer.diskStorage({
+    destination: (req, file, cb) => {
+      fs.mkdirSync(carpetaImagenesProductos, { recursive: true })
+      cb(null, carpetaImagenesProductos)
+    },
+    filename: (req, file, cb) => {
+      const extension = extensionesImagen[file.mimetype]
+      cb(null, `producto-${Date.now()}-${Math.round(Math.random() * 1E9)}${extension}`)
+    }
+  }),
+  fileFilter: (req, file, cb) => {
+    if (!extensionesImagen[file.mimetype]) {
+      return cb(new Error('Solo se permiten imagenes JPG, PNG, WEBP o GIF.'))
+    }
+
+    cb(null, true)
+  },
+  limits: {
+    fileSize: 5 * 1024 * 1024
+  }
+})
+
+const subirImagenProducto = (req, res, next) => {
+  cargaImagenProducto.single('ImagenArchivo')(req, res, error => {
+    if (!error) {
+      return next()
+    }
+
+    const mensaje = error instanceof multer.MulterError && error.code === 'LIMIT_FILE_SIZE'
+      ? 'La imagen no puede superar 5 MB.'
+      : error.message || 'No se pudo cargar la imagen del producto.'
+
+    return res.status(400).json({
+      ok: false,
+      message: mensaje
+    })
+  })
+}
 
 // Rutas Menu cliente
 router.get('/menu', menuControlador.getMenu)
@@ -36,8 +87,10 @@ router.get('/tiposByCategoria', isAdmin, menuControlador.getTiposByCategoria)
 router.get('/ingredientesPorTipo', isAdmin, menuControlador.getIngredientesPorTipo)
 router.get('/formsTipoPlatillo', isAdmin, menuControlador.getCategorys)
 router.get('/formsRegistraPlatillo', isAdmin, menuControlador.getProductfieldsAndIngredientes)
+
 router.post('/uploadImage', isAdmin, uploadProductos.single('imagen'), menuControlador.uploadImage)
-router.post('/registerNewProduct', isAdmin, menuControlador.postNewProduct)
+router.post('/registerNewProduct', isAdmin, subirImagenProducto, menuControlador.postNewProduct)
+
 router.put('/modifProduct/:id', isAdmin, menuControlador.postModifProduct)
 // Eliminar Producto
 router.delete('/eliminarProducto', isAdmin, menuControlador.deleteProducto)
