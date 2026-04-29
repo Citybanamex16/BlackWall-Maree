@@ -1,14 +1,15 @@
-/* global ShowErrorModal, showSuccessModal, catalogoIng:writable , catalogTipos:writable , limpiarModal, createFieldElement, buildIngredientsSection, SetRegisterButtons, onBtnIngNewClick, getIngredientesSeleccionados, validarDatosRegistro */
+/* global ShowErrorModal, showSuccessModal, refreshProductsCatalog, buildWhippedCreamSupportNotice, buildIngredientCustomizationSupportNotice, catalogoIng:writable , catalogTipos:writable , limpiarModal, createFieldElement, buildIngredientsSection, SetRegisterButtons, onBtnIngNewClick, getIngredientesSeleccionados, validarDatosRegistro */
 /* exported ConstruirModifModal, ModifyProduct */
 
 /* CU05 Modificar Platillo Existente */
 
 async function getAllIngredientesCatalog () {
   try {
-    const response = await fetch('/Menu/globalAdminIngredientes')
+    const response = await fetch('/menu/globalAdminIngredientes')
 
     if (!response.ok) {
-      ShowErrorModal('Error en Backend global', 'No es posible obtener ingredientes')
+      const errorData = await response.json().catch(() => ({}))
+      ShowErrorModal('Error en Backend global', errorData.message || 'No es posible obtener ingredientes')
       return
     }
 
@@ -22,8 +23,14 @@ async function getAllIngredientesCatalog () {
 async function getIngredientesPorTipoEdit (tipo) {
   if (!tipo) return []
   try {
+    // Mantenemos la ruta específica de HEAD porque es más eficiente
     const response = await fetch(`/menu/ingredientesPorTipo?tipo=${encodeURIComponent(tipo)}`)
-    if (!response.ok) throw new Error('Error al obtener ingredientes por tipo')
+    
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}))
+      throw new Error(errorData.message || 'Error al obtener ingredientes por tipo')
+    }
+    
     const data = await response.json()
     return data.success ? data.data : []
   } catch (error) {
@@ -32,6 +39,7 @@ async function getIngredientesPorTipoEdit (tipo) {
   }
 }
 
+// Esta función se perdía en el conflicto, es vital conservarla
 function refreshModifIngredientDropdowns () {
   document.querySelectorAll('#ingredientsList .ing-dropdown').forEach(select => {
     const valorActual = select.value
@@ -44,19 +52,23 @@ function refreshModifIngredientDropdowns () {
 
 async function getTiposByCategoria (categoria) {
   try {
+    // HEAD filtraba, la otra rama quería traer todos. 
+    // Mantenemos el filtro por desempeño:
     const response = await fetch(`/menu/tiposByCategoria?categoria=${encodeURIComponent(categoria)}`)
 
     if (!response.ok) {
-      throw new Error('Error al obtener tipos de BD')
+      const errorData = await response.json().catch(() => ({}))
+      throw new Error(errorData.message || 'Error al obtener tipos de BD')
     }
 
     const tiposCatalogData = await response.json()
     return tiposCatalogData.data || []
   } catch (error) {
-    ShowErrorModal('Error en funcion global', 'No es posible obtener tipos')
+    ShowErrorModal('Error', 'No es posible obtener tipos')
     return []
   }
 }
+
 
 // Referencias del modal
 const ModifModal = document.getElementById('RegisterFormsCU04')
@@ -68,70 +80,63 @@ document.getElementById('cerrarFormsRegistrar').addEventListener('click', (event
 })
 
 async function ConstruirModifModal (productData, AllCategorys) {
-  console.log('¡Hola desde otro Script!')
   const ModifIdSection = document.getElementById('idSection')
-
   const ingData = productData.ingredientes
-  console.log('Ingrediente data: ', ingData)
 
-  console.log('Obteniendo catalogo global de ingredientes ')
+  // --- 1. Obtención de Catálogos (Híbrido) ---
+  // Mantenemos el filtrado de HEAD para que el modal abra con lo que corresponde al producto
   catalogoIng = await getIngredientesPorTipoEdit(productData.tipo)
-
   catalogTipos = await getTiposByCategoria(productData.categoria)
-  console.log('Tipos obtenidos: ', catalogTipos)
+  
+  if (!catalogoIng || !catalogTipos) return
 
-  // 1. Limpieza
+  // --- 2. Limpieza y Títulos ---
   limpiarModal(ModifModal)
   limpiarModal(ModifForm)
-
-  // Título e ID
   ModifTitle.textContent = `Modificar ${productData.nombre}`
   ModifIdSection.textContent = `ID: ${productData.id}`
 
-  // 2. Construir fields desde productData
-  // Keys que tienen tratamiento especial — se excluyen del loop general
-  const KEYS_EXCLUIDAS = ['id', 'ingredientes', 'categoria', 'tipo'] // Nombres Sincronizados con Backend
+  // --- 3. Construcción de Campos Dinámicos ---
+  const KEYS_EXCLUIDAS = ['id', 'ingredientes', 'categoria', 'tipo', 'activo', 'permiteCremaBatida', 'permiteModificarIngredientes']
 
   Object.entries(productData).forEach(([key, value]) => {
     if (KEYS_EXCLUIDAS.includes(key)) return
-
-    // Inferir el tipo para createFieldElement
-    const tipoJS = typeof value
-    const field = {
-      nombre: key,
-      type: tipoJS, // 'string', 'number', 'boolean' — createFieldElement ya los mapea
-      value // valor actual del producto
-    }
+    const field = { nombre: key, type: typeof value, value }
     const fieldEl = createFieldElement(field)
-
-    // Pre-llenar el input con el valor actual
-    const input = fieldEl.querySelector('input')
-    if (input) {
-      if (input.type === 'checkbox') input.checked = Boolean(value)
-      else input.value = value ?? ''
-    }
-
     fieldEl.classList.add('is-dynamic')
     ModifForm.appendChild(fieldEl)
-  })
+  });
 
-  // 3. Sección ingredientes (sin botón de cantidad)
+  // --- 4. Secciones Especiales (Ingredientes y Dropdowns) ---
   const ingSection = buildIngredientsSection({ mostrarCantidad: false })
   ingSection.classList.add('is-dynamic')
   ModifForm.appendChild(ingSection)
 
-  // 4. Dropdown de categoría
-  console.log('Mi categoría es : ', productData)
   const catField = buildCategoriaDropdown(AllCategorys, productData.categoria)
   catField.classList.add('is-dynamic')
   ModifForm.appendChild(catField)
 
-  // 4.5 Dropdown de tipo
   const tipoField = buildTipoDropdown(catalogTipos, productData.tipo)
   tipoField.classList.add('is-dynamic')
   ModifForm.appendChild(tipoField)
 
-  // Cuando cambia el tipo, recargar ingredientes disponibles
+  const activoField = buildActivoDropdown(productData.activo)
+  activoField.classList.add('is-dynamic')
+  ModifForm.appendChild(activoField)
+
+  // --- 5. Lógica de Parches (Nuevos campos de Crema Batida y Modificación) ---
+  // Usamos los soportes detectados en el backend para mostrar u ocultar opciones
+  if (window.supportsProductWhippedCream === true) {
+    const cremaBatidaField = buildPermiteCremaBatidaField(productData.permiteCremaBatida)
+    ModifForm.appendChild(cremaBatidaField)
+  }
+
+  if (window.supportsProductIngredientCustomization === true) {
+    const ingredientesField = buildPermiteModificarIngredientesField(productData.permiteModificarIngredientes)
+    ModifForm.appendChild(ingredientesField)
+  }
+
+  // --- 6. Interactividad (HEAD): Recargar ingredientes al cambiar el tipo ---
   const selectTipoEl = ModifForm.querySelector('#selectTipo')
   if (selectTipoEl) {
     selectTipoEl.addEventListener('change', async () => {
@@ -140,15 +145,12 @@ async function ConstruirModifModal (productData, AllCategorys) {
     })
   }
 
-  // 5. Pre-seleccionar ingredientes actuales en los dropdowns
+  // --- 7. Finalización ---
   precargarIngredientes(ingData, productData)
-
-  // 6. Conectar Botones
   SetRegisterButtons('MODIFY', catalogoIng, productData)
-
-  // 7. Mostrar modal
   ModifModal.showModal()
 }
+
 
 // ── Dropdown de categoría ──────────────────────────────────
 function buildCategoriaDropdown (categorias, valorActual) {
@@ -216,9 +218,50 @@ function buildTipoDropdown (tipos, valorActual) {
   return wrapper
 }
 
+function buildActivoDropdown (valorActual) {
+  const valorSeleccionado = String(valorActual ? 1 : 0)
+  const wrapper = document.createElement('div')
+  wrapper.classList.add('field', 'is-dynamic')
+
+  wrapper.innerHTML = `
+    <label class="label">Disponibilidad</label>
+    <div class="control">
+      <div class="select is-fullwidth">
+        <select id="selectActivo" name="activo">
+          <option value="1" ${valorSeleccionado === '1' ? 'selected' : ''}>Activo</option>
+          <option value="0" ${valorSeleccionado === '0' ? 'selected' : ''}>Desactivado</option>
+        </select>
+      </div>
+    </div>`
+
+  return wrapper
+}
+
+function buildPermiteCremaBatidaField (checked = false) {
+  const wrapper = document.createElement('div')
+  wrapper.classList.add('maree-field', 'is-dynamic')
+  wrapper.innerHTML = `
+    <label class="maree-checkbox-row">
+      <input type="checkbox" id="field-permiteCremaBatida" name="permiteCremaBatida" ${checked ? 'checked' : ''}>
+      Permitir crema batida
+    </label>`
+  return wrapper
+}
+
+function buildPermiteModificarIngredientesField (checked = true) {
+  const wrapper = document.createElement('div')
+  wrapper.classList.add('maree-field', 'is-dynamic')
+  wrapper.innerHTML = `
+    <label class="maree-checkbox-row">
+      <input type="checkbox" id="field-permiteModificarIngredientes" name="permiteModificarIngredientes" ${checked ? 'checked' : ''}>
+      Permitir modificar ingredientes
+    </label>`
+  return wrapper
+}
+
 // ── Pre-seleccionar ingredientes en los dropdowns ──────────
 function precargarIngredientes (ingData) {
-  const rows = document.querySelectorAll('#ingredientsList .ingredient-row')
+  const rows = document.querySelectorAll('#ingredientsList .maree-ing-row')
   ingData.forEach((ing, i) => {
     if (!rows[i]) {
       onBtnIngNewClick() // crea la fila si no existe
@@ -328,13 +371,16 @@ function conectarBotonesSummaryModif (modifiedData) {
 }
 
 // ── Normaliza cualquier valor a string legible para el usuario ──
-function formatearValor (valor) {
+function formatearValor (valor, key = '') {
   if (Array.isArray(valor)) {
     // Array de ingredientes [{id, nombre}] → "Bubulubu, Mocha"
     return valor.map(v => v.nombre ?? v).join(', ') || '—'
   }
   if (valor === null || valor === undefined || valor === '') return '—'
   if (typeof valor === 'boolean' || valor === '1' || valor === '0') {
+    if (['permitecremabatida', 'permitemodificaringredientes'].includes(String(key).toLowerCase())) {
+      return valor === '1' || valor === true ? 'Sí' : 'No'
+    }
     return valor === '1' || valor === true ? 'Activo' : 'Inactivo'
   }
   return String(valor)
@@ -343,8 +389,8 @@ function formatearValor (valor) {
 // ── Construye una fila de la tabla comparativa ──
 function crearFilaComparativa (key, valorOld, valorNew, huboCambio) {
   const clase = huboCambio ? 'con-cambio' : 'sin-cambio'
-  const oldTexto = formatearValor(valorOld)
-  const newTexto = formatearValor(valorNew)
+  const oldTexto = formatearValor(valorOld, key)
+  const newTexto = formatearValor(valorNew, key)
 
   return `
     <div class="modif-summary-row ${clase}">
@@ -408,13 +454,17 @@ async function postModifiedProduct (data) {
     })
     const response = await postrequest.json()
 
-    if (!response.ok) {
-      ShowErrorModal('Error Registrar Modificacion', 'La modificacion no se pudo registrar en la base de datos')
+    if (!postrequest.ok || !response.ok) {
+      ShowErrorModal('Error Registrar Modificacion', response.message || response.error || 'La modificacion no se pudo registrar en la base de datos')
       return
     }
 
     // Exito
-    showSuccessModal('Modificaciones Exitosas', 'Modificacion en la Base de Datos')
+    showSuccessModal(
+      'Modificaciones exitosas',
+      'La modificación del producto se guardó correctamente.',
+      refreshProductsCatalog
+    )
   } catch (error) {
 
   }
@@ -589,17 +639,21 @@ async function eliminarProducto (idProd, nombreProd) {
       })
     })
 
-    const res = await response.json()
+    const res = await response.json().catch(() => ({}))
 
-    if (!res.ok) {
+    if (!response.ok || !res.ok) {
       console.log('Error desde backend')
-      throw new Error('Error al eliminar')
+      throw new Error(res.message || 'Error al eliminar')
     }
 
     // Exito en la consulta
-    showSuccessModal('Eliminación realizada con exito', `${nombreProd} fue eliminado con exito`)
+    showSuccessModal(
+      'Eliminación realizada con éxito',
+      `${nombreProd} fue eliminado con éxito.`,
+      refreshProductsCatalog
+    )
   } catch (error) {
-    ShowErrorModal('Error en eliminación', 'La conexión con la BD a fallado. Favor de intentarlo mas tarde')
+    ShowErrorModal('Error en eliminación', error.message || 'La conexión con la BD a fallado. Favor de intentarlo mas tarde')
   }
 }
 
@@ -616,16 +670,20 @@ async function desactivarProd (idProd, nombreProd) {
       })
     })
 
-    const res = await response.json()
+    const res = await response.json().catch(() => ({}))
 
-    if (!res.ok) {
+    if (!response.ok || !res.ok) {
       console.log('Error desde backend')
-      throw new Error('Error al Desactivar')
+      throw new Error(res.message || 'Error al desactivar')
     }
 
     // Exito en la consulta
-    showSuccessModal('Desactivación realizada con exito', `${nombreProd} fue desactivado con exito`)
+    showSuccessModal(
+      'Desactivación realizada con éxito',
+      `${nombreProd} fue desactivado con éxito.`,
+      refreshProductsCatalog
+    )
   } catch (error) {
-    ShowErrorModal('Error en Desactivación', 'La conexión con la BD a fallado. Favor de intentarlo mas tarde')
+    ShowErrorModal('Error en Desactivación', error.message || 'La conexión con la BD a fallado. Favor de intentarlo mas tarde')
   }
 }

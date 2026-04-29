@@ -1018,6 +1018,13 @@ dialog .checkbox {
   margin-top: 6px;
 }
 
+.admin-prod-helper {
+  margin-top: 4px;
+  font-size: 11px;
+  color: #8e826f;
+  line-height: 1.4;
+}
+
 /* El Badge del Tipo */
 .admin-tag-tipo {
   background-color: #f5f5f5; /* Gris muy tenue neutral */

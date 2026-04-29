@@ -67,8 +67,15 @@ let _ingExtras = []
 let _precioBase = 0
 let _cremaBatida = null
 let _cremaBatidaSeleccionada = false
+let _permiteModificarIngredientes = true
 
 function _chipOriginal (ing) {
+  if (!_permiteModificarIngredientes) {
+    return `<span style="display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:20px;
+                         font-size:12px;font-family:'Jost',sans-serif;background:#f5f0e8;color:#b5956a;">
+      ${ing.nombre}
+    </span>`
+  }
   const removed = _ingEliminados.has(ing.id)
   return `<span style="display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:20px;
                        font-size:12px;font-family:'Jost',sans-serif;
@@ -105,14 +112,20 @@ function _actualizarPrecioVivo () {
   const el = document.getElementById('modal-precio-vivo')
   if (el) el.textContent = `$${(_precioBase + extrasTotal + cremaBatidaTotal).toFixed(2)}`
 
-  const restantes = (_ingOriginales.length - _ingEliminados.size) + _ingExtras.length
   const btn = document.getElementById('btn-confirmar-agregar')
   const msg = document.getElementById('msg-sin-ingredientes')
+  if (!_permiteModificarIngredientes) {
+    if (btn) { btn.disabled = false; btn.style.opacity = '1' }
+    if (msg) msg.style.display = 'none'
+    return
+  }
+  const restantes = (_ingOriginales.length - _ingEliminados.size) + _ingExtras.length
   if (btn) { btn.disabled = restantes === 0; btn.style.opacity = restantes === 0 ? '0.4' : '1' }
   if (msg) msg.style.display = restantes === 0 ? '' : 'none'
 }
 
 window._toggleOriginal = (id) => {
+  if (!_permiteModificarIngredientes) return
   if (_ingEliminados.has(id)) _ingEliminados.delete(id)
   else _ingEliminados.add(id)
   _renderIngOriginales()
@@ -169,24 +182,12 @@ function generarHTMLModal (platillo, dataExtra, promoDisplay, promoPrecio) {
         </div>
       </div>`
     : ''
-
-  return `
-    <div class="modal-detalle-header">
-        <h2 class="title is-4 font-cormorant" style="font-family:'Cormorant Garamond',serif;margin-bottom:4px;">${platillo.nombre}</h2>
-        <p class="subtitle is-5" style="margin-bottom:4px;">${precioHTML}</p>
-        ${promoHTML}
-        ${cremaBatidaHTML}
-    </div>
-    <div class="modal-detalle-body" style="margin-top:16px;">
-        <p style="color:#666;font-size:14px;">${dataExtra.base ? 'Categoría: ' + dataExtra.base : 'Crepa artesanal preparada al momento.'}</p>
-        <hr style="margin:12px 0;">
-
-        <p style="font-size:11px;font-weight:600;letter-spacing:1px;color:#888;margin-bottom:6px;text-transform:uppercase;">Ingredientes incluidos</p>
-        <p style="font-size:11px;color:#aaa;font-family:'Jost',sans-serif;margin-bottom:8px;">Toca × para quitar (no cambia el precio)</p>
-        <div id="ings-originales" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:16px;min-height:28px;"></div>
-
-        <hr style="margin:12px 0;">
-
+  const ingredientesHelperHTML = dataExtra.permiteModificarIngredientes === false
+    ? `<p style="font-size:11px;color:#aaa;font-family:'Jost',sans-serif;margin-bottom:8px;">Este producto se prepara tal como aparece en el menú.</p>`
+    : `<p style="font-size:11px;color:#aaa;font-family:'Jost',sans-serif;margin-bottom:8px;">Toca × para quitar (no cambia el precio)</p>`
+  const extrasSectionHTML = dataExtra.permiteModificarIngredientes === false
+    ? `<p style="font-size:12px;color:#7d746b;font-family:'Jost',sans-serif;margin-bottom:4px;">La composición de este producto no es editable por el cliente.</p>`
+    : `
         <p style="font-size:11px;font-weight:600;letter-spacing:1px;color:#888;margin-bottom:8px;text-transform:uppercase;">Agregar ingrediente extra</p>
         <div style="display:flex;gap:8px;align-items:center;margin-bottom:10px;flex-wrap:wrap;">
           <select id="selector-extra" style="flex:1;min-width:180px;padding:7px 10px;border:1px solid #ddd;
@@ -202,7 +203,26 @@ function generarHTMLModal (platillo, dataExtra, promoDisplay, promoPrecio) {
         <div id="ings-extra" style="display:flex;flex-wrap:wrap;gap:6px;min-height:28px;margin-bottom:4px;"></div>
         <p id="msg-sin-ingredientes" style="display:none;color:#c0392b;font-size:12px;font-family:'Jost',sans-serif;margin-top:6px;">
           El platillo debe tener al menos un ingrediente.
-        </p>
+        </p>`
+
+  return `
+    <div class="modal-detalle-header">
+        <h2 class="title is-4 font-cormorant" style="font-family:'Cormorant Garamond',serif;margin-bottom:4px;">${platillo.nombre}</h2>
+        <p class="subtitle is-5" style="margin-bottom:4px;">${precioHTML}</p>
+        ${promoHTML}
+        ${cremaBatidaHTML}
+    </div>
+    <div class="modal-detalle-body" style="margin-top:16px;">
+        <p style="color:#666;font-size:14px;">${dataExtra.base ? 'Categoría: ' + dataExtra.base : 'Crepa artesanal preparada al momento.'}</p>
+        <hr style="margin:12px 0;">
+
+        <p style="font-size:11px;font-weight:600;letter-spacing:1px;color:#888;margin-bottom:6px;text-transform:uppercase;">Ingredientes incluidos</p>
+        ${ingredientesHelperHTML}
+        <div id="ings-originales" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:16px;min-height:28px;"></div>
+
+        <hr style="margin:12px 0;">
+
+        ${extrasSectionHTML}
     </div>
     <div class="modal-detalle-footer" style="margin-top:20px;display:flex;justify-content:flex-end;">
         <button id="btn-confirmar-agregar"
@@ -258,6 +278,7 @@ async function verDetalleProducto (id) {
     _ingExtras = []
     _cremaBatida = data.cremaBatida || null
     _cremaBatidaSeleccionada = false
+    _permiteModificarIngredientes = data.permiteModificarIngredientes !== false
 
     modalContent.innerHTML = generarHTMLModal(producto, data, promoDisplay, promoPrecio)
     modalOverlay.showModal()
@@ -291,28 +312,30 @@ async function verDetalleProducto (id) {
       actualizarBotonesCremaBatida()
     }
 
-    const ingIdsOriginales = new Set(_ingOriginales.map(i => i.id))
-    const selector = document.getElementById('selector-extra')
-    ;(data.catalogo || [])
-      .filter(i => !ingIdsOriginales.has(i.id))
-      .forEach(i => {
-        const opt = document.createElement('option')
-        opt.value = i.id
-        opt.textContent = `${i.nombre} (+$${parseFloat(i.precio).toFixed(2)})`
-        opt.dataset.nombre = i.nombre
-        opt.dataset.precio = i.precio
-        selector.appendChild(opt)
-      })
+    if (_permiteModificarIngredientes) {
+      const ingIdsOriginales = new Set(_ingOriginales.map(i => i.id))
+      const selector = document.getElementById('selector-extra')
+      ;(data.catalogo || [])
+        .filter(i => !ingIdsOriginales.has(i.id))
+        .forEach(i => {
+          const opt = document.createElement('option')
+          opt.value = i.id
+          opt.textContent = `${i.nombre} (+$${parseFloat(i.precio).toFixed(2)})`
+          opt.dataset.nombre = i.nombre
+          opt.dataset.precio = i.precio
+          selector.appendChild(opt)
+        })
 
-    document.getElementById('btn-agregar-extra').onclick = () => {
-      const sel = document.getElementById('selector-extra')
-      const opt = sel.options[sel.selectedIndex]
-      if (!opt.value) return
-      if (_ingExtras.some(i => i.id_insumo === opt.value)) return
-      _ingExtras.push({ id_insumo: opt.value, nombre: opt.dataset.nombre, precio: parseFloat(opt.dataset.precio) })
-      sel.selectedIndex = 0
-      _renderIngExtras()
-      _actualizarPrecioVivo()
+      document.getElementById('btn-agregar-extra').onclick = () => {
+        const sel = document.getElementById('selector-extra')
+        const opt = sel.options[sel.selectedIndex]
+        if (!opt.value) return
+        if (_ingExtras.some(i => i.id_insumo === opt.value)) return
+        _ingExtras.push({ id_insumo: opt.value, nombre: opt.dataset.nombre, precio: parseFloat(opt.dataset.precio) })
+        sel.selectedIndex = 0
+        _renderIngExtras()
+        _actualizarPrecioVivo()
+      }
     }
 
     document.getElementById('btn-confirmar-agregar').onclick = () => {
