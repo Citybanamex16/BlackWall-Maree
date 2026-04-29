@@ -167,7 +167,13 @@
 <dialog id="ModalRegistroTipo" class="maree-modal">
   <div class="modal-inner">
     <p class="modal-title">Nuevo Tipo</p>
-    <p class="modal-sub">Ingresa el nombre del nuevo tipo</p>
+    <p class="modal-sub">Ingresa los datos del nuevo tipo</p>
+    <div class="maree-field">
+      <label class="maree-label" for="inputCategoriaTipo">Categoría</label>
+      <select class="maree-input" id="inputCategoriaTipo">
+        <option value="">Selecciona una categoría...</option>
+      </select>
+    </div>
     <div class="maree-field">
       <label class="maree-label" for="inputNombreTipo">Nombre</label>
       <input class="maree-input" type="text" id="inputNombreTipo" placeholder="Ej. Especiales" maxlength="50">
@@ -217,6 +223,13 @@
   <div class="modal-inner">
     <p class="modal-title">Editar Tipo</p>
     <p class="modal-sub" id="editarSubtituloTipo"></p>
+
+    <div class="maree-field">
+      <label class="maree-label">Categoría</label>
+      <select class="maree-input" id="editCategoriaTipo">
+        <option value="">Selecciona una categoría...</option>
+      </select>
+    </div>
 
     <div class="maree-field">
       <label class="maree-label">Nombre</label>

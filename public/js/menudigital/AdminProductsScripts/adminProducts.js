@@ -1,6 +1,8 @@
 /* global ConstruirModifModal, ModifyProduct, eliminarDesactivarModal */
 // JS FRONTEND de la vista de Productos del Admin
 const canManageProducts = window.canManageProducts === true
+window.supportsProductWhippedCream = false
+window.supportsProductIngredientCustomization = false
 
 // Funciones Globales
 
@@ -42,7 +44,8 @@ async function getCatalogoProductos () {
     showSpinner('Obteniendo Catalogo de Productos')
     const response = await fetch('/menu/productosCatalog')
     if (!response.ok) {
-      ShowErrorModal('Error Interno', 'Error en Obtener Catalogo')
+      const errorData = await response.json().catch(() => ({}))
+      ShowErrorModal('Error Interno', errorData.message || 'Error en Obtener Catalogo')
       throw new Error('Error en Register Button Click')
     }
 
@@ -50,19 +53,40 @@ async function getCatalogoProductos () {
     console.log('object: ', object)
     construirCatalogoAdmin(object)
   } catch (error) {
-    console.log('Error obteniendo Catalogo: '.error)
+    console.log('Error obteniendo Catalogo:', error)
   } finally {
     hideSpinner()
   }
 }
 getCatalogoProductos()
 
+function refreshProductsCatalog () {
+  catalogoProductosMap.clear()
+  getCatalogoProductos()
+}
+
 /* == Construcción de Catálogo Admin == */
 
 // Estructuras de Datos
 const catalogoProductosMap = new Map()
 
-function construirFichaProductos (datosProducto, datosCategorias) {
+function createDuplicateMap (productos) {
+  const duplicates = new Map()
+
+  productos.forEach(prod => {
+    const key = `${prod.categoria}::${prod.tipo}::${String(prod.nombre).trim().toLowerCase()}`
+    duplicates.set(key, (duplicates.get(key) || 0) + 1)
+  })
+
+  return duplicates
+}
+
+function getIngredientesResumen (ingredientes) {
+  if (!Array.isArray(ingredientes) || ingredientes.length === 0) return 'Sin ingredientes vinculados'
+  return ingredientes.map(ing => ing.nombre).join(', ')
+}
+
+function construirFichaProductos (datosProducto, datosCategorias, duplicateMap) {
   console.log('Repartiendo productos en sus categorías...')
   datosCategorias.forEach(cat => {
     const sectionPrincipal = document.getElementById(cat.id)
@@ -80,7 +104,7 @@ function construirFichaProductos (datosProducto, datosCategorias) {
 
     productosFiltrados.forEach(prod => {
       catalogoProductosMap.set(String(prod.id), prod) // Guardamos la info en la memoria
-      const fichaHTML = renderProductoAdmin(prod)
+      const fichaHTML = renderProductoAdmin(prod, duplicateMap)
       gridDestino.insertAdjacentHTML('beforeend', fichaHTML)
     })
 
@@ -106,9 +130,14 @@ function construirFichaProductos (datosProducto, datosCategorias) {
 }
 
 // Render de fila compacta
-function renderProductoAdmin (prod) {
+function renderProductoAdmin (prod, duplicateMap) {
   // Verificamos si tiene tipo, si no, ponemos un placeholder
   const tipoTexto = prod.tipo ? prod.tipo : 'Otro'
+  const estadoTexto = prod.activo ? 'Activo' : 'Inactivo'
+  const estadoClase = prod.activo ? 'is-success' : 'is-inactive'
+  const productKey = `${prod.categoria}::${prod.tipo}::${String(prod.nombre).trim().toLowerCase()}`
+  const duplicateCount = duplicateMap.get(productKey) || 0
+  const ingredientesResumen = getIngredientesResumen(prod.ingredientes)
 
   return `
     <div class="admin-prod-row" data-id="${prod.id}">
@@ -118,9 +147,12 @@ function renderProductoAdmin (prod) {
         </div>
         <div class="admin-prod-texts">
           <h4 class="admin-prod-name">${prod.nombre}</h4>
+          <p class="admin-prod-helper">ID: ${prod.id} · ${ingredientesResumen}</p>
           
           <div class="admin-prod-meta">
             <span class="admin-tag-tipo">${tipoTexto}</span>
+            <span class="status-pill ${estadoClase}">${estadoTexto}</span>
+            ${duplicateCount > 1 ? '<span class="status-pill is-neutral">Duplicado</span>' : ''}
             <span class="admin-prod-price">$${prod.precio}</span>
           </div>
         </div>
@@ -206,8 +238,12 @@ function construirCatalogoAdmin (datos) {
   console.log('Construyendo catálogo admin...')
   const categorias = datos.arrayCategorías[0]
   const productosInfo = datos.arrayProductsCatalog
+  const duplicateMap = createDuplicateMap(productosInfo)
+  window.supportsProductWhippedCream = datos.supportsProductWhippedCream === true
+  window.supportsProductIngredientCustomization = datos.supportsProductIngredientCustomization === true
 
   const contenedor = document.getElementById('admin-catalogo')
+  catalogoProductosMap.clear()
   contenedor.innerHTML = ''
 
   const categoriasInfo = []
@@ -215,7 +251,7 @@ function construirCatalogoAdmin (datos) {
     categoriasInfo.push(construirCategoria(cat, contenedor))
   })
 
-  construirFichaProductos(productosInfo, categoriasInfo)
+  construirFichaProductos(productosInfo, categoriasInfo, duplicateMap)
 
   // Stats del encabezado
   animarContador('statTotal', productosInfo.length)
@@ -327,6 +363,8 @@ async function seleccionarTipoProducto (id) {
     const ProductFields = object.data.fields
     const AllIngredientes = object.data.ingredientes[0]
     const AllTypes = object.data.types
+    window.supportsProductWhippedCream = object.data.supportsProductWhippedCream === true
+    window.supportsProductIngredientCustomization = object.data.supportsProductIngredientCustomization === true
     console.log('Types recvieves: ', AllTypes)
     createProductRegisterForms(ProductFields, AllIngredientes, id, AllTypes)
   } catch (error) {
@@ -341,21 +379,87 @@ async function seleccionarTipoProducto (id) {
 
 /* ── Helper de campo por tipo ── */
 function createFieldElement (field) {
+  const fieldName = field.name ?? field.nombre
+  const fieldLabel = field.label ?? field.nombre
   const wrapper = document.createElement('div')
   wrapper.classList.add('maree-field', 'is-dynamic') // Usamos maree-field
 
   const label = document.createElement('label')
   label.classList.add('maree-label', 'is-dynamic') // Usamos maree-label
-  label.textContent = field.nombre
-  label.setAttribute('for', `field-${field.nombre}`)
+  label.textContent = fieldLabel
+  label.setAttribute('for', `field-${fieldName}`)
 
   const control = document.createElement('div')
   // No necesitamos la clase 'control' de Bulma, usamos la estructura de la Biblia
+
+  // Campo Imagen: file picker con preview y upload automático
+  if (field.nombre.toLowerCase() === 'imagen') {
+    const hiddenInput = document.createElement('input')
+    hiddenInput.type = 'hidden'
+    hiddenInput.name = field.nombre // 'Imagen' en registro, 'imagen' en modificar
+    hiddenInput.id = `field-${field.nombre}`
+
+    const fileInput = document.createElement('input')
+    fileInput.type = 'file'
+    fileInput.accept = 'image/*'
+    fileInput.classList.add('maree-input')
+
+    const statusText = document.createElement('span')
+    statusText.style.cssText = 'font-size:12px;color:#888;font-family:Jost,sans-serif;display:block;margin-top:4px;'
+
+    const preview = document.createElement('img')
+    preview.style.cssText = 'display:none;max-width:100%;max-height:140px;border-radius:8px;margin-top:8px;object-fit:cover;'
+
+    // Si hay imagen actual (modal de modificar), mostrarla
+    if (field.value) {
+      hiddenInput.value = field.value
+      preview.src = field.value
+      preview.style.display = 'block'
+      statusText.textContent = 'Imagen actual (puedes cambiarla)'
+      statusText.style.color = '#888'
+    } else {
+      statusText.textContent = 'Sin imagen seleccionada'
+    }
+
+    fileInput.addEventListener('change', async () => {
+      const file = fileInput.files[0]
+      if (!file) return
+      statusText.textContent = 'Subiendo imagen...'
+      statusText.style.color = '#b5956a'
+      const fd = new FormData()
+      fd.append('imagen', file)
+      try {
+        const res = await fetch('/menu/uploadImage', { method: 'POST', body: fd })
+        const data = await res.json()
+        if (data.ok) {
+          hiddenInput.value = data.url
+          preview.src = data.url
+          preview.style.display = 'block'
+          statusText.textContent = '✓ Imagen subida'
+          statusText.style.color = '#3a7d52'
+        } else {
+          statusText.textContent = 'Error al subir imagen'
+          statusText.style.color = '#c0392b'
+        }
+      } catch (err) {
+        statusText.textContent = 'Error de conexión'
+        statusText.style.color = '#c0392b'
+      }
+    })
+
+    wrapper.appendChild(label)
+    wrapper.appendChild(hiddenInput) // primero, para que querySelector('input') lo encuentre y no el file input
+    wrapper.appendChild(fileInput)
+    wrapper.appendChild(statusText)
+    wrapper.appendChild(preview)
+    return wrapper
+  }
 
   const typeMap = {
     string: 'text',
     int: 'number',
     float: 'number',
+    file: 'file',
     bool: 'checkbox',
     boolean: 'checkbox'
   }
@@ -368,11 +472,12 @@ function createFieldElement (field) {
 
     const input = document.createElement('input')
     input.type = 'checkbox'
-    input.id = `field-${field.nombre}`
-    input.name = field.nombre
+    input.id = `field-${fieldName}`
+    input.name = fieldName
+    input.checked = field.checked === true
 
     checkRow.appendChild(input)
-    checkRow.append(` ${field.nombre}`)
+    checkRow.append(` ${fieldLabel}`)
 
     label.style.display = 'none' // El label de arriba no se usa en checkbox
     wrapper.appendChild(checkRow)
@@ -380,11 +485,12 @@ function createFieldElement (field) {
     const input = document.createElement('input')
     input.classList.add('maree-input') // Usamos maree-input de la Biblia
     input.type = mappedType
-    input.id = `field-${field.nombre}`
-    input.name = field.nombre
+    input.id = `field-${fieldName}`
+    input.name = fieldName
     input.required = true
 
     if (field.type === 'float') input.step = 'any'
+    if (mappedType === 'file') input.accept = field.accept || 'image/*'
     if (field.placeholder) input.placeholder = field.placeholder
 
     wrapper.appendChild(label)
@@ -508,7 +614,6 @@ function buildIngredientsSection ({ mostrarCantidad = false } = {}) {
   section.innerHTML = `
     <div class="ingredients-header is-dynamic">
       <div class="ingredients-title-wrapper">
-        <span class="ing-icon">✨</span>
         <h4 class="ingredients-premium-title">Composición del Platillo</h4>
       </div>
       <span id="ingCounter" class="maree-badge-gold">1 / ${MAX_INGREDIENTES}</span>
@@ -609,12 +714,39 @@ function getIngredientesSeleccionados () {
     .filter(item => item !== null && item.id !== '')
 }
 
+// Carga ingredientes para un tipo y refresca todos los dropdowns existentes
+async function fetchIngredientesPorTipo (tipo) {
+  if (!tipo) {
+    catalogoIng = []
+    refreshIngredientDropdowns()
+    return
+  }
+  try {
+    const res = await fetch(`/menu/ingredientesPorTipo?tipo=${encodeURIComponent(tipo)}`)
+    const obj = await res.json()
+    catalogoIng = obj.success ? obj.data : []
+  } catch (error) {
+    console.error('Error cargando ingredientes por tipo:', error)
+    catalogoIng = []
+  }
+  refreshIngredientDropdowns()
+}
+
+function refreshIngredientDropdowns () {
+  document.querySelectorAll('#ingredientsList .ing-dropdown').forEach(select => {
+    const valorActual = select.value
+    populateDropdown(select)
+    // Restaurar selección si el ingrediente sigue disponible
+    if (valorActual && select.querySelector(`option[value="${valorActual}"]`)) {
+      select.value = valorActual
+    }
+  })
+}
+
 /* == Funcion Central == */
 function createProductRegisterForms (Fields, Ingredientes, type, tiposData) {
   // Type == Categoría
-  // Guardar catálogo para usarlo en cada nueva fila
-  console.log('Catalogo de Ingredientes: ', Ingredientes)
-  catalogoIng = Ingredientes // Indispensable
+  catalogoIng = [] // Empieza vacío; se llena cuando el usuario selecciona un tipo
 
   // Limpieza del modal
   limpiarModal(RegisterFormModal)
@@ -623,15 +755,37 @@ function createProductRegisterForms (Fields, Ingredientes, type, tiposData) {
 
   // Inyectar campos dinámicos (nombre, precio, etc.)
   Fields.forEach((field, index) => {
+    if (field.nombre === 'permiteCremaBatida' && window.supportsProductWhippedCream !== true) {
+      return
+    }
+    if (field.nombre === 'permiteModificarIngredientes' && window.supportsProductIngredientCustomization !== true) {
+      return
+    }
     const fieldEl = createFieldElement(field)
     fieldEl.style.animationDelay = `${index * 0.05}s`
     registerForm.appendChild(fieldEl)
   })
 
+  if (window.supportsProductWhippedCream !== true) {
+    registerForm.appendChild(buildWhippedCreamSupportNotice())
+  }
+
+  if (window.supportsProductIngredientCustomization !== true) {
+    registerForm.appendChild(buildIngredientCustomizationSupportNotice())
+  }
+
   // Construir la sección de tipos
   registerForm.appendChild(buildTypeSection(tiposData))
 
-  // Construir e inyectar la sección de ingredientes
+  // Listener: cuando cambia el tipo, recargar ingredientes
+  const tipoSelectEl = registerForm.querySelector('#productTypeSelect')
+  if (tipoSelectEl) {
+    tipoSelectEl.addEventListener('change', () => {
+      fetchIngredientesPorTipo(tipoSelectEl.value)
+    })
+  }
+
+  // Construir e inyectar la sección de ingredientes (vacía hasta que se elija tipo)
   registerForm.appendChild(buildIngredientsSection({ mostrarCantidad: false }))
 
   SetRegisterButtons('POST', Ingredientes, type)
@@ -714,10 +868,10 @@ function PostNewProduct (BackupIngredientes, ProductType) {
   console.log('Ingredientes Get: ', ingredientes)
 
   // 4.5 Añadir Tipo
-  data.categoría = ProductType
+  data.categoria = ProductType
 
-  // 5. Validación de Reglas de negocio
-  const validacion = validarDatosRegistro(data, BackupIngredientes)
+  // 5. Validación de Reglas de negocio (usa catalogoIng actual — filtrado por tipo)
+  const validacion = validarDatosRegistro(data, catalogoIng)
 
   if (validacion) {
     console.log('Datos válidos :)')
@@ -726,7 +880,7 @@ function PostNewProduct (BackupIngredientes, ProductType) {
     // Construir array para ShowProductSummary incluyendo ingredientes
     const summaryData = Object.entries(data)
       .filter(([key]) => key !== 'ingredientes') // los ingredientes se muestran aparte
-      .map(([key, value]) => ({ key, value }))
+      .map(([key, value]) => ({ key: getSummaryLabel(key), value }))
 
     ingredientes.forEach((ing, i) => {
       summaryData.push({ key: `Ingrediente ${i + 1}`, value: ing.nombre })
@@ -767,12 +921,81 @@ function ShowErrorModal (title, content) {
   ErrorModal.showModal()
 }
 
+function buildWhippedCreamSupportNotice () {
+  const wrapper = document.createElement('div')
+  wrapper.classList.add('maree-field', 'is-dynamic')
+  wrapper.innerHTML = `
+    <div class="maree-summary-row" style="border-style:dashed;">
+      <span class="maree-summary-label">Permitir crema batida</span>
+      <span class="maree-summary-value">Disponible cuando se aplique el parche SQL de crema batida por producto.</span>
+    </div>`
+  return wrapper
+}
+
+function buildIngredientCustomizationSupportNotice () {
+  const wrapper = document.createElement('div')
+  wrapper.classList.add('maree-field', 'is-dynamic')
+  wrapper.innerHTML = `
+    <div class="maree-summary-row" style="border-style:dashed;">
+      <span class="maree-summary-label">Permitir modificar ingredientes</span>
+      <span class="maree-summary-value">Disponible cuando se aplique el parche SQL de modificación por producto.</span>
+    </div>`
+  return wrapper
+}
+
 /* == Creación de Modal de Resumen de Datos */
 
 const SummaryModal = document.getElementById('SummaryCU04')
 const SummaryFormTitle = document.getElementById('SummaryTitleModal')
 const SummaryFormClose = document.getElementById('cerrarSummaryModal')
 const SummaryRegisterbtn = document.getElementById('RegisterProduct')
+
+function isFileValue (content) {
+  return typeof File !== 'undefined' && content instanceof File
+}
+
+function getSummaryLabel (key) {
+  const labels = {
+    Nombre: 'Nombre',
+    Precio: 'Precio',
+    Disponible: 'Disponible',
+    permiteCremaBatida: 'Permitir crema batida',
+    permiteModificarIngredientes: 'Permitir modificar ingredientes',
+    ImagenArchivo: 'Imagen',
+    Imagen: 'Imagen',
+    tipo: 'Tipo',
+    categoria: 'Categoría'
+  }
+
+  return labels[key] || key
+}
+
+function buildProductRequestFormData (productData) {
+  const requestData = new FormData()
+
+  Object.entries(productData).forEach(([key, value]) => {
+    if (key === 'ingredientesID') {
+      requestData.append(key, JSON.stringify(value))
+      return
+    }
+
+    if (isFileValue(value)) {
+      if (value.size > 0) requestData.append(key, value)
+      return
+    }
+
+    if (typeof value === 'boolean') {
+      requestData.append(key, value ? 'true' : 'false')
+      return
+    }
+
+    if (value !== null && value !== undefined) {
+      requestData.append(key, value)
+    }
+  })
+
+  return requestData
+}
 
 function createSummaryElement (title, content) {
   const wrapper = document.createElement('div')
@@ -787,7 +1010,11 @@ function createSummaryElement (title, content) {
   const isImageKey = title.toLowerCase().includes('imagen') || title.toLowerCase().includes('img')
 
   let value
-  if (isImageKey && content && (content.startsWith('http') || content.startsWith('/'))) {
+  if (isFileValue(content)) {
+    value = document.createElement('span')
+    value.classList.add('maree-summary-value')
+    value.textContent = content.name || 'Imagen seleccionada'
+  } else if (isImageKey && content && (content.startsWith('http') || content.startsWith('/'))) {
     value = document.createElement('div')
     value.classList.add('maree-summary-img-wrapper')
 
@@ -803,7 +1030,7 @@ function createSummaryElement (title, content) {
   } else {
     value = document.createElement('span')
     value.classList.add('maree-summary-value')
-    value.textContent = content || '—'
+    value.textContent = typeof content === 'boolean' ? (content ? 'Sí' : 'No') : (content || '—')
 
     // Si el contenido es un número con $, le damos un toque dorado
     if (String(content).includes('$')) {
@@ -866,23 +1093,26 @@ async function registerNewProduct (NewProductData, ProductType) {
     console.log('POST NEW PRODUCT')
 
     showSpinner('Guardando Producto')
+    const requestBody = buildProductRequestFormData(NewProductData)
     const postrequest = await fetch('/menu/registerNewProduct', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/JSON' },
-      body: JSON.stringify(NewProductData)
+      body: requestBody
     })
 
-    const response = await postrequest.json()
-    if (response.ok) {
+    const response = await postrequest.json().catch(() => ({}))
+    if (postrequest.ok && response.ok) {
       console.log('¡Exito!')
       // Mostramos modal de exito
-      showSuccessModal(nombre, ProductType)
+      showSuccessModal(
+        `Registro de ${nombre} exitoso`,
+        `¡Tu ${ProductType} fue registrado de manera exitosa!`,
+        refreshProductsCatalog
+      )
     } else {
-      ShowErrorModal(`Error al Registrar ${ProductType}`, response.message || 'Error Desconocido')
-      throw new Error('Error Registrar nuevo Producto')
+      ShowErrorModal(`Error al registrar ${ProductType}`, response.message || 'No se pudo registrar el producto.')
     }
   } catch (error) {
-    ShowErrorModal(`Error al intentar Registrar ${ProductType}`, 'Hubo in fallo en la conexión con la BD. Favor de intentarlo mas tarde')
+    ShowErrorModal(`Error al intentar registrar ${ProductType}`, 'Hubo un fallo en la conexión con la BD. Favor de intentarlo más tarde.')
   } finally {
     hideSpinner()
   }
@@ -891,19 +1121,27 @@ async function registerNewProduct (NewProductData, ProductType) {
 const SuccessModal = document.getElementById('ModalExito')
 const Successitle = document.getElementById('TituloExito')
 const SuccessContent = document.getElementById('exitoContent')
+const Successbtn = document.getElementById('closeExito')
+let successCloseHandler = null
 
-function showSuccessModal (productName, productType) {
-  Successitle.innerText = `Registro de ${productName} exitoso`
-  SuccessContent.innerText = `¡Tu ${productType} fue registrado de manera exitosa!`
+function showSuccessModal (title, message, onClose = null) {
+  Successitle.innerText = title
+  SuccessContent.innerText = message
+
+  if (successCloseHandler) {
+    Successbtn.removeEventListener('click', successCloseHandler)
+  }
+
+  successCloseHandler = (event) => {
+    event.preventDefault()
+    SuccessModal.close()
+    closeAllModals()
+    if (typeof onClose === 'function') onClose()
+  }
+
+  Successbtn.addEventListener('click', successCloseHandler)
   SuccessModal.showModal()
 }
-
-const Successbtn = document.getElementById('closeExito')
-Successbtn.addEventListener('click', (event) => {
-  event.preventDefault()
-  closeAllModals()
-  window.location.reload() // Fuerza la recarga manualmente
-}, { once: true })
 
 // Funcion validar datos de Formulario
 function validarDatosRegistro (Formsdata, catalogoIngredientes) {
@@ -914,6 +1152,11 @@ function validarDatosRegistro (Formsdata, catalogoIngredientes) {
   const nombresValidos = new Set(catalogoIngredientes.map(ing => ing.nombre))
 
   for (const field of data) {
+    if (isFileValue(field[1]) && field[1].size === 0) {
+      console.warn(`Archivo faltante: ${field[0]}`)
+      return false
+    }
+
     if (field[1] === null || field[1] === undefined || field[1] === '') {
       console.warn(`Campo vacío: ${field[0]}`)
       return false
@@ -955,12 +1198,11 @@ function limpiarModal (contenedor) {
 
 // Funcion para cerrar TODOS los modals
 function closeAllModals () {
-  // 1. Recolecta todos los <dialog> que tienen la clase 'modal'
-  const modales = document.querySelectorAll('dialog.mymodal')
+  // Cierra cualquier dialog abierto para evitar que quede el resumen detrás del modal de éxito.
+  const modales = document.querySelectorAll('dialog[open]')
 
   // 2. Itera sobre cada modal encontrado
   modales.forEach(modal => {
-    // 3. Cierra el modal usando el método nativo del DOM
     modal.close()
   })
 
@@ -990,7 +1232,8 @@ document.getElementById('closeSummaryModifX')?.addEventListener('click', () => {
 
 // 5. Modal: ModalExito
 document.getElementById('closeExito')?.addEventListener('click', () => {
-  document.getElementById('ModalExito').close()
+  const successModal = document.getElementById('ModalExito')
+  if (successModal?.open) successModal.close()
 })
 
 // 6. Modal: ErrorModal

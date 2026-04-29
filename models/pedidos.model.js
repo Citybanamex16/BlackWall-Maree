@@ -3,10 +3,6 @@ const Royalty = require('../models/royalty.model.js')
 
 const CREMA_BATIDA_INGREDIENT_ID = 'INCRMBT001'
 
-function permiteCremaBatidaPorNombre (nombreProducto) {
-  return !String(nombreProducto || '').toLowerCase().includes('chamoyada')
-}
-
 module.exports = class Pedido {
   static fetchOrders () {
     const query = `
@@ -171,31 +167,72 @@ module.exports = class Pedido {
 
     if (idsProductos.length > 0) {
       try {
-        [productoMetaRows] = await db.execute(
+        const result = await db.execute(
           `SELECT
             p.ID_Producto AS id,
-            p.Nombre AS nombre,
-            c.Permite_Crema_Batida AS permiteCremaBatida
+            p.Permite_Crema_Batida AS permiteCremaBatida,
+            p.Permite_Modificar_Ingredientes AS permiteModificarIngredientes
           FROM producto p
-          LEFT JOIN categoría c ON p.Categoría = c.Nombre
           WHERE p.ID_Producto IN (${idsProductos.map(() => '?').join(',')})`,
           idsProductos
         )
+        productoMetaRows = result[0]
       } catch (error) {
         if (error.code !== 'ER_BAD_FIELD_ERROR') throw error
+
+        try {
+          const fallbackResult = await db.execute(
+            `SELECT
+              p.ID_Producto AS id,
+              c.Permite_Crema_Batida AS permiteCremaBatida,
+              1 AS permiteModificarIngredientes
+            FROM producto p
+            LEFT JOIN categoría c ON p.Categoría = c.Nombre
+            WHERE p.ID_Producto IN (${idsProductos.map(() => '?').join(',')})`,
+            idsProductos
+          )
+          productoMetaRows = fallbackResult[0]
+        } catch (categoryFallbackError) {
+          if (categoryFallbackError.code !== 'ER_BAD_FIELD_ERROR') throw categoryFallbackError
+
+          productoMetaRows = idsProductos.map(id => ({
+            id,
+            permiteCremaBatida: 0,
+            permiteModificarIngredientes: 1
+          }))
+        }
       }
     }
+
+    const [ingredientesBaseRows] = idsProductos.length > 0
+      ? await db.execute(
+          `SELECT ID_Producto AS idProducto, ID_Insumo AS idInsumo
+           FROM producto_tiene_insumo
+           WHERE ID_Producto IN (${idsProductos.map(() => '?').join(',')})`,
+          idsProductos
+        )
+      : [[]]
 
     const lista = { productos: {}, insumos: {}, productoMeta: {} };
     resultSets[0].forEach(p => lista.productos[p.id] = parseFloat(p.Precio));
     resultSets[1].forEach(i => lista.insumos[i.id] = parseFloat(i.Precio));
     productoMetaRows.forEach(p => {
       lista.productoMeta[p.id] = {
-        permiteCremaBatida:
-          (p.permiteCremaBatida === 1 || p.permiteCremaBatida === '1') &&
-          permiteCremaBatidaPorNombre(p.nombre)
+        permiteCremaBatida: p.permiteCremaBatida === 1 || p.permiteCremaBatida === '1',
+        permiteModificarIngredientes: p.permiteModificarIngredientes === 1 || p.permiteModificarIngredientes === '1',
+        ingredientesBaseIds: []
       };
     });
+    ingredientesBaseRows.forEach(ing => {
+      if (!lista.productoMeta[ing.idProducto]) {
+        lista.productoMeta[ing.idProducto] = {
+          permiteCremaBatida: false,
+          permiteModificarIngredientes: true,
+          ingredientesBaseIds: []
+        }
+      }
+      lista.productoMeta[ing.idProducto].ingredientesBaseIds.push(ing.idInsumo)
+    })
 
     console.log(`📥 [LISTA ORO] Cargados ${Object.keys(lista.productos).length} productos y ${Object.keys(lista.insumos).length} insumos.`)
     return lista
@@ -272,6 +309,11 @@ module.exports = class Pedido {
     const insumos = [...(item.ingredientes_adentro || []), ...(item.ingredientes_toppings || [])]
     const cremaBatidaCount = insumos.filter(ins => ins.id_insumo === CREMA_BATIDA_INGREDIENT_ID).length
     const permiteCremaBatida = Boolean(listaOro.productoMeta[item.id]?.permiteCremaBatida)
+    const permiteModificarIngredientes = listaOro.productoMeta[item.id]?.permiteModificarIngredientes !== false
+    const ingredientesBaseEsperados = [...new Set(listaOro.productoMeta[item.id]?.ingredientesBaseIds || [])].sort()
+    const ingredientesBaseRecibidos = [...new Set((item.ingredientes_base || []).map(ins => ins.id_insumo))].sort()
+    const ingredientesExtraRecibidos = item.ingredientes_adentro || []
+    const ingredientesQuitadosRecibidos = item.ingredientes_eliminados || []
 
     if (cremaBatidaCount > 1) {
       const error = new Error('No se puede agregar crema batida más de una vez por producto.')
@@ -283,6 +325,18 @@ module.exports = class Pedido {
       const error = new Error(`El producto ${nombreItem} no permite crema batida.`)
       error.code = 'INVALID_ITEM_CONFIGURATION'
       throw error
+    }
+
+    if (!permiteModificarIngredientes) {
+      const intentoModificarIngredientes = ingredientesExtraRecibidos.length > 0 ||
+        ingredientesQuitadosRecibidos.length > 0 ||
+        JSON.stringify(ingredientesBaseRecibidos) !== JSON.stringify(ingredientesBaseEsperados)
+
+      if (intentoModificarIngredientes) {
+        const error = new Error(`El producto ${nombreItem} no permite modificar sus ingredientes.`)
+        error.code = 'INVALID_ITEM_CONFIGURATION'
+        throw error
+      }
     }
 
     if (insumos.length > 0) {
