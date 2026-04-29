@@ -67,19 +67,14 @@ function generarSellos (visitasActuales, maxVisitas) {
 }
 
 // Crear clases dinámicas
-async function crearLoyaltyClass (nombreRoyalty, maxVisitas) {
-  if (!googleWalletConfigurado()) {
-    advertirGoogleWalletNoDisponible()
-    return null
-  }
-
+async function crearLoyaltyClass (nombreRoyalty, maxVisita) {
   const classId = getClassId(nombreRoyalty)
   try {
     await walletClient.loyaltyclass.insert({
       requestBody: {
         id: classId,
         issuerName: 'Marée',
-        programName: `Marée Rewards - ${nombreRoyalty}`,
+        programName: `${nombreRoyalty}`,
         reviewStatus: 'UNDER_REVIEW',
         hexBackgroundColor: '#fcebeb',
         // Imagen global que aparece en todas las tarjetas de este nivel
@@ -105,6 +100,7 @@ async function crearLoyaltyClass (nombreRoyalty, maxVisitas) {
         resourceId: classId,
         requestBody: {
           reviewStatus: 'UNDER_REVIEW',
+          programName: `${nombreRoyalty}`,
           heroImage: {
             sourceUri: {
               uri: 'https://dynamic-media-cdn.tripadvisor.com/media/photo-o/2c/cc/06/f3/crepa-manzane-cajeta.jpg?w=900&h=500&s=1'
@@ -142,8 +138,8 @@ async function actualizarLoyaltyClass (nombreOriginal, nuevoNombre, maxVisitas) 
       await walletClient.loyaltyclass.patch({
         resourceId: classIdOriginal,
         requestBody: {
-          stampInfos: { stampCount: maxVisitas },
-          programName: `Marée Rewards - ${nuevoNombre}`
+          reviewStatus: 'UNDER_REVIEW',
+          programName: nuevoNombre
         }
       })
       console.log(`Clase actualizada: ${classIdOriginal}`)
@@ -187,6 +183,7 @@ async function crearLoyaltyObject (telefono, nombreCliente, nombreRoyalty, punto
         id: objectId,
         classId,
         state: 'ACTIVE',
+        accountName: `${nombreRoyalty}`,
         barcode: {
           type: 'QR_CODE',
           value: String(telefono),
@@ -234,6 +231,7 @@ async function actualizarLoyaltyObject (telefono, nombreCliente, nombreRoyalty, 
     resourceId: objectId,
     requestBody: {
       classId,
+      accountName: `${nombreRoyalty}`,
       barcode: {
         type: 'QR_CODE',
         value: String(telefono),

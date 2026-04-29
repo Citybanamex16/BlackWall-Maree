@@ -246,10 +246,10 @@ exports.getOrden = async (request, response, next) => {
       if (statusData && statusData.length > 0) {
         const info = statusData[0]
 
-        // 2. CÁLCULO DE TOKENS (Regla: Visitas/10 - Gastados)
+        // 2. CÁLCULO DE TOKENS (Regla: Visitas/8 - Gastados)
         const visitas = info.visitas|| 0
         const gastados = info.tokens_gastados || 0
-        const tokensDisponibles = Math.floor(visitas / 10) - gastados
+        const tokensDisponibles = Math.floor(visitas / 8) - gastados
 
         // 3. OBTENER DESCUENTO (Atributo: descuento_premio desde la DB)
         const descuentoDecimal = parseFloat(info.descuento_premio) || 0
@@ -432,7 +432,7 @@ exports.validarPedido = async (request, response, next) => {
       const [statusData] = await Royalty.fetchClientStatus(usuario.telefono);
       const info = statusData[0];
       
-      const tokensReales = Math.floor(info.visitas / 10) - (info.tokens_gastados || 0);
+      const tokensReales = Math.floor(info.visitas / 8) - (info.tokens_gastados || 0);
 
       if (tokensReales <= 0) {
         return response.status(200).json({ 
@@ -560,7 +560,7 @@ exports.confirmarPedido = async (request, response, next) => {
       }
 
       const info = statusData[0]
-      const tokensDisponibles = Math.floor(info.Visitas_Actuales / 10) - info.tokens_gastados
+      const tokensDisponibles = Math.floor(info.Visitas_Actuales / 8) - info.tokens_gastados
       console.log("Tokens disponibles", tokensDisponibles);
 
       if (tokensDisponibles <= 0) {
