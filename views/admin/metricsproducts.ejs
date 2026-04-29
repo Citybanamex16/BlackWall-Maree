@@ -57,17 +57,19 @@
         <div>
           <label class="label">Categoría</label>
           <div class="select is-fullwidth">
-            <select name="categoria">
+            <select name="categoria" id="selectCategoria">
               <option value="">Todas</option>
-              <option value="Platillo">Platillo</option>
-              <option value="Bebidas">Bebidas</option>
             </select>
           </div>
         </div>
 
         <div>
           <label class="label">Tipo</label>
-          <input class="input" type="text" name="tipo" placeholder="Ej. Especiales, Saladas, Frappes">
+          <div class="select is-fullwidth">
+            <select name="tipo" id="selectTipo">
+              <option value="">Todos</option>
+            </select>
+          </div>
         </div>
 
         <div class="actions-row">

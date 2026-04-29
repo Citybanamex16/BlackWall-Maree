@@ -7,8 +7,6 @@ const modalOverlay = document.getElementById('modal-overlay')
 const modalContent = document.getElementById('modal-content')
 const cartToast = document.getElementById('cart-toast')
 let cartToastTimer
-
-
 let pedido = JSON.parse(localStorage.getItem('pedido')) || []
 
 // MODAL

@@ -45,7 +45,7 @@
                         <input class="input auth-input" type="password" name="password" placeholder="••••••••">
                     </div>
                 </div>
-                <button class="primary-btn mt-4" type="submit">Continuar</button>
+                <button class="primary-btn mt-4" type="submit" id="btn-login" disabled>Continuar</button>
             </form>
 
             <form id="form-signup" class="is-hidden">
@@ -59,19 +59,30 @@
                 <div class="field"><label class="auth-label">Género</label><div class="control"><div class="select is-fullwidth"><select name="genero" required><option value="" disabled selected>Selecciona</option><option value="Masculino">Hombre</option><option value="Femenino">Mujer</option><option value="Otro">Otro</option></select></div></div></div>
                 <div class="field"><label class="auth-label">Nacimiento</label><div class="control"><input class="input auth-input" type="date" name="birthday" required></div></div>
                 <div class="field"><label class="auth-label">Mail</label><div class="control"><input class="input auth-input" type="email" name="mail" required></div></div>
-                <button class="primary-btn mt-4" type="submit">Registrarse</button>
+                <div class="field mt-5" style="margin-bottom: 20px;">
+                    <label class="checkbox-container auth-label" style="display: flex; align-items: flex-start; cursor: pointer; font-size: 13px; text-transform: none;">
+                        <input type="checkbox" id="aceptoPrivacidad" required style="margin-top: 4px; margin-right: 10px; accent-color: #b5956a;">
+                        <span style="color: #666; line-height: 1.4;">
+                            He leído y acepto el 
+                            <a href="/cliente/aviso-simplificado" target="_blank" style="color: #b5956a; text-decoration: underline; font-weight: 500;">
+                                Aviso de Privacidad
+                            </a>
+                        </span>
+                    </label>
+                </div>
+                <button class="primary-btn mt-4" type="submit" id="btn-signup" disabled>Registrarse</button>
             </form>
 
             <div id="panel-otp" class="otp-panel is-hidden">
                 <p class="otp-title">Verificación</p>
                 <p class="otp-meta mb-2" id="otp-phone-text"></p>
-                <p class="otp-meta mb-4 is-hidden" id="debug-code-box">Código (Dev Mode): <span class="otp-code" id="debug-code-text"></span></p>
-
+                <p class="otp-meta mb-4 is-hidden" id="debug-code-box">Código de Verificación: <span class="otp-code" id="debug-code-text"></span></p>
+                
                 <form id="form-otp">
                     <div class="field">
                         <div class="control"><input class="input auth-input" type="text" name="codigo" placeholder="123456" maxlength="6" required></div>
                     </div>
-                    <button class="primary-btn" type="submit">Validar código</button>
+                    <button class="primary-btn" type="submit" id="btn-otp" disabled>Validar código</button>
                 </form>
             </div>
         </div>
