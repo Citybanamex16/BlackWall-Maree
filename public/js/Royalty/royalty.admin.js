@@ -15,6 +15,8 @@ async function modificarRoyalty (nombre) {
   document.getElementById('input-descripcion').value = royalty.Descripción
   document.getElementById('input-minVisitas').value = royalty.Min_Visitas
   document.getElementById('input-maxVisitas').value = royalty.Max_Visitas
+  const valorMostrar = royalty.descuento_premio ? (royalty.descuento_premio * 100) : 0;
+  document.getElementById('input-descuentos_premios').value = valorMostrar
 
   // Promociones
   const resPromos = await fetch(`/royalty/royaltyAdmin/${nombre}/promociones`)
@@ -86,6 +88,7 @@ const RegistroGuardarRoyalty = () => {
     descripcion: document.getElementById('add-input-descripcion').value.trim(),
     minVisitas: document.getElementById('add-input-minVisitas').value.trim(),
     maxVisitas: document.getElementById('add-input-maxVisitas').value.trim(),
+    descuento_premio: parseFloat(document.getElementById('add-input-descuento_premio').value.trim()) / 100,
     promociones: Array.from(document.querySelectorAll('.checkbox-promociones:checked')).map(cb => ({
       id: cb.value,
       nombre: cb.dataset.nombre
@@ -132,6 +135,8 @@ async function guardarRoyalty () {
     descripcion: document.getElementById('input-descripcion').value,
     minVisitas: document.getElementById('input-minVisitas').value,
     maxVisitas: document.getElementById('input-maxVisitas').value,
+    maxVisitas: document.getElementById('input-descuentos_premios').value,
+    descuento_premio: parseFloat(document.getElementById('input-descuentos_premios').value) / 100,
     promociones,
     eventos
   }
@@ -169,6 +174,7 @@ const abrirModalNuevoEstadoRoyalty = async () => {
   document.getElementById('add-input-descripcion').value = ''
   document.getElementById('add-input-minVisitas').value = ''
   document.getElementById('add-input-maxVisitas').value = ''
+  document.getElementById('add-input-descuento_premio').value = ''
 
   // Cargamos todas las promociones disponibles
   const resPromos = await fetch('/royalty/royaltyAdmin/todas/promociones-disponibles')
@@ -287,6 +293,7 @@ function agregarValidarFormulario (datos) {
   document.querySelectorAll('.help.is-danger').forEach(el => el.remove())
   const minNuevo = Number(datos.minVisitas)
   const maxNuevo = Number(datos.maxVisitas)
+  const desc_nuevo = Number(datos.descuento_premio)
   const prioridadNueva = Number(datos.prioridad)
   const prioridadDuplicada = royaltiesData.find(r => 
   Number(r.Número_de_prioridad) === prioridadNueva && r.Nombre_Royalty !== nombreOriginal)
@@ -528,6 +535,7 @@ async function cargarRoyalty () {
       <span class="royalty-meta-pill"><i class="fas fa-star"></i> Prioridad ${royalty.Número_de_prioridad}</span>
       <span class="royalty-meta-pill"><i class="fas fa-arrow-up"></i> Min ${royalty.Min_Visitas}</span>
       <span class="royalty-meta-pill"><i class="fas fa-arrow-down"></i> Max ${royalty.Max_Visitas}</span>
+      <span class="royalty-meta-pill"><i class="fas fa-tag"></i> Descuento: ${(royalty.descuento_premio * 100)}%</span>
     </div>
     <p class="royalty-card-desc">${royalty.Descripción}</p>
     <hr style="margin: 4px 0; border-color: var(--c-border);">

@@ -1,12 +1,13 @@
 const db = require('../util/database.js')
 
 module.exports = class Royalty {
-  constructor (nombre, numeroPrioridad, descripcion, maxVisitas, minVisitas) {
+  constructor (nombre, numeroPrioridad, descripcion, maxVisitas, minVisitas, descuento_premio) {
     this.Nombre_Royalty = nombre
     this.Número_de_prioridad = numeroPrioridad
     this.Descripción = descripcion
     this.Max_Visitas = maxVisitas
     this.Min_Visitas = minVisitas
+    this.descuento_premio = descuento_premio
   }
 
   // Admin
@@ -33,8 +34,8 @@ module.exports = class Royalty {
 
   save () {
     return db.execute(
-      'INSERT INTO estado_royalty (Nombre_Royalty, Número_de_prioridad, Descripción, Min_Visitas, Max_Visitas) VALUES (?,?,?,?,?)',
-      [this.Nombre_Royalty, this.Número_de_prioridad, this.Descripción, this.Min_Visitas, this.Max_Visitas]
+      'INSERT INTO estado_royalty (Nombre_Royalty, Número_de_prioridad, Descripción, Min_Visitas, Max_Visitas, descuento_premio) VALUES (?,?,?,?,?,?)',
+      [this.Nombre_Royalty, this.Número_de_prioridad, this.Descripción, this.Min_Visitas, this.Max_Visitas, this.descuento_premio]
     )
   }
 
@@ -62,7 +63,7 @@ module.exports = class Royalty {
   }
 
   // Actualizaión de estado royalty
-  static async updateEstadoRoyalty (nombreOriginal, nombreNuevo, prioridad, descripcion, minVisitas, maxVisitas) {
+  static async updateEstadoRoyalty (nombreOriginal, nombreNuevo, prioridad, descripcion, minVisitas, maxVisitas, descuento_premio) {
   // Desactivar llaves foraneas
     await db.execute('SET FOREIGN_KEY_CHECKS = 0')
 
@@ -78,9 +79,9 @@ module.exports = class Royalty {
     // Actualizar la tabla de estado royalty
     await db.execute(
     `UPDATE estado_royalty
-     SET Nombre_Royalty = ?, Número_de_prioridad = ?, Descripción = ?, Min_Visitas = ?, Max_Visitas = ?
+     SET Nombre_Royalty = ?, Número_de_prioridad = ?, Descripción = ?, Min_Visitas = ?, Max_Visitas = ?, descuento_premio = ?
      WHERE Nombre_Royalty = ?`,
-    [nombreNuevo, prioridad, descripcion, minVisitas, maxVisitas, nombreOriginal]
+    [nombreNuevo, prioridad, descripcion, minVisitas, maxVisitas, nombreOriginal, descuento_premio]
     )
 
     // Reactiva llaves foráneas
