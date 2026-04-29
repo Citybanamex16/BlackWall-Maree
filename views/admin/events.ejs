@@ -11,8 +11,21 @@
 
 </head>
 <body>
+    <nav class="navbar" role="navigation">
+        <div class="navbar-brand">
+            <div class="navbar-item">
+                <div class="logo-area">
+                    <span class="logo-text">MARÉE</span>
+                    <span class="logo-sub">Love at First Crêpe</span>
+                </div>
+            </div>
+        </div>
+    </nav>
+
     <section class="section">
         <div class="container">
+            <a href="/admin" class="back-link">← Admin Dashboard</a>
+
             <div class="events-shell">
                 <div>
                     <span class="events-kicker">Eventos, promociones y catalogo</span>
@@ -22,21 +35,11 @@
                         que participan en cada experiencia de Maree.
                     </p>
                 </div>
-                <div class="events-toolbar"
-                    style="display: flex; align-items: center; justify-content: space-between; width: 100%; margin-top: 16px;">
-
-                    <a href="/admin" class="button event-ghost is-medium">
-                        Volver al dashboard
-                    </a>
-
-                    <div style="display: flex; align-items: center; gap: 12px;">
-                        <div id="loading-spinner" class="button is-loading is-ghost is-hidden"></div>
-
-                        <button id="btn-nuevo-evento" class="button event-primary-button is-rounded is-medium">
-                            Nuevo evento
-                        </button>
-                    </div>
-
+                <div class="events-toolbar">
+                    <div id="loading-spinner" class="button is-loading is-ghost is-hidden"></div>
+                    <button id="btn-nuevo-evento" class="button event-primary-button is-rounded is-medium">
+                        Nuevo evento
+                    </button>
                 </div>
             </div>
 
