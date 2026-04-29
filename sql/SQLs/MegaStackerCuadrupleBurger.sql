@@ -992,7 +992,7 @@ DROP TABLE IF EXISTS `historial_canjes_royalty`;
 CREATE TABLE `historial_canjes_royalty` (
   `ID_canje` int(11) NOT NULL,
   `Numero_Telefonico` varchar(20) DEFAULT NULL,
-  `ID_Promocion` varchar(20) DEFAULT NULL,
+  `Nombre_Royalty` varchar(50) DEFAULT NULL,
   `Fecha_canje` datetime DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish2_ci;
 
@@ -2560,7 +2560,7 @@ ALTER TABLE `evento_contiene_promocion`
 ALTER TABLE `historial_canjes_royalty`
   ADD PRIMARY KEY (`ID_canje`),
   ADD KEY `Numero_Telefonico` (`Numero_Telefonico`),
-  ADD KEY `ID_Promocion` (`ID_Promocion`);
+  ADD KEY `Nombre_Royalty` (`Nombre_Royalty`);
 
 --
 -- Indices de la tabla `insumo`
@@ -2825,7 +2825,7 @@ ALTER TABLE `evento_contiene_promocion`
 --
 ALTER TABLE `historial_canjes_royalty`
   ADD CONSTRAINT `historial_canjes_royalty_ibfk_1` FOREIGN KEY (`Numero_Telefonico`) REFERENCES `cliente` (`Numero_Telefonico`),
-  ADD CONSTRAINT `historial_canjes_royalty_ibfk_2` FOREIGN KEY (`ID_Promocion`) REFERENCES `promocion` (`ID_Promocion`);
+  ADD CONSTRAINT `historial_canjes_royalty_ibfk_2` FOREIGN KEY (`Nombre_Royalty`) REFERENCES `estado_royalty` (`Nombre_Royalty`);
 
 --
 -- Filtros para la tabla `insumo`

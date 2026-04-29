@@ -447,13 +447,15 @@ exports.confirmarPedido = async (request, response, next) => {
 
     if (itemConPremio) {
       // A. Verificar tokens reales en la Base de Datos
-      const [statusData] = await Royalty.fetchClientStatus(telefonoLimpio)
+      const [statusData] = await Royalty.fetchClientStatus(telefonoFinal)
+      console.log("Data Estado", statusData);
       if (!statusData || statusData.length === 0) {
         return response.status(403).json({ pedidoConfirmado: false, mensaje: 'No se encontró información de Royalty' })
       }
 
       const info = statusData[0]
-      const tokensDisponibles = Math.floor(info.visitas / 10) - info.tokens_gastados
+      const tokensDisponibles = Math.floor(info.Visitas_Actuales / 10) - info.tokens_gastados
+      console.log("Tokens disponibles", tokensDisponibles);
 
       if (tokensDisponibles <= 0) {
         return response.status(403).json({ pedidoConfirmado: false, mensaje: 'Fraude detectado: No tienes tokens disponibles' })
@@ -482,7 +484,7 @@ exports.confirmarPedido = async (request, response, next) => {
 
       // Si llegamos aquí, el policía da el visto bueno
       // Definimos qué ID de promoción registrar (puedes mapearlo por nivel)
-      idPromocionARegistrar = info.ID_Promocion_Actual || 1
+      royalty = info.nivel
     }
     // --- FIN DEL POLICÍA DE ROYALTY ---
 
@@ -498,8 +500,8 @@ exports.confirmarPedido = async (request, response, next) => {
     await Pedido.guardarItems(idOrden, items)
 
     // 3. Si se usó un premio, registrar el canje para restar el token
-    if (idPromocionARegistrar) {
-      await Royalty.registrarCanje(telefonoLimpio, idPromocionARegistrar)
+    if (royalty) {
+      await Royalty.registrarCanje(telefonoLimpio, royalty)
     }
 
     response.status(200).json({ pedidoConfirmado: true, idOrden })

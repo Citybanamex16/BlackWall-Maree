@@ -145,7 +145,7 @@ module.exports = class Royalty {
         WHERE Numero_Telefonico = ?`, [telefono])
   }
 
-  static async registrarCanje (telefono, idPromocion) {
+  static async registrarCanje (telefono, Royalty) {
     const connection = await db.getConnection()
     try {
       await connection.beginTransaction()
@@ -156,8 +156,8 @@ module.exports = class Royalty {
       )
 
       await connection.execute(
-        'INSERT INTO historial_canjes_royalty (Numero_Telefonico, ID_Promocion) VALUES (?, ?)',
-        [telefono, idPromocion]
+        'INSERT INTO historial_canjes_royalty (Numero_Telefonico, Nombre_Royalty) VALUES (?, ?)',
+        [telefono, Royalty]
       )
 
       await connection.commit()
