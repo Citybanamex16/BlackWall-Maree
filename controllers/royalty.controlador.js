@@ -381,7 +381,7 @@ exports.getRoyaltyDataAPI = async (request, response, next) => {
     // Google Wallet
     const walletLink = await WalletModel.generarLinkWallet(
       telefono,
-      statusDataGoogle.Nombre,
+      statusDataGoogle.username,
       statusDataGoogle.nivel,
       statusDataGoogle.Visitas_Actuales,
       statusDataGoogle.Max_Visitas
