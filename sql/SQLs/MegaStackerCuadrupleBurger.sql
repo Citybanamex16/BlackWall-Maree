@@ -1749,6 +1749,7 @@ CREATE TABLE `producto` (
   `Tipo` varchar(50) NOT NULL,
   `Imagen` text DEFAULT NULL,
   `Permite_Crema_Batida` tinyint(1) NOT NULL DEFAULT 0,
+  `Permite_Modificar_Ingredientes` tinyint(1) NOT NULL DEFAULT 1,
   `EsExclusivo` tinyint(1) NOT NULL DEFAULT 0 COMMENT '0 = producto normal; 1 = producto exclusivo de evento'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish2_ci;
 
