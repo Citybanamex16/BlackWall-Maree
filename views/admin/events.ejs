@@ -22,14 +22,21 @@
                         que participan en cada experiencia de Maree.
                     </p>
                 </div>
-                <div class="events-toolbar">
-                    <a href="/admin" class="button event-ghost is-medium" type="button">
+                <div class="events-toolbar"
+                    style="display: flex; align-items: center; justify-content: space-between; width: 100%; margin-top: 16px;">
+
+                    <a href="/admin" class="button event-ghost is-medium">
                         Volver al dashboard
                     </a>
-                    <div id="loading-spinner" class="button is-loading is-ghost is-hidden"></div>
-                    <button id="btn-nuevo-evento" class="button event-primary-button is-rounded is-medium" type="button">
-                        Nuevo evento
-                    </button>
+
+                    <div style="display: flex; align-items: center; gap: 12px;">
+                        <div id="loading-spinner" class="button is-loading is-ghost is-hidden"></div>
+
+                        <button id="btn-nuevo-evento" class="button event-primary-button is-rounded is-medium">
+                            Nuevo evento
+                        </button>
+                    </div>
+
                 </div>
             </div>
 
