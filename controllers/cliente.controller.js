@@ -7,6 +7,7 @@ const Eventos = require('../models/eventos.model.js')
 const promos = require('../models/promociones.model.js')
 const Cliente = require('../models/cliente.model.js')
 const Pedido = require('../models/pedidos.model.js')
+const { request, response } = require('express')
 
 // Recuerden que automaticamente cuando haces render Express busca en Views
 // Si esta dentro de una subcarpeta de Views hay que decirle en cual
@@ -237,4 +238,12 @@ exports.postCancelClientOrder = async (request, response) => {
   } catch {
     return response.status(500).json({ ok: false, message: 'Error del servidor.' })
   }
+}
+
+exports.getAvisoSimplificado = async (request, response) =>{
+  response.render('cliente/aviso-simplificado')
+}
+
+exports.getAvisoIntegral = async (request, response) =>{
+  response.render('cliente/aviso-integral')
 }

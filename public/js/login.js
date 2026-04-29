@@ -27,6 +27,42 @@ document.addEventListener('DOMContentLoaded', () => {
     loginPasswordInput.required = true
   }
 
+  const btnLogin = document.getElementById('btn-login');
+  const btnSignup = document.getElementById('btn-signup');
+  const btnOtp = document.getElementById('btn-otp');
+  const checkPrivacidad = document.getElementById('aceptoPrivacidad');
+
+
+// LÓGICA DE VALIDACIÓN
+  const validateForm = (form, submitBtn) => {
+    const inputs = Array.from(form.querySelectorAll('input[required], select[required]'));
+    
+    const allFilled = inputs.every(input => {
+      return input.value.trim() !== '';
+    });
+
+    let privacyAccepted = true;
+    if (form.id === 'form-signup' && checkPrivacidad) {
+        privacyAccepted = checkPrivacidad.checked;
+    }
+
+    submitBtn.disabled = !allFilled;
+  };
+
+  const formsToWatch = [
+    { form: formLogin, btn: btnLogin },
+    { form: formSignup, btn: btnSignup },
+    { form: formOtp, btn: btnOtp }
+  ];
+
+  formsToWatch.forEach(({ form, btn }) => {
+    form.addEventListener('input', () => validateForm(form, btn));
+
+    if (form.id === 'form-signup' && checkPrivacidad) {
+        checkPrivacidad.addEventListener('change', () => validateForm(form, btn));
+    }
+  });
+
   // Función global para mostrar alertas
   const showAlert = (msg, type = 'danger') => {
     if (type === 'danger') {
@@ -141,6 +177,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!response) return
 
     if (response.status === 200 && response.data.redirectUrl) {
+      localStorage.removeItem('pedido') 
       window.location.href = response.data.redirectUrl
     } else {
       showAlert(response.data.error)

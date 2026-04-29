@@ -5,6 +5,8 @@ const btnLimpiar = document.getElementById('btnLimpiar')
 const btnExportar = document.getElementById('btnExportar')
 const statusBox = document.getElementById('statusBox')
 const dashboardContent = document.getElementById('dashboardContent')
+const selectCategoria = document.getElementById('selectCategoria')
+const selectTipo = document.getElementById('selectTipo')
 
 let chartTopCantidad = null
 let chartCategoriaIngresos = null
@@ -32,6 +34,67 @@ function showStatus (tipo, mensaje) {
 function clearStatus () {
   statusBox.className = 'status-box'
   statusBox.textContent = ''
+}
+
+function normalizeOptionRows (result) {
+  if (!result) return []
+  if (Array.isArray(result)) return result
+  if (Array.isArray(result.data)) return result.data
+  return []
+}
+
+function populateSelect (selectElement, rows, preferredKeys, allLabel) {
+  if (!selectElement) return
+
+  const previousValue = selectElement.value
+  selectElement.innerHTML = `<option value="">${allLabel}</option>`
+
+  const valuesSet = new Set()
+
+  for (const row of rows) {
+    const key = preferredKeys.find((k) => row && row[k] !== undefined && row[k] !== null)
+    if (!key) continue
+
+    const value = String(row[key]).trim()
+    if (!value || valuesSet.has(value)) continue
+
+    valuesSet.add(value)
+
+    const option = document.createElement('option')
+    option.value = value
+    option.textContent = value
+    selectElement.appendChild(option)
+  }
+
+  if (previousValue && valuesSet.has(previousValue)) {
+    selectElement.value = previousValue
+  }
+}
+
+async function cargarCatalogosFiltros () {
+  const [resCategorias, resTipos] = await Promise.all([
+    fetch('/admin/api/categorias'),
+    fetch('/admin/api/tipos')
+  ])
+
+  const [categoriasResult, tiposResult] = await Promise.all([
+    resCategorias.json(),
+    resTipos.json()
+  ])
+
+  if (!resCategorias.ok) {
+    throw new Error(categoriasResult.message || 'No se pudieron cargar las categorías.')
+  }
+
+  if (!resTipos.ok) {
+    throw new Error(tiposResult.message || 'No se pudieron cargar los tipos.')
+  }
+
+  const categoriasRows = normalizeOptionRows(categoriasResult)
+  const tiposRows = normalizeOptionRows(tiposResult)
+
+  populateSelect(selectCategoria, categoriasRows, ['Nombre', 'nombre'], 'Todas')
+  populateSelect(selectTipo, tiposRows, ['Nombre', 'nombre'], 'Todos')
 }
 
 function formatMoney (value) {
@@ -231,5 +294,11 @@ btnExportar.addEventListener('click', () => {
 })
 
 window.addEventListener('DOMContentLoaded', async () => {
+  try {
+    await cargarCatalogosFiltros()
+  } catch (error) {
+    showStatus('error', error.message || 'No fue posible cargar los filtros de catálogo.')
+  }
+
   await cargarMetricas()
 })

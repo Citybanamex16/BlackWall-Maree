@@ -1,4 +1,4 @@
-/* global ORDENES_INIT */
+/* global ORDENES_INIT, CLIENTE_TELEFONO */
 
 const CANCEL_WINDOW_MS = 3 * 60 * 1000
 
@@ -17,7 +17,14 @@ function renderCancelArea (idOrden, fecha, estado) {
   const area = card.querySelector('.cancel-area')
   if (!area) return
 
-  if (estado === 'Cancelado' || estado === 'Entregado') { area.innerHTML = ''; return }
+  if (estado === 'Cancelado') { area.innerHTML = ''; return }
+  if (estado === 'Entregado') {
+    // Si el botón ya está (render EJS) no hacemos nada; si llegó por polling lo inyectamos
+    if (!area.querySelector('.btn-resena')) {
+      area.innerHTML = `<button class="btn-resena" data-orden-id="${idOrden}" onclick="abrirModalResena('${idOrden}')">★ Dejar reseña</button>`
+    }
+    return
+  }
 
   const diff = Date.now() - new Date(fecha).getTime()
   const restante = Math.min(CANCEL_WINDOW_MS - diff, CANCEL_WINDOW_MS)
@@ -106,6 +113,72 @@ async function actualizarStatus () {
   } catch { /* silencioso */ }
 }
 
+// ── RESEÑA ──────────────────────────────────────────────
+let _resenaOrdenId = null
+let _resenaPuntaje = 0
+
+function abrirModalResena (idOrden) {
+  _resenaOrdenId = idOrden
+  _resenaPuntaje = 0
+  document.getElementById('resena-orden-sub').textContent = `Orden ${idOrden}`
+  document.getElementById('resena-comentario').value = ''
+  seleccionarEstrella(0)
+  document.getElementById('modal-resena').showModal()
+}
+
+function cerrarModalResena () {
+  document.getElementById('modal-resena').close()
+  _resenaOrdenId = null
+  _resenaPuntaje = 0
+}
+
+function seleccionarEstrella (val) {
+  _resenaPuntaje = val
+  document.querySelectorAll('.estrella-btn').forEach(btn => {
+    btn.classList.toggle('activa', parseInt(btn.dataset.val) <= val)
+  })
+}
+
+async function enviarResena () {
+  if (_resenaPuntaje < 1) {
+    mostrarAlerta('Selecciona una puntuación antes de enviar.', 'is-warning')
+    cerrarModalResena()
+    return
+  }
+  const comentario = document.getElementById('resena-comentario').value.trim()
+  const btn = document.getElementById('btn-enviar-resena')
+  btn.disabled = true
+
+  try {
+    const res = await fetch('/menu/feedback/Nuevo', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        ID_Orden: _resenaOrdenId,
+        Puntaje: _resenaPuntaje,
+        Comentario: comentario || '',
+        Numero_Telefonico: CLIENTE_TELEFONO
+      })
+    })
+    const data = await res.json()
+    if (data.ok) {
+      const idParaBorrar = _resenaOrdenId
+      cerrarModalResena()
+      mostrarAlerta('¡Gracias por tu reseña!')
+      const btnCard = document.querySelector(`.btn-resena[data-orden-id="${idParaBorrar}"]`)
+      if (btnCard) btnCard.remove()
+    } else {
+      cerrarModalResena()
+      mostrarAlerta(data.message || 'No se pudo guardar la reseña.', 'is-danger')
+    }
+  } catch {
+    cerrarModalResena()
+    mostrarAlerta('Error de conexión.', 'is-danger')
+  } finally {
+    btn.disabled = false
+  }
+}
+
 // Init
 document.addEventListener('DOMContentLoaded', () => {
   const cancelModal = document.getElementById('cancel-confirm-modal')
@@ -114,6 +187,11 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('btn-no-cancelar').addEventListener('click', closeModal)
   document.getElementById('btn-si-cancelar').addEventListener('click', _ejecutarCancel)
   cancelModal.querySelector('.modal-background').addEventListener('click', closeModal)
+
+  // Cerrar modal reseña al click fuera
+  document.getElementById('modal-resena').addEventListener('click', e => {
+    if (e.target === e.currentTarget) cerrarModalResena()
+  })
 
   ORDENES_INIT.forEach(o => renderCancelArea(o.id, o.fecha, o.estado))
   setInterval(actualizarStatus, 30000)

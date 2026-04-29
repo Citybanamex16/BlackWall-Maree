@@ -1,5 +1,4 @@
 const mysql = require('mysql2')
-
 /*
 // Pool de conexiones
 const pool = mysql.createPool({
@@ -8,14 +7,13 @@ const pool = mysql.createPool({
   port: '3306',
   // port: '3000',
   user: 'mansi',
-  database: 'mareedb',
+  database: 'mareebd',
   password: '280904',
-  waitForConnections: true,
-  connectionLimit: 10 
+  waitForConnection: true,
+  connectionLimit: 10
 
 })
 */
-
 /* ==Contraseñas y usuario ==
 Usuario: CL85565990
 Pass: CL006901!
@@ -31,7 +29,8 @@ const pool = mysql.createPool({
   user: 'root',
   database: 'mareebd',
   password: '',
-  waitForConnections: true,
+  charset: 'utf8mb4_spanish2_ci' ,
+  waitForConnection: true,
   connectionLimit: 10
 
 })
@@ -42,7 +41,7 @@ const pool = mysql.createPool({
 const pool = mysql.createPool({
   host: 'mysql-maree2.alwaysdata.net',
   user: 'maree2',
-  database: 'maree2_suprema',
+  database: 'maree2_37',
   password: 'maree123',
   waitForConnections: true,
   connectionLimit: 10

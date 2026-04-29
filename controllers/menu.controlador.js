@@ -6,6 +6,7 @@ const tipos = require('../models/MenuDigital/tipos.model.js')
 const promos = require('../models/promociones.model.js')
 const Pedido = require('../models/pedidos.model.js')
 const sucursal = require('../models/MenuDigital/sucursales.model.js')
+const feedback = require('../models/MenuDigital/feedback.model.js')
 const db = require('../util/database.js')
 
 const CREMA_BATIDA_INGREDIENT_ID = 'INCRMBT001'
@@ -138,9 +139,43 @@ exports.getAllSucursales = async (req, res, nex) => {
   }
 }
 
-exports.getOrden = (request, response, next) => {
+exports.getOrden = async (request, response, next) => {
   const breadcrumbs = nav.getBreadcrumbs('Orden')
-  response.render('cliente/order', { breadcrumbs, datosCliente: request.session.cliente || null })
+  const sesion = request.session.cliente
+
+  // Solo intentamos calcular si el usuario está logueado
+  if (sesion && sesion.telefono) {
+    try {
+      // 1. Llamamos al SP que nos trae el estado del cliente (visitas, nivel, etc.)
+      const [statusData] = await Royalty.fetchClientStatus(sesion.telefono)
+
+      if (statusData && statusData.length > 0) {
+        const info = statusData[0]
+
+        // 2. CÁLCULO DE TOKENS (Regla: Visitas/10 - Gastados)
+        const visitas = info.visitas|| 0
+        const gastados = info.tokens_gastados || 0
+        const tokensDisponibles = Math.floor(visitas / 10) - gastados
+
+        // 3. OBTENER DESCUENTO (Atributo: descuento_premio desde la DB)
+        const descuentoDecimal = parseFloat(info.descuento_premio) || 0
+        const descuentoPorcentaje = Math.round(descuentoDecimal * 100)
+
+        // 4. Actualizamos la sesión con datos reales de la DB
+        request.session.cliente.tokensDisponibles = tokensDisponibles > 0 ? tokensDisponibles : 0
+        request.session.cliente.descuentoRoyalty = descuentoPorcentaje
+        request.session.cliente.nivel = info.nivel
+
+        console.log(`Tokens calculados para ${sesion.telefono}: ${tokensDisponibles}`)
+      }
+    } catch (err) {
+      console.error('Error al sincronizar datos de Royalty:', err)
+    }
+  }
+
+  response.render('cliente/order', {
+    datosCliente: request.session.cliente
+  })
 }
 
 exports.getPlatillo = async (request, response, next) => {
@@ -162,7 +197,12 @@ exports.getPlatillo = async (request, response, next) => {
     const permiteCremaBatidaCategoria = row.permiteCremaBatida === 1 || row.permiteCremaBatida === '1'
     const permiteCremaBatida = permiteCremaBatidaCategoria && permiteCremaBatidaPorNombre(row.Nombre)
     const [catalogoRows] = await db.execute(
-      'SELECT ID_Insumo as id, Nombre as nombre, Precio as precio FROM insumo WHERE Activo = 1 ORDER BY Nombre'
+      `SELECT i.ID_Insumo as id, i.Nombre as nombre, i.Precio as precio
+       FROM insumo i
+       JOIN insumo_categoria ic ON i.ID_Insumo = ic.ID_Insumo
+       WHERE ic.Nom_Categoria = ? AND i.Activo = 1
+       ORDER BY i.Nombre`,
+      [row.base]
     )
     const [cremaBatidaRows] = permiteCremaBatida
       ? await db.execute(
@@ -278,12 +318,30 @@ exports.validarPedido = async (request, response, next) => {
 
   const { items } = request.body
 
+  try {
+    const tienePremio = items.some(i => i.premioAplicado === true);
+    let descuentoRecompensa = 0;
+
+    if (tienePremio) {
+      const [statusData] = await Royalty.fetchClientStatus(usuario.telefono);
+      const info = statusData[0];
+      
+      const tokensReales = Math.floor(info.visitas / 10) - (info.tokens_gastados || 0);
+
+      if (tokensReales <= 0) {
+        return response.status(200).json({ 
+          pedidoValido: false, 
+          mensaje: 'No tienes tokens suficientes para reclamar este premio.' 
+        });
+      }
+      descuentoRecompensa = parseFloat(info.descuento_premio) || 0;
+    }
+
   // ── Validación básica ──
   if (!Array.isArray(items) || items.length === 0) {
     return response.status(400).json({ pedidoValido: false, mensaje: 'El pedido está vacío' })
   }
 
-  try {
     // ── 1. Recolección de IDs ──
     const idsProductos = [...new Set(items.map(i => i.id))]
     const idsInsumos = [...new Set(items.flatMap(i => [
@@ -310,11 +368,13 @@ exports.validarPedido = async (request, response, next) => {
 
     items.forEach((item, index) => {
       // Pasamos el compendio para que el cálculo sepa qué promo aplicar
-      const precioOficial = Pedido.calcularPrecioRealItem(item, listaOro, compendio)
-
+      const precioOficial = Pedido.calcularPrecioRealItem(item, listaOro, compendio, descuentoRecompensa)
+      
       const precioRecibido = parseFloat(
         String(item.precio_total ?? item.precio).replace(/[^0-9.]/g, '')
       )
+
+      console.log(` ⚖️ [COMPARACIÓN] Item ${index + 1}: Poli calculó $${precioOficial} | Front envió $${precioRecibido}`);
 
       if (Math.abs(precioOficial - precioRecibido) > 0.01) {
         erroresPrecio.push(`Item ${index + 1}: se esperaba $${precioOficial} pero se recibió $${precioRecibido}`)
@@ -329,7 +389,6 @@ exports.validarPedido = async (request, response, next) => {
         detalles: erroresPrecio
       })
     }
-
     return response.status(200).json({
       pedidoValido: true,
       totalVerificado: granTotalOficial
@@ -348,21 +407,26 @@ exports.validarPedido = async (request, response, next) => {
 
 exports.confirmarPedido = async (request, response, next) => {
   const { items, forma, telefono: telefonoBody, nombre: nombreBody, direccion, descripcion } = request.body
+    console.error('💥 Error en Policía:', err)
+    next(err)
+  }
 
+
+exports.confirmarPedido = async (request, response, next) => {
+  const { items, forma, telefono: telefonoBody, nombre: nombreBody, direccion, descripcion } = request.body
   const sesion = request.session.cliente
   const telefonoFinal = sesion ? String(sesion.telefono) : telefonoBody
   const nombreFinal = sesion ? sesion.nombre : (String(nombreBody || '').trim() || 'Cliente')
+  const telefonoLimpio = String(telefonoFinal).replace(/[\s-]/g, '')
 
+  // 1. Validaciones básicas de entrada
   const formasValidas = ['Pick-Up', 'Sucursal', 'Delivery']
   if (!formasValidas.includes(forma)) {
     return response.status(400).json({ pedidoConfirmado: false, mensaje: 'Forma de entrega inválida' })
   }
-
-  const telefonoLimpio = String(telefonoFinal).replace(/[\s-]/g, '')
   if (!/^\d{7,15}$/.test(telefonoLimpio)) {
     return response.status(400).json({ pedidoConfirmado: false, mensaje: 'Teléfono inválido' })
   }
-
   if (!Array.isArray(items) || items.length === 0) {
     return response.status(400).json({ pedidoConfirmado: false, mensaje: 'El pedido está vacío' })
   }
@@ -377,6 +441,52 @@ exports.confirmarPedido = async (request, response, next) => {
   }
 
   try {
+    // --- INICIO DEL POLICÍA DE ROYALTY ---
+    const itemConPremio = items.find(i => i.premioAplicado === true)
+    let idPromocionARegistrar = null
+
+    if (itemConPremio) {
+      // A. Verificar tokens reales en la Base de Datos
+      const [statusData] = await Royalty.fetchClientStatus(telefonoLimpio)
+      if (!statusData || statusData.length === 0) {
+        return response.status(403).json({ pedidoConfirmado: false, mensaje: 'No se encontró información de Royalty' })
+      }
+
+      const info = statusData[0]
+      const tokensDisponibles = Math.floor(info.visitas / 10) - info.tokens_gastados
+
+      if (tokensDisponibles <= 0) {
+        return response.status(403).json({ pedidoConfirmado: false, mensaje: 'Fraude detectado: No tienes tokens disponibles' })
+      }
+
+      // B. Recalcular precio original desde la DB (El policía no confía en el precio del front)
+      let precioOriginalDB = 0
+      if (itemConPremio.producto_base) {
+        const [res] = await productos.getCrepaPersoPrecioBase()
+        precioOriginalDB = res[0].PrecioBase
+        // Aquí podrías sumar el precio de los ingredientes si tu lógica lo requiere
+      } else {
+        const [res] = await productos.fecthOneProduct(itemConPremio.id)
+        precioOriginalDB = res[0].Precio
+      }
+
+      // C. Verificar que el descuento aplicado sea el que le corresponde a su nivel
+      // Asumimos que el porcentaje viene de la sesión o una constante por nivel
+      const porcentajePermitido = sesion.descuentoRoyalty || 0
+      const precioEsperado = precioOriginalDB - (precioOriginalDB * (porcentajePermitido / 100))
+
+      // Comparar con un margen de error pequeño por decimales
+      if (Math.abs(parseFloat(itemConPremio.precio_total) - precioEsperado) > 0.1) {
+        return response.status(400).json({ pedidoConfirmado: false, mensaje: 'Fraude detectado: El precio del premio no coincide' })
+      }
+
+      // Si llegamos aquí, el policía da el visto bueno
+      // Definimos qué ID de promoción registrar (puedes mapearlo por nivel)
+      idPromocionARegistrar = info.ID_Promocion_Actual || 1
+    }
+    // --- FIN DEL POLICÍA DE ROYALTY ---
+
+    // 2. Guardar el pedido (Proceso normal)
     await Pedido.verificarOCrearCliente(telefonoLimpio, nombreFinal)
     const idOrden = await Pedido.guardarOrden(
       telefonoLimpio,
@@ -386,6 +496,11 @@ exports.confirmarPedido = async (request, response, next) => {
       descripcionFinal || null
     )
     await Pedido.guardarItems(idOrden, items)
+
+    // 3. Si se usó un premio, registrar el canje para restar el token
+    if (idPromocionARegistrar) {
+      await Royalty.registrarCanje(telefonoLimpio, idPromocionARegistrar)
+    }
 
     response.status(200).json({ pedidoConfirmado: true, idOrden })
   } catch (error) {
@@ -795,10 +910,12 @@ exports.getIngredientesActivos = async (req, res, nex) => {
   try {
     // Iniciamos la transacción
     await connection.beginTransaction()
-
-    // Ejecutamos ambas consultas usando la misma conexión
-    const result = await ingrediente.fetchAllValid(connection)
-    const resultPrecioBase = await productos.getCrepaPersoPrecioBase(connection)
+        // Ejecutamos ambas consultas usando la misma conexión
+        const categoria = req.query.categoria
+        const result = categoria
+          ? await ingrediente.fetchAllValidPorCategoria(connection, categoria)
+          : await ingrediente.fetchAllValid(connection)
+        const resultPrecioBase = await productos.getCrepaPersoPrecioBase(connection);
 
     // Si todo sale bien, confirmamos (commit)
     await connection.commit()
@@ -821,5 +938,156 @@ exports.getIngredientesActivos = async (req, res, nex) => {
   } finally {
     // Siempre liberamos la conexión al terminar
     if (connection) connection.release()
+  }
+}
+//Sección feedback Cliente
+exports.getReviewHistoryView = (request, response, next) => {
+  const breadcrumbs = nav.getBreadcrumbs('Menu')
+  const SesionData = request.session.cliente
+  console.log("Datos del cliente: ", SesionData)
+  response.render('cliente/historialClienteReviews', { breadcrumbs, datosCliente: SesionData})
+}
+
+
+
+exports.getClientReviewHistory = async (req, res, nex) => {
+  console.log("Getting Client's review history")
+  try{
+
+    const clienteTelefono = req.query.Numero_Telefonico;
+
+    if(clienteTelefono === undefined){
+      throw new Error("Telefono indefinido")
+    }
+
+    console.log("Teléfono recibido:", clienteTelefono);
+
+    const resultData = await feedback.getClientFeedback(clienteTelefono)
+
+    console.log("Reviews obtenidas: ", resultData)
+
+     res.status(200).json({
+          ok: true,
+          message: 'Catalogo Feedback Obtenido',
+          reviewCatalog:resultData
+                  })
+
+  } catch (err) {
+    if (connection) await connection.rollback()
+
+    res.status(500).json({
+      ok: false,
+      message: 'Error en la transacción',
+      error: err.message || err
+    })
+
+  } finally {
+    if (connection) connection.release()
+  }
+}
+
+
+// Sección feedback Cliente
+exports.getReviewHistoryView = (request, response, next) => {
+  const breadcrumbs = nav.getBreadcrumbs('Menu')
+  const SesionData = request.session.cliente
+  console.log('Datos del cliente: ', SesionData)
+  response.render('cliente/historialClienteReviews', { breadcrumbs, datosCliente: SesionData })
+}
+
+exports.getClientReviewHistory = async (req, res, nex) => {
+  console.log("Getting Client's review history")
+  try {
+    const clienteTelefono = req.query.Numero_Telefonico
+
+    if (clienteTelefono === undefined) {
+      throw new Error('Telefono indefinido')
+    }
+
+    console.log('Teléfono recibido:', clienteTelefono)
+
+    const resultData = await feedback.getClientFeedback(clienteTelefono)
+
+    console.log('Reviews obtenidas: ', resultData)
+
+    res.status(200).json({
+      ok: true,
+      message: 'Catalogo Feedback Obtenido',
+      reviewCatalog: resultData
+    })
+  } catch (err) {
+    res.status(500).json({
+      ok: false,
+      message: 'Error al obtener catalogo feedback',
+      error: err
+    })
+  }
+}
+
+exports.postNewFeedback = async (req, res, post) => {
+  console.log('Generando nuevo feedback de cliente')
+  let resultData
+  try {
+    const NewReviewData = req.body
+    // Extracción tipo map
+    const {
+      ID_Orden, // Recibir
+      Puntaje, // Recibir
+      Comentario, // Recibir
+      Numero_Telefonico // Recibir para cliente_tiene_review
+    } = NewReviewData
+
+    // Generar variables
+    const ID_Review = productos.generarID('RV')
+    console.log('ID generado para nueva review: ', ID_Review)
+
+    const now = new Date()
+    const Fecha_Hora = now.getFullYear() + '-' +
+    String(now.getMonth() + 1).padStart(2, '0') + '-' +
+    String(now.getDate()).padStart(2, '0') + ' ' +
+    String(now.getHours()).padStart(2, '0') + ':' +
+    String(now.getMinutes()).padStart(2, '0') + ':' +
+    String(now.getSeconds()).padStart(2, '0')
+
+    // Preparando paquetes de info para cada tabla:
+    // Para tabla Review
+    const reviewRecord = {
+      ID_Review,
+      ID_Orden,
+      Puntaje,
+      Fecha_Hora,
+      Comentario
+    }
+
+    // Para tabla cliente_tiene_review
+    const intermediaryData = {
+      ID_Review, // ID_Review generada arriba
+      Numero_Telefonico
+    }
+
+    console.log(reviewRecord)
+    console.log(intermediaryData)
+
+    // Ejecutando POST
+    resultData = await feedback.postNewOrderFeedback(reviewRecord, intermediaryData)
+
+    console.log('Resultado SP:', JSON.stringify(resultData))
+
+    if (resultData && resultData[0]?.Estado === 'Error') {
+      throw new Error(`SP falló: ${resultData[0]?.Mensaje}`)
+    }
+
+    res.status(200).json({
+      ok: true,
+      message: 'Feedback Guardado correctamente',
+      result: resultData
+    })
+  } catch (err) {
+    console.log('Error interno en POST de feedback: ', err)
+    res.status(500).json({
+      ok: false,
+      message: 'Error al guardar feedback',
+      result: resultData
+    })
   }
 }

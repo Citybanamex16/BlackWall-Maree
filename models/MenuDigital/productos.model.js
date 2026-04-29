@@ -129,7 +129,14 @@ module.exports = class Producto {
 
   // Función para obtener los ingredientes pertenecientes a una Categoría
   static async getCategoryIngredientes (categoria) {
-    return db.execute('SELECT ID_Insumo as id ,Nombre as nombre, Precio as precio FROM insumo WHERE Categoría = ?', [categoria])
+    return db.execute(
+      `SELECT i.ID_Insumo as id, i.Nombre as nombre, i.Precio as precio
+       FROM insumo i
+       JOIN insumo_categoria ic ON i.ID_Insumo = ic.ID_Insumo
+       WHERE ic.Nom_Categoria = ? AND i.Activo = 1
+       ORDER BY i.Nombre`,
+      [categoria]
+    )
   }
 
   static generarID (prefijo) {
@@ -141,8 +148,8 @@ module.exports = class Producto {
   static async insertNewProduct (connection, id, nombre, categoria, Precio, Disponible, Imagen, tipo) {
     // Al usar await, recibes el resultado de la promesa
     const [result] = await connection.execute(
-      'INSERT INTO producto VALUES (?,?,?,?,?,?,?,?)',
-      [id, 'Básico', categoria, nombre, Precio, Disponible, tipo, Imagen]
+      'INSERT INTO producto VALUES (?,?,?,?,?,?,?,?,?)',
+      [id, 'Básico', categoria, nombre, Precio, Disponible, tipo, Imagen,0]
     )
     return result // Este objeto contiene affectedRows e insertId
   }

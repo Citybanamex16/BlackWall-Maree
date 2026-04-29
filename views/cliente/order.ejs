@@ -55,7 +55,20 @@
                     Confirmar Pedido →
                 </button>
             </div>
+        </div>
 
+        <div id="contenedor-royalty-ui"></div>
+    
+        <div id="modal-royalty" class="modal">
+            <div class="modal-background" onclick="cerrarModalPremios()"></div>
+            <div class="modal-content" style="background: white; padding: 25px; border-radius: 15px;">
+                <h3 class="title is-4" style="font-family: 'Cormorant Garamond';">Canjear Premio Royalty</h3>
+                <p class="subtitle is-6">Selecciona el producto para aplicar tu descuento:</p>
+                <div id="lista-productos-premios"></div>
+                <button class="button is-fullwidth mt-4" onclick="cerrarModalPremios()">Cancelar</button>
+            </div>
+        </div>
+            
         <% if (datosCliente) { %>
         <div style="margin-top:32px;display:flex;justify-content:flex-end;">
             <a href="/cliente/historial"
@@ -77,7 +90,14 @@
         </div>
         <% } %>
 
-        </div>
+
+        <script>
+            window.datosRoyalty = {
+                tokens: <%= (datosCliente && datosCliente.tokensDisponibles) ? datosCliente.tokensDisponibles : 0 %>,
+                descuento: <%= (datosCliente && datosCliente.descuentoRoyalty) ? datosCliente.descuentoRoyalty : 0 %>,
+                nivel: "<%= (datosCliente) ? datosCliente.nivel : '' %>"
+            };
+        </script>
     </section>
 
     <script>

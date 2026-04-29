@@ -557,17 +557,29 @@ html {
 
 #menuErrorModal[open] {
     animation: modalEntrada 0.22s ease forwards;
+}
+
 .menu-grid-container {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
     gap: 20px;
 }
 
+/* type-accordion y type-content deben ocupar 100% del ancho del contenedor
+   para que las columnas Bulma internas se rendericen correctamente */
+.type-accordion {
+    width: 100%;
+}
+
+.type-content {
+    width: 100%;
+}
+
 @media (max-width: 768px) {
     .navbar {
         padding: 8px 16px;
     }
-    
+
     .logo-text {
         font-size: 18px;
     }

@@ -245,7 +245,6 @@ if (canManageProducts && registerButton) {
 
 const typeFormsModal = document.getElementById('TypeFormsCU04')
 const typeFormsTitle = document.getElementById('tituloModal')
-const typeFormsCloseBtn = document.getElementById('cerrarModal')
 
 function registerButtonOnClick (event) {
   console.log('Nuevo Producto button detectado')
@@ -301,10 +300,6 @@ function registerButtonOnClick (event) {
         console.log('Boton Creado')
       })
       //
-      typeFormsCloseBtn.addEventListener('click', (event) => {
-        event.preventDefault()
-        typeFormsModal.close()
-      }, { once: true })
 
       typeFormsModal.showModal()
     })
@@ -347,24 +342,16 @@ async function seleccionarTipoProducto (id) {
 /* ── Helper de campo por tipo ── */
 function createFieldElement (field) {
   const wrapper = document.createElement('div')
-  wrapper.classList.add('field', 'is-dynamic')
+  wrapper.classList.add('maree-field', 'is-dynamic') // Usamos maree-field
 
   const label = document.createElement('label')
-  label.classList.add('label', 'is-dynamic')
+  label.classList.add('maree-label', 'is-dynamic') // Usamos maree-label
   label.textContent = field.nombre
   label.setAttribute('for', `field-${field.nombre}`)
 
   const control = document.createElement('div')
-  control.classList.add('control', 'is-dynamic')
+  // No necesitamos la clase 'control' de Bulma, usamos la estructura de la Biblia
 
-  // ── text | number | date ──
-  const input = document.createElement('input')
-  input.classList.add('input')
-  input.id = `field-${field.nombre}`
-  input.name = field.nombre
-  input.required = true
-
-  // Selección de Tipo de Dato
   const typeMap = {
     string: 'text',
     int: 'number',
@@ -375,42 +362,37 @@ function createFieldElement (field) {
   const mappedType = typeMap[field.type] ?? 'text'
 
   if (mappedType === 'checkbox') {
-  // Bulma necesita: <label class="checkbox"><input type="checkbox"> Texto</label>
-    const checkLabel = document.createElement('label')
-    checkLabel.classList.add('checkbox')
-    checkLabel.setAttribute('for', `field-${field.nombre}`)
+    // Usamos la clase de la Biblia: maree-checkbox-row
+    const checkRow = document.createElement('label')
+    checkRow.classList.add('maree-checkbox-row', 'is-dynamic')
 
+    const input = document.createElement('input')
     input.type = 'checkbox'
     input.id = `field-${field.nombre}`
     input.name = field.nombre
-    input.required = false
-    // Quitar la clase 'input' que se agregó arriba, no aplica a checkbox
-    input.classList.remove('input')
 
-    checkLabel.appendChild(input)
-    checkLabel.append(` ${field.nombre}`) // Texto al lado del checkbox
+    checkRow.appendChild(input)
+    checkRow.append(` ${field.nombre}`)
 
-    // Reemplazar el label externo y meter todo en control
-    label.textContent = '' // Vaciar el label superior
-    label.style.display = 'none' // Ocultarlo, el checkLabel ya tiene el texto
-    control.appendChild(checkLabel)
+    label.style.display = 'none' // El label de arriba no se usa en checkbox
+    wrapper.appendChild(checkRow)
   } else {
+    const input = document.createElement('input')
+    input.classList.add('maree-input') // Usamos maree-input de la Biblia
     input.type = mappedType
-    input.classList.add('input') // Clase estándar de Bulma para texto/número
-  }
-  // Para los números 'Float', puedes añadir el atributo 'step'
-  if (field.type === 'float') {
-    input.step = 'any' // Permite decimales
+    input.id = `field-${field.nombre}`
+    input.name = field.nombre
+    input.required = true
+
+    if (field.type === 'float') input.step = 'any'
+    if (field.placeholder) input.placeholder = field.placeholder
+
+    wrapper.appendChild(label)
+    wrapper.appendChild(input)
   }
 
-  if (field.placeholder) input.placeholder = field.placeholder
-  control.appendChild(input)
-
-  wrapper.appendChild(label)
-  wrapper.appendChild(control)
   return wrapper
 }
-
 /* ══════════════════════════════════════════════════════
    REFERENCIAS DEL DOM
 ══════════════════════════════════════════════════════ */
@@ -463,50 +445,49 @@ function updateIngCounter () {
 // Crea una fila completa: dropdown + input cantidad [+ botón ✕ si no es la primera]
 function createIngRow (index, isFirst = false, mostrarCantidad = false) {
   const row = document.createElement('div')
-  row.classList.add('ingredient-row')
+  // Usamos 'maree-ing-row' para control total del flexbox
+  row.classList.add('maree-ing-row', 'is-dynamic')
   row.dataset.ingIndex = index
 
-  // Dropdown
-  const selectWrap = document.createElement('div')
-  selectWrap.classList.add('select', 'is-fullwidth', 'ing-select-wrap')
+  // 1. Dropdown con estilo Marée
   const select = document.createElement('select')
-  select.classList.add('ing-dropdown')
-  console.log('index: ', index)
+  select.classList.add('maree-input', 'ing-dropdown') // Clase de tu Biblia + identificador
   select.name = `ingrediente_${index}`
-  select.dataset.ingField = 'true' // añade data-ing-field="true"
+  select.dataset.ingField = 'true'
   populateDropdown(select)
-  selectWrap.appendChild(select)
 
-  // Input cantidad
-  const inputCant = document.createElement('input')
-  inputCant.classList.add('input', 'ing-cantidad')
-  inputCant.type = 'number'
-  inputCant.name = `cantidad_${index}`
-  inputCant.placeholder = 'Cant.'
-  inputCant.min = '1'
-  inputCant.value = '1'
-  inputCant.dataset.ingField = 'true'
-
-  row.appendChild(selectWrap)
-
+  // 2. Input cantidad (solo si se requiere)
+  let inputCant = null
   if (mostrarCantidad) {
-    row.appendChild(inputCant)
+    inputCant = document.createElement('input')
+    inputCant.classList.add('maree-input', 'ing-cantidad')
+    inputCant.type = 'number'
+    inputCant.name = `cantidad_${index}`
+    inputCant.placeholder = 'Cant.'
+    inputCant.min = '1'
+    inputCant.value = '1'
+    inputCant.dataset.ingField = 'true'
+    inputCant.style.width = '80px' // Ancho fijo para que no baile
   }
 
-  // Botón ✕ — solo en filas que no son la primera
+  // Añadimos elementos al row
+  row.appendChild(select)
+  if (inputCant) row.appendChild(inputCant)
+
+  // 3. Botón ✕ (Estilo Minimalista/Peligro suave)
   if (!isFirst) {
     const btnRemove = document.createElement('button')
     btnRemove.type = 'button'
-    btnRemove.classList.add('btn-remove-ing')
+    btnRemove.classList.add('btn-remove-ing-premium')
     btnRemove.title = 'Quitar ingrediente'
-    btnRemove.textContent = '✕'
+    btnRemove.innerHTML = '<i class="fas fa-times"></i>' // Usando FontAwesome para consistencia
+
     btnRemove.addEventListener('click', () => {
-      row.classList.add('removing')
+      row.classList.add('removing-row') // Clase para animación
       row.addEventListener('animationend', () => {
         row.remove()
         ingCount--
         updateIngCounter()
-        // reindexRows()
       }, { once: true })
     })
     row.appendChild(btnRemove)
@@ -514,30 +495,36 @@ function createIngRow (index, isFirst = false, mostrarCantidad = false) {
 
   return row
 }
-
 // Construye la sección de ingredientes completa y la inyecta en el form
 function buildIngredientsSection ({ mostrarCantidad = false } = {}) {
-  console.log('BUILDING INGREDIENT SECTION......')
+  console.log('✨ BUILDING PREMIUM INGREDIENT SECTION...')
   ingCount = 1
 
   const section = document.createElement('div')
-  section.classList.add('ingredients-section', 'is-dynamic')
+  // Usamos una clase nueva 'maree-recipe-zone' para darle ese toque especial
+  section.classList.add('maree-recipe-zone', 'is-dynamic')
   section.id = 'ingredientsSection'
 
   section.innerHTML = `
     <div class="ingredients-header is-dynamic">
-      <span class="ingredients-title is-dynamic">
-        <span class="ing-icon is-dynamic">🥗</span> Ingredientes
-      </span>
-      <span id="ingCounter" class="ing-counter is-dynamic">1 / ${MAX_INGREDIENTES}</span>
+      <div class="ingredients-title-wrapper">
+        <span class="ing-icon">✨</span>
+        <h4 class="ingredients-premium-title">Composición del Platillo</h4>
+      </div>
+      <span id="ingCounter" class="maree-badge-gold">1 / ${MAX_INGREDIENTES}</span>
     </div>
-    <div id="ingredientsList" class="ingredients-list is-dynamic"></div>
-    <button type="button" id="btnAddIngrediente" class="btn-add-ingredient is-dynamic">
-      <span class="add-icon is-dynamic">＋</span> Agregar ingrediente
-    </button>
+
+    <div id="ingredientsList" class="ingredients-list-container is-dynamic">
+      </div>
+
+    <div class="ingredients-footer">
+      <button type="button" id="btnAddIngrediente" class="btn-add-ingredient-premium">
+        <i class="fas fa-plus"></i> Agregar Ingrediente Especial
+      </button>
+    </div>
   `
 
-  // Insertar fila 0 (obligatoria, sin ✕)
+  // Insertar fila 0
   const list = section.querySelector('#ingredientsList')
   list.appendChild(createIngRow(0, true, mostrarCantidad))
 
@@ -594,20 +581,32 @@ function buildTypeSection (typesData) {
 }
 
 function getIngredientesSeleccionados () {
-  return Array.from(
-    document.querySelectorAll('#ingredientsList .ingredient-row')
-  )
+  // 1. CAMBIO CLAVE: Ahora buscamos '.maree-ing-row'
+  const filas = document.querySelectorAll('#ingredientsList .maree-ing-row')
+
+  console.log(`Searching for ingredients in ${filas.length} rows...`)
+
+  return Array.from(filas)
     .map(row => {
       const dropdown = row.querySelector('.ing-dropdown')
+      // Verificamos que el dropdown exista antes de acceder
+      if (!dropdown) return null
+
       const selectedOption = dropdown.options[dropdown.selectedIndex]
 
-      // Creamos un objeto con ambos datos
+      // Opcional: Recolectar la cantidad si existe el input
+      const inputCant = row.querySelector('.ing-cantidad')
+      const cantidad = inputCant ? inputCant.value : 1
+
       return {
         id: dropdown.value,
-        nombre: selectedOption.dataset.nombre // Aquí usamos el dataset que configuramos antes
+        nombre: selectedOption.getAttribute('data-nombre') || selectedOption.textContent,
+        precio: selectedOption.getAttribute('data-precio') || 0,
+        cantidad
       }
     })
-    .filter(item => item.id !== '') // Filtramos los que no tengan ID seleccionado
+    // Filtramos nulos y los que no tengan un ingrediente seleccionado (ID vacío)
+    .filter(item => item !== null && item.id !== '')
 }
 
 /* == Funcion Central == */
@@ -777,50 +776,39 @@ const SummaryRegisterbtn = document.getElementById('RegisterProduct')
 
 function createSummaryElement (title, content) {
   const wrapper = document.createElement('div')
-  wrapper.classList.add('summary-field', 'is-dynamic')
-  wrapper.style.cssText = `
-    display: flex;
-    align-items: center; /* Alineamos al centro por si la imagen es alta */
-    gap: 12px;
-    padding: 10px 0;
-    border-bottom: 1px solid #e5e5e5;
-    font-size: 14px;
-  `
+  wrapper.classList.add('maree-summary-row', 'is-dynamic')
 
+  // Label: Estilo Jost, mayúsculas, color muted
   const label = document.createElement('span')
-  label.classList.add('summary-label', 'is-dynamic')
-  label.style.cssText = 'font-weight: 600; min-width: 140px; color: #555;'
-  label.textContent = `${title}:`
+  label.classList.add('maree-summary-label')
+  label.textContent = title
 
-  // --- LÓGICA DE DETECCIÓN DE IMAGEN ---
+  // Lógica de detección de imagen
   const isImageKey = title.toLowerCase().includes('imagen') || title.toLowerCase().includes('img')
 
   let value
-
   if (isImageKey && content && (content.startsWith('http') || content.startsWith('/'))) {
-    // Si es imagen, creamos un elemento IMG
-    value = document.createElement('img')
-    value.src = content
-    value.alt = 'Preview'
-    value.style.cssText = `
-      width: 60px;
-      height: 60px;
-      object-fit: cover;
-      border-radius: 8px;
-      border: 1px solid #ddd;
-      background-color: #f9f9f9;
-    `
-    // Placeholder si la URL está rota o mal escrita
-    value.onerror = function () {
-      this.src = 'https://placehold.co/60x60?text=Error'
-      this.style.opacity = '0.5'
+    value = document.createElement('div')
+    value.classList.add('maree-summary-img-wrapper')
+
+    const img = document.createElement('img')
+    img.src = content
+    img.classList.add('maree-summary-img')
+
+    img.onerror = function () {
+      this.src = 'https://placehold.co/200x200?text=Sin+Imagen'
+      this.classList.add('img-error')
     }
+    value.appendChild(img)
   } else {
-    // Si no es imagen, mantenemos el SPAN original
     value = document.createElement('span')
-    value.classList.add('summary-value', 'is-dynamic')
-    value.style.cssText = 'color: #111; word-break: break-all;' // Break-all por si hay textos muy largos
-    value.textContent = content ?? '—'
+    value.classList.add('maree-summary-value')
+    value.textContent = content || '—'
+
+    // Si el contenido es un número con $, le damos un toque dorado
+    if (String(content).includes('$')) {
+      value.classList.add('text-gold')
+    }
   }
 
   wrapper.appendChild(label)
@@ -835,6 +823,8 @@ Array -> .forEach
 */
 
 const SummaryContent = document.getElementById('summaryContent')
+
+let handlerRegister = null
 
 function ShowProductSummary (SummaryData, type, Registerdata) {
   limpiarModal(SummaryModal)
@@ -856,11 +846,15 @@ function ShowProductSummary (SummaryData, type, Registerdata) {
     SummaryModal.close()
   }, { once: true })
 
-  SummaryRegisterbtn.addEventListener('click', async (event) => {
-    // Send de los Datos del Summary
+  if (handlerRegister) SummaryRegisterbtn.removeEventListener('click', handlerRegister)
+
+  handlerRegister = async (event) => {
     event.preventDefault()
     registerNewProduct(Registerdata, type)
-  }, { once: true })
+  }
+
+  SummaryRegisterbtn.addEventListener('click', handlerRegister)
+
   console.log('Mostrando Modal de Summary')
   SummaryModal.showModal()
 }
