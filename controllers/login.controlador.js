@@ -1,5 +1,6 @@
 const Login = require('../models/login.model.js')
 const nav = require('../models/breadcrumbs.model.js')
+const { sendOTP } = require('../util/twilio.js')
 const bcrypt = require('bcryptjs')
 
 const isBcryptHash = (value = '') => /^\$2[aby]\$\d{2}\$/.test(value)
@@ -115,7 +116,6 @@ exports.postLogin = async (request, response, next) => {
 
       return response.status(200).json({
         otpStep: true,
-        debugCode: otpData.code
       })
     }
 
@@ -146,7 +146,6 @@ exports.postSignUp = async (request, response, next) => {
     return response.status(201).json({
       success: true,
       otpStep: true,
-      debugCode: otpData.code,
       message: '¡Cuenta creada con éxito!'
     })
   } catch (error) {
@@ -165,48 +164,31 @@ exports.postSignUp = async (request, response, next) => {
 
 // 4. ENDPOINT: VERIFICAR OTP
 exports.postVerifyOtp = async (request, response, next) => {
-  const { codigo } = request.body
-  const telefono = request.session.pendingPhone
+  const { codigo } = request.body;
+    const telefono = request.session.pendingPhone;
 
-  if (!telefono) {
-    return response.status(400).json({ error: 'Sesión expirada. Reinicia el proceso.' })
-  }
+    if (!telefono) return response.status(400).json({ error: 'Sesión expirada.' });
 
-  try {
-    const client = await Login.findByPhoneForLogin(telefono)
+    try {
+        const esValido = await checkOTP(telefono, codigo);
 
-    if (client && String(client.codigoVerificacion) === String(codigo)) {
-      const ahora = new Date()
-      if (ahora > new Date(client.expiracionVerificacion)) {
-        await Login.deleteVerificationCode(telefono)
-        return response.status(400).json({ error: 'El código ha expirado. Genera uno nuevo.' })
-      }
+        if (esValido) {
+            const client = await Login.findByPhoneForLogin(telefono);
+            setClientSession(request, client);
+            return response.status(200).json({ success: true, redirectUrl: '/menu/menu' });
+        }
 
-      await Login.deleteVerificationCode(telefono)
-      setClientSession(request, client)
-
-      return response.status(200).json({
-        success: true,
-        redirectUrl: '/menu/menu'
-      })
+        return response.status(400).json({ error: 'Código incorrecto o expirado.' });
+    } catch (error) {
+        return response.status(500).json({ error: 'Error en el servidor.' });
     }
-
-    return response.status(400).json({ error: 'El código de verificación es incorrecto.' })
-  } catch (error) {
-    console.error('ERROR EN postVerifyOtp:', error)
-    return response.status(500).json({
-      redirectUrl: '/menu/menu?authError=database'
-    })
-  };
-}
+};
 
 const issueOtpForClient = async (telefono) => {
-  const otpCode = Math.floor(100000 + Math.random() * 900000).toString()
-  const expirationDate = new Date(Date.now() + (15 * 60 * 1000))
-  await Login.updateVerificationCodeByPhone(telefono, otpCode, expirationDate)
-  console.log(`\n[TEST] OTP para ${telefono}: ${otpCode}\n`)
-  return { code: otpCode, expires: expirationDate }
-}
+    // 1. Mandamos el SMS vía Twilio Verify
+    const smsResult = await sendOTP(telefono);
+    return smsResult;
+};
 
 // === Funciones que utiliza el equipo de Menu :) ==
 exports.getSesion = (req, res) => {

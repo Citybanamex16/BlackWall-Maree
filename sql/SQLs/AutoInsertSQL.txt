@@ -1,0 +1,58 @@
+-- --------------------------------------------------------
+-- DML INICIAL — Defaults y Producto Comodín
+-- Todos los inserts son condicionales (WHERE NOT EXISTS).
+-- Se ejecutan al importar y en cada recreación de la BD
+-- sin duplicar registros existentes.
+-- --------------------------------------------------------
+
+-- --------------------------------------------------------
+-- DML ULTRA-ROBUSTO — Asegura Dependencias y Producto
+-- --------------------------------------------------------
+
+-- --------------------------------------------------------
+-- DML NIVEL CRÍTICO — Asegurar registros exactos
+-- --------------------------------------------------------
+
+START TRANSACTION;
+
+-- 1. Forzamos la existencia de los padres exactos que necesitamos
+INSERT INTO tamaño (Nombre)
+SELECT 'Básico' WHERE NOT EXISTS (SELECT 1 FROM tamaño WHERE Nombre = 'Básico');
+
+INSERT INTO categoría (Nombre)
+SELECT 'Otros' WHERE NOT EXISTS (SELECT 1 FROM categoría WHERE Nombre = 'Otros');
+
+INSERT INTO tipos (nombre)
+SELECT 'Otros' WHERE NOT EXISTS (SELECT 1 FROM tipos WHERE nombre = 'Otros');
+
+-- 2. Insertar el Producto Comodín
+INSERT INTO producto (ID_Producto, Tamaño, Categoría, Nombre, Precio, Disponible, Tipo, Imagen)
+SELECT 
+    'PD_COMODIN', 
+    t.Nombre, 
+    c.Nombre, 
+    'Crepa Personalizada', 
+    25.00, 
+    1, 
+    tp.nombre, 
+    NULL
+FROM 
+    (SELECT 'Básico' as Nombre) temp_t 
+    JOIN tamaño t ON t.Nombre = temp_t.Nombre
+    CROSS JOIN (SELECT 'Otros' as Nombre) temp_c
+    JOIN categoría c ON c.Nombre = temp_c.Nombre
+    CROSS JOIN (SELECT 'Otros' as nombre) temp_tp
+    JOIN tipos tp ON tp.nombre = temp_tp.nombre
+WHERE NOT EXISTS (
+    SELECT 1 FROM producto WHERE ID_Producto = 'PD_COMODIN'
+);
+
+-- SEED ADMIN MAESTRO
+
+INSERT INTO colaborador (ID_Colaborador, Nombre, Contraseña, ID_Rol)
+VALUES ('CL85565991', 'Admin Maestro', 'Admin123!', 'Administrador')
+ON DUPLICATE KEY UPDATE 
+Nombre = VALUES(Nombre), 
+ID_Rol = VALUES(ID_Rol), 
+
+COMMIT;
