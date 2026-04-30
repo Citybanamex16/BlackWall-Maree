@@ -74,7 +74,7 @@ async function modificarRoyalty (nombre) {
   const otros = royaltiesData.filter(r => r.Nombre_Royalty !== nombre)
   if (otros.length > 0) {
     const maxPrioridad = Math.max(...otros.map(r => Number(r.Número_de_prioridad)))
-    const prioridadActual = document.getElementById('input-prioridad')
+    const prioridadActual = document.getElementById('input-prioridad').value
     recordatorioPrioridad.textContent = `La prioridad actual debe ser igual a ${prioridadActual} o mayor a ${maxPrioridad}`
   } else {
     recordatorioPrioridad.textContent = ''
@@ -137,7 +137,7 @@ async function guardarRoyalty () {
     descripcion: document.getElementById('input-descripcion').value,
     minVisitas: document.getElementById('input-minVisitas').value,
     maxVisitas: document.getElementById('input-maxVisitas').value,
-    maxVisitas: document.getElementById('input-descuentos_premios').value,
+    maxVisitasPremios: document.getElementById('input-descuentos_premios').value,
     descuento_premio: parseFloat(document.getElementById('input-descuentos_premios').value) / 100,
     promociones,
     eventos
@@ -387,12 +387,8 @@ function validarFormulario (datos) {
   if (!datos.minVisitas) { marcarError('input-minVisitas', 'Requerido'); esValido = false }
   if (!datos.maxVisitas) { marcarError('input-maxVisitas', 'Requerido'); esValido = false }
   // Validamos que sea menor y mayor al numero de visitas
-  if (Number(datos.minVisitas) > Number(datos.maxVisitas)) {
+  if (Number(minNuevo) > Number(maxNuevo)) {
     marcarError('input-minVisitas', 'Debe ser menor que max Visitas')
-    esValido = false
-  }
-  if (Number(datos.maxVisitas) < Number(datos.minVisitas)) {
-    marcarError('input-maxVisitas', 'Debe ser mayor que min Visitas')
     esValido = false
   }
   // Validamos que sea entero
@@ -418,7 +414,7 @@ function validarFormulario (datos) {
       const maxExistente = Number(royalty.Max_Visitas)
       const minExistente = Number(royalty.Min_Visitas)
       if (minNuevo <= maxExistente && maxNuevo >= minExistente) {
-        marcarError('input-maxVisitas', `Rango traslapa con "${royalty.Nombre_Royalty}" (${minExistente}-${maxExistente})`)
+        marcarError('add-input-minVisitas', `Rango traslapa con "${royalty.Nombre_Royalty}" (${minExistente}-${maxExistente})`)
         esValido = false
         break
       }
