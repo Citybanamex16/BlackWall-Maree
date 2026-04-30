@@ -3,6 +3,9 @@ const nav = require('../models/breadcrumbs.model.js')
 const Royalty = require('../models/royalty.model.js')
 const QRCode = require('qrcode')
 const WalletModel = require('../models/googleWallet.model.js')
+const AppleWallet = require('../models/appleWallet.model.js')
+const path = require('path')
+const fs = require('fs')
 
 // Admin
 exports.getRoyaltyAdmin = async (request, response, next) => {
@@ -29,22 +32,51 @@ exports.getRoyaltyAdmin = async (request, response, next) => {
   }
 }
 
+exports.getApplePass = async (request, response) => {
+  if (!request.session.isLoggedIn || request.session.rol !== 'Usuario') {
+    return response.redirect('/cliente/login')
+  }
+
+  const telefono = request.session.cliente.telefono
+  const [[statusDataGoogle]] = await Royalty.fetchClienteStatusGoogle(telefono)
+
+  try {
+    const passBuffer = await AppleWallet.generarApplePass(
+      telefono,
+      statusDataGoogle.Nombre,
+      statusDataGoogle.nivel,
+      statusDataGoogle.Visitas_Actuales,
+      statusDataGoogle.Max_Visitas
+    )
+
+    const fileName = `maree-${String(telefono).replace(/[^a-zA-Z0-9]/g, '')}.pkpass`
+    response.setHeader('Content-Type', 'application/vnd.apple.pkpass')
+    response.setHeader('Content-Disposition', `attachment; filename="${fileName}"`)
+    response.send(passBuffer)
+  } catch (err) {
+    console.error('Error generando Apple Pass:', err)
+    response.status(500).send('Error generando pase')
+  }
+}
+
 exports.postRegistrarEstadoRoyalty = async (request, response, next) => {
   console.log('Body recibido:', request.body)
-  const { nombre, prioridad, descripcion, minVisitas, maxVisitas, promociones, eventos } = request.body
+  const { nombre, prioridad, descripcion, minVisitas, maxVisitas, descuento_premio, promociones, eventos } = request.body
 
-  if (!nombre || prioridad === undefined || !descripcion || !minVisitas || !maxVisitas) {
+  if (!nombre || prioridad === undefined || !descripcion || !minVisitas || !maxVisitas || !descuento_premio) {
     return response.status(400).json({
       success: false,
       message: 'Faltan datos obligatorios para registrar Estado Royalty'
     })
   }
   try {
-    const nuevoEstadoRoyalty = new Royalty(nombre, prioridad, descripcion, maxVisitas, minVisitas)
+    const nuevoEstadoRoyalty = new Royalty(nombre, prioridad, descripcion, maxVisitas, minVisitas, descuento_premio)
     await nuevoEstadoRoyalty.save()
     const promesas = []
     if (promociones && promociones.length > 0) {
+      console.log('promociones recibidas:', promociones)
       const idsPromociones = promociones.map(p => p.id)
+      console.log('ids extraídos:', idsPromociones)
       promesas.push(Royalty.guardarEstadoRoyaltyPromociones(nombre, idsPromociones))
     }
     if (eventos && eventos.length > 0) {
@@ -140,12 +172,12 @@ exports.deleteRoyalty = async (request, response, next) => {
 exports.updateRoyalty = async (request, response, next) => {
   try {
     const nombreOriginal = request.params.nombre
-    const { nombre, prioridad, descripcion, minVisitas, maxVisitas, promociones, eventos } = request.body
-    await Royalty.updateEstadoRoyalty(nombreOriginal, nombre, prioridad, descripcion, minVisitas, maxVisitas)
+    const { nombre, prioridad, descripcion, minVisitas, maxVisitas, descuento_premio, promociones, eventos } = request.body
+    await Royalty.updateEstadoRoyalty(nombreOriginal, nombre, prioridad, descripcion, minVisitas, maxVisitas, descuento_premio)
     await Royalty.updatePromocionesRoyalty(nombre, promociones)
     await Royalty.updateEventosRoyalty(nombre, eventos)
     await WalletModel.actualizarLoyaltyClass(nombreOriginal, nombre, maxVisitas)
-    await WalletModel.actualizarTarjetaPorNivel(nombreOriginal, nombre, maxVisitas)
+    await WalletModel.actualizarTarjetaPorNivel(nombreOriginal, nombre, null, maxVisitas)
     response.status(200).json({
       success: true,
       message: 'Se han modificado los datos correctamente'
@@ -221,9 +253,9 @@ exports.postProcesarEscaneo = async (request, response) => {
     const cliente = rows[0]
 
     // Matemática de los tokens
-    const tokensGanados = Math.floor(cliente.visitas_totales / 10)
+    const tokensGanados = Math.floor(cliente.visitas_totales / 8)
     const tokensDisponibles = tokensGanados - cliente.tokens_gastados
-    const sellosActuales = cliente.visitas_totales % 10
+    const sellosActuales = cliente.visitas_totales % 8
 
     const visitasTotales = cliente.Visitas_Actuales || 0
 
@@ -326,7 +358,7 @@ exports.getRoyaltyDataAPI = async (request, response, next) => {
     const clienteInfo = statusData[0]
     const nivelId = clienteInfo.nivel
     console.log(clienteInfo.Nombre)
-    console.log(clienteInfo.Max_Visitas)
+    console.log(clienteInfo.visitas)
     const [
       [promotionsData],
       [eventsData],
@@ -342,14 +374,40 @@ exports.getRoyaltyDataAPI = async (request, response, next) => {
       Royalty.fetchFavoritosCliente(telefono, 'Bebidas'),
       Royalty.fetchFavoritosCliente(telefono, 'Platillo')
     ])
+    if (statusDataGoogle.nivel == null) {
+      statusDataGoogle.nivel = '¡Bienvenido!'
+    }
 
+    // Google Wallet
     const walletLink = await WalletModel.generarLinkWallet(
       telefono,
       statusDataGoogle.Nombre,
       statusDataGoogle.nivel,
-      statusDataGoogle.Visitas,
+      statusDataGoogle.Visitas_Actuales,
       statusDataGoogle.Max_Visitas
     )
+
+    // Apple Wallet
+    let applePassUrl = null
+    try {
+      const passBuffer = await AppleWallet.generarApplePass(
+        telefono,
+        statusDataGoogle.Nombre,
+        statusDataGoogle.nivel,
+        statusDataGoogle.Visitas_Actuales,
+        statusDataGoogle.Max_Visitas
+      )
+
+      // Guardamos el buffer temporalmente y mandamos la ruta
+      const fileName = `maree-${String(telefono).replace(/[^a-zA-Z0-9]/g, '')}.pkpass`
+      const filePath = path.join('./passes', fileName)
+      fs.writeFileSync(filePath, passBuffer)
+      const host = request.headers.host
+      const protocol = request.headers['x-forwarded-proto'] || 'https'
+      applePassUrl = `${protocol}://${host}/passes/${fileName}`
+    } catch (err) {
+      console.error('Error generando Apple Pass:', err)
+    }
 
     console.log('Wallet link generado:', walletLink)
     console.log('clienteInfo completo:', clienteInfo)
@@ -359,6 +417,7 @@ exports.getRoyaltyDataAPI = async (request, response, next) => {
       promociones: promotionsData,
       eventos: eventsData,
       walletLink,
+      applePassUrl,
       metrics: {
         global: {
           bebidas: topBebidasResult[0] || [],

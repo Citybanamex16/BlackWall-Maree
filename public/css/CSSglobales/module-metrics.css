@@ -5,6 +5,22 @@
     margin-bottom: 24px;
 }
 
+.back-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-family: var(--font-body);
+    font-size: 13px;
+    color: var(--c-text-muted);
+    text-decoration: none;
+    margin-bottom: 32px;
+    transition: color 0.2s;
+}
+
+.back-link:hover {
+    color: var(--c-primary);
+}
+
 .kpi-card {
     background: var(--c-surface);
     border: 1px solid var(--c-border);

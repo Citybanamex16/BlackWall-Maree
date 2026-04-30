@@ -1,5 +1,8 @@
 const Login = require('../models/login.model.js')
 const nav = require('../models/breadcrumbs.model.js')
+const bcrypt = require('bcryptjs')
+
+const isBcryptHash = (value = '') => /^\$2[aby]\$\d{2}\$/.test(value)
 
 const formatearTelefono = (tel) => {
   const soloNumeros = tel.replace(/\D/g, '')
@@ -70,7 +73,18 @@ exports.postLogin = async (request, response, next) => {
       }
 
       if (password) {
-        if (password === colaborador.password) {
+        let passwordValido = false
+
+        if (isBcryptHash(colaborador.password)) {
+          passwordValido = await bcrypt.compare(password, colaborador.password)
+        } else if (password === colaborador.password) {
+          passwordValido = true
+
+          const nuevoHash = await bcrypt.hash(password, 12)
+          await Login.updateColaboradorPasswordHash(colaborador.id_colaborador, nuevoHash)
+        }
+
+        if (passwordValido) {
           setEmployeeSession(request, colaborador)
 
           const redirectUrl = colaborador.id_rol === 'Administrador'
@@ -115,7 +129,7 @@ exports.postLogin = async (request, response, next) => {
 }
 
 exports.postSignUp = async (request, response, next) => {
-  const { telefono, nombre, genero, birthday, mail } = request.body
+  const { telefono, nombre, genero, birthday, mail, username } = request.body
   const telefonoSoloNumeros = telefono.replace(/\D/g, '')
 
   if (telefonoSoloNumeros.length !== 10) {
@@ -124,7 +138,7 @@ exports.postSignUp = async (request, response, next) => {
 
   try {
     const telefonoFormateado = formatearTelefono(telefonoSoloNumeros)
-    await Login.save({ telefono: telefonoFormateado, nombre, genero, birthday, mail })
+    await Login.save({ telefono: telefonoFormateado, nombre, genero, birthday, mail, username })
 
     const otpData = await issueOtpForClient(telefonoFormateado)
     request.session.pendingPhone = telefonoFormateado

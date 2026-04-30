@@ -1,26 +1,69 @@
 const db = require('../../util/database.js')
 
 module.exports = class Producto {
+  static async hasColumn (executor, tableName, columnName) {
+    const [rows] = await executor.execute(
+      `SELECT COUNT(*) AS total
+       FROM information_schema.COLUMNS
+       WHERE TABLE_SCHEMA = DATABASE()
+         AND TABLE_NAME = ?
+         AND COLUMN_NAME = ?`,
+      [tableName, columnName]
+    )
+
+    return Number(rows[0]?.total || 0) > 0
+  }
+
+  static async hasTable (executor, tableName) {
+    const [rows] = await executor.execute(
+      `SELECT COUNT(*) AS total
+       FROM information_schema.TABLES
+       WHERE TABLE_SCHEMA = DATABASE()
+         AND TABLE_NAME = ?`,
+      [tableName]
+    )
+
+    return Number(rows[0]?.total || 0) > 0
+  }
+
   // Obtiene todos los productos y sus ingredientes correspondientes disponibles y no disponibles
   static async getAllProductsInfo () {
-    // 1. ejecutamos Consulta
-    const [rows] = await db.execute(`SELECT 
-    P.ID_Producto AS productoID,
-    P.nombre AS productoNombre, 
-    P.precio AS productoPrecio, 
-    P.categoría AS productoCategoria,
-    P.Tipo AS productoType, 
-    P.imagen AS productoImagen,
-    P.Disponible AS productoActivo, 
-    I.ID_Insumo AS insumoID,
-    I.nombre AS insumoNombre,
-    I.Precio AS precio
-    FROM producto AS P
-    INNER JOIN producto_tiene_insumo AS PI ON P.ID_Producto = PI.ID_Producto
-    INNER JOIN insumo AS I ON PI.ID_Insumo = I.ID_Insumo
-    ;`)
+    const hasProductWhippedCream = await Producto.hasColumn(db, 'producto', 'Permite_Crema_Batida')
+    const hasCategoryWhippedCream = hasProductWhippedCream
+      ? false
+      : await Producto.hasColumn(db, 'categoría', 'Permite_Crema_Batida')
+    const hasIngredientCustomization = await Producto.hasColumn(db, 'producto', 'Permite_Modificar_Ingredientes')
 
-    console.log('Rows: ', rows)
+    const cremaBatidaSelect = hasProductWhippedCream
+      ? 'P.Permite_Crema_Batida AS productoPermiteCremaBatida,'
+      : hasCategoryWhippedCream
+        ? 'C.Permite_Crema_Batida AS productoPermiteCremaBatida,'
+        : '0 AS productoPermiteCremaBatida,'
+    const ingredientCustomizationSelect = hasIngredientCustomization
+      ? 'P.Permite_Modificar_Ingredientes AS productoPermiteModificarIngredientes,'
+      : '1 AS productoPermiteModificarIngredientes,'
+    const categoryJoin = hasCategoryWhippedCream
+      ? 'LEFT JOIN categoría AS C ON P.Categoría = C.Nombre'
+      : ''
+
+    const [rows] = await db.execute(`SELECT 
+      P.ID_Producto AS productoID,
+      P.nombre AS productoNombre, 
+      P.precio AS productoPrecio, 
+      P.categoría AS productoCategoria,
+      P.Tipo AS productoType, 
+      P.imagen AS productoImagen,
+      P.Disponible AS productoActivo,
+      ${cremaBatidaSelect}
+      ${ingredientCustomizationSelect}
+      I.ID_Insumo AS insumoID,
+      I.nombre AS insumoNombre,
+      I.Precio AS precio
+      FROM producto AS P
+      ${categoryJoin}
+      LEFT JOIN producto_tiene_insumo AS PI ON P.ID_Producto = PI.ID_Producto
+      LEFT JOIN insumo AS I ON PI.ID_Insumo = I.ID_Insumo
+      ;`)
 
     // 2. Agrupamos utilizando Mapping
     const productosMap = {}
@@ -35,6 +78,8 @@ module.exports = class Producto {
           categoria: fila.productoCategoria,
           tipo: fila.productoType,
           activo: fila.productoActivo,
+          permiteCremaBatida: fila.productoPermiteCremaBatida === 1 || fila.productoPermiteCremaBatida === '1',
+          permiteModificarIngredientes: fila.productoPermiteModificarIngredientes === 1 || fila.productoPermiteModificarIngredientes === '1',
           imagen: fila.productoImagen,
           ingredientes: [] // Inicializamos el array de ingredientes
         }
@@ -55,20 +100,51 @@ module.exports = class Producto {
   }
 
   static async getValidProductData () {
+    const hasExclusiveProducts = await Producto.hasColumn(db, 'producto', 'EsExclusivo')
+    const supportsEventExclusivity = hasExclusiveProducts && await Producto.hasTable(db, 'producto_pertenece_evento') && await Producto.hasTable(db, 'evento')
+    const exclusiveSelect = hasExclusiveProducts
+      ? 'P.EsExclusivo AS esExclusivo,'
+      : '0 AS esExclusivo,'
+    const exclusiveFilter = supportsEventExclusivity
+      ? `
+      AND (
+        P.EsExclusivo = 0
+        OR (
+          P.EsExclusivo = 1
+          AND EXISTS (
+            SELECT 1
+            FROM producto_pertenece_evento AS ppe
+            INNER JOIN evento AS e
+              ON e.ID_Evento = ppe.ID_Evento
+            WHERE ppe.ID_Producto = P.ID_Producto
+              AND e.Activo = 1
+              AND CURDATE() BETWEEN e.Fecha_Inicio AND COALESCE(e.Fecha_Final, e.Fecha_Inicio)
+          )
+        )
+      )`
+      : ''
+
     // 1. ejecutamos Consulta
-    const [rows] = await db.execute(`SELECT 
-    P.ID_Producto AS productoID,
-    P.nombre AS productoNombre, 
-    P.precio AS productoPrecio, 
-    P.categoría AS productoCategoria, 
-    P.Tipo  AS productoTipo,
-    P.imagen AS productoImagen, 
-    I.ID_Insumo AS insumoID,
-    I.nombre AS insumoNombre
+    const [rows] = await db.execute(`
+    SELECT
+      P.ID_Producto AS productoID,
+      P.Nombre AS productoNombre,
+      P.Precio AS productoPrecio,
+      P.Categoría AS productoCategoria,
+      P.Tipo AS productoTipo,
+      P.Imagen AS productoImagen,
+      ${exclusiveSelect}
+      I.ID_Insumo AS insumoID,
+      I.Nombre AS insumoNombre
     FROM producto AS P
-    INNER JOIN producto_tiene_insumo AS PI ON P.ID_Producto = PI.ID_Producto
-    INNER JOIN insumo AS I ON PI.ID_Insumo = I.ID_Insumo
-    WHERE P.Disponible = 1;`)
+    -- CAMBIO AQUÍ: LEFT JOIN en lugar de INNER JOIN
+    LEFT JOIN producto_tiene_insumo AS PI
+      ON P.ID_Producto = PI.ID_Producto
+    LEFT JOIN insumo AS I
+      ON PI.ID_Insumo = I.ID_Insumo
+    WHERE P.Disponible = 1
+      ${exclusiveFilter}
+  `)
 
     // console.log('Rows: ', rows)
 
@@ -110,12 +186,29 @@ module.exports = class Producto {
   // Función para obtener los ingredientes pertenecientes a una Categoría
   static async getCategoryIngredientes (categoria) {
     return db.execute(
-      `SELECT i.ID_Insumo as id, i.Nombre as nombre, i.Precio as precio
+      `SELECT
+         MIN(i.ID_Insumo) AS id,
+         TRIM(i.Nombre) AS nombre,
+         MIN(i.Precio) AS precio
        FROM insumo i
        JOIN insumo_categoria ic ON i.ID_Insumo = ic.ID_Insumo
        WHERE ic.Nom_Categoria = ? AND i.Activo = 1
-       ORDER BY i.Nombre`,
+         AND LOWER(TRIM(i.Nombre)) NOT IN ('pruebaallcat', 'mocha chalry', 'mocha charly')
+       GROUP BY LOWER(TRIM(i.Nombre)), TRIM(i.Nombre)
+       ORDER BY TRIM(i.Nombre)`,
       [categoria]
+    )
+  }
+
+  // Ingredientes activos que pertenecen a un tipo específico
+  static async getIngredientesPorTipo (tipo) {
+    return db.execute(
+      `SELECT i.ID_Insumo as id, i.Nombre as nombre, i.Precio as precio
+       FROM insumo i
+       JOIN insumo_tipo it ON i.ID_Insumo = it.ID_Insumo
+       WHERE it.Nom_Tipo = ? AND i.Activo = 1
+       ORDER BY i.Nombre`,
+      [tipo]
     )
   }
 
@@ -125,27 +218,59 @@ module.exports = class Producto {
     return `${prefijo}${numero}` // "PD1823049231" — 12 chars, bien dentro del varchar(10)...
   }
 
-  static async insertNewProduct (connection, id, nombre, categoria, Precio, Disponible, Imagen, tipo) {
-    // Al usar await, recibes el resultado de la promesa
+  static async insertNewProduct (connection, id, nombre, categoria, Precio, Disponible, Imagen, tipo, permiteCremaBatida, permiteModificarIngredientes) {
+    const columns = ['ID_Producto', 'Tamaño', 'Categoría', 'Nombre', 'Precio', 'Disponible', 'Tipo', 'Imagen']
+    const values = [id, 'Básico', categoria, nombre, Precio, Disponible, tipo, Imagen]
+
+    if (await Producto.hasColumn(connection, 'producto', 'EsExclusivo')) {
+      columns.push('EsExclusivo')
+      values.push(0)
+    }
+
+    if (await Producto.hasColumn(connection, 'producto', 'Permite_Crema_Batida')) {
+      columns.push('Permite_Crema_Batida')
+      values.push(permiteCremaBatida)
+    }
+
+    if (await Producto.hasColumn(connection, 'producto', 'Permite_Modificar_Ingredientes')) {
+      columns.push('Permite_Modificar_Ingredientes')
+      values.push(permiteModificarIngredientes)
+    }
+
     const [result] = await connection.execute(
-      'INSERT INTO producto VALUES (?,?,?,?,?,?,?,?)',
-      [id, 'Básico', categoria, nombre, Precio, Disponible, tipo, Imagen]
+      `INSERT INTO producto (${columns.join(', ')})
+       VALUES (${columns.map(() => '?').join(', ')})`,
+      values
     )
-    return result // Este objeto contiene affectedRows e insertId
+    return result
   }
 
-  static async modifyProduct (connection, id, nombre, categoria, tipo, Precio, Disponible, Imagen) {
-    const result = await connection.execute(`
-    UPDATE producto
-    SET 
-      Categoría = ?, 
-      Tipo = ?,
-      Nombre = ?,
-      Precio = ?,
-      Disponible = ?,
-      Imagen = ?
-  WHERE ID_Producto = ?;`, [categoria, tipo, nombre, Precio, Disponible, Imagen, id])
-    return result
+  static async modifyProduct (connection, id, nombre, categoria, tipo, Precio, Disponible, Imagen, permiteCremaBatida, permiteModificarIngredientes) {
+    const sets = [
+      'Categoría = ?',
+      'Tipo = ?',
+      'Nombre = ?',
+      'Precio = ?',
+      'Disponible = ?',
+      'Imagen = ?'
+    ]
+    const values = [categoria, tipo, nombre, Precio, Disponible, Imagen]
+
+    if (await Producto.hasColumn(connection, 'producto', 'Permite_Crema_Batida')) {
+      sets.push('Permite_Crema_Batida = ?')
+      values.push(permiteCremaBatida)
+    }
+
+    if (await Producto.hasColumn(connection, 'producto', 'Permite_Modificar_Ingredientes')) {
+      sets.push('Permite_Modificar_Ingredientes = ?')
+      values.push(permiteModificarIngredientes)
+    }
+
+    values.push(id)
+    return connection.execute(`
+      UPDATE producto
+      SET ${sets.join(', ')}
+      WHERE ID_Producto = ?;`, values)
   }
 
   static async insertNewProductIng (connection, productId, insumoId) {
@@ -192,23 +317,45 @@ module.exports = class Producto {
   }
 
   static async getAllIngredientes () {
-    return db.execute('SELECT Nombre as nombre, ID_Insumo as id, Precio as precio FROM INSUMO')
+    return db.execute('SELECT Nombre as nombre, ID_Insumo as id, Precio as precio FROM insumo WHERE Activo = 1 ORDER BY Nombre')
   }
 
   /* Modificar Un producto */
 
   static async fecthOneProduct (id) {
-    return db.execute('SELECT * FROM PRODUCTO WHERE ID_Producto = ?', [id])
+    return db.execute('SELECT * FROM producto WHERE ID_Producto = ?', [id])
   }
 
   static async fetchOneProductIngredientes (id) {
     return db.execute('SELECT ID_Insumo as id FROM producto_tiene_insumo WHERE ID_Producto = ?', [id])
   }
 
+  static async existeProductoDuplicado (nombre, categoria, tipo, idExcluir = null) {
+    const query = `
+      SELECT COUNT(*) AS total
+      FROM producto
+      WHERE LOWER(TRIM(Nombre)) = LOWER(TRIM(?))
+        AND Categoría = ?
+        AND Tipo = ?
+        ${idExcluir ? 'AND ID_Producto <> ?' : ''}
+    `
+    const params = idExcluir
+      ? [nombre, categoria, tipo, idExcluir]
+      : [nombre, categoria, tipo]
+    const [rows] = await db.execute(query, params)
+    return Number(rows[0]?.total || 0) > 0
+  }
+
   /* EliminarDesactivar producto PD30576515 */
 
-  static async eliminarProducto (id) {
-    const [result] = await db.execute('CALL eliminarProducto(?)', [id])
+  static async eliminarProducto (connection, id) {
+    await connection.execute('DELETE FROM producto_tiene_insumo WHERE ID_Producto = ?', [id])
+    await connection.execute('DELETE FROM orden_tiene_producto WHERE ID_Producto = ?', [id])
+    if (await Producto.hasTable(connection, 'producto_pertenece_evento')) {
+      await connection.execute('DELETE FROM producto_pertenece_evento WHERE ID_Producto = ?', [id])
+    }
+    await connection.execute('DELETE FROM producto_tiene_promocion WHERE ID_Producto = ?', [id])
+    const [result] = await connection.execute('DELETE FROM producto WHERE ID_Producto = ?', [id])
     return result
   }
 

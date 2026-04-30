@@ -67,19 +67,14 @@ function generarSellos (visitasActuales, maxVisitas) {
 }
 
 // Crear clases dinámicas
-async function crearLoyaltyClass (nombreRoyalty, maxVisitas) {
-  if (!googleWalletConfigurado()) {
-    advertirGoogleWalletNoDisponible()
-    return null
-  }
-
+async function crearLoyaltyClass (nombreRoyalty, maxVisita) {
   const classId = getClassId(nombreRoyalty)
   try {
     await walletClient.loyaltyclass.insert({
       requestBody: {
         id: classId,
         issuerName: 'Marée',
-        programName: `Marée Rewards - ${nombreRoyalty}`,
+        programName: `${nombreRoyalty}`,
         reviewStatus: 'UNDER_REVIEW',
         hexBackgroundColor: '#fcebeb',
         // Imagen global que aparece en todas las tarjetas de este nivel
@@ -105,6 +100,7 @@ async function crearLoyaltyClass (nombreRoyalty, maxVisitas) {
         resourceId: classId,
         requestBody: {
           reviewStatus: 'UNDER_REVIEW',
+          programName: `${nombreRoyalty}`,
           heroImage: {
             sourceUri: {
               uri: 'https://dynamic-media-cdn.tripadvisor.com/media/photo-o/2c/cc/06/f3/crepa-manzane-cajeta.jpg?w=900&h=500&s=1'
@@ -142,8 +138,8 @@ async function actualizarLoyaltyClass (nombreOriginal, nuevoNombre, maxVisitas) 
       await walletClient.loyaltyclass.patch({
         resourceId: classIdOriginal,
         requestBody: {
-          stampInfos: { stampCount: maxVisitas },
-          programName: `Marée Rewards - ${nuevoNombre}`
+          reviewStatus: 'UNDER_REVIEW',
+          programName: nuevoNombre
         }
       })
       console.log(`Clase actualizada: ${classIdOriginal}`)
@@ -187,6 +183,7 @@ async function crearLoyaltyObject (telefono, nombreCliente, nombreRoyalty, punto
         id: objectId,
         classId,
         state: 'ACTIVE',
+        accountName: `${nombreRoyalty}`,
         barcode: {
           type: 'QR_CODE',
           value: String(telefono),
@@ -223,17 +220,19 @@ async function crearLoyaltyObject (telefono, nombreCliente, nombreRoyalty, punto
 
 // Actualiza la tarjeta cuandoo cambia el nivel del cliente
 async function actualizarLoyaltyObject (telefono, nombreCliente, nombreRoyalty, puntosActuales, maxPuntos) {
+  
   if (!googleWalletConfigurado()) {
     advertirGoogleWalletNoDisponible()
     return null
   }
   const classId = getClassId(nombreRoyalty)
   const objectId = `${ISSUER_ID}.cliente_${limpiarTelefono(telefono)}`
-
+  try{
   await walletClient.loyaltyobject.patch({
     resourceId: objectId,
     requestBody: {
       classId,
+      accountName: `${nombreRoyalty}`,
       barcode: {
         type: 'QR_CODE',
         value: String(telefono),
@@ -258,6 +257,14 @@ async function actualizarLoyaltyObject (telefono, nombreCliente, nombreRoyalty, 
     }
   })
   console.log(`Tarjeta actualizada para cliente ${telefono}`)
+} catch (error) {
+    if (error.code === 404) {
+      // ✅ Cliente nunca agregó su tarjeta — se omite silenciosamente
+      console.log(`Cliente ${telefono} no tiene tarjeta en Wallet, se omite`)
+    } else {
+      throw error
+    }
+  }
 }
 
 // Actualiza todos los clientes de un nivel cuando el admin modifica ese estado royalty
@@ -273,17 +280,18 @@ async function actualizarTarjetaPorNivel (nombreRoyalty, nuevoNombre, nuevoDescr
     [nombreRoyalty]
   )
 
-  const promesas = clientes.map(cliente =>
-    actualizarLoyaltyObject(
-      cliente.telefono,
-      cliente.Nombre,
-      nuevoNombre || nombreRoyalty,
-      cliente.visitas ?? 0,
-      maxVisitasFinal ?? 0
+  const resultados = await Promise.allSettled(
+    clientes.map(cliente =>
+      actualizarLoyaltyObject(
+        cliente.Numero_Telefonico,
+        cliente.Nombre,
+        nuevoNombre || nombreRoyalty,
+        cliente.Visitas_Actuales,
+        maxVisitas
+      )
     )
   )
-
-  await Promise.all(promesas)
+  const fallidos = resultados.filter(r => r.status === 'rejected')
   console.log(`${clientes.length} tarjetas actualizadas para nivel ${nombreRoyalty}`)
 }
 

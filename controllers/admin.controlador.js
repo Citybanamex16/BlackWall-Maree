@@ -9,8 +9,6 @@ const Categoria = require('../models/categoria.model.js')
 const Tipo = require('../models/tipo.model.js')
 const Sucursal = require('../models/sucursal.model.js')
 
-// const bcrypt = require('bcryptjs')
-
 // const path = require('path')
 
 // Exports
@@ -471,7 +469,8 @@ exports.getIngredientesLista = async (req, res, next) => {
     const [rows] = await Ingrediente.fetchAll()
     const data = rows.map(row => ({
       ...row,
-      categorias: row.cats_raw ? row.cats_raw.split('|') : [row.Categoría]
+      categorias: row.cats_raw ? row.cats_raw.split('|') : [row.Categoría],
+      tipos: row.tipos_raw ? row.tipos_raw.split('|') : []
     }))
     res.status(200).json({
       success: true,
@@ -557,6 +556,7 @@ exports.crearIngrediente = async (req, res, next) => {
   try {
     const { Nombre, Precio, Activo, Imagen } = req.body
     const Categorias = req.body.Categorias // array de categorías seleccionadas
+    const Tipos = req.body.Tipos || []    // array de tipos seleccionados (opcional)
 
     // Validación de campos obligatorios
     const resultado = Ingrediente.verificarCamposVacios(req.body)
@@ -589,6 +589,7 @@ exports.crearIngrediente = async (req, res, next) => {
       Imagen || null
     )
     await Ingrediente.insertCategoriasInsumo(nuevoID, Categorias)
+    if (Tipos.length > 0) await Ingrediente.insertTiposInsumo(nuevoID, Tipos)
 
     res.status(200).json({
       success: true,
@@ -639,6 +640,7 @@ exports.actualizarIngrediente = async (req, res, next) => {
     const { id } = req.params
     const { Nombre, Precio, Activo, Imagen } = req.body
     const Categorias = req.body.Categorias // array de categorías seleccionadas
+    const Tipos = req.body.Tipos || []    // array de tipos seleccionados (opcional)
 
     if (!id || !Nombre || !Categorias || !Categorias.length || !Precio) {
       return res.status(400).json({ success: false, message: 'Campos obligatorios faltantes' })
@@ -650,11 +652,26 @@ exports.actualizarIngrediente = async (req, res, next) => {
     )
     await Ingrediente.deleteCategoriasInsumo(id)
     await Ingrediente.insertCategoriasInsumo(id, Categorias)
+    await Ingrediente.deleteTiposInsumo(id)
+    if (Tipos.length > 0) await Ingrediente.insertTiposInsumo(id, Tipos)
 
     res.status(200).json({ success: true, message: 'Ingrediente actualizado correctamente' })
   } catch (error) {
     console.error('Error en actualizarIngrediente:', error)
     res.status(500).json({ success: false, message: error.message })
+  }
+}
+
+// GET /admin/api/ingredientes/tiposPorCategorias?cats=Platillo,Bebidas
+exports.getTiposParaCategorias = async (req, res, next) => {
+  try {
+    const cats = req.query.cats ? req.query.cats.split(',').map(c => c.trim()).filter(Boolean) : []
+    if (cats.length === 0) return res.status(200).json({ success: true, data: [] })
+    const [tipos] = await Ingrediente.getTiposPorCategorias(cats)
+    res.status(200).json({ success: true, data: tipos })
+  } catch (error) {
+    console.error('Error en getTiposParaCategorias:', error)
+    res.status(500).json({ success: false, message: 'Error al obtener tipos' })
   }
 }
 
@@ -738,8 +755,6 @@ exports.postNewCollaborator = async (req, res, next) => {
       })
     }
 
-    // const contrasenaHasheada = await bcrypt.hash(contrasena, 12)
-
     await Colaborador.create(
       idColaborador,
       rol,
@@ -806,6 +821,7 @@ exports.getDiasHabiles = async (req, res, next) => {
 
 exports.postDiasHabiles = async (req, res, next) => {
   try {
+    console.log('BODY DIAS HABILES:', req.body)
     const idCalendario = String(req.body.id_calendario || '').trim()
     const idSucursal = String(req.body.id_sucursal || '').trim()
     const fecha = String(req.body.fecha || '').trim()
@@ -1045,9 +1061,10 @@ exports.verificarNombreTipo = async (req, res, next) => {
 // POST crear tipo
 exports.crearTipo = async (req, res, next) => {
   try {
-    const { nombre } = req.body
+    const { nombre, categoria } = req.body
     if (!nombre) return res.status(400).json({ success: false, message: 'Nombre requerido' })
-    await Tipo.insertNuevoTipo(nombre.trim())
+    if (!categoria) return res.status(400).json({ success: false, message: 'Categoría requerida' })
+    await Tipo.insertNuevoTipo(nombre.trim(), categoria.trim())
     res.status(200).json({ success: true, message: 'Tipo registrado exitosamente' })
   } catch (error) {
     console.error('Error en crearTipo:', error)
@@ -1074,10 +1091,13 @@ exports.verificarTipoEnUso = async (req, res, next) => {
 exports.actualizarTipo = async (req, res, next) => {
   try {
     const oldNombre = decodeURIComponent(req.params.nombre)
-    const { nombre: newNombre } = req.body
+    const { nombre: newNombre, categoria: newCategoria } = req.body
 
     if (!newNombre || !newNombre.trim()) {
       return res.status(400).json({ success: false, message: 'El nombre es obligatorio' })
+    }
+    if (!newCategoria || !newCategoria.trim()) {
+      return res.status(400).json({ success: false, message: 'La categoría es obligatoria' })
     }
 
     if (newNombre.trim() !== oldNombre) {
@@ -1087,7 +1107,7 @@ exports.actualizarTipo = async (req, res, next) => {
       }
     }
 
-    await Tipo.actualizarTipo(oldNombre, newNombre.trim())
+    await Tipo.actualizarTipo(oldNombre, newNombre.trim(), newCategoria.trim())
     res.status(200).json({ success: true, message: 'Tipo actualizado correctamente' })
   } catch (error) {
     console.error('Error en actualizarTipo:', error)

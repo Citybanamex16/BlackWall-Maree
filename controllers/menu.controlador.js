@@ -1,3 +1,5 @@
+const fs = require('fs')
+const path = require('path')
 const nav = require('../models/breadcrumbs.model.js')
 const productos = require('../models/MenuDigital/productos.model.js')
 const ingrediente = require('../models/ingrediente.model.js')
@@ -10,44 +12,134 @@ const feedback = require('../models/MenuDigital/feedback.model.js')
 const db = require('../util/database.js')
 
 const CREMA_BATIDA_INGREDIENT_ID = 'INCRMBT001'
+const directorioImagenesProductos = path.join(__dirname, '..', 'public', 'uploads', 'productos')
+const prefijoImagenesProductos = '/uploads/productos/'
 
-function permiteCremaBatidaPorNombre (nombreProducto) {
-  return !String(nombreProducto || '').toLowerCase().includes('chamoyada')
+function parseBooleanFlag (value) {
+  if (typeof value === 'string') {
+    return ['true', '1', 'on', 'si'].includes(value.trim().toLowerCase()) ? 1 : 0
+  }
+
+  return value === true || value === 1 ? 1 : 0
+}
+
+function firstDefined (...values) {
+  return values.find(value => value !== undefined)
+}
+
+async function tableHasColumn (tableName, columnName) {
+  const [rows] = await db.execute(
+    `SELECT COUNT(*) AS total
+     FROM information_schema.COLUMNS
+     WHERE TABLE_SCHEMA = DATABASE()
+       AND TABLE_NAME = ?
+       AND COLUMN_NAME = ?`,
+    [tableName, columnName]
+  )
+
+  return Number(rows[0]?.total || 0) > 0
+}
+
+async function getCategoryWhippedCreamPermission (categoryName) {
+  if (!categoryName) return 0
+
+  const hasCategoryColumn = await tableHasColumn('categoría', 'Permite_Crema_Batida')
+  if (!hasCategoryColumn) return 0
+
+  const [rows] = await db.execute(
+    'SELECT Permite_Crema_Batida AS permiteCremaBatida FROM categoría WHERE Nombre = ? LIMIT 1',
+    [categoryName]
+  )
+
+  const value = rows[0]?.permiteCremaBatida
+  return value === 1 || value === '1' ? 1 : 0
+}
+
+async function validateWhippedCreamPersistence ({ categoryName, requestedValue }) {
+  const hasProductColumn = await tableHasColumn('producto', 'Permite_Crema_Batida')
+  if (hasProductColumn) return null
+
+  const fallbackValue = await getCategoryWhippedCreamPermission(categoryName)
+  if (Number(requestedValue) === Number(fallbackValue)) return null
+
+  return 'No se puede guardar "Permitir crema batida" en esta base todavía. Aplica sql/Parches/parche_crema_batida_por_producto.sql y vuelve a intentarlo.'
+}
+
+async function validateIngredientCustomizationPersistence (requestedValue) {
+  const hasProductColumn = await tableHasColumn('producto', 'Permite_Modificar_Ingredientes')
+  if (hasProductColumn || Number(requestedValue) === 1) return null
+
+  return 'No se puede guardar "Permitir modificar ingredientes" en esta base todavía. Aplica sql/Parches/parche_modificacion_ingredientes_por_producto.sql y vuelve a intentarlo.'
+}
+
+function parseIngredientesPayload (value) {
+  if (Array.isArray(value)) {
+    return value
+  }
+
+  if (typeof value !== 'string' || value.trim() === '') {
+    return []
+  }
+
+  try {
+    const parsed = JSON.parse(value)
+    return Array.isArray(parsed) ? parsed : []
+  } catch (error) {
+    return []
+  }
+}
+
+function obtenerRutaImagenProducto (archivo) {
+  return archivo ? `${prefijoImagenesProductos}${archivo.filename}` : null
+}
+
+async function eliminarImagenSubidaProducto (archivo) {
+  if (!archivo) return
+
+  try {
+    await fs.promises.unlink(path.join(directorioImagenesProductos, archivo.filename))
+  } catch (error) {
+    if (error.code !== 'ENOENT') {
+      console.warn('No se pudo eliminar la imagen subida del producto:', error)
+    }
+  }
 }
 
 async function fetchPlatilloRows (id) {
-  try {
-    return await db.execute(
-      `SELECT p.ID_Producto, p.Nombre, p.Precio, p.Disponible,
-              p.Categoría as base,
-              c.Permite_Crema_Batida as permiteCremaBatida,
-              i.ID_Insumo as ing_id,
-              i.Nombre    as ing_nombre,
-              i.Precio    as ing_precio
-       FROM producto p
-       LEFT JOIN categoría c ON p.Categoría = c.Nombre
-       LEFT JOIN producto_tiene_insumo pti ON p.ID_Producto = pti.ID_Producto
-       LEFT JOIN insumo i ON pti.ID_Insumo = i.ID_Insumo
-       WHERE p.ID_Producto = ?`,
-      [id]
-    )
-  } catch (error) {
-    if (error.code !== 'ER_BAD_FIELD_ERROR') throw error
+  const hasProductWhippedCream = await tableHasColumn('producto', 'Permite_Crema_Batida')
+  const hasCategoryWhippedCream = hasProductWhippedCream
+    ? false
+    : await tableHasColumn('categoría', 'Permite_Crema_Batida')
+  const hasIngredientCustomization = await tableHasColumn('producto', 'Permite_Modificar_Ingredientes')
 
-    return db.execute(
-      `SELECT p.ID_Producto, p.Nombre, p.Precio, p.Disponible,
-              p.Categoría as base,
-              0 as permiteCremaBatida,
-              i.ID_Insumo as ing_id,
-              i.Nombre    as ing_nombre,
-              i.Precio    as ing_precio
-       FROM producto p
-       LEFT JOIN producto_tiene_insumo pti ON p.ID_Producto = pti.ID_Producto
-       LEFT JOIN insumo i ON pti.ID_Insumo = i.ID_Insumo
-       WHERE p.ID_Producto = ?`,
-      [id]
-    )
-  }
+  const cremaBatidaSelect = hasProductWhippedCream
+    ? 'p.Permite_Crema_Batida as permiteCremaBatida,'
+    : hasCategoryWhippedCream
+      ? 'c.Permite_Crema_Batida as permiteCremaBatida,'
+      : '0 as permiteCremaBatida,'
+  const ingredientCustomizationSelect = hasIngredientCustomization
+    ? 'p.Permite_Modificar_Ingredientes as permiteModificarIngredientes,'
+    : '1 as permiteModificarIngredientes,'
+  const categoryJoin = hasCategoryWhippedCream
+    ? 'LEFT JOIN categoría c ON c.Nombre = p.Categoría'
+    : ''
+
+  return db.execute(
+    `SELECT p.ID_Producto, p.Nombre, p.Precio, p.Disponible,
+            p.Categoría as base,
+            p.Tipo as tipo,
+            ${cremaBatidaSelect}
+            ${ingredientCustomizationSelect}
+            i.ID_Insumo as ing_id,
+            i.Nombre    as ing_nombre,
+            i.Precio    as ing_precio
+     FROM producto p
+     ${categoryJoin}
+     LEFT JOIN producto_tiene_insumo pti ON p.ID_Producto = pti.ID_Producto
+     LEFT JOIN insumo i ON pti.ID_Insumo = i.ID_Insumo
+     WHERE p.ID_Producto = ?`,
+    [id]
+  )
 }
 
 // CU11 Vizualisar Menu
@@ -69,6 +161,8 @@ exports.getMenuData = async (request, response, next) => {
     console.log('All Promises realizada con exito')
     // console.log('Categorías Info: ', Allcategories)
     // console.log('Products Info: ', productsData)
+
+    console.log("productos obtenidos: ", productsData.length , " vs los 81 disponibles : ", productsData)
 
     response.status(200).json({
       ok: true,
@@ -116,7 +210,8 @@ exports.getMenuPromos = async (req, res, nex) => {
 
 exports.getMapaSucursales = (req, res, nex) => {
   const breadcrumbs = nav.getBreadcrumbs('Menu')
-  res.render('cliente/mapaSucursal', { breadcrumbs })
+  const SesionData = req.session.cliente
+  res.render('cliente/mapaSucursal', { breadcrumbs, datosCliente: SesionData})
 }
 
 exports.getAllSucursales = async (req, res, nex) => {
@@ -139,9 +234,43 @@ exports.getAllSucursales = async (req, res, nex) => {
   }
 }
 
-exports.getOrden = (request, response, next) => {
+exports.getOrden = async (request, response, next) => {
   const breadcrumbs = nav.getBreadcrumbs('Orden')
-  response.render('cliente/order', { breadcrumbs, datosCliente: request.session.cliente || null })
+  const sesion = request.session.cliente
+
+  // Solo intentamos calcular si el usuario está logueado
+  if (sesion && sesion.telefono) {
+    try {
+      // 1. Llamamos al SP que nos trae el estado del cliente (visitas, nivel, etc.)
+      const [statusData] = await Royalty.fetchClientStatus(sesion.telefono)
+
+      if (statusData && statusData.length > 0) {
+        const info = statusData[0]
+
+        // 2. CÁLCULO DE TOKENS (Regla: Visitas/8 - Gastados)
+        const visitas = info.visitas|| 0
+        const gastados = info.tokens_gastados || 0
+        const tokensDisponibles = Math.floor(visitas / 8) - gastados
+
+        // 3. OBTENER DESCUENTO (Atributo: descuento_premio desde la DB)
+        const descuentoDecimal = parseFloat(info.descuento_premio) || 0
+        const descuentoPorcentaje = Math.round(descuentoDecimal * 100)
+
+        // 4. Actualizamos la sesión con datos reales de la DB
+        request.session.cliente.tokensDisponibles = tokensDisponibles > 0 ? tokensDisponibles : 0
+        request.session.cliente.descuentoRoyalty = descuentoPorcentaje
+        request.session.cliente.nivel = info.nivel
+
+        console.log(`Tokens calculados para ${sesion.telefono}: ${tokensDisponibles}`)
+      }
+    } catch (err) {
+      console.error('Error al sincronizar datos de Royalty:', err)
+    }
+  }
+
+  response.render('cliente/order', {
+    datosCliente: request.session.cliente
+  })
 }
 
 exports.getPlatillo = async (request, response, next) => {
@@ -154,26 +283,35 @@ exports.getPlatillo = async (request, response, next) => {
     }
 
     const row = rows[0]
+
+
+
+
     const disponible = row.Disponible === 1 || row.Disponible === '1'
 
     const ingredientes = rows
       .filter(r => r.ing_id)
       .map(r => ({ id: r.ing_id, nombre: r.ing_nombre, precio: parseFloat(r.ing_precio) }))
 
-    const permiteCremaBatidaCategoria = row.permiteCremaBatida === 1 || row.permiteCremaBatida === '1'
-    const permiteCremaBatida = permiteCremaBatidaCategoria && permiteCremaBatidaPorNombre(row.Nombre)
+    const permiteCremaBatida = row.permiteCremaBatida === 1 || row.permiteCremaBatida === '1'
+    const permiteModificarIngredientes = row.permiteModificarIngredientes === 1 || row.permiteModificarIngredientes === '1'
     const [catalogoRows] = await db.execute(
       `SELECT i.ID_Insumo as id, i.Nombre as nombre, i.Precio as precio
        FROM insumo i
-       JOIN insumo_categoria ic ON i.ID_Insumo = ic.ID_Insumo
-       WHERE ic.Nom_Categoria = ? AND i.Activo = 1
+       JOIN insumo_tipo it ON i.ID_Insumo = it.ID_Insumo
+       WHERE it.Nom_Tipo = ? AND i.Activo = 1
        ORDER BY i.Nombre`,
-      [row.base]
+      [row.tipo]
     )
     const [cremaBatidaRows] = permiteCremaBatida
       ? await db.execute(
-          'SELECT ID_Insumo as id, Nombre as nombre, Precio as precio FROM insumo WHERE Activo = 1 AND ID_Insumo = ? LIMIT 1',
-          [CREMA_BATIDA_INGREDIENT_ID]
+          `SELECT ID_Insumo as id, Nombre as nombre, Precio as precio
+           FROM insumo
+           WHERE Activo = 1
+             AND (ID_Insumo = ? OR LOWER(TRIM(Nombre)) = 'crema batida')
+           ORDER BY ID_Insumo = ? DESC
+           LIMIT 1`,
+          [CREMA_BATIDA_INGREDIENT_ID, CREMA_BATIDA_INGREDIENT_ID]
         )
       : [[]]
     const cremaBatida = cremaBatidaRows[0] || null
@@ -183,7 +321,9 @@ exports.getPlatillo = async (request, response, next) => {
       nombre: row.Nombre,
       precio: row.Precio,
       base: row.base,
+      tipo: row.tipo,
       permiteCremaBatida,
+      permiteModificarIngredientes,
       cremaBatida: cremaBatida
         ? {
             id: cremaBatida.id,
@@ -203,8 +343,9 @@ exports.getPlatillo = async (request, response, next) => {
 }
 
 exports.agregarItem = (request, response, next) => {
-  const { nombre, precio, desc } = request.body
-  console.log(`Item agregado: ${nombre} - $${precio}`)
+ const { nombre, precio, precio_total, desc } = request.body
+  const precioFinal = precio ?? precio_total ?? 0
+  console.log(`Item agregado: ${nombre} - $${precioFinal}`)
   response.status(200).json({ agregado: true, nombre, precio, desc })
 }
 
@@ -284,12 +425,30 @@ exports.validarPedido = async (request, response, next) => {
 
   const { items } = request.body
 
+  try {
+    const tienePremio = items.some(i => i.premioAplicado === true);
+    let descuentoRecompensa = 0;
+
+    if (tienePremio) {
+      const [statusData] = await Royalty.fetchClientStatus(usuario.telefono);
+      const info = statusData[0];
+      
+      const tokensReales = Math.floor(info.visitas / 8) - (info.tokens_gastados || 0);
+
+      if (tokensReales <= 0) {
+        return response.status(200).json({ 
+          pedidoValido: false, 
+          mensaje: 'No tienes tokens suficientes para reclamar este premio.' 
+        });
+      }
+      descuentoRecompensa = parseFloat(info.descuento_premio) || 0;
+    }
+
   // ── Validación básica ──
   if (!Array.isArray(items) || items.length === 0) {
     return response.status(400).json({ pedidoValido: false, mensaje: 'El pedido está vacío' })
   }
 
-  try {
     // ── 1. Recolección de IDs ──
     const idsProductos = [...new Set(items.map(i => i.id))]
     const idsInsumos = [...new Set(items.flatMap(i => [
@@ -316,11 +475,13 @@ exports.validarPedido = async (request, response, next) => {
 
     items.forEach((item, index) => {
       // Pasamos el compendio para que el cálculo sepa qué promo aplicar
-      const precioOficial = Pedido.calcularPrecioRealItem(item, listaOro, compendio)
-
+      const precioOficial = Pedido.calcularPrecioRealItem(item, listaOro, compendio, descuentoRecompensa)
+      
       const precioRecibido = parseFloat(
         String(item.precio_total ?? item.precio).replace(/[^0-9.]/g, '')
       )
+
+      console.log(` ⚖️ [COMPARACIÓN] Item ${index + 1}: Poli calculó $${precioOficial} | Front envió $${precioRecibido}`);
 
       if (Math.abs(precioOficial - precioRecibido) > 0.01) {
         erroresPrecio.push(`Item ${index + 1}: se esperaba $${precioOficial} pero se recibió $${precioRecibido}`)
@@ -335,7 +496,6 @@ exports.validarPedido = async (request, response, next) => {
         detalles: erroresPrecio
       })
     }
-
     return response.status(200).json({
       pedidoValido: true,
       totalVerificado: granTotalOficial
@@ -354,21 +514,26 @@ exports.validarPedido = async (request, response, next) => {
 
 exports.confirmarPedido = async (request, response, next) => {
   const { items, forma, telefono: telefonoBody, nombre: nombreBody, direccion, descripcion } = request.body
+    console.error('💥 Error en Policía:', err)
+    next(err)
+  }
 
+
+exports.confirmarPedido = async (request, response, next) => {
+  const { items, forma, telefono: telefonoBody, nombre: nombreBody, direccion, descripcion } = request.body
   const sesion = request.session.cliente
   const telefonoFinal = sesion ? String(sesion.telefono) : telefonoBody
   const nombreFinal = sesion ? sesion.nombre : (String(nombreBody || '').trim() || 'Cliente')
+  const telefonoLimpio = String(telefonoFinal).replace(/[\s-]/g, '')
 
+  // 1. Validaciones básicas de entrada
   const formasValidas = ['Pick-Up', 'Sucursal', 'Delivery']
   if (!formasValidas.includes(forma)) {
     return response.status(400).json({ pedidoConfirmado: false, mensaje: 'Forma de entrega inválida' })
   }
-
-  const telefonoLimpio = String(telefonoFinal).replace(/[\s-]/g, '')
   if (!/^\d{7,15}$/.test(telefonoLimpio)) {
     return response.status(400).json({ pedidoConfirmado: false, mensaje: 'Teléfono inválido' })
   }
-
   if (!Array.isArray(items) || items.length === 0) {
     return response.status(400).json({ pedidoConfirmado: false, mensaje: 'El pedido está vacío' })
   }
@@ -382,7 +547,57 @@ exports.confirmarPedido = async (request, response, next) => {
     })
   }
 
+  let royalty
+
   try {
+    // --- INICIO DEL POLICÍA DE ROYALTY ---
+    const itemConPremio = items.find(i => i.premioAplicado === true)
+    let idPromocionARegistrar = null
+
+    if (itemConPremio) {
+      // A. Verificar tokens reales en la Base de Datos
+      const [statusData] = await Royalty.fetchClientStatus(telefonoFinal)
+      console.log("Data Estado", statusData);
+      if (!statusData || statusData.length === 0) {
+        return response.status(403).json({ pedidoConfirmado: false, mensaje: 'No se encontró información de Royalty' })
+      }
+
+      const info = statusData[0]
+      const tokensDisponibles = Math.floor(info.Visitas_Actuales / 8) - info.tokens_gastados
+      console.log("Tokens disponibles", tokensDisponibles);
+
+      if (tokensDisponibles <= 0) {
+        return response.status(403).json({ pedidoConfirmado: false, mensaje: 'Fraude detectado: No tienes tokens disponibles' })
+      }
+
+      // B. Recalcular precio original desde la DB (El policía no confía en el precio del front)
+      let precioOriginalDB = 0
+      if (itemConPremio.producto_base) {
+        const [res] = await productos.getCrepaPersoPrecioBase()
+        precioOriginalDB = res[0].PrecioBase
+        // Aquí podrías sumar el precio de los ingredientes si tu lógica lo requiere
+      } else {
+        const [res] = await productos.fecthOneProduct(itemConPremio.id)
+        precioOriginalDB = res[0].Precio
+      }
+
+      // C. Verificar que el descuento aplicado sea el que le corresponde a su nivel
+      // Asumimos que el porcentaje viene de la sesión o una constante por nivel
+      const porcentajePermitido = sesion.descuentoRoyalty || 0
+      const precioEsperado = precioOriginalDB - (precioOriginalDB * (porcentajePermitido / 100))
+
+      // Comparar con un margen de error pequeño por decimales
+      if (Math.abs(parseFloat(itemConPremio.precio_total) - precioEsperado) > 0.1) {
+        return response.status(400).json({ pedidoConfirmado: false, mensaje: 'Fraude detectado: El precio del premio no coincide' })
+      }
+
+      // Si llegamos aquí, el policía da el visto bueno
+      // Definimos qué ID de promoción registrar (puedes mapearlo por nivel)
+      royalty = info.nivel
+    }
+    // --- FIN DEL POLICÍA DE ROYALTY ---
+
+    // 2. Guardar el pedido (Proceso normal)
     await Pedido.verificarOCrearCliente(telefonoLimpio, nombreFinal)
     const idOrden = await Pedido.guardarOrden(
       telefonoLimpio,
@@ -392,6 +607,11 @@ exports.confirmarPedido = async (request, response, next) => {
       descripcionFinal || null
     )
     await Pedido.guardarItems(idOrden, items)
+
+    // 3. Si se usó un premio, registrar el canje para restar el token
+    if (royalty) {
+      await Royalty.registrarCanje(telefonoLimpio, royalty)
+    }
 
     response.status(200).json({ pedidoConfirmado: true, idOrden })
   } catch (error) {
@@ -406,13 +626,16 @@ exports.getProducts = (req, res, next) => {
   res.render('admin/products', { breadcrumbs })
 }
 
+
 exports.getProductsCatalog = async (req, res, next) => {
   console.log('Backend obteniendo todos los Productos, ingredientes & catalogos')
   try {
     // 1. Llamado en paralelo de consultas con Promise.all()
-    const [Allcategories, allProductsData] = await Promise.all([
+    const [Allcategories, allProductsData, supportsProductWhippedCream, supportsProductIngredientCustomization] = await Promise.all([
       categorías.fecthAll(), // Async BD call 1.
-      productos.getAllProductsInfo() // async BD call
+      productos.getAllProductsInfo(), // async BD call
+      tableHasColumn('producto', 'Permite_Crema_Batida'),
+      tableHasColumn('producto', 'Permite_Modificar_Ingredientes')
     ])
 
     // console.log('Categorías catalog: ', Allcategories)
@@ -422,14 +645,16 @@ exports.getProductsCatalog = async (req, res, next) => {
       ok: true,
       message: 'Catalogos Obtenido con exito',
       arrayCategorías: Allcategories,
-      arrayProductsCatalog: allProductsData
+      arrayProductsCatalog: allProductsData,
+      supportsProductWhippedCream,
+      supportsProductIngredientCustomization
     })
     console.log('Catalogos obtenidos con exito')
   } catch (err) {
     console.log('Error en get Menu: ', err)
     res.status(500).json({
       ok: false,
-      message: err
+      message: err.message || 'Error al obtener catalogos de productos'
     })
   }
 }
@@ -476,7 +701,9 @@ const ProductFields = [
   { nombre: 'Nombre', type: 'string' },
   { nombre: 'Precio', type: 'float' },
   { nombre: 'Disponible', type: 'boolean' },
-  { nombre: 'Imagen', type: 'string' }
+  { nombre: 'permiteCremaBatida', label: 'Permitir crema batida', type: 'boolean' },
+  { nombre: 'permiteModificarIngredientes', label: 'Permitir modificar ingredientes', type: 'boolean', checked: true },
+  { nombre: 'ImagenArchivo', label: 'Imagen del producto', type: 'file', accept: 'image/*' }
 ]
 
 exports.getProductfieldsAndIngredientes = async (req, res, next) => {
@@ -488,7 +715,13 @@ exports.getProductfieldsAndIngredientes = async (req, res, next) => {
     }
 
     const allIngredientes = await productos.getCategoryIngredientes(typeId)
-    const allTypes = await tipos.fetchAll()
+    
+    // Mantenemos el filtro de HEAD para eficiencia
+    const [tiposFiltrados] = await tipos.fetchByCategoria(typeId)
+    
+    // Traemos las validaciones de la nueva rama para activar funciones
+    const supportsProductWhippedCream = await tableHasColumn('producto', 'Permite_Crema_Batida')
+    const supportsProductIngredientCustomization = await tableHasColumn('producto', 'Permite_Modificar_Ingredientes')
 
     const productFormsFields = ProductFields
     res.status(200).json({
@@ -497,7 +730,9 @@ exports.getProductfieldsAndIngredientes = async (req, res, next) => {
       data: {
         fields: productFormsFields,
         ingredientes: allIngredientes,
-        types: allTypes
+        types: tiposFiltrados, // Usamos los filtrados
+        supportsProductWhippedCream,
+        supportsProductIngredientCustomization
       }
     })
   } catch (error) {
@@ -509,7 +744,41 @@ exports.getProductfieldsAndIngredientes = async (req, res, next) => {
   }
 }
 
+
+exports.getIngredientesPorTipo = async (req, res, next) => {
+  try {
+    const { tipo } = req.query
+    if (!tipo) return res.status(400).json({ success: false, message: 'Tipo requerido' })
+    const [ingredientes] = await productos.getIngredientesPorTipo(tipo)
+    res.status(200).json({ success: true, data: ingredientes })
+  } catch (error) {
+    console.error('Error en getIngredientesPorTipo:', error)
+    res.status(500).json({ success: false, message: 'Error al obtener ingredientes' })
+  }
+}
+
+exports.getTiposByCategoria = async (req, res, next) => {
+  try {
+    const { categoria } = req.query
+    if (!categoria) {
+      return res.status(400).json({ success: false, message: 'Categoría requerida' })
+    }
+    const [tiposFiltrados] = await tipos.fetchByCategoria(categoria)
+    res.status(200).json({ success: true, data: tiposFiltrados })
+  } catch (error) {
+    console.error('Error en getTiposByCategoria:', error)
+    res.status(500).json({ success: false, message: 'Error al obtener tipos' })
+  }
+}
+
 const pool = require('../util/database.js')
+
+exports.uploadImage = (req, res) => {
+  if (!req.file) {
+    return res.status(400).json({ ok: false, message: 'No se recibió ninguna imagen' })
+  }
+  res.json({ ok: true, url: `/uploads/productos/${req.file.filename}` })
+}
 
 exports.postNewProduct = async (req, res, next) => {
   console.log('POST recibido: ', req.body)
@@ -518,39 +787,112 @@ exports.postNewProduct = async (req, res, next) => {
     connection = await pool.getConnection()
 
     const NewProductData = req.body
-    // Extracción tipo map
-    const {
-      Nombre,
-      Precio,
-      Disponible,
-      Imagen,
-      tipo,
-      categoría, // Renombramos 'type' a 'categoria'
-      ingredientesID
-    } = NewProductData
+    const ingredientesID = parseIngredientesPayload(NewProductData.ingredientesID)
+    const nombreProducto = firstDefined(NewProductData.Nombre, NewProductData.nombre) ?? null
+    const precioProducto = firstDefined(NewProductData.Precio, NewProductData.precio) ?? null
+    const categoriaProducto = firstDefined(
+      NewProductData.categoria,
+      NewProductData.Categoria,
+      NewProductData['Categoría'],
+      NewProductData['categoría'],
+      NewProductData['categorÃ­a']
+    ) ?? null
+    const disponibleProducto = parseBooleanFlag(firstDefined(NewProductData.Disponible, NewProductData.disponible))
+    const tipoProducto = firstDefined(NewProductData.tipo, NewProductData.Tipo) ?? null
+    const permiteCremaBatidaProducto = parseBooleanFlag(
+      firstDefined(NewProductData.permiteCremaBatida, NewProductData.Permite_Crema_Batida)
+    )
+    const permiteModificarIngredientesProducto = parseBooleanFlag(
+      firstDefined(NewProductData.permiteModificarIngredientes, NewProductData.Permite_Modificar_Ingredientes, 1)
+    )
+    const imagenProducto = obtenerRutaImagenProducto(req.file) ||
+      firstDefined(NewProductData.Imagen, NewProductData.imagen) ||
+      null
 
     console.log('Variables a insertar:', {
       AutoId: 'Generando...',
-      Nombre,
-      categoría,
-      Precio,
-      Disponible,
-      Imagen,
-      tipo,
-      tieneIngredientes: ingredientesID?.length > 0
+      Nombre: nombreProducto,
+      categoria: categoriaProducto,
+      Precio: precioProducto,
+      Disponible: disponibleProducto,
+      permiteCremaBatida: Boolean(permiteCremaBatidaProducto),
+      permiteModificarIngredientes: Boolean(permiteModificarIngredientesProducto),
+      Imagen: imagenProducto,
+      tipo: tipoProducto,
+      tieneIngredientes: ingredientesID.length > 0
     })
 
-    const validation = await productos.ValidarDatosRegistro(NewProductData)
+    const validation = productos.ValidarDatosRegistro({
+      Nombre: nombreProducto,
+      Precio: precioProducto,
+      Disponible: disponibleProducto,
+      categoria: categoriaProducto,
+      tipo: tipoProducto,
+      Imagen: imagenProducto
+    })
     const AutoId = productos.generarID('PD')
 
-    if (validation) {
+    if (!imagenProducto) {
+      await eliminarImagenSubidaProducto(req.file)
+      return res.status(400).json({ ok: false, message: 'Debes subir una imagen del producto.' })
+    }
+
+    const productoDuplicado = await productos.existeProductoDuplicado(
+      nombreProducto,
+      categoriaProducto,
+      tipoProducto
+    )
+
+    if (productoDuplicado) {
+      await eliminarImagenSubidaProducto(req.file)
+      return res.status(400).json({
+        ok: false,
+        message: 'Ya existe un producto con el mismo nombre, categoría y tipo.'
+      })
+    }
+
+    const whippedCreamPersistenceError = await validateWhippedCreamPersistence({
+      categoryName: categoriaProducto,
+      requestedValue: permiteCremaBatidaProducto
+    })
+
+    if (whippedCreamPersistenceError) {
+      await eliminarImagenSubidaProducto(req.file)
+      return res.status(400).json({
+        ok: false,
+        message: whippedCreamPersistenceError
+      })
+    }
+
+    const ingredientCustomizationPersistenceError = await validateIngredientCustomizationPersistence(permiteModificarIngredientesProducto)
+
+    if (ingredientCustomizationPersistenceError) {
+      await eliminarImagenSubidaProducto(req.file)
+      return res.status(400).json({
+        ok: false,
+        message: ingredientCustomizationPersistenceError
+      })
+    }
+
+    if (validation.valido) {
       if (ingredientesID.length > 0) {
         // Caso producto con ingredientes (transacción)
         // 1. Iniciamos la transacción asincronica -> hasta commit
         await connection.beginTransaction()
 
         // 2. Inserción en Producto
-        await productos.insertNewProduct(connection, AutoId, Nombre, categoría, Precio, Disponible, Imagen, tipo)
+        await productos.insertNewProduct(
+          connection,
+          AutoId,
+          nombreProducto,
+          categoriaProducto,
+          precioProducto,
+          disponibleProducto,
+          imagenProducto,
+          tipoProducto,
+          permiteCremaBatidaProducto,
+          permiteModificarIngredientesProducto
+        )
 
         // 3. Inserciones en Ingrediente-Producto
         for (const ing of ingredientesID) {
@@ -567,7 +909,18 @@ exports.postNewProduct = async (req, res, next) => {
         })
       } else {
         // Caso producto Sin ingredientes
-        const postResult = await productos.insertNewProduct(connection, AutoId, Nombre, categoría, Precio, Disponible, Imagen, tipo)
+        const postResult = await productos.insertNewProduct(
+          connection,
+          AutoId,
+          nombreProducto,
+          categoriaProducto,
+          precioProducto,
+          disponibleProducto,
+          imagenProducto,
+          tipoProducto,
+          permiteCremaBatidaProducto,
+          permiteModificarIngredientesProducto
+        )
 
         if (postResult.affectedRows > 0) {
           console.log('Producto Insertado con exito')
@@ -583,16 +936,21 @@ exports.postNewProduct = async (req, res, next) => {
         }
       }
     } else {
-      res.status(400).json({ ok: false, message: 'Datos no validos' })
+      await eliminarImagenSubidaProducto(req.file)
+      res.status(400).json({ ok: false, message: validation.mensaje || 'Datos no válidos' })
     }
   } catch (error) {
+    if (connection) {
+      await connection.rollback().catch(() => {})
+    }
+    await eliminarImagenSubidaProducto(req.file)
     console.log('Error en conexion a BD: ', error)
     res.status(500).json({
       ok: false,
-      message: 'Error en conexión a BD'
+      message: error.message || 'Error en conexión a BD'
     })
   } finally {
-    connection.release() // Siempre liberar la conexión
+    if (connection) connection.release() // Siempre liberar la conexión
   }
 }
 
@@ -602,8 +960,57 @@ exports.postModifProduct = async (req, res, next) => {
 
   try {
     const newdata = req.body
+    const idProducto = firstDefined(newdata.id, req.params.id)
+    const nombreProducto = firstDefined(newdata.nombre, newdata.Nombre) ?? null
+    const categoriaProducto = firstDefined(
+      newdata.categoria,
+      newdata.Categoria,
+      newdata['Categoría'],
+      newdata['categoría']
+    ) ?? null
+    const tipoProducto = firstDefined(newdata.tipo, newdata.Tipo) ?? null
+    const precioProducto = firstDefined(newdata.precio, newdata.Precio) ?? null
+    const disponibleProducto = parseBooleanFlag(firstDefined(newdata.activo, newdata.Disponible, newdata.disponible))
+    const permiteModificarIngredientesProducto = parseBooleanFlag(
+      firstDefined(newdata.permiteModificarIngredientes, newdata.Permite_Modificar_Ingredientes, 1)
+    )
+    const imagenProducto = firstDefined(newdata.imagen, newdata.Imagen) ?? null
     const newIngredientesRaw = newdata.ingredientes || [] // Evitamos fallos si viene vacío
-    const oldIngredientesRaw = await productos.fetchOneProductIngredientes(newdata.id)
+    const oldIngredientesRaw = await productos.fetchOneProductIngredientes(idProducto)
+    const productoDuplicado = await productos.existeProductoDuplicado(
+      nombreProducto,
+      categoriaProducto,
+      tipoProducto,
+      idProducto
+    )
+
+    if (productoDuplicado) {
+      return res.status(400).json({
+        ok: false,
+        message: 'Ya existe otro producto con el mismo nombre, categoría y tipo.'
+      })
+    }
+
+    const whippedCreamPersistenceError = await validateWhippedCreamPersistence({
+      categoryName: categoriaProducto,
+      requestedValue: parseBooleanFlag(newdata.permiteCremaBatida)
+    })
+
+    if (whippedCreamPersistenceError) {
+      return res.status(400).json({
+        ok: false,
+        message: whippedCreamPersistenceError
+      })
+    }
+
+    const ingredientCustomizationPersistenceError = await validateIngredientCustomizationPersistence(permiteModificarIngredientesProducto)
+
+    if (ingredientCustomizationPersistenceError) {
+      return res.status(400).json({
+        ok: false,
+        message: ingredientCustomizationPersistenceError
+      })
+    }
 
     // 1. LIMPIEZA DE DATOS: Convertimos los objetos complejos en arrays de IDs simples
     // newIds quedará como: ['IN37891778', 'IN12345678']
@@ -630,14 +1037,25 @@ exports.postModifProduct = async (req, res, next) => {
     await connection.beginTransaction()
 
     // A. Cambio de datos en el Producto
-    const modifyResult = await productos.modifyProduct(connection, newdata.id, newdata.nombre, newdata.Categoria, newdata.tipo, newdata.precio, newdata.activo, newdata.imagen)
+    const modifyResult = await productos.modifyProduct(
+      connection,
+      idProducto,
+      nombreProducto,
+      categoriaProducto,
+      tipoProducto,
+      precioProducto,
+      disponibleProducto,
+      imagenProducto,
+      parseBooleanFlag(newdata.permiteCremaBatida),
+      permiteModificarIngredientesProducto
+    )
     console.log(modifyResult)
     // B. Eliminacion de ingredientes removidos
     if (aEliminar.length > 0) {
       console.log(`Eliminando ${aEliminar.length} relaciones obsoletas...`)
       // TODO: Placeholder para Modelo
       for (const ingElim of aEliminar) {
-        await productos.eliminateIngProduct(connection, newdata.id, ingElim)
+        await productos.eliminateIngProduct(connection, idProducto, ingElim)
       }
     }
     // C. Insercion de ingredientes nuevos :)
@@ -645,7 +1063,7 @@ exports.postModifProduct = async (req, res, next) => {
       console.log(`Insertando ${aInsertar.length} relaciones nuevas...`)
       // TODO: Placeholder para Modelo
       for (const ingInsert of aInsertar) {
-        await productos.insertNewProductIng(connection, newdata.id, ingInsert)
+        await productos.insertNewProductIng(connection, idProducto, ingInsert)
       }
     }
 
@@ -684,7 +1102,7 @@ exports.getIngredientesFullCatalog = async (req, res, next) => {
     console.log('Error en get Ingredientes: ', err)
     res.status(500).json({
       ok: false,
-      message: err
+      message: err.message || 'No es posible obtener ingredientes'
     })
   }
 }
@@ -692,6 +1110,7 @@ exports.getIngredientesFullCatalog = async (req, res, next) => {
 /* Eliminar/Desactivar Producto */
 exports.deleteProducto = async (req, res, next) => {
   const { id } = req.body // Más limpio
+  let connection
 
   // Validar entrada
   if (!id) {
@@ -702,10 +1121,13 @@ exports.deleteProducto = async (req, res, next) => {
   }
 
   try {
+    connection = await pool.getConnection()
+    await connection.beginTransaction()
     console.log('Eliminando producto con id: ', id)
-    const productoEliminado = await productos.eliminarProducto(id)
+    const productoEliminado = await productos.eliminarProducto(connection, id)
 
-    if (!productoEliminado) {
+    if (productoEliminado.affectedRows === 0) {
+      await connection.rollback()
       console.log('Error producto no encontrado')
       return res.status(404).json({
         ok: false,
@@ -713,21 +1135,26 @@ exports.deleteProducto = async (req, res, next) => {
       })
     }
 
+    await connection.commit()
     console.log('Producto Eliminado con exito: ', productoEliminado)
     res.status(200).json({
       ok: true,
-      message: 'Producto Eliminado con éxito', // Mensaje preciso
-      data: productoEliminado // Opcional: devolver el objeto
+      message: 'Producto eliminado con éxito',
+      data: { id }
     })
   } catch (err) {
+    if (connection) {
+      await connection.rollback().catch(() => {})
+    }
     // 3. Logear el error real para debugging
     console.error('Error al eliminar producto:', err)
 
     res.status(500).json({
       ok: false,
-      message: 'Error interno del servidor', // Mensaje seguro para el cliente
-      error: process.env.NODE_ENV === 'development' ? err.message : {}
+      message: err.message || 'Error interno del servidor'
     })
+  } finally {
+    if (connection) connection.release()
   }
 }
 
@@ -746,7 +1173,7 @@ exports.putDesactivarProducto = async (req, res, next) => {
     // 2. Asumimos que desactivarProducto devuelve el producto actualizado o null
     const productoDesactivado = await productos.desactivarProducto(id)
 
-    if (!productoDesactivado) {
+    if (productoDesactivado.affectedRows === 0) {
       console.log('Error producto no desactivado')
       return res.status(404).json({
         ok: false,
@@ -757,8 +1184,8 @@ exports.putDesactivarProducto = async (req, res, next) => {
     console.log('Producto desactivado con exito')
     res.status(200).json({
       ok: true,
-      message: 'Producto desactivado con éxito', // Mensaje preciso
-      data: productoDesactivado // Opcional: devolver el objeto
+      message: 'Producto desactivado con éxito',
+      data: { id }
     })
   } catch (err) {
     // 3. Logear el error real para debugging
@@ -766,8 +1193,7 @@ exports.putDesactivarProducto = async (req, res, next) => {
 
     res.status(500).json({
       ok: false,
-      message: 'Error interno del servidor', // Mensaje seguro para el cliente
-      error: process.env.NODE_ENV === 'development' ? err.message : {}
+      message: err.message || 'Error interno del servidor'
     })
   }
 }
@@ -792,24 +1218,26 @@ exports.getCategorías = async (req, res, nex) => {
   }
 }
 
-
 exports.getIngredientesActivos = async (req, res, nex) => {
   console.log('Obteniendo los ingredientes activos con transacción')
 
+  // PLACEHOLDER: Obtener el objeto de conexión/pool de tu configuración de BD
   const connection = await db.getConnection()
 
   try {
+    // Iniciamos la transacción
     await connection.beginTransaction()
+        // Ejecutamos ambas consultas usando la misma conexión
+        const categoria = req.query.categoria
+        const tipo = req.query.tipo
+        const result = tipo
+          ? await ingrediente.fetchAllValidPorTipo(connection, tipo)
+          : categoria
+            ? await ingrediente.fetchAllValidPorCategoria(connection, categoria)
+            : await ingrediente.fetchAllValid(connection)
+        const resultPrecioBase = await productos.getCrepaPersoPrecioBase(connection);
 
-    // 🔥 UNIFICACIÓN: soporte para filtro opcional por categoría
-    const categoria = req.query.categoria
-
-    const result = categoria
-      ? await ingrediente.fetchAllValidPorCategoria(connection, categoria)
-      : await ingrediente.fetchAllValid(connection)
-
-    const resultPrecioBase = await productos.getCrepaPersoPrecioBase(connection)
-
+    // Si todo sale bien, confirmamos (commit)
     await connection.commit()
 
     res.status(200).json({
@@ -818,6 +1246,51 @@ exports.getIngredientesActivos = async (req, res, nex) => {
       ingActiveCatalog: result,
       precioBasePerso: resultPrecioBase
     })
+  } catch (err) {
+    // Si algo falla, revertimos cualquier cambio (rollback)
+    if (connection) await connection.rollback()
+
+    res.status(500).json({
+      ok: false,
+      message: 'Error en la transacción',
+      error: err.message || err
+    })
+  } finally {
+    // Siempre liberamos la conexión al terminar
+    if (connection) connection.release()
+  }
+}
+//Sección feedback Cliente
+exports.getReviewHistoryView = (request, response, next) => {
+  const breadcrumbs = nav.getBreadcrumbs('Menu')
+  const SesionData = request.session.cliente
+  console.log("Datos del cliente: ", SesionData)
+  response.render('cliente/historialClienteReviews', { breadcrumbs, datosCliente: SesionData})
+}
+
+
+
+exports.getClientReviewHistory = async (req, res, nex) => {
+  console.log("Getting Client's review history")
+  try{
+
+    const clienteTelefono = req.query.Numero_Telefonico;
+
+    if(clienteTelefono === undefined){
+      throw new Error("Telefono indefinido")
+    }
+
+    console.log("Teléfono recibido:", clienteTelefono);
+
+    const resultData = await feedback.getClientFeedback(clienteTelefono)
+
+    console.log("Reviews obtenidas: ", resultData)
+
+     res.status(200).json({
+          ok: true,
+          message: 'Catalogo Feedback Obtenido',
+          reviewCatalog:resultData
+                  })
 
   } catch (err) {
     if (connection) await connection.rollback()

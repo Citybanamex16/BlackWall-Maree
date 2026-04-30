@@ -1,24 +1,24 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Mapa - Marée</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@1.0.4/css/bulma.min.css">
-    <link rel="stylesheet" href="/css/moduloMenuCSS/menustyle.css">
-    <link rel="stylesheet" href="/css/moduloMenuCSS/mapStyle.css">
-    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=Jost:wght@300;400;500&display=swap" rel="stylesheet">
-</head>
+<%- include('../partials/header_cliente', { pageTitle: 'Mapa - Marée' }) %>
+
 <body>
-    <%- include('../partials/breadcrumbs') %>
+  <div class="mapa-page">
+    <header class="mapa-header">
+    
 
-    <section class="section">
-        <div class="container">
+      <h1>Mapa Interactivo</h1>
+      <p>Selecciona una sucursal para verla en el mapa</p>
+    </header>
 
-            <h1 class="page-title">Mapa Interactivo</h1>
-            <p class="page-subtitle">Encuéntranos aquí</p>
+    <main class="mapa-main">
+      <section class="mapa-layout">
+        <div class="mapa-columna">
+          <div id="contenedor-mapa"></div>
 
-            <div class="mapa-layout">
+          <div class="mapa-acciones">
+            <button id="btnMiUbicacion" class="button is-light" type="button">
+              <i class="fa-solid fa-location-crosshairs"></i>
+              Usar mi ubicación
+            </button>
 
                 <!-- COLUMNA IZQUIERDA: Mapa -->
                 <div class="mapa-columna">
@@ -41,14 +41,84 @@
                         </div>
 
                     </div>
+<style>
+    .boton-insta {
+        background: linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%);
+        color: white !important; /* El !important asegura que no lo sobrescriba otro estilo */
+        padding: 12px 24px;
+        text-decoration: none;
+        border-radius: 8px;
+        font-weight: bold;
+        display: inline-block;
+        transition: transform 0.2s;
+        border: none;
+        cursor: pointer;
+    }
+
+    .boton-insta:hover {
+        transform: scale(1.05);
+        color: white;
+        text-decoration: none;
+    }
+</style>
+    <a href="https://www.instagram.com/mareecrepe/" 
+   target="_blank" 
+   rel="noopener noreferrer">
+   <img src="https://img.freepik.com/vector-premium/icono-instagram-logotipo-insignia-moderna_578229-124.jpg?semt=ais_hybrid&w=740&q=80" 
+        alt="Instagram" 
+        style="height: 44px; width: 44px; border-radius: 12px;">
+</a>
 
                 </aside>
 
             </div>
 
+          <p id="mapaMensaje" class="mapa-mensaje"></p>
         </div>
-    </section>
 
-    <script src="/js/menudigital/mapaScript.js"></script>
+        <aside class="direccion-columna">
+          <div id="contenedor-sucursales"></div>
+        </aside>
+      </section>
+    </main>
+  </div>
+
+  <div id="sticky-bottom" class="sticky-bottom-app">
+
+    <a href="/cliente/eventosCliente" class="btn btn-icon search-side-btn" aria-label="Eventos">
+        <i class="fas fa-calendar-alt is-size-4"></i>
+    </a>
+
+    <% if (datosCliente) { %>
+    <a href="/royalty/royaltyUser" class="btn btn-icon search-side-btn btn-rewards-glow" aria-label="Rewards">
+        <i class="fas fa-crown is-size-4"></i>
+    </a>
+    <% } %>
+
+    <a href="/" class="btn btn-icon search-side-btn" aria-label="Inicio">
+        <i class="fas fa-house is-size-4"></i>
+    </a>
+
+    <button id="btn-search-toggle" class="btn btn-icon" aria-label="Buscar">
+        <i class="fas fa-search is-size-4"></i>
+    </button>
+
+    <div class="search-bar-wrapper control has-icons-left" id="search-expanded" style="display:none;flex:1;">
+        <input id="search-input" class="input is-rounded" type="text" placeholder="Buscar...">
+        <span class="icon is-left">
+            <i class="fas fa-search"></i>
+        </span>
+    </div>
+
+    <a href="/menu/orden" class="btn btn-icon search-side-btn" aria-label="Carrito">
+        <span style="position:relative;display:inline-flex;">
+            <i class="fas fa-shopping-cart is-size-4"></i>
+            <span class="fab-badge">0</span>
+        </span>
+    </a>
+
+  </div>
+
+  <script src="/js/menudigital/mapaScript.js"></script>
 </body>
 </html>

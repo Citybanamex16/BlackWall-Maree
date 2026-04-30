@@ -9,6 +9,7 @@ const btnConfirmarRegistro = document.getElementById('btnConfirmarRegistro')
 
 const inputNombre = document.getElementById('inputNombre')
 const checksCategoriasContainer = document.getElementById('checksCategorias')
+const checksTiposContainer = document.getElementById('checksTipos')
 const inputPrecio = document.getElementById('inputPrecio')
 const inputImagen = document.getElementById('inputImagen')
 const checkActivo = document.getElementById('checkActivo')
@@ -32,16 +33,13 @@ const tablaContainer = document.getElementById('tablaContainer')
 
 let datosParaEnviar = null
 
-// Cuando carga la pagina
-
+// ─── Carga inicial ────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
   cargarTablaIngredientes()
-  if (canManageIngredients) {
-    cargarCategorias()
-  }
+  if (canManageIngredients) cargarCategorias()
 })
 
-// Tabluki
+// ─── Tabla ────────────────────────────────────────────────
 async function cargarTablaIngredientes () {
   try {
     const res = await fetch('/admin/api/ingredientes')
@@ -57,13 +55,13 @@ async function cargarTablaIngredientes () {
 
     const tabla = document.createElement('table')
     tabla.className = 'ing-table'
-
     tabla.innerHTML = `
       <thead>
         <tr>
           <th>ID</th>
           <th>Nombre</th>
           <th>Categoría</th>
+          <th>Tipos</th>
           <th>Precio</th>
           <th>Estado</th>
           <th></th>
@@ -82,10 +80,16 @@ async function cargarTablaIngredientes () {
       const cats = ing.categorias || [ing.Categoría]
       const badgesCats = cats.map(c => `<span class="badge badge-cat">${c}</span>`).join(' ')
 
+      const tipos = ing.tipos || []
+      const badgesTipos = tipos.length > 0
+        ? tipos.map(t => `<span class="badge badge-cat" style="background:#f0e8d8;color:#8a6a3a;">${t}</span>`).join(' ')
+        : '<span style="color:#ccc;font-size:12px;">—</span>'
+
       tr.innerHTML = `
         <td class="muted" style="font-size:12px;font-family:monospace;">${ing.ID_Insumo}</td>
         <td style="font-weight:500;">${ing.Nombre}</td>
         <td>${badgesCats}</td>
+        <td>${badgesTipos}</td>
         <td style="color:#b5956a;font-weight:500;">$${parseFloat(ing.Precio).toFixed(2)}</td>
         <td>${badgeEstado}</td>
         <td>${canManageIngredients ? `<button class="btn-eliminar" data-id="${ing.ID_Insumo}" data-nombre="${ing.Nombre}">Eliminar</button>` : ''}</td>
@@ -96,7 +100,6 @@ async function cargarTablaIngredientes () {
         tr.querySelector('.btn-eliminar').addEventListener('click', (e) => {
           abrirModalEliminar(e.target.dataset.id, e.target.dataset.nombre)
         })
-
         tr.addEventListener('click', (e) => {
           if (e.target.classList.contains('btn-eliminar')) return
           abrirModalEditar(ing)
@@ -113,7 +116,44 @@ async function cargarTablaIngredientes () {
   }
 }
 
-// Categorias
+// ─── Tipos dinámicos ──────────────────────────────────────
+
+async function cargarTiposParaCategorias (cats, container, selectedTipos = []) {
+  if (!cats || cats.length === 0) {
+    container.innerHTML = '<span style="color:#999;font-size:13px;">Selecciona una categoría primero</span>'
+    return
+  }
+  try {
+    const qs = cats.map(c => encodeURIComponent(c)).join(',')
+    const res = await fetch(`/admin/api/ingredientes/tiposPorCategorias?cats=${qs}`)
+    const obj = await res.json()
+    const tipos = obj.data || []
+
+    if (tipos.length === 0) {
+      container.innerHTML = '<span style="color:#999;font-size:13px;">No hay tipos para las categorías seleccionadas</span>'
+      return
+    }
+
+    container.innerHTML = ''
+    tipos.forEach(t => {
+      const label = document.createElement('label')
+      label.className = 'maree-checkbox-row'
+      label.style.cssText = 'display:inline-flex;align-items:center;gap:6px;margin:0;cursor:pointer;'
+      const checked = selectedTipos.includes(t.nombre) ? 'checked' : ''
+      label.innerHTML = `<input type="checkbox" class="tipo-check" value="${t.nombre}" ${checked}> ${t.nombre} <span style="font-size:11px;color:#aaa;">(${t.categoria})</span>`
+      container.appendChild(label)
+    })
+  } catch (error) {
+    console.error('Error cargando tipos:', error)
+    container.innerHTML = '<span style="color:#a03020;font-size:13px;">Error al cargar tipos</span>'
+  }
+}
+
+function getCatsSeleccionadas (checksContainer) {
+  return Array.from(checksContainer.querySelectorAll('.cat-check-registro:checked, .cat-check-editar:checked')).map(c => c.value)
+}
+
+// ─── Categorías (registro) ────────────────────────────────
 async function cargarCategorias () {
   try {
     const res = await fetch('/admin/api/ingredientes/categorias')
@@ -130,13 +170,19 @@ async function cargarCategorias () {
       label.innerHTML = `<input type="checkbox" class="cat-check-registro" value="${cat.Nombre}"> ${cat.Nombre}`
       checksCategoriasContainer.appendChild(label)
     })
+
+    // Listener: cuando cambia una categoría en el form de registro, recargar tipos
+    checksCategoriasContainer.addEventListener('change', () => {
+      const seleccionadas = Array.from(checksCategoriasContainer.querySelectorAll('.cat-check-registro:checked')).map(c => c.value)
+      cargarTiposParaCategorias(seleccionadas, checksTiposContainer, [])
+    })
   } catch (error) {
     console.error('Error cargando categorías:', error)
     checksCategoriasContainer.innerHTML = '<span style="color:red;font-size:13px;">Error al cargar</span>'
   }
 }
 
-// Abrir formulario
+// ─── Abrir formulario de registro ────────────────────────
 if (canManageIngredients && btnRegistrar && modalRegistro) {
   btnRegistrar.addEventListener('click', (e) => {
     e.preventDefault()
@@ -150,14 +196,13 @@ if (canManageIngredients && btnRegistrar && modalRegistro) {
   })
 }
 
-// Validaci´ón nombre
+// ─── Validar y continuar al resumen ──────────────────────
 if (canManageIngredients && btnConfirmarRegistro) {
   btnConfirmarRegistro.addEventListener('click', async (e) => {
     e.preventDefault()
 
     const datos = obtenerDatosFormulario()
 
-    // Valida campos vacíos
     try {
       const resValidar = await fetch('/admin/api/ingredientes/validar', {
         method: 'POST',
@@ -165,46 +210,41 @@ if (canManageIngredients && btnConfirmarRegistro) {
         body: JSON.stringify(datos)
       })
       const objValidar = await resValidar.json()
-
       if (objValidar.camposVacios) {
         mostrarError('Campos incompletos', `El campo "${objValidar.campoFaltante}" es obligatorio.`)
         return
       }
     } catch (error) {
       mostrarError('Error de validación', 'No se pudo validar el formulario.')
-      console.error(error)
       return
     }
 
-    // Verifica duplicados (nombre)
     try {
       const resNombre = await fetch(`/admin/api/ingredientes/verificarNombre?nombre=${encodeURIComponent(datos.Nombre)}`)
       const objNombre = await resNombre.json()
-
       if (objNombre.existe) {
         mostrarError('Ingrediente ya existente', `Ya existe un ingrediente con el nombre "${datos.Nombre}".`)
         return
       }
     } catch (error) {
       mostrarError('Error de verificación', 'No se pudo verificar el nombre del ingrediente.')
-      console.error(error)
       return
     }
 
-    // Resumen
     datosParaEnviar = datos
     modalRegistro.close()
     mostrarResumen(datos)
   })
 }
 
-// Resumen final
+// ─── Resumen ──────────────────────────────────────────────
 function mostrarResumen (datos) {
   resumenContenido.innerHTML = ''
 
   const campos = [
     { label: 'Nombre', value: datos.Nombre },
     { label: 'Categorías', value: (datos.Categorias || []).join(', ') || '—' },
+    { label: 'Tipos', value: (datos.Tipos || []).join(', ') || '—' },
     { label: 'Precio', value: `$${parseFloat(datos.Precio).toFixed(2)}` },
     { label: 'Imagen', value: datos.Imagen || '—' },
     { label: 'Disponible', value: datos.Activo ? 'Sí' : 'No' }
@@ -213,15 +253,12 @@ function mostrarResumen (datos) {
   campos.forEach(c => {
     const fila = document.createElement('div')
     fila.className = 'resumen-fila'
-
     const etiqueta = document.createElement('span')
     etiqueta.className = 'resumen-label'
     etiqueta.textContent = c.label
-
     const valor = document.createElement('span')
     valor.className = 'resumen-valor'
     valor.textContent = c.value
-
     fila.appendChild(etiqueta)
     fila.appendChild(valor)
     resumenContenido.appendChild(fila)
@@ -238,7 +275,7 @@ if (canManageIngredients && btnVolverFormulario) {
   })
 }
 
-// Guardado en BD
+// ─── Guardar en BD ────────────────────────────────────────
 if (canManageIngredients && btnConfirmarCreacion) {
   btnConfirmarCreacion.addEventListener('click', async (e) => {
     e.preventDefault()
@@ -254,7 +291,6 @@ if (canManageIngredients && btnConfirmarCreacion) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(datosParaEnviar)
       })
-
       const obj = await res.json()
 
       if (obj.success) {
@@ -268,12 +304,11 @@ if (canManageIngredients && btnConfirmarCreacion) {
       }
     } catch (error) {
       mostrarError('Error interno', `Fallo al conectar con el servidor: ${error}`)
-      console.error(error)
     }
   })
 }
 
-// Cerrado de los modales
+// ─── Modales utilitarios ──────────────────────────────────
 btnCerrarError.addEventListener('click', () => modalError.close())
 
 btnCerrarExito.addEventListener('click', () => {
@@ -281,12 +316,14 @@ btnCerrarExito.addEventListener('click', () => {
   datosParaEnviar = null
 })
 
-// Helpers
+// ─── Helpers ──────────────────────────────────────────────
 function obtenerDatosFormulario () {
-  const checks = checksCategoriasContainer.querySelectorAll('.cat-check-registro:checked')
+  const cats = checksCategoriasContainer.querySelectorAll('.cat-check-registro:checked')
+  const tipos = checksTiposContainer.querySelectorAll('.tipo-check:checked')
   return {
     Nombre: inputNombre.value.trim(),
-    Categorias: Array.from(checks).map(c => c.value),
+    Categorias: Array.from(cats).map(c => c.value),
+    Tipos: Array.from(tipos).map(t => t.value),
     Precio: inputPrecio.value,
     Imagen: inputImagen.value.trim(),
     Activo: checkActivo.checked
@@ -296,6 +333,7 @@ function obtenerDatosFormulario () {
 function limpiarFormulario () {
   inputNombre.value = ''
   checksCategoriasContainer.querySelectorAll('.cat-check-registro').forEach(c => { c.checked = false })
+  checksTiposContainer.innerHTML = '<span style="color:#999;font-size:13px;">Selecciona una categoría primero</span>'
   inputPrecio.value = ''
   inputImagen.value = ''
   checkActivo.checked = true
@@ -307,7 +345,7 @@ function mostrarError (titulo, mensaje) {
   modalError.showModal()
 }
 
-// Logica modal eliminar ingredientes
+// ─── Modal eliminar ───────────────────────────────────────
 const modalEliminar = document.getElementById('ModalEliminar')
 const eliminarNombre = document.getElementById('eliminarNombre')
 const eliminarAdvertencia = document.getElementById('eliminarAdvertencia')
@@ -356,9 +394,7 @@ if (canManageIngredients && btnConfirmarEliminar) {
     if (!idParaEliminar) return
 
     try {
-      const res = await fetch(`/admin/api/ingredientes/${idParaEliminar}/eliminar`, {
-        method: 'DELETE'
-      })
+      const res = await fetch(`/admin/api/ingredientes/${idParaEliminar}/eliminar`, { method: 'DELETE' })
       const obj = await res.json()
 
       if (obj.success) {
@@ -378,11 +414,12 @@ if (canManageIngredients && btnConfirmarEliminar) {
   })
 }
 
-// Modal modificar ingredientes
+// ─── Modal editar ─────────────────────────────────────────
 const modalEditar = document.getElementById('ModalEditar')
 const editarSubtitulo = document.getElementById('editarSubtitulo')
 const editNombre = document.getElementById('editNombre')
 const editChecksCatContainer = document.getElementById('editChecksCategorias')
+const editChecksTiposContainer = document.getElementById('editChecksTipos')
 const editPrecio = document.getElementById('editPrecio')
 const editImagen = document.getElementById('editImagen')
 const editActivo = document.getElementById('editActivo')
@@ -391,6 +428,13 @@ const btnCancelarEditar = document.getElementById('btnCancelarEditar')
 
 let idParaEditar = null
 let nombreOriginalEditar = null
+
+// Listener de categorías en editar — declarado UNA sola vez
+editChecksCatContainer.addEventListener('change', () => {
+  const seleccionadas = Array.from(editChecksCatContainer.querySelectorAll('.cat-check-editar:checked')).map(c => c.value)
+  const tiposActuales = Array.from(editChecksTiposContainer.querySelectorAll('.tipo-check:checked')).map(c => c.value)
+  cargarTiposParaCategorias(seleccionadas, editChecksTiposContainer, tiposActuales)
+})
 
 async function abrirModalEditar (ing) {
   idParaEditar = ing.ID_Insumo
@@ -403,11 +447,13 @@ async function abrirModalEditar (ing) {
   editActivo.checked = ing.Activo === 1
 
   const ingCategorias = ing.categorias || [ing.Categoría]
+  const ingTipos = ing.tipos || []
 
-  const res = await fetch('/admin/api/ingredientes/categorias')
-  const obj = await res.json()
+  // Cargar checkboxes de categorías
+  const resCats = await fetch('/admin/api/ingredientes/categorias')
+  const objCats = await resCats.json()
   editChecksCatContainer.innerHTML = ''
-  obj.data.forEach(cat => {
+  objCats.data.forEach(cat => {
     const label = document.createElement('label')
     label.className = 'maree-checkbox-row'
     label.style.cssText = 'display:inline-flex;align-items:center;gap:6px;margin:0;cursor:pointer;'
@@ -415,6 +461,9 @@ async function abrirModalEditar (ing) {
     label.innerHTML = `<input type="checkbox" class="cat-check-editar" value="${cat.Nombre}" ${checked}> ${cat.Nombre}`
     editChecksCatContainer.appendChild(label)
   })
+
+  // Cargar tipos según las categorías actuales del ingrediente
+  await cargarTiposParaCategorias(ingCategorias, editChecksTiposContainer, ingTipos)
 
   modalEditar.showModal()
 }
@@ -433,20 +482,17 @@ if (canManageIngredients && btnGuardarEditar) {
     const nombre = editNombre.value.trim()
     const precio = parseFloat(editPrecio.value)
     const categorias = Array.from(editChecksCatContainer.querySelectorAll('.cat-check-editar:checked')).map(c => c.value)
+    const tipos = Array.from(editChecksTiposContainer.querySelectorAll('.tipo-check:checked')).map(c => c.value)
 
-    // 1. Valida campos vacios
     if (!nombre || !categorias.length || !editPrecio.value) {
       mostrarError('Campos incompletos', 'Nombre, al menos una Categoría y Precio son obligatorios.')
       return
     }
-
-    // 2. Valida que el precio no sea negativo
     if (isNaN(precio) || precio < 0) {
       mostrarError('Precio inválido', 'El precio debe ser un número positivo.')
       return
     }
 
-    // 3. Verifica duplicado solo si el nombre cambio
     if (nombre !== nombreOriginalEditar) {
       try {
         const resNombre = await fetch(`/admin/api/ingredientes/verificarNombre?nombre=${encodeURIComponent(nombre)}`)
@@ -461,10 +507,10 @@ if (canManageIngredients && btnGuardarEditar) {
       }
     }
 
-    // 4. Construcción del Body (Solo una vez)
     const body = {
       Nombre: nombre,
       Categorias: categorias,
+      Tipos: tipos,
       Precio: precio,
       Activo: editActivo.checked,
       Imagen: editImagen.value.trim()
@@ -494,8 +540,6 @@ if (canManageIngredients && btnGuardarEditar) {
         mostrarError('Error al actualizar', obj.message || 'Error desconocido')
       }
     } catch (error) {
-
-    // Si se cae la BD, el "throw new Error" de arriba manda la ejecucion para aca abajo
       mostrarError('Error al intentar modificar ingrediente', error.message)
     } finally {
       idParaEditar = null

@@ -5,6 +5,7 @@ const modalRegistroTipo = document.getElementById('ModalRegistroTipo')
 const btnCerrarRegistroTipo = document.getElementById('btnCerrarRegistroTipo')
 const btnConfirmarRegistroTipo = document.getElementById('btnConfirmarRegistroTipo')
 const inputNombreTipo = document.getElementById('inputNombreTipo')
+const inputCategoriaTipo = document.getElementById('inputCategoriaTipo')
 
 const modalResumenTipo = document.getElementById('ModalResumenTipo')
 const resumenContenidoTipo = document.getElementById('resumenContenidoTipo')
@@ -24,10 +25,35 @@ const btnCerrarExitoTipo = document.getElementById('btnCerrarExitoTipo')
 const tablaTiposContainer = document.getElementById('tablaTiposContainer')
 
 let datosTipoParaEnviar = null
+let listaCategorias = []
 
 document.addEventListener('DOMContentLoaded', () => {
+  cargarCategorias()
   cargarTablaTipos()
 })
+
+async function cargarCategorias () {
+  try {
+    const res = await fetch('/admin/api/categorias')
+    if (!res.ok) throw new Error('Error al obtener categorías')
+    const obj = await res.json()
+    listaCategorias = obj.data || []
+    poblarSelectCategorias(inputCategoriaTipo, '')
+  } catch (error) {
+    console.error('Error cargando categorías para tipos:', error)
+  }
+}
+
+function poblarSelectCategorias (selectEl, valorSeleccionado) {
+  selectEl.innerHTML = '<option value="">Selecciona una categoría...</option>'
+  listaCategorias.forEach(cat => {
+    const opt = document.createElement('option')
+    opt.value = cat.Nombre
+    opt.textContent = cat.Nombre
+    if (cat.Nombre === valorSeleccionado) opt.selected = true
+    selectEl.appendChild(opt)
+  })
+}
 
 // Tabla tipos
 async function cargarTablaTipos () {
@@ -48,6 +74,7 @@ async function cargarTablaTipos () {
       <thead>
         <tr>
           <th>Nombre</th>
+          <th>Categoría</th>
           <th></th>
         </tr>
       </thead>
@@ -58,6 +85,7 @@ async function cargarTablaTipos () {
       const tr = document.createElement('tr')
       tr.innerHTML = `
         <td style="font-weight:500;">${tipo.nombre}</td>
+        <td style="color:#888;">${tipo.categoria || '—'}</td>
         <td><button class="btn-eliminar" data-nombre="${tipo.nombre}">Eliminar</button></td>
       `
       tr.style.cursor = 'pointer'
@@ -68,7 +96,7 @@ async function cargarTablaTipos () {
 
       tr.addEventListener('click', (e) => {
         if (e.target.classList.contains('btn-eliminar')) return
-        abrirModalEditarTipo(tipo.nombre)
+        abrirModalEditarTipo(tipo.nombre, tipo.categoria)
       })
 
       tbody.appendChild(tr)
@@ -86,6 +114,7 @@ async function cargarTablaTipos () {
 btnNuevoTipo.addEventListener('click', (e) => {
   e.preventDefault()
   inputNombreTipo.value = ''
+  poblarSelectCategorias(inputCategoriaTipo, '')
   modalRegistroTipo.showModal()
 })
 
@@ -94,11 +123,15 @@ btnCerrarRegistroTipo.addEventListener('click', (e) => {
   modalRegistroTipo.close()
 })
 
-// Validacion lleno registro
 btnConfirmarRegistroTipo.addEventListener('click', async (e) => {
   e.preventDefault()
   const nombre = inputNombreTipo.value.trim()
+  const categoria = inputCategoriaTipo.value
 
+  if (!categoria) {
+    mostrarErrorTipo('Campo incompleto', 'Debes seleccionar una categoría.')
+    return
+  }
   if (!nombre) {
     mostrarErrorTipo('Campo incompleto', 'El nombre del tipo es obligatorio.')
     return
@@ -116,25 +149,24 @@ btnConfirmarRegistroTipo.addEventListener('click', async (e) => {
     return
   }
 
-  datosTipoParaEnviar = { nombre }
+  datosTipoParaEnviar = { nombre, categoria }
   modalRegistroTipo.close()
-  mostrarResumenTipo(nombre)
+  mostrarResumenTipo(nombre, categoria)
 })
 
-// Resumen tipo
-function mostrarResumenTipo (nombre) {
+function mostrarResumenTipo (nombre, categoria) {
   resumenContenidoTipo.innerHTML = ''
-  const fila = document.createElement('div')
-  fila.className = 'resumen-fila'
-  const etiqueta = document.createElement('span')
-  etiqueta.className = 'resumen-label'
-  etiqueta.textContent = 'Nombre'
-  const valor = document.createElement('span')
-  valor.className = 'resumen-valor'
-  valor.textContent = nombre
-  fila.appendChild(etiqueta)
-  fila.appendChild(valor)
-  resumenContenidoTipo.appendChild(fila)
+
+  const filaCategoria = document.createElement('div')
+  filaCategoria.className = 'resumen-fila'
+  filaCategoria.innerHTML = '<span class="resumen-label">Categoría</span><span class="resumen-valor">' + categoria + '</span>'
+
+  const filaNombre = document.createElement('div')
+  filaNombre.className = 'resumen-fila'
+  filaNombre.innerHTML = '<span class="resumen-label">Nombre</span><span class="resumen-valor">' + nombre + '</span>'
+
+  resumenContenidoTipo.appendChild(filaCategoria)
+  resumenContenidoTipo.appendChild(filaNombre)
   modalResumenTipo.showModal()
 }
 
@@ -190,16 +222,20 @@ function mostrarErrorTipo (titulo, mensaje) {
 const modalEditarTipo = document.getElementById('ModalEditarTipo')
 const editarSubtituloTipo = document.getElementById('editarSubtituloTipo')
 const editNombreTipo = document.getElementById('editNombreTipo')
+const editCategoriaTipo = document.getElementById('editCategoriaTipo')
 const editarTipoEnUso = document.getElementById('editarTipoEnUso')
 const btnGuardarEditarTipo = document.getElementById('btnGuardarEditarTipo')
 const btnCancelarEditarTipo = document.getElementById('btnCancelarEditarTipo')
 
 let nombreOriginalTipo = null
+let categoriaOriginalTipo = null
 
-async function abrirModalEditarTipo (nombre) {
+async function abrirModalEditarTipo (nombre, categoria) {
   nombreOriginalTipo = nombre
+  categoriaOriginalTipo = categoria
   editarSubtituloTipo.textContent = `Editando: ${nombre}`
   editNombreTipo.value = nombre
+  poblarSelectCategorias(editCategoriaTipo, categoria)
   editarTipoEnUso.style.display = 'none'
   editarTipoEnUso.innerHTML = ''
 
@@ -224,13 +260,19 @@ async function abrirModalEditarTipo (nombre) {
 btnCancelarEditarTipo.addEventListener('click', () => {
   modalEditarTipo.close()
   nombreOriginalTipo = null
+  categoriaOriginalTipo = null
 })
 
 btnGuardarEditarTipo.addEventListener('click', async () => {
   if (!nombreOriginalTipo) return
 
   const nuevoNombre = editNombreTipo.value.trim()
+  const nuevaCategoria = editCategoriaTipo.value
 
+  if (!nuevaCategoria) {
+    mostrarErrorTipo('Campo incompleto', 'Debes seleccionar una categoría.')
+    return
+  }
   if (!nuevoNombre) {
     mostrarErrorTipo('Campo incompleto', 'El nombre es obligatorio.')
     return
@@ -254,7 +296,7 @@ btnGuardarEditarTipo.addEventListener('click', async () => {
     const res = await fetch(`/admin/api/tipos/${encodeURIComponent(nombreOriginalTipo)}/actualizar`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ nombre: nuevoNombre })
+      body: JSON.stringify({ nombre: nuevoNombre, categoria: nuevaCategoria })
     })
 
     if (!res.ok) {
@@ -277,6 +319,7 @@ btnGuardarEditarTipo.addEventListener('click', async () => {
     mostrarErrorTipo('Error al modificar', error.message)
   } finally {
     nombreOriginalTipo = null
+    categoriaOriginalTipo = null
   }
 })
 

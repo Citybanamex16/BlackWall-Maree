@@ -1,16 +1,13 @@
 <%- include('../partials/header_cliente', { pageTitle: 'Menu - Maree' }) %>
 <link rel="stylesheet" href="/css/moduloRoyaltyCSS/royalty-cliente.css">
 <body>
-    <div class="container-fluid bg-white border-bottom">
-        <%- include('../partials/breadcrumbs') %>
-    </div>
     
     <main class="container-fluid container-md my-3 my-md-5 royalty-dashboard">
         <div class="row mb-4">
             <div class="col-12 col-md-8 mx-auto px-2 px-md-3">
                 <div class="premium-card p-4">
                     <div class="greeting-section mb-4 text-start">
-                        <h1 class="greeting-title text-truncate">¡Hola, <%= cliente.Nombre %>!</h1>
+                        <h1 class="greeting-title text-truncate">¡Hola, <%= cliente.username || cliente.Nombre  %>!</h1>
                         <p class="loyalty-subtitle">Maree Rewards</p>
                     </div>
             <div class="text-center mt-4">
@@ -47,11 +44,11 @@
                  alt="Agregar a Google Wallet" 
                  style="height: 44px; width: auto;">
         </a>
-        <a id="btn-apple-wallet" href="#" target="_blank" class="mx-2">
-            <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/3/30/Add_to_Apple_Wallet_badge.svg/3840px-Add_to_Apple_Wallet_badge.svg.png" 
-                 alt="Agregar a Apple Wallet" 
-                 style="height: 44px; width: auto;">
-        </a>
+        <a id="btn-apple-wallet" href="/royalty/royaltyUser/apple-pass" target="_blank" class="mx-2">
+    <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/3/30/Add_to_Apple_Wallet_badge.svg/3840px-Add_to_Apple_Wallet_badge.svg.png" 
+         alt="Agregar a Apple Wallet" 
+         style="height: 44px; width: auto;">
+</a>
     </div>
 </div>
         </div>
@@ -65,12 +62,15 @@
      CARRUSEL DE PROMOCIONES ROYALTY
      Se inyectan las tarjetas desde JS con construirCarruselPromos()
 ════════════════════════════════════════════ -->
-<section class="promos-section premium-card mb-5 ps-2 ps-md-0" style="margin-top: 32px;">
+
 
   <!-- Encabezado -->
-  <div class="promos-header mb-3 px-1">
-    <h2 class="section-title fs-5">Tus Promociones</h2>
-    <p class="loyalty-subtitle mb-0">Beneficios exclusivos de tu nivel</p>
+   <div class="row">
+      <div class="col-12 col-md-8 mx-auto px-2 px-md-3">
+  <section class="promos-section premium-card mb-5 p-4" style="margin-top: 32px;">
+    <div class="promos-header mb-4 text-start">
+    <h2 class="section-title fs-4">Tus Promociones</h2>
+    <p class="loyalty-subtitle mb-1">Beneficios exclusivos de tu nivel</p>
   </div>
 
   <!-- Estado de carga -->
@@ -92,6 +92,54 @@
   </div>
 
 </section>
+</div>
+</div>
+
+
+
+<div id="sticky-bottom" class="sticky-bottom-app">
+
+    <a href="/menu/sucursales" class="btn btn-icon search-side-btn" aria-label="Mapa">
+        <i class="fas fa-map-marker-alt is-size-4"></i>
+    </a>
+
+    <a href="/cliente/eventosCliente" class="btn btn-icon search-side-btn" aria-label="Eventos">
+        <i class="fas fa-calendar-alt is-size-4"></i>
+    </a>
+
+    <a href="/" class="btn btn-icon search-side-btn" aria-label="Inicio">
+        <i class="fas fa-house is-size-4"></i>
+    </a>
+
+    <div class="search-bar-wrapper control has-icons-left" id="search-expanded" style="display:none;flex:1;">
+        <input id="search-input" class="input is-rounded" type="text" placeholder="Buscar...">
+        <span class="icon is-left">
+            <i class="fas fa-search"></i>
+        </span>
+    </div>
+
+    <a href="/menu/orden" class="btn btn-icon search-side-btn" aria-label="Carrito">
+        <span style="position:relative;display:inline-flex;">
+            <i class="fas fa-shopping-cart is-size-4"></i>
+            <span class="fab-badge">0</span>
+        </span>
+    </a>
+
+</div>
+
+<script>
+fetch('/royalty/royaltyUser/api/datos')
+  .then(r => {
+    return r.json()
+  })
+  .catch(err => {
+    document.body.insertAdjacentHTML('beforeend',
+      `<div style="position:fixed;bottom:0;left:0;right:0;background:orange;padding:10px;font-size:14px;z-index:9999">
+        Error: ${err.message}
+      </div>`
+    )
+  })
+</script>
 
 
 
@@ -117,7 +165,7 @@
   window.clienteData = {
     nombre:  "<%= cliente.Nombre %>",
     nivel:   "<%= cliente.nivel %>",
-    visitas: <%= cliente.visitas %>
+    visitas: "<%= cliente.visitas %>"
   }
 </script>
 

@@ -1,4 +1,8 @@
 const db = require('../util/database')
+const bcrypt = require('bcryptjs')
+
+const BCRYPT_SALT_ROUNDS = 12
+const isBcryptHash = (value = '') => /^\$2[aby]\$\d{2}\$/.test(value)
 
 class Colaborador {
   static async fetchActivos () {
@@ -40,10 +44,14 @@ class Colaborador {
   }
 
   static async create (idColaborador, idRol, nombre, contrasena) {
+    const passwordToStore = isBcryptHash(contrasena)
+      ? contrasena
+      : await bcrypt.hash(contrasena, BCRYPT_SALT_ROUNDS)
+
     const [result] = await db.execute(`
       INSERT INTO colaborador (ID_Colaborador, ID_Rol, Nombre, Contraseña)
       VALUES (?, ?, ?, ?)
-    `, [idColaborador, idRol, nombre, contrasena])
+    `, [idColaborador, idRol, nombre, passwordToStore])
 
     return result
   }

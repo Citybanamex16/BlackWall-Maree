@@ -21,11 +21,20 @@
 <link rel="stylesheet" href="/css/CSSglobales/adminstyle.css"> 
 
 <main class="page-wrap">
-  <header style="margin-bottom: 32px;">
-    <h1 class="page-title">Gestión de días hábiles</h1>
-    <p style="color: var(--c-text-muted); font-size: 16px; margin-top: 8px;">
-      Registrar y consultar días hábiles de atención.
-    </p>
+  <header style="margin-bottom: 32px; display: flex; flex-direction: column; gap: 12px;">
+
+    <div>
+      <h1 class="page-title">Gestión de días hábiles</h1>
+      <p style="color: var(--c-text-muted); font-size: 16px; margin-top: 8px;">
+        Registrar y consultar días hábiles de atención.
+      </p>
+    </div>
+
+    <div>
+      <a href="/admin" class="btn-ghost" style="display: inline-flex; align-items: center; gap: 6px;">
+        ← Volver al dashboard
+      </a>
+    </div>
   </header>
 
   <% if (typeof error !== 'undefined' && error) { %>
@@ -45,22 +54,22 @@
       Registrar día hábil
     </h2>
 
-    <div>
-      <label style="color: var(--c-text-muted); text-transform: uppercase; font-size: 11px; letter-spacing: 1px;">
-        ID Calendario
-      </label>
-      <input
-        class="input"
-        style="margin-top: 6px;"
-        type="text"
-        name="id_calendario"
-        value="<%= oldInput.id_calendario %>"
-        readonly
-        required>
-    </div>
-
     <form action="/admin/dias-habiles" method="POST">
       <div style="display: flex; flex-direction: column; gap: 18px; margin-bottom: 28px;">
+
+        <div>
+          <label style="color: var(--c-text-muted); text-transform: uppercase; font-size: 11px; letter-spacing: 1px;">
+            ID Calendario
+          </label>
+          <input
+            class="input"
+            style="margin-top: 6px;"
+            type="text"
+            name="id_calendario"
+            value="<%= oldInput.id_calendario %>"
+            readonly
+            required>
+        </div>
 
         <div>
           <label style="color: var(--c-text-muted); text-transform: uppercase; font-size: 11px; letter-spacing: 1px;">
@@ -119,7 +128,6 @@
         <button class="btn-danger" type="submit">
           Guardar configuración
         </button>
-        <a href="/admin" class="btn-ghost">Volver al dashboard</a>
       </div>
     </form>
   </div>

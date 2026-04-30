@@ -1,0 +1,402 @@
+/* ============================================
+   MARÉE — Royalty Admin Catalog
+   Hereda: global_theme.css, global_components.css, adminstyle.css
+   ============================================ */
+
+/* ── PÁGINA BASE ── */
+body {
+  background: var(--c-bg-gradient);
+  min-height: 100vh;
+}
+
+.section {
+  padding-top: 2.5rem;
+  padding-bottom: 3rem;
+}
+
+/* ── ENLACE DE REGRESO ── */
+.back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-body);
+  font-size: 13px;
+  color: var(--c-text-muted);
+  text-decoration: none;
+  margin-bottom: 32px;
+  transition: color 0.2s ease;
+}
+
+.back-link:hover {
+  color: var(--c-primary);
+}
+
+/* ── ENCABEZADO ── */
+.royalty-shell {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 24px;
+  flex-wrap: wrap;
+  margin-bottom: 28px;
+}
+
+.title {
+  font-family: var(--font-heading) !important;
+  font-size: 3rem !important;
+  font-weight: 600 !important;
+  color: var(--c-text-main) !important;
+  letter-spacing: 0.3px;
+  margin-bottom: 0.25rem !important;
+  position: relative;
+  display: inline-block;
+}
+
+.title::after {
+  content: '';
+  display: block;
+  width: 48px;
+  height: 2px;
+  background: var(--c-primary);
+  margin-top: 10px;
+  border-radius: 2px;
+}
+
+/* ── BOTÓN NUEVO ESTADO ── */
+.button.is-primary,
+button.button.is-primary {
+  background: linear-gradient(135deg, var(--c-primary) 0%, var(--c-primary-deep) 100%) !important;
+  border: none !important;
+  color: #fff !important;
+  font-family: var(--font-body);
+  font-weight: 500;
+  font-size: 13px;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  border-radius: var(--radius-pill) !important;
+  padding: 10px 24px !important;
+  height: auto !important;
+  box-shadow: 0 6px 18px rgba(166, 127, 79, 0.25);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.button.is-primary:hover,
+button.button.is-primary:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 10px 24px rgba(166, 127, 79, 0.3) !important;
+}
+
+/* Quitar el wrapper doble de botón */
+.button.is-rounded {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+}
+
+/* ── CONTENEDOR DE TARJETAS ROYALTY ── */
+#royaltyContainer {
+  display: grid !important;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 20px;
+  margin-top: 1.5rem;
+}
+
+/* Las columnas de Bulma dentro del grid no deben agregar padding extra */
+#royaltyContainer .column {
+  padding: 0 !important;
+}
+
+/* ── TARJETA DE NIVEL ROYALTY ── */
+.royalty-card {
+  background: var(--c-surface);
+  border: 1px solid var(--c-border);
+  border-radius: var(--radius-md);
+  padding: 28px 24px 20px;
+  box-shadow: var(--shadow-sm);
+  position: relative;
+  overflow: hidden;
+  transition: box-shadow 0.25s ease, transform 0.2s ease;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.royalty-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--c-primary-light), var(--c-primary));
+}
+
+.royalty-card:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-md);
+}
+
+.royalty-card-name {
+  font-family: var(--font-heading);
+  font-size: 1.6rem;
+  font-weight: 600;
+  color: var(--c-text-main);
+  margin: 0;
+  line-height: 1.2;
+}
+
+.royalty-card-desc {
+  font-size: 13px;
+  color: var(--c-text-muted);
+  margin: 0;
+  line-height: 1.5;
+}
+
+.royalty-card-meta {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 4px;
+}
+
+.royalty-meta-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: var(--c-surface-soft);
+  border: 1px solid var(--c-border);
+  color: var(--c-text-soft);
+  font-size: 12px;
+  font-weight: 500;
+  padding: 4px 10px;
+  border-radius: var(--radius-pill);
+}
+
+.royalty-meta-pill i {
+  color: var(--c-primary);
+  font-size: 11px;
+}
+
+.royalty-card-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+  padding-top: 16px;
+  border-top: 1px solid var(--c-border);
+}
+
+.royalty-card-actions .button {
+  flex: 1;
+  border-radius: var(--radius-pill) !important;
+  font-size: 12px !important;
+  font-weight: 500 !important;
+  letter-spacing: 0.5px;
+  height: 36px !important;
+  transition: all 0.2s ease;
+}
+
+.royalty-card-actions .button:not(.is-primary):not(.is-danger) {
+  background: var(--c-surface-soft) !important;
+  border: 1px solid var(--c-border) !important;
+  color: var(--c-text-soft) !important;
+}
+
+.royalty-card-actions .button:not(.is-primary):not(.is-danger):hover {
+  background: var(--c-primary-bg) !important;
+  border-color: var(--c-primary-light) !important;
+  color: var(--c-primary-deep) !important;
+}
+
+.royalty-card-actions .button.is-danger {
+  background: var(--c-danger-bg) !important;
+  border: 1px solid #f0cbc3 !important;
+  color: var(--c-danger) !important;
+}
+
+.royalty-card-actions .button.is-danger:hover {
+  background: var(--c-danger) !important;
+  color: #fff !important;
+}
+
+/* ── SECCIÓN VIEW METRICS ── */
+.box {
+  background: var(--c-surface) !important;
+  border: 1px solid var(--c-border) !important;
+  border-radius: var(--radius-md) !important;
+  box-shadow: var(--shadow-sm) !important;
+}
+
+/* ── MODALES ── */
+.modal-background {
+  background: rgba(34, 22, 12, 0.45);
+  backdrop-filter: blur(3px);
+}
+
+.modal-content .box,
+.modal-card {
+  border-radius: var(--radius-md) !important;
+  border: 1px solid var(--c-border) !important;
+  box-shadow: var(--shadow-lg) !important;
+  overflow: hidden;
+}
+
+.modal-content .title.is-4 {
+  font-family: var(--font-heading) !important;
+  font-size: 1.7rem !important;
+  color: var(--c-text-main) !important;
+  margin-bottom: 1.25rem !important;
+}
+
+/* Inputs dentro de modales */
+.modal-content .input,
+.modal-content .select select,
+.modal-content .textarea {
+  background: var(--c-surface-soft) !important;
+  border: 1px solid var(--c-border) !important;
+  border-radius: var(--radius-sm) !important;
+  color: var(--c-text-main) !important;
+  box-shadow: none !important;
+  font-family: var(--font-body);
+  font-size: 14px;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.modal-content .input:focus,
+.modal-content .select select:focus {
+  border-color: var(--c-primary) !important;
+  box-shadow: 0 0 0 3px rgba(181, 149, 106, 0.12) !important;
+}
+
+.modal-content .label {
+  font-family: var(--font-body);
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  color: var(--c-text-muted);
+  margin-bottom: 6px !important;
+}
+
+/* Contenedor de promociones/eventos dentro del modal */
+.modal-content #contenedor-promociones,
+.modal-content #contenedor-eventos,
+.modal-content #contenedor-promociones-nuevo,
+.modal-content #contenedor-eventos-nuevo {
+  background: var(--c-surface-soft) !important;
+  border: 1px solid var(--c-border) !important;
+  border-radius: var(--radius-sm) !important;
+  padding: 12px !important;
+  max-height: 150px;
+  overflow-y: auto;
+  box-shadow: none !important;
+}
+
+/* Scrollbar sutil */
+.modal-content #contenedor-promociones::-webkit-scrollbar,
+.modal-content #contenedor-eventos::-webkit-scrollbar,
+.modal-content #contenedor-promociones-nuevo::-webkit-scrollbar,
+.modal-content #contenedor-eventos-nuevo::-webkit-scrollbar {
+  width: 4px;
+}
+
+.modal-content #contenedor-promociones::-webkit-scrollbar-thumb,
+.modal-content #contenedor-eventos::-webkit-scrollbar-thumb,
+.modal-content #contenedor-promociones-nuevo::-webkit-scrollbar-thumb,
+.modal-content #contenedor-eventos-nuevo::-webkit-scrollbar-thumb {
+  background: var(--c-border-focus);
+  border-radius: 4px;
+}
+
+/* Botones del modal */
+.modal-content .buttons {
+  margin-top: 1.5rem;
+  gap: 10px;
+}
+
+.modal-content .button {
+  border-radius: var(--radius-pill) !important;
+  font-family: var(--font-body);
+  font-size: 13px !important;
+  font-weight: 500 !important;
+  letter-spacing: 0.5px;
+  height: 40px !important;
+  transition: all 0.2s ease;
+}
+
+.modal-content .button:not(.is-primary):not(.is-danger) {
+  background: var(--c-surface-soft) !important;
+  border: 1px solid var(--c-border) !important;
+  color: var(--c-text-soft) !important;
+}
+
+.modal-content .button:not(.is-primary):not(.is-danger):hover {
+  background: var(--c-primary-bg) !important;
+  border-color: var(--c-primary-light) !important;
+  color: var(--c-primary-deep) !important;
+}
+
+/* ── MODAL ERROR / ÉXITO / ELIMINAR ── */
+#ModalError .box,
+#ModalEliminar .box,
+#modal-exito .box {
+  padding: 2.5rem 2rem !important;
+}
+
+#ModalError .title.is-4,
+#modal-exito .title.is-4 {
+  font-family: var(--font-heading) !important;
+  font-size: 1.6rem !important;
+  margin-top: 0.5rem !important;
+}
+
+#ModalError #errorMensaje,
+#ModalEliminar p {
+  font-size: 14px;
+  color: var(--c-text-muted);
+  margin-bottom: 1.5rem;
+  line-height: 1.6;
+}
+
+.button.is-danger {
+  background: var(--c-danger) !important;
+  border-color: var(--c-danger) !important;
+  color: #fff !important;
+  border-radius: var(--radius-pill) !important;
+  font-weight: 500 !important;
+}
+
+.button.is-danger:hover {
+  background: var(--c-danger-deep) !important;
+  border-color: var(--c-danger-deep) !important;
+}
+
+/* ── HELP TEXT ── */
+.help.has-text-info {
+  color: var(--c-primary) !important;
+  font-size: 12px;
+}
+
+/* ── RESPONSIVE ── */
+@media (max-width: 768px) {
+  .back-link {
+    margin-bottom: 24px;
+  }
+
+  .title::after {
+    width: 32px;
+  }
+
+  #royaltyContainer {
+    grid-template-columns: 1fr;
+  }
+
+  .royalty-card {
+    padding: 22px 18px 16px;
+  }
+}
+
+.title + .button,
+.title ~ .button {
+  margin-top: 1rem;
+}

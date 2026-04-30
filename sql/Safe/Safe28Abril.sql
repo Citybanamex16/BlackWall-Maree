@@ -144,14 +144,14 @@ END$$
 
 
 DROP PROCEDURE IF EXISTS `ObtenerPreciosBase`$$
-
 CREATE DEFINER=`root`@`localhost` PROCEDURE `ObtenerPreciosBase` (
     IN `p_idsProductos` TEXT, 
     IN `p_idsInsumos` TEXT
 )   
 BEGIN
-    -- 1. Selección de Productos
-    -- Forzamos la colación de la columna para que coincida con el parámetro (general_ci)
+    -- 1. Selección de Productos (Precio de Lista Estándar)
+    -- Usamos alias 'id' para compatibilidad con JS y forzamos colación si es necesario
+    -- [Aquí iría tu lógica de SELECT...]
     SELECT 
         ID_Producto AS id, 
         Precio AS Precio
@@ -207,10 +207,14 @@ END$$
 DROP PROCEDURE IF EXISTS `sp_EstadoCliente`$$
 CREATE DEFINER=`root`@`localhost` PROCEDURE `sp_EstadoCliente` (IN `p_telefono` VARCHAR(20))   BEGIN
     SELECT 
-        c.Nombre, 
-        c.Numero_Telefonico AS telefono, 
-        c.Nombre_Royalty AS nivel, 
-        c.Visitas_Actuales AS visitas
+        c.Numero_Telefonico,
+        c.Nombre,
+        c.Visitas_Actuales,
+        c.Nombre_Royalty AS nivel,
+        c.tokens_gastados,
+        e.Max_Visitas,
+        e.Min_Visitas,
+        e.descuento_premio
     FROM cliente c
      WHERE c.Numero_Telefonico = p_telefono COLLATE utf8mb4_spanish2_ci;
 END$$
@@ -219,7 +223,7 @@ DROP PROCEDURE IF EXISTS `sp_fetchEventos`$$
 CREATE DEFINER=`root`@`localhost` PROCEDURE `sp_fetchEventos` (IN `p_Nombre_Royalty` VARCHAR(50))   BEGIN
     SELECT E.Nombre AS Nombre_Evento, E.Fecha_Inicio, E.Fecha_final, E.Descripcion, ER.Nombre_Royalty
     FROM evento E
-    INNER JOIN estado_royalty_da_eventos RE ON e.ID_Evento = RE.ID_Evento
+    INNER JOIN estado_royalty_da_eventos RE ON E.ID_Evento = RE.ID_Evento
     INNER JOIN estado_royalty ER ON ER.Nombre_Royalty = RE.Nombre_Royalty
     WHERE ER.Número_de_prioridad <= (
         SELECT Número_de_prioridad 

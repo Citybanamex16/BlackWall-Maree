@@ -1,35 +1,44 @@
--- Ya es el último parche que pongo, en este caso es sumar un dato al cliente para registrar sus premios y una tabla de historial de precios
+services:
+  app:
+    build: .
+    image: app
+    container_name: app
+    restart: unless-stopped
+    ports:
+      - "3005:3005"
+    depends_on:
+      - mariadb  # <--- ¡OJO AQUÍ! Asegúrate que se llame 'mariadb' o 'db' según tu servicio
+    environment:
+      DB_HOST: mariadb
+      DB_USER: root
+      DB_PASSWORD: ""
+      DB_NAME: mareebd
 
-ALTER TABLE cliente ADD COLUMN tokens_gastados INT DEFAULT 0;
-ALTER TABLE cliente ADD COLUMN username VARCHAR(20);
 
--- Historial de canjes de premios
-CREATE TABLE historial_canjes_royalty (
-    ID_canje INT AUTO_INCREMENT PRIMARY KEY,
-    Numero_Telefonico VARCHAR(20),
-    ID_Promocion VARCHAR(20),
-    Fecha_canje DATETIME DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (Numero_Telefonico) REFERENCES cliente(Numero_Telefonico),
-    FOREIGN KEY (ID_Promocion) REFERENCES promocion(ID_Promocion)
-);
+  caddy:
+    image: caddy:2
+    container_name: caddy
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile
+    depends_on:
+      - app
 
--- Actualizacion de trigger (no se si estaba en otro parche)
-DROP TRIGGER IF EXISTS actualizar_nivel_por_visitas;
+  mariadb:
+    image: mariadb:11
+    container_name: mariadb
+    restart: unless-stopped
+    environment:
+      MARIADB_ALLOW_EMPTY_ROOT_PASSWORD: true
+      MARIADB_ROOT_PASSWORD: ""
+      MARIADB_DATABASE: mareebd
+    volumes:
+      - db_data:/var/lib/mysql
+      - ./sql/SQLs/MegaStackerCuadrupleBurgerUbuntu.sql:/docker-entrypoint-initdb.d/init.sql
+volumes:
+  db_data:
 
-DELIMITER $$
 
-CREATE TRIGGER actualizar_nivel_por_visitas
-BEFORE UPDATE ON cliente
-FOR EACH ROW
-BEGIN
-    IF OLD.Visitas_Actuales <> NEW.Visitas_Actuales THEN
-        SET NEW.Nombre_Royalty = (
-            SELECT Nombre_Royalty
-            FROM estado_royalty
-            WHERE NEW.Visitas_Actuales BETWEEN Min_Visitas AND Max_Visitas
-            LIMIT 1
-        );
-    END IF;
-END$$
-
-DELIMITER ;

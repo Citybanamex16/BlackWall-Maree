@@ -1,12 +1,13 @@
 const db = require('../util/database.js')
 
 module.exports = class Royalty {
-  constructor (nombre, numeroPrioridad, descripcion, maxVisitas, minVisitas) {
+  constructor (nombre, numeroPrioridad, descripcion, maxVisitas, minVisitas, descuento_premio) {
     this.Nombre_Royalty = nombre
     this.Número_de_prioridad = numeroPrioridad
     this.Descripción = descripcion
     this.Max_Visitas = maxVisitas
     this.Min_Visitas = minVisitas
+    this.descuento_premio = descuento_premio
   }
 
   // Admin
@@ -17,8 +18,14 @@ module.exports = class Royalty {
 
   // Obtenemos las promociones
   static fetchTodasPromociones () {
-    return db.execute('SELECT ID_promocion, Nombre FROM promocion')
-  }
+  return db.execute(`
+    SELECT p.ID_promocion, p.Nombre 
+    FROM promocion p
+    WHERE p.ID_promocion NOT IN (
+      SELECT ID_Promocion FROM evento_contiene_promocion
+    )
+  `)
+}
 
   // Obtenemos los eventos
   static fetchTodosEventos () {
@@ -27,8 +34,8 @@ module.exports = class Royalty {
 
   save () {
     return db.execute(
-      'INSERT INTO estado_royalty (Nombre_Royalty, Número_de_prioridad, Descripción, Min_Visitas, Max_Visitas) VALUES (?,?,?,?,?)',
-      [this.Nombre_Royalty, this.Número_de_prioridad, this.Descripción, this.Min_Visitas, this.Max_Visitas]
+      'INSERT INTO estado_royalty (Nombre_Royalty, Número_de_prioridad, Descripción, Min_Visitas, Max_Visitas, descuento_premio) VALUES (?,?,?,?,?,?)',
+      [this.Nombre_Royalty, this.Número_de_prioridad, this.Descripción, this.Min_Visitas, this.Max_Visitas, this.descuento_premio]
     )
   }
 
@@ -56,7 +63,7 @@ module.exports = class Royalty {
   }
 
   // Actualizaión de estado royalty
-  static async updateEstadoRoyalty (nombreOriginal, nombreNuevo, prioridad, descripcion, minVisitas, maxVisitas) {
+  static async updateEstadoRoyalty (nombreOriginal, nombreNuevo, prioridad, descripcion, minVisitas, maxVisitas, descuento_premio) {
   // Desactivar llaves foraneas
     await db.execute('SET FOREIGN_KEY_CHECKS = 0')
 
@@ -72,9 +79,9 @@ module.exports = class Royalty {
     // Actualizar la tabla de estado royalty
     await db.execute(
     `UPDATE estado_royalty
-     SET Nombre_Royalty = ?, Número_de_prioridad = ?, Descripción = ?, Min_Visitas = ?, Max_Visitas = ?
+     SET Nombre_Royalty = ?, Número_de_prioridad = ?, Descripción = ?, Min_Visitas = ?, Max_Visitas = ?, descuento_premio = ?
      WHERE Nombre_Royalty = ?`,
-    [nombreNuevo, prioridad, descripcion, minVisitas, maxVisitas, nombreOriginal]
+    [nombreNuevo, prioridad, descripcion, minVisitas, maxVisitas, nombreOriginal, descuento_premio]
     )
 
     // Reactiva llaves foráneas
@@ -114,13 +121,16 @@ module.exports = class Royalty {
 
   // Obtenemos las promociones de cada royalty
   static async fetchPromociones_royalties (nombre) {
-    return db.execute(
-    `SELECT p.ID_promocion, p.Nombre FROM promocion p 
-     INNER JOIN estado_royalty_da_promociones erp ON p.ID_promocion = erp.ID_Promocion 
-     WHERE erp.Nombre_Royalty = ?`,
-    [nombre]
+  return db.execute(`
+    SELECT p.ID_promocion, p.Nombre 
+    FROM promocion p
+    INNER JOIN estado_royalty_da_promociones erp ON p.ID_promocion = erp.ID_Promocion
+    WHERE erp.Nombre_Royalty = ?
+    AND p.ID_promocion NOT IN (
+      SELECT ID_Promocion FROM evento_contiene_promocion
     )
-  }
+  `, [nombre])
+}
 
   static async fetchEventos_royalty (nombre) {
     return db.execute(
@@ -145,7 +155,7 @@ module.exports = class Royalty {
         WHERE Numero_Telefonico = ?`, [telefono])
   }
 
-  static async registrarCanje (telefono, idPromocion) {
+  static async registrarCanje (telefono, Royalty) {
     const connection = await db.getConnection()
     try {
       await connection.beginTransaction()
@@ -156,8 +166,8 @@ module.exports = class Royalty {
       )
 
       await connection.execute(
-        'INSERT INTO historial_canjes_royalty (Numero_Telefonico, ID_Promocion) VALUES (?, ?)',
-        [telefono, idPromocion]
+        'INSERT INTO historial_canjes_royalty (Numero_Telefonico, Nombre_Royalty) VALUES (?, ?)',
+        [telefono, Royalty]
       )
 
       await connection.commit()

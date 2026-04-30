@@ -3,12 +3,25 @@ const Royalty = require('../models/royalty.model.js')
 
 const CREMA_BATIDA_INGREDIENT_ID = 'INCRMBT001'
 
-function permiteCremaBatidaPorNombre (nombreProducto) {
-  return !String(nombreProducto || '').toLowerCase().includes('chamoyada')
+async function tableHasColumn (tableName, columnName) {
+  const [rows] = await db.execute(
+    `SELECT COUNT(*) AS total
+     FROM information_schema.COLUMNS
+     WHERE TABLE_SCHEMA = DATABASE()
+       AND TABLE_NAME = ?
+       AND COLUMN_NAME = ?`,
+    [tableName, columnName]
+  )
+
+  return Number(rows[0]?.total || 0) > 0
 }
 
 module.exports = class Pedido {
-  static fetchOrders () {
+  static async fetchOrders () {
+    const hasDescripcion = await tableHasColumn('orden', 'Descripcion')
+    const descripcionSelect = hasDescripcion
+      ? 'o.Descripcion AS descripcion'
+      : 'NULL AS descripcion'
     const query = `
       SELECT
         o.ID_Orden AS id_orden,
@@ -18,7 +31,7 @@ module.exports = class Pedido {
         o.Estado_Orden AS estado_orden,
         o.Fecha AS fecha,
         o.Direccion AS direccion,
-        o.Descripcion AS descripcion
+        ${descripcionSelect}
       FROM orden o
       LEFT JOIN cliente c
         ON o.Numero_Telefonico = c.Numero_Telefonico
@@ -28,7 +41,11 @@ module.exports = class Pedido {
     return db.execute(query)
   }
 
-  static fetchPendingOrders () {
+  static async fetchPendingOrders () {
+    const hasDescripcion = await tableHasColumn('orden', 'Descripcion')
+    const descripcionSelect = hasDescripcion
+      ? 'o.Descripcion AS descripcion'
+      : 'NULL AS descripcion'
     const query = `
       SELECT
         o.ID_Orden AS id_orden,
@@ -38,7 +55,7 @@ module.exports = class Pedido {
         o.Estado_Orden AS estado_orden,
         o.Fecha AS fecha,
         o.Direccion AS direccion,
-        o.Descripcion AS descripcion
+        ${descripcionSelect}
       FROM orden o
       LEFT JOIN cliente c
         ON o.Numero_Telefonico = c.Numero_Telefonico
@@ -57,14 +74,18 @@ module.exports = class Pedido {
     )
   }
 
-  static fetchOne (idOrden) {
+  static async fetchOne (idOrden) {
+    const hasDescripcion = await tableHasColumn('orden', 'Descripcion')
+    const descripcionSelect = hasDescripcion
+      ? 'o.Descripcion AS descripcion,'
+      : 'NULL AS descripcion,'
     const query = `
       SELECT
         o.ID_Orden AS id_orden,
         c.Nombre AS nombre_cliente,
         o.Numero_Telefonico AS telefono,
         o.Tipo_Orden AS tipo_orden,
-        o.Descripcion AS descripcion,
+        ${descripcionSelect}
         o.Estado_Orden AS estado_orden,
         o.Fecha AS fecha
       FROM orden o
@@ -171,42 +192,81 @@ module.exports = class Pedido {
 
     if (idsProductos.length > 0) {
       try {
-        [productoMetaRows] = await db.execute(
+        const result = await db.execute(
           `SELECT
             p.ID_Producto AS id,
-            p.Nombre AS nombre,
-            c.Permite_Crema_Batida AS permiteCremaBatida
+            p.Permite_Crema_Batida AS permiteCremaBatida,
+            p.Permite_Modificar_Ingredientes AS permiteModificarIngredientes
           FROM producto p
-          LEFT JOIN categoría c ON p.Categoría = c.Nombre
           WHERE p.ID_Producto IN (${idsProductos.map(() => '?').join(',')})`,
           idsProductos
         )
+        productoMetaRows = result[0]
       } catch (error) {
         if (error.code !== 'ER_BAD_FIELD_ERROR') throw error
+
+        try {
+          const fallbackResult = await db.execute(
+            `SELECT
+              p.ID_Producto AS id,
+              c.Permite_Crema_Batida AS permiteCremaBatida,
+              1 AS permiteModificarIngredientes
+            FROM producto p
+            LEFT JOIN categoría c ON p.Categoría = c.Nombre
+            WHERE p.ID_Producto IN (${idsProductos.map(() => '?').join(',')})`,
+            idsProductos
+          )
+          productoMetaRows = fallbackResult[0]
+        } catch (categoryFallbackError) {
+          if (categoryFallbackError.code !== 'ER_BAD_FIELD_ERROR') throw categoryFallbackError
+
+          productoMetaRows = idsProductos.map(id => ({
+            id,
+            permiteCremaBatida: 0,
+            permiteModificarIngredientes: 1
+          }))
+        }
       }
     }
+
+    const [ingredientesBaseRows] = idsProductos.length > 0
+      ? await db.execute(
+          `SELECT ID_Producto AS idProducto, ID_Insumo AS idInsumo
+           FROM producto_tiene_insumo
+           WHERE ID_Producto IN (${idsProductos.map(() => '?').join(',')})`,
+          idsProductos
+        )
+      : [[]]
 
     const lista = { productos: {}, insumos: {}, productoMeta: {} };
     resultSets[0].forEach(p => lista.productos[p.id] = parseFloat(p.Precio));
     resultSets[1].forEach(i => lista.insumos[i.id] = parseFloat(i.Precio));
     productoMetaRows.forEach(p => {
       lista.productoMeta[p.id] = {
-        permiteCremaBatida:
-          (p.permiteCremaBatida === 1 || p.permiteCremaBatida === '1') &&
-          permiteCremaBatidaPorNombre(p.nombre)
+        permiteCremaBatida: p.permiteCremaBatida === 1 || p.permiteCremaBatida === '1',
+        permiteModificarIngredientes: p.permiteModificarIngredientes === 1 || p.permiteModificarIngredientes === '1',
+        ingredientesBaseIds: []
       };
     });
+    ingredientesBaseRows.forEach(ing => {
+      if (!lista.productoMeta[ing.idProducto]) {
+        lista.productoMeta[ing.idProducto] = {
+          permiteCremaBatida: false,
+          permiteModificarIngredientes: true,
+          ingredientesBaseIds: []
+        }
+      }
+      lista.productoMeta[ing.idProducto].ingredientesBaseIds.push(ing.idInsumo)
+    })
 
     console.log(`📥 [LISTA ORO] Cargados ${Object.keys(lista.productos).length} productos y ${Object.keys(lista.insumos).length} insumos.`)
     return lista
   }
 
-
-
   /**
  * El "Cerebro" que aplica la matemática final item por item.
  */
-  static calcularPrecioRealItem (item, listaOro, compendio) {
+  static calcularPrecioRealItem (item, listaOro, compendio, descuentoRoyalty = 0) {
     let acumulado = 0
     const nombreItem = item.nombre || item.producto_base || item.id
 
@@ -253,7 +313,11 @@ module.exports = class Pedido {
     console.log(`   💰 Precio Base Unitario: $${precioBase}`)
 
     // 2. Aplicar Promoción del Compendio
-    if (compendio[item.id]) {
+    if (item.premioAplicado){
+      const descuentoEfectivo = precioBase * descuentoRoyalty
+      precioBase = precioBase - descuentoEfectivo
+      console.log(`   🏆 [PREMIO ROYALTY] Aplicando descuento de recompensa: ${descuentoRoyalty * 100}% (-$${descuentoEfectivo.toFixed(2)})`)
+    } else if (compendio[item.id]) {
       const promo = compendio[item.id]
       const descuentoEfectivo = precioBase * promo.descuento
       precioBase = precioBase - descuentoEfectivo
@@ -270,6 +334,11 @@ module.exports = class Pedido {
     const insumos = [...(item.ingredientes_adentro || []), ...(item.ingredientes_toppings || [])]
     const cremaBatidaCount = insumos.filter(ins => ins.id_insumo === CREMA_BATIDA_INGREDIENT_ID).length
     const permiteCremaBatida = Boolean(listaOro.productoMeta[item.id]?.permiteCremaBatida)
+    const permiteModificarIngredientes = listaOro.productoMeta[item.id]?.permiteModificarIngredientes !== false
+    const ingredientesBaseEsperados = [...new Set(listaOro.productoMeta[item.id]?.ingredientesBaseIds || [])].sort()
+    const ingredientesBaseRecibidos = [...new Set((item.ingredientes_base || []).map(ins => ins.id_insumo))].sort()
+    const ingredientesExtraRecibidos = item.ingredientes_adentro || []
+    const ingredientesQuitadosRecibidos = item.ingredientes_eliminados || []
 
     if (cremaBatidaCount > 1) {
       const error = new Error('No se puede agregar crema batida más de una vez por producto.')
@@ -283,15 +352,28 @@ module.exports = class Pedido {
       throw error
     }
 
+    if (!permiteModificarIngredientes) {
+      const intentoModificarIngredientes = ingredientesExtraRecibidos.length > 0 ||
+        ingredientesQuitadosRecibidos.length > 0 ||
+        JSON.stringify(ingredientesBaseRecibidos) !== JSON.stringify(ingredientesBaseEsperados)
+
+      if (intentoModificarIngredientes) {
+        const error = new Error(`El producto ${nombreItem} no permite modificar sus ingredientes.`)
+        error.code = 'INVALID_ITEM_CONFIGURATION'
+        throw error
+      }
+    }
+
     if (insumos.length > 0) {
-      console.log(`   ➕ Sumando ${insumos.length} insumos a precio de lista...`)
-      insumos.forEach(ins => {
-        const pInsumo = (listaOro.insumos[ins.id_insumo] || 0)
-        if (pInsumo > 0) {
-          console.log(`      • ${ins.nombre || ins.id_insumo}: $${pInsumo}`)
-        }
-        acumulado += pInsumo
-      })
+        console.log(`   ➕ Sumando ${insumos.length} insumos a precio de lista...`);
+        insumos.forEach(ins => {
+            const pInsumo = (listaOro.insumos[ins.id_insumo] || 0);
+            if (pInsumo > 0) {
+                // Intenta usar el nombre para el log, si no tiene, usa el ID
+                console.log(`      • ${ins.nombre || ins.id_insumo}: $${pInsumo}`);
+            }
+            acumulado += pInsumo;
+        });
     }
 
     console.log(`   ✅ [TOTAL ITEM] $${acumulado.toFixed(2)}`)
@@ -301,12 +383,20 @@ module.exports = class Pedido {
   static async guardarOrden (telefono, tipoOrden, nombreCliente, direccion = null, descripcion = null) {
     const idOrden = Pedido.generarID()
     const idTurnoFijo = 'TN26496107'
+    const hasDescripcion = await tableHasColumn('orden', 'Descripcion')
+    const columns = ['ID_Orden', 'ID_Turno', 'Numero_Telefonico', 'Tipo_Orden', 'Nombre_cliente', 'Estado_Orden', 'Direccion']
+    const values = [idOrden, idTurnoFijo, telefono, tipoOrden, nombreCliente, 'Pendiente', direccion]
+
+    if (hasDescripcion) {
+      columns.push('Descripcion')
+      values.push(descripcion)
+    }
 
     await db.execute(
       `INSERT INTO orden
-      (ID_Orden, ID_Turno, Numero_Telefonico, Tipo_Orden, Nombre_cliente, Estado_Orden, Direccion, Descripcion)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-      [idOrden, idTurnoFijo, telefono, tipoOrden, nombreCliente, 'Pendiente', direccion, descripcion]
+      (${columns.join(', ')})
+      VALUES (${columns.map(() => '?').join(', ')})`,
+      values
     )
 
     return idOrden

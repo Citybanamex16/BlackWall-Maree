@@ -6,6 +6,7 @@ class Cliente {
       SELECT
         c.Numero_Telefonico AS telefono,
         c.Nombre AS nombre_cliente,
+        c.usrename AS username_cliente,
         c.Correo AS correo,
         c.Nombre_Royalty AS nombre_royalty
       FROM orden o
@@ -22,6 +23,7 @@ class Cliente {
       SELECT
         Numero_Telefonico AS numero_telefonico,
         Nombre AS nombre,
+        username AS username,
         Correo AS correo,
         Genero AS genero,
         Fecha_Nacimiento AS fecha_nacimiento
