@@ -309,11 +309,40 @@ async function generarLinkWallet (telefono, nombreCliente, nombreRoyalty, puntos
   await crearLoyaltyClass(nombreRoyalty, maxPuntos)
   await crearLoyaltyObject(telefono, nombreCliente, nombreRoyalty, puntosActuales, maxPuntos)
   const objectId = `${ISSUER_ID}.cliente_${limpiarTelefono(telefono)}`
+  const classId = getClassId(nombreRoyalty)
+  // Construir el objeto completo para el JWT
+  const loyaltyObject = {
+    id: objectId,
+    classId,
+    state: 'ACTIVE',
+    accountName: nombreRoyalty,
+    barcode: {
+      type: 'QR_CODE',
+      value: String(telefono),
+      alternateText: nombreCliente
+    },
+    loyaltyPoints: {
+      balance: { int: puntosActuales ?? 0 },
+      label: 'Visitas'
+    },
+    secondaryLoyaltyPoints: {
+      balance: { int: maxPuntos ?? 0 },
+      label: 'Meta de visitas'
+    },
+    textModulesData: [
+      {
+        id: 'nivel',
+        header: 'Nivel Actual',
+        body: nombreRoyalty || 'Sin nivel'
+      }
+    ]
+  }
+
   const claims = {
     iss: credentials.client_email, // se obtienen el email del cliente del JSON
     aud: 'google',
-    origins: ['http://localhost:3005', 'https://manicure-starless-spending.ngrok-free.dev'], // dominio del sitio web
     typ: 'savetowallet',
+    iat: Math.floor(Date.now() / 1000),
     payload: {
       loyaltyObjects: [{ id: objectId }]
     }
@@ -326,7 +355,6 @@ async function generarLinkWallet (telefono, nombreCliente, nombreRoyalty, puntos
 
   const token = jwt.sign(claims, credentials.private_key, {
     algorithm: 'RS256',
-    expiresIn: '1h'
   })
   await auth.getClient()
   return `https://pay.google.com/gp/v/save/${token}`
