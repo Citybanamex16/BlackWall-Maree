@@ -1,12 +1,3 @@
--- =============================================================================
--- DUMP SANITIZADO - MegaStackerCuadrupleBurger
--- Cambios aplicados para reducir riesgos de seguridad:
---   1. Contraseñas en texto plano → [REDACTED]  (usar hashes bcrypt/argon2 en prod)
---   2. Correos electrónicos reales → [email_redacted]
---   3. DEFINER=`root`@... eliminado de procedimientos/triggers
---   4. Revisar y eliminar datos de prueba antes de despliegue en producción
--- =============================================================================
-
 -- phpMyAdmin SQL Dump
 -- version 5.2.1
 -- https://www.phpmyadmin.net/
@@ -35,309 +26,6 @@ DELIMITER $$
 -- Procedimientos
 --
 DROP PROCEDURE IF EXISTS `ActualizarCategoria`$$
-<<<<<<<< HEAD:sql/SQLs/MegaStackerCuadrupleBurgerUbuntu.sql
-CREATE PROCEDURE `ActualizarCategoria` (IN `oldNombre` VARCHAR(50) CHARSET utf8mb4 COLLATE utf8mb4_spanish2_ci, IN `newNombre` VARCHAR(50) CHARSET utf8mb4 COLLATE utf8mb4_spanish2_ci)   BEGIN
-    DECLARE EXIT HANDLER FOR SQLEXCEPTION
-    BEGIN
-        SET FOREIGN_KEY_CHECKS = 1;
-        ROLLBACK;
-        RESIGNAL;
-    END;
-
-    START TRANSACTION;
-        SET FOREIGN_KEY_CHECKS = 0;
-        UPDATE `categoría`        SET Nombre          = newNombre WHERE Nombre          = oldNombre;
-        UPDATE `insumo`           SET `Categoría`     = newNombre WHERE `Categoría`     = oldNombre;
-        UPDATE `insumo_categoria` SET `Nom_Categoria` = newNombre WHERE `Nom_Categoria` = oldNombre;
-        UPDATE `producto`         SET `Categoría`     = newNombre WHERE `Categoría`     = oldNombre;
-        SET FOREIGN_KEY_CHECKS = 1;
-    COMMIT;
-END$$
-
-DROP PROCEDURE IF EXISTS `ActualizarIngrediente`$$
-CREATE PROCEDURE `ActualizarIngrediente` (IN `p_idInsumo` VARCHAR(10) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish2_ci, IN `p_nombre` VARCHAR(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish2_ci, IN `p_categoria` VARCHAR(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish2_ci, IN `p_precio` DECIMAL(10,2), IN `p_activo` TINYINT(1), IN `p_imagen` TEXT CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish2_ci)   BEGIN
-    DECLARE v_error_msg VARCHAR(500);
-    DECLARE EXIT HANDLER FOR SQLEXCEPTION
-    BEGIN
-        GET DIAGNOSTICS CONDITION 1 v_error_msg = MESSAGE_TEXT;
-        ROLLBACK;
-        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = v_error_msg;
-    END;
-
-    START TRANSACTION;
-        UPDATE insumo
-        SET Nombre = p_nombre,
-            `Categoría` = p_categoria,
-            Precio = p_precio,
-            Activo = p_activo,
-            Imagen = p_imagen
-        WHERE ID_Insumo = p_idInsumo;
-    COMMIT;
-END$$
-
-DROP PROCEDURE IF EXISTS `ActualizarTipo`$$
-CREATE PROCEDURE `ActualizarTipo` (IN `oldNombre` VARCHAR(50) CHARSET utf8mb4 COLLATE utf8mb4_spanish2_ci, IN `newNombre` VARCHAR(50) CHARSET utf8mb4 COLLATE utf8mb4_spanish2_ci)   BEGIN
-    DECLARE EXIT HANDLER FOR SQLEXCEPTION
-    BEGIN
-        SET FOREIGN_KEY_CHECKS = 1;
-        ROLLBACK;
-        RESIGNAL;
-    END;
-
-    START TRANSACTION;
-        SET FOREIGN_KEY_CHECKS = 0;
-        UPDATE `tipos` SET nombre = newNombre WHERE nombre = oldNombre;
-        UPDATE `producto` SET `Tipo` = newNombre WHERE `Tipo` = oldNombre;
-        SET FOREIGN_KEY_CHECKS = 1;
-    COMMIT;
-END$$
-
-DROP PROCEDURE IF EXISTS `EliminarIngrediente`$$
-CREATE PROCEDURE `EliminarIngrediente` (IN `p_idInsumo` VARCHAR(10) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish2_ci)   BEGIN
-    DECLARE v_error_msg VARCHAR(500);
-    DECLARE EXIT HANDLER FOR SQLEXCEPTION
-    BEGIN
-        GET DIAGNOSTICS CONDITION 1 v_error_msg = MESSAGE_TEXT;
-        ROLLBACK;
-        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = v_error_msg;
-    END;
-
-    START TRANSACTION;
-        DELETE FROM insumo_categoria     WHERE ID_Insumo = p_idInsumo;
-        DELETE FROM producto_tiene_insumo WHERE ID_Insumo = p_idInsumo;
-        DELETE FROM insumo               WHERE ID_Insumo = p_idInsumo;
-    COMMIT;
-END$$
-
-DROP PROCEDURE IF EXISTS `eliminarProducto`$$
-CREATE PROCEDURE `eliminarProducto` (IN `idProducto` VARCHAR(12) CHARSET utf8mb4)  DETERMINISTIC BEGIN
-
-
-    DECLARE code_sql CHAR(5) DEFAULT '00000';
-    DECLARE msg_text TEXT;
-
-  
-    DECLARE EXIT HANDLER FOR SQLEXCEPTION 
-    BEGIN
-        
-        GET DIAGNOSTICS CONDITION 1 
-            code_sql = RETURNED_SQLSTATE, msg_text = MESSAGE_TEXT;
-        
-    
-        ROLLBACK;
-       
-        SELECT code_sql AS SQL_State, msg_text AS Error_Mensaje;
-    END;
-
-    START TRANSACTION;
-
-        DELETE FROM producto_tiene_insumo 
-        WHERE ID_Producto = idProducto COLLATE utf8mb4_spanish2_ci;
-        
-        DELETE FROM orden_tiene_producto
-        WHERE ID_Producto = idProducto COLLATE utf8mb4_spanish2_ci;
-        
-        DELETE FROM producto_pertenece_evento
-        WHERE ID_Producto = idProducto COLLATE utf8mb4_spanish2_ci;
-        
-        DELETE FROM producto_tiene_promocion
-        WHERE ID_Producto = idProducto COLLATE utf8mb4_spanish2_ci;
-
-        DELETE FROM producto 
-        WHERE ID_Producto = idProducto COLLATE utf8mb4_spanish2_ci;
-
-    COMMIT;
-    SELECT 'Éxito' AS Estado, 'Producto eliminado correctamente' AS Error_Mensaje;
-END$$
-
-DROP PROCEDURE IF EXISTS `ObtenerPreciosBase`$$
-CREATE PROCEDURE `ObtenerPreciosBase` (IN `p_idsProductos` TEXT, IN `p_idsInsumos` TEXT)   BEGIN
-    -- 1. Selección de Productos
-    -- Forzamos la colación de la columna para que coincida con el parámetro (general_ci)
-    SELECT 
-        ID_Producto AS id, 
-        Precio AS Precio
-    FROM producto 
-    WHERE FIND_IN_SET(ID_Producto COLLATE utf8mb4_general_ci, p_idsProductos);
-
-    -- 2. Selección de Insumos
-    SELECT 
-        ID_Insumo AS id, 
-        Precio AS Precio 
-    FROM insumo 
-    WHERE FIND_IN_SET(ID_Insumo COLLATE utf8mb4_general_ci, p_idsInsumos);
-END$$
-
-DROP PROCEDURE IF EXISTS `obtener_promociones_por_tipo`$$
-CREATE PROCEDURE `obtener_promociones_por_tipo` (IN `tipo_promo` VARCHAR(2))   BEGIN 
-    -- Lógica de Jerarquía EFRL (Event First, Royalty Last) 
-    IF tipo_promo = 'PE' THEN 
-        -- 1. EVENTO: Devuelve 5 columnas
-        SELECT p.ID_Producto, p.Nombre AS Producto, promo.Nombre AS Plantilla_Promo, 
-        promo.Descuento, 'Evento' AS Origen 
-        FROM evento_contiene_promocion ecp 
-        JOIN producto_tiene_promocion ptp ON ecp.ID_Promocion = ptp.ID_Promocion 
-        JOIN producto p ON ptp.ID_Producto = p.ID_Producto 
-        JOIN promocion promo ON ptp.ID_Promocion = promo.ID_Promocion; 
-
-    ELSEIF tipo_promo = 'PU' THEN 
-        -- 2. ÚNICA: Devuelve 5 columnas
-        SELECT p.ID_Producto, p.Nombre AS Producto, promo.Nombre AS Plantilla_Promo, 
-        promo.Descuento, 'Única' AS Origen 
-        FROM producto_tiene_promocion ptp 
-        JOIN producto p ON p.ID_Producto = ptp.ID_Producto 
-        JOIN promocion promo ON promo.ID_Promocion = ptp.ID_Promocion 
-        WHERE ptp.ID_Promocion NOT IN (SELECT ID_Promocion FROM evento_contiene_promocion) 
-        AND ptp.ID_Promocion NOT IN (SELECT ID_Promocion FROM estado_royalty_da_promociones); 
-
-    ELSEIF tipo_promo = 'PR' THEN 
-        -- 3. ROYALTY: Devuelve 6 columnas (incluyendo Nombre_Royalty)
-        SELECT p.ID_Producto, p.Nombre AS Producto, promo.Nombre AS Plantilla_Promo, 
-        promo.Descuento, erp.Nombre_Royalty, 'Royalty' AS Origen 
-        FROM estado_royalty_da_promociones erp 
-        JOIN producto_tiene_promocion ptp ON erp.ID_Promocion = ptp.ID_Promocion 
-        JOIN producto p ON ptp.ID_Producto = p.ID_Producto 
-        JOIN promocion promo ON ptp.ID_Promocion = promo.ID_Promocion 
-        WHERE erp.ID_Promocion NOT IN (SELECT ID_Promocion FROM evento_contiene_promocion); 
-
-    ELSE 
-        SELECT 'Error: El parámetro debe ser PU, PE o PR' AS Mensaje; 
-    END IF; 
-END$$
-
-DROP PROCEDURE IF EXISTS `sp_EstadoCliente`$$
-CREATE PROCEDURE `sp_EstadoCliente` (IN `p_telefono` VARCHAR(20))   BEGIN
-    SELECT 
-        c.Nombre, 
-        c.Numero_Telefonico AS telefono, 
-        c.Nombre_Royalty AS nivel, 
-        c.Visitas_Actuales AS visitas
-    FROM cliente c
-     WHERE c.Numero_Telefonico = p_telefono COLLATE utf8mb4_spanish2_ci;
-END$$
-
-DROP PROCEDURE IF EXISTS `sp_fetchEventos`$$
-CREATE PROCEDURE `sp_fetchEventos` (IN `p_Nombre_Royalty` VARCHAR(50))   BEGIN
-    SELECT E.Nombre AS Nombre_Evento, E.Fecha_Inicio, E.Fecha_final, E.Descripcion, ER.Nombre_Royalty
-    FROM evento E
-    INNER JOIN estado_royalty_da_eventos RE ON e.ID_Evento = RE.ID_Evento
-    INNER JOIN estado_royalty ER ON ER.Nombre_Royalty = RE.Nombre_Royalty
-    WHERE ER.Número_de_prioridad <= (
-        SELECT Número_de_prioridad 
-        FROM estado_royalty 
-        WHERE Nombre_Royalty = p_Nombre_Royalty COLLATE utf8mb4_spanish2_ci
-    )
-    ORDER BY ER.Número_de_prioridad DESC;
-END$$
-
-DROP PROCEDURE IF EXISTS `sp_fetchFavCliente`$$
-CREATE PROCEDURE `sp_fetchFavCliente` (IN `p_Numero_Telefonico` VARCHAR(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish2_ci, IN `p_Categoría` VARCHAR(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish2_ci)   BEGIN
-    SELECT O.Numero_Telefonico, P.Nombre, COUNT(OP.ID_Producto) AS Total
-    FROM orden_tiene_producto OP
-    JOIN producto P ON P.Id_Producto = OP.ID_Producto
-    JOIN orden O ON O.ID_Orden = OP.ID_Orden
-    WHERE P.Categoría = p_Categoría
-    AND O.Numero_Telefonico =p_Numero_Telefonico
-    GROUP BY OP.ID_Producto
-    ORDER BY Total DESC
-    LIMIT 3;
-
-END$$
-
-DROP PROCEDURE IF EXISTS `sp_fetchPromociones`$$
-CREATE PROCEDURE `sp_fetchPromociones` (IN `p_Nombre_Royalty` VARCHAR(50))   BEGIN
-    SELECT P.Nombre, P.Descuento, P.Fecha_inicio, P.Fecha_final, E.Nombre_Royalty
-    FROM estado_royalty E 
-    JOIN estado_royalty_da_promociones EP ON E.Nombre_Royalty = EP.Nombre_Royalty 
-    JOIN promocion P ON P.ID_Promocion = EP.ID_Promocion 
-    WHERE E.Número_de_prioridad <= (
-        SELECT Número_de_prioridad 
-        FROM estado_royalty 
-        WHERE Nombre_Royalty = p_Nombre_Royalty COLLATE utf8mb4_spanish2_ci
-    )
-    ORDER BY E.Número_de_prioridad DESC;
-END$$
-
-DROP PROCEDURE IF EXISTS `sp_fetchTopGlobal`$$
-CREATE PROCEDURE `sp_fetchTopGlobal` (IN `p_Categoría` VARCHAR(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish2_ci)   BEGIN
-    SELECT P.Nombre, COUNT(OP.ID_Producto) AS Total
-    FROM orden_tiene_producto OP
-    JOIN producto P on P.Id_Producto = OP.ID_Producto
-    WHERE P.Categoría = p_Categoría
-    GROUP BY OP.ID_Producto
-    ORDER BY Total DESC
-    LIMIT 3;
-END$$
-
-DROP PROCEDURE IF EXISTS `SP_GuardarItemHibrido`$$
-CREATE PROCEDURE `SP_GuardarItemHibrido` (IN `p_idOrden` VARCHAR(10) CHARSET utf8mb4, IN `p_idProducto` VARCHAR(50) CHARSET utf8mb4, IN `p_precioVenta` DECIMAL(10,2), IN `p_jsonExtras` TEXT CHARSET utf8mb4)   BEGIN
-    DECLARE v_id_orden_producto INT;
-    DECLARE v_json_length       INT          DEFAULT 0;
-    DECLARE i                   INT          DEFAULT 0;
-    DECLARE v_id_insumo         VARCHAR(50)  CHARSET utf8mb4;
-    DECLARE v_precio_extra      DECIMAL(10,2);
-    DECLARE v_tipo_cambio       VARCHAR(20);
-
-    -- 1. Insertar el producto en la orden
-    INSERT INTO orden_tiene_producto (ID_Orden, ID_Producto, Cantidad, Precio_Venta)
-    VALUES (p_idOrden, p_idProducto, 1, p_precioVenta);
-
-    SET v_id_orden_producto = LAST_INSERT_ID();
-
-    -- 2. Procesar ingredientes del JSON
-    IF p_jsonExtras IS NOT NULL AND p_jsonExtras != '[]' AND p_jsonExtras != '' THEN
-        SET v_json_length = JSON_LENGTH(p_jsonExtras);
-
-        WHILE i < v_json_length DO
-            SET v_id_insumo = JSON_UNQUOTE(JSON_EXTRACT(p_jsonExtras, CONCAT('$[', i, '].id_insumo')));
-
-            SET v_precio_extra = CAST(
-                IFNULL(JSON_UNQUOTE(JSON_EXTRACT(p_jsonExtras, CONCAT('$[', i, '].precio'))), '0')
-                AS DECIMAL(10,2)
-            );
-
-            -- Si el JSON trae tipo_cambio lo usa; si no (crepa personalizada legacy) usa 'base'
-            SET v_tipo_cambio = IFNULL(
-                JSON_UNQUOTE(JSON_EXTRACT(p_jsonExtras, CONCAT('$[', i, '].tipo_cambio'))),
-                'base'
-            );
-
-            INSERT INTO detalle_orden_insumos
-                (id_orden_producto, ID_Orden, ID_Insumo, tipo_cambio, precio_momento)
-            VALUES
-                (v_id_orden_producto, p_idOrden, v_id_insumo, v_tipo_cambio, v_precio_extra);
-
-            SET i = i + 1;
-        END WHILE;
-    END IF;
-END$$
-
-DROP PROCEDURE IF EXISTS `sp_GuardarRoyaltyPromocion`$$
-CREATE PROCEDURE `sp_GuardarRoyaltyPromocion` (IN `p_NombreRoyalty` VARCHAR(100), IN `p_IDPromocion` INT)   BEGIN
-  INSERT INTO estado_royalty_da_promociones (Nombre_Royalty, ID_Promocion)
-  VALUES (p_NombreRoyalty, p_IDPromocion);
-END$$
-
-DROP PROCEDURE IF EXISTS `sp_RegistrarReview`$$
-CREATE PROCEDURE `sp_RegistrarReview` (IN `_ID_Review` VARCHAR(10), IN `_ID_Orden` VARCHAR(10), IN `_Puntaje` INT, IN `_Fecha_Hora` DATETIME, IN `_Comentario` TEXT, IN `_Numero_Telefonico` VARCHAR(15))   BEGIN
-    DECLARE EXIT HANDLER FOR SQLEXCEPTION
-    BEGIN
-        ROLLBACK;
-        SELECT 'Error' AS Estado, 'No se pudo completar el registro de la reseña' AS Mensaje;
-    END;
-
-    START TRANSACTION;
-
-    INSERT INTO review (ID_Review, ID_Orden, Puntaje, Comentario)
-    VALUES (_ID_Review, _ID_Orden, _Puntaje, _Comentario);
-
-    INSERT INTO cliente_tiene_review (ID_Review, Numero_Telefonico)
-    VALUES (_ID_Review, _Numero_Telefonico);
-
-    COMMIT;
-
-    SELECT 'Exito' AS Estado, CONCAT('Reseña ', _ID_Review, ' registrada correctamente') AS Mensaje;
-========
 CREATE DEFINER=`root`@`localhost` PROCEDURE `ActualizarCategoria` (IN `oldNombre` VARCHAR(50) CHARSET utf8mb4 COLLATE utf8mb4_spanish2_ci, IN `newNombre` VARCHAR(50) CHARSET utf8mb4 COLLATE utf8mb4_spanish2_ci)   BEGIN
     DECLARE EXIT HANDLER FOR SQLEXCEPTION
     BEGIN
@@ -642,7 +330,6 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `sp_RegistrarReview` (IN `_ID_Review
     COMMIT;
 
     SELECT 'Exito' AS Estado, CONCAT('Reseña ', _ID_Review, ' registrada correctamente') AS Mensaje;
->>>>>>>> backup:sql/SQLs/DoubleWesternBaconCheeseBurgerEnComboExtraGrande.sql
 END$$
 
 DELIMITER ;
@@ -736,60 +423,60 @@ INSERT INTO `cliente` (`Numero_Telefonico`, `Nombre_Royalty`, `Nombre`, `Correo`
 ('4428199000', NULL, 'Juan Pablo Juarez', NULL, NULL, NULL, 0, 'Usuario', 0, 'juan_74039'),
 ('44294924', NULL, 'RN', NULL, NULL, NULL, 0, 'Usuario', 0, 'rn_23437'),
 ('443789097', NULL, 'Lalo', NULL, NULL, NULL, 0, 'Usuario', 0, 'lalo_65067'),
-('55-1156-9800', 'Mega Fan', 'Andrea Iliana Cantú Mayorga', '[email_redacted]', 'f', '1977-04-01', 2, 'Usuario', 0, 'andrea_65028'),
-('55-1579-6753', 'Super Fan', 'Eduardo Daniel Juárez Pineda', '[email_redacted]', 'm', '1967-06-07', 16, 'Usuario', 0, 'eduardo_29938'),
-('55-1827-6651', 'Super Fan', 'David Antonio Gandara Ruiz', '[email_redacted]', 'm', '1975-07-03', 18, 'Usuario', 0, 'david_34606'),
-('55-2006-6063', 'Fan', 'Isabela Ruiz Velasco Angeles', '[email_redacted]', 'f', '1957-07-18', 16, 'Usuario', 0, 'isabela_73217'),
-('55-2435-6781', 'Fan', 'Brenda Vázquez Rodríguez', '[email_redacted]', 'f', '1971-06-10', 14, 'Usuario', 0, 'brenda_72266'),
-('55-2669-1307', 'Fan', 'Ana Camila Cuevas González', '[email_redacted]', 'f', '1987-02-18', 14, 'Usuario', 0, 'ana_41680'),
-('55-2884-7043', 'Super Fan', 'Eduardo Hernández Alonso', '[email_redacted]', 'm', '1995-04-19', 1, 'Usuario', 0, 'eduardo_71601'),
-('55-3225-9858', 'Super Fan', 'Alexis Yaocalli Berthou Haas', '[email_redacted]', 'm', '1958-09-24', 18, 'Usuario', 0, 'alexis_42969'),
-('55-3251-9266', 'Fan', 'Ximena Guadalupe Córdoba Ángeles', '[email_redacted]', 'f', '1965-02-10', 16, 'Usuario', 0, 'ximena_80040'),
-('55-3647-8536', 'Fan', 'Dana Izel Martínez García', '[email_redacted]', 'f', '1995-05-24', 7, 'Usuario', 0, 'dana_81293'),
-('55-3672-3148', 'Fan', 'Alejandro Contreras Magallanes', '[email_redacted]', 'm', '1956-12-27', 11, 'Usuario', 0, 'alejandro_66347'),
-('55-3885-6878', 'Fan', 'Mariana Frías Olguín', '[email_redacted]', 'f', '1991-09-12', 14, 'Usuario', 0, 'mariana_77855'),
-('55-3938-1454', 'Super Fan', 'Hannah Carolina Hernández Reyes', '[email_redacted]', 'f', '1976-10-27', 11, 'Usuario', 0, 'hannah_90233'),
-('55-3975-4081', 'Mega Fan', 'Samantha García Cárdenas', '[email_redacted]', 'f', '1992-03-07', 1, 'Usuario', 0, 'samantha_27604'),
-('55-4203-5221', 'Super Fan', 'Ricardo Cortés Espinosa', '[email_redacted]', 'm', '1992-03-18', 18, 'Usuario', 0, 'ricardo_37318'),
-('55-4217-5522', 'Super Fan', 'Ilian Judith Castillo Beristain', '[email_redacted]', 'f', '1979-08-01', 6, 'Usuario', 0, 'ilian_93781'),
-('55-4606-3624', 'Fan', 'Héctor Alejandro Barrón Tamayo', '[email_redacted]', 'm', '1956-03-04', 12, 'Usuario', 0, 'hector_76949'),
-('55-4768-9613', 'Mega Fan', 'Jessica Hernández Tejeda', '[email_redacted]', 'f', '1961-02-07', 7, 'Usuario', 0, 'jessica_93402'),
-('55-5018-5507', 'Mega Fan', 'Armando Montealegre Villagrán', '[email_redacted]', 'm', '1952-10-08', 9, 'Usuario', 0, 'armando_46167'),
-('55-5824-6563', 'Super Fan', 'Suri Reyes Vega', '[email_redacted]', 'f', '1957-12-21', 7, 'Usuario', 0, 'suri_30626'),
-('55-6026-1598', 'Fan', 'Maria Fernanda Padme Lakshmi Martínez Jara', '[email_redacted]', 'f', '1999-01-06', 12, 'Usuario', 0, 'maria_94631'),
-('55-6624-7720', 'Mega Fan', 'Mariangel Aguirre Magallanes', '[email_redacted]', 'f', '1980-02-08', 17, 'Usuario', 0, 'mariangel_11279'),
-('55-6788-4484', 'Fan', 'Víctor Hugo Esquivel Feregrino', '[email_redacted]', 'm', '1992-11-06', 1, 'Usuario', 0, 'victor_32500'),
-('55-7095-1397', 'Fan', 'Gabriela Frías Quiroz', '[email_redacted]', 'f', '1981-07-03', 19, 'Usuario', 0, 'gabriela_28662'),
-('55-7110-9468', 'Fan', 'Santiago Barjau Hernández', '[email_redacted]', 'm', '1982-05-15', 5, 'Usuario', 0, 'santiago_35814'),
-('55-7260-4596', 'Mega Fan', 'Fernanda Rosales Herrera', '[email_redacted]', 'f', '1980-01-14', 5, 'Usuario', 0, 'fernanda_83082'),
-('55-7378-3019', 'Super Fan', 'Jonathan de Jesús Anaya Correa', '[email_redacted]', 'm', '1952-12-21', 6, 'Usuario', 0, 'jonathan_27971'),
-('55-7564-5136', 'Mega Fan', 'Diego Alberto Pasaye González', '[email_redacted]', 'm', '1994-10-08', 10, 'Usuario', 0, 'diego_60609'),
-('55-7634-3304', 'Fan', 'Carlos Delgado Contreras', '[email_redacted]', 'm', '1995-08-20', 9, 'Usuario', 0, 'carlos_29134'),
-('55-7731-4202', 'Fan', 'Renata Martínez Ozumbilla', '[email_redacted]', 'f', '1994-07-09', 2, 'Usuario', 0, 'renata_43842'),
-('55-7869-6124', 'Fan', 'Emiliano Murillo Ruiz', '[email_redacted]', 'm', '1988-10-19', 20, 'Usuario', 0, 'emiliano_31810'),
-('55-7877-5755', 'Fan', 'Yamine Dávila Bejos', '[email_redacted]', 'f', '1997-09-08', 5, 'Usuario', 0, 'yamine_17521'),
-('55-8034-2908', 'Mega Fan', 'Sofía Alondra Reyes Gómez', '[email_redacted]', 'f', '1968-02-18', 9, 'Usuario', 0, 'sofia_72179'),
-('55-8069-3709', 'Mega Fan', 'Jesús Osvaldo Ramos Pérez', '[email_redacted]', 'm', '1989-12-08', 5, 'Usuario', 0, 'jesus_28333'),
-('55-8317-4862', 'Super Fan', 'Oscar Alexander Vilchis Soto', '[email_redacted]', 'm', '1960-03-06', 20, 'Usuario', 0, 'oscar_95127'),
-('55-8361-8067', 'Fan', 'Katya Jiménez Antonio', '[email_redacted]', 'f', '1987-01-11', 13, 'Usuario', 0, 'katya_20635'),
-('55-8616-1973', 'Super Fan', 'Alberto Barba Arroyo', '[email_redacted]', 'm', '2003-03-09', 5, 'Usuario', 0, 'alberto_77796'),
-('55-8634-4784', 'Fan', 'Francisco Rafael Arreola Corona', '[email_redacted]', 'm', '1973-07-12', 18, 'Usuario', 0, 'francisco_47073'),
-('55-8842-2908', 'Super Fan', 'Ana Sofía Moreno Hernández', '[email_redacted]', 'f', '1975-05-12', 14, 'Usuario', 0, 'ana_81981'),
-('55-8913-8427', 'Super Fan', 'Fernanda Curiel Perez', '[email_redacted]', 'f', '1997-11-18', 7, 'Usuario', 0, 'fernanda_78684'),
+('55-1156-9800', 'Mega Fan', 'Andrea Iliana Cantú Mayorga', 'ailiana@gmail.com', 'f', '1977-04-01', 2, 'Usuario', 0, 'andrea_65028'),
+('55-1579-6753', 'Super Fan', 'Eduardo Daniel Juárez Pineda', 'ejuarez@gmail.com', 'm', '1967-06-07', 16, 'Usuario', 0, 'eduardo_29938'),
+('55-1827-6651', 'Super Fan', 'David Antonio Gandara Ruiz', 'dgandara@gmail.com', 'm', '1975-07-03', 18, 'Usuario', 0, 'david_34606'),
+('55-2006-6063', 'Fan', 'Isabela Ruiz Velasco Angeles', 'ivelasco@gmail.com', 'f', '1957-07-18', 16, 'Usuario', 0, 'isabela_73217'),
+('55-2435-6781', 'Fan', 'Brenda Vázquez Rodríguez', 'bvazquez@gmail.com', 'f', '1971-06-10', 14, 'Usuario', 0, 'brenda_72266'),
+('55-2669-1307', 'Fan', 'Ana Camila Cuevas González', 'acuevas@gmail.com', 'f', '1987-02-18', 14, 'Usuario', 0, 'ana_41680'),
+('55-2884-7043', 'Super Fan', 'Eduardo Hernández Alonso', 'ehernandez@gmail.com', 'm', '1995-04-19', 1, 'Usuario', 0, 'eduardo_71601'),
+('55-3225-9858', 'Super Fan', 'Alexis Yaocalli Berthou Haas', 'aberthou@gmail.com', 'm', '1958-09-24', 18, 'Usuario', 0, 'alexis_42969'),
+('55-3251-9266', 'Fan', 'Ximena Guadalupe Córdoba Ángeles', 'xcordoba@gmail.com', 'f', '1965-02-10', 16, 'Usuario', 0, 'ximena_80040'),
+('55-3647-8536', 'Fan', 'Dana Izel Martínez García', 'dmartinez@gmail.com', 'f', '1995-05-24', 7, 'Usuario', 0, 'dana_81293'),
+('55-3672-3148', 'Fan', 'Alejandro Contreras Magallanes', 'acontreras@gmail.com', 'm', '1956-12-27', 11, 'Usuario', 0, 'alejandro_66347'),
+('55-3885-6878', 'Fan', 'Mariana Frías Olguín', 'mfrias@gmail.com', 'f', '1991-09-12', 14, 'Usuario', 0, 'mariana_77855'),
+('55-3938-1454', 'Super Fan', 'Hannah Carolina Hernández Reyes', 'hhernandez@gmail.com', 'f', '1976-10-27', 11, 'Usuario', 0, 'hannah_90233'),
+('55-3975-4081', 'Mega Fan', 'Samantha García Cárdenas', 'sgarcia@gmail.com', 'f', '1992-03-07', 1, 'Usuario', 0, 'samantha_27604'),
+('55-4203-5221', 'Super Fan', 'Ricardo Cortés Espinosa', 'rcortes@gmail.com', 'm', '1992-03-18', 18, 'Usuario', 0, 'ricardo_37318'),
+('55-4217-5522', 'Super Fan', 'Ilian Judith Castillo Beristain', 'icastillo@gmail.com', 'f', '1979-08-01', 6, 'Usuario', 0, 'ilian_93781'),
+('55-4606-3624', 'Fan', 'Héctor Alejandro Barrón Tamayo', 'hbarron@gmail.com', 'm', '1956-03-04', 12, 'Usuario', 0, 'hector_76949'),
+('55-4768-9613', 'Mega Fan', 'Jessica Hernández Tejeda', 'jhernandez@gmail.com', 'f', '1961-02-07', 7, 'Usuario', 0, 'jessica_93402'),
+('55-5018-5507', 'Mega Fan', 'Armando Montealegre Villagrán', 'amontealegre@gmail.com', 'm', '1952-10-08', 9, 'Usuario', 0, 'armando_46167'),
+('55-5824-6563', 'Super Fan', 'Suri Reyes Vega', 'sureyes@gmail.com', 'f', '1957-12-21', 7, 'Usuario', 0, 'suri_30626'),
+('55-6026-1598', 'Fan', 'Maria Fernanda Padme Lakshmi Martínez Jara', 'mlakshmi@gmail.com', 'f', '1999-01-06', 12, 'Usuario', 0, 'maria_94631'),
+('55-6624-7720', 'Mega Fan', 'Mariangel Aguirre Magallanes', 'maguirre@gmail.com', 'f', '1980-02-08', 17, 'Usuario', 0, 'mariangel_11279'),
+('55-6788-4484', 'Fan', 'Víctor Hugo Esquivel Feregrino', 'vesquivel@gmail.com', 'm', '1992-11-06', 1, 'Usuario', 0, 'victor_32500'),
+('55-7095-1397', 'Fan', 'Gabriela Frías Quiroz', 'gfrias@gmail.com', 'f', '1981-07-03', 19, 'Usuario', 0, 'gabriela_28662'),
+('55-7110-9468', 'Fan', 'Santiago Barjau Hernández', 'sbarjau@gmail.com', 'm', '1982-05-15', 5, 'Usuario', 0, 'santiago_35814'),
+('55-7260-4596', 'Mega Fan', 'Fernanda Rosales Herrera', 'frosales@gmail.com', 'f', '1980-01-14', 5, 'Usuario', 0, 'fernanda_83082'),
+('55-7378-3019', 'Super Fan', 'Jonathan de Jesús Anaya Correa', 'janaya@gmail.com', 'm', '1952-12-21', 6, 'Usuario', 0, 'jonathan_27971'),
+('55-7564-5136', 'Mega Fan', 'Diego Alberto Pasaye González', 'dpasaye@gmail.com', 'm', '1994-10-08', 10, 'Usuario', 0, 'diego_60609'),
+('55-7634-3304', 'Fan', 'Carlos Delgado Contreras', 'cdelgado@gmail.com', 'm', '1995-08-20', 9, 'Usuario', 0, 'carlos_29134'),
+('55-7731-4202', 'Fan', 'Renata Martínez Ozumbilla', 'rmartinez@gmail.com', 'f', '1994-07-09', 2, 'Usuario', 0, 'renata_43842'),
+('55-7869-6124', 'Fan', 'Emiliano Murillo Ruiz', 'emurillo@gmail.com', 'm', '1988-10-19', 20, 'Usuario', 0, 'emiliano_31810'),
+('55-7877-5755', 'Fan', 'Yamine Dávila Bejos', 'ydavila@gmail.com', 'f', '1997-09-08', 5, 'Usuario', 0, 'yamine_17521'),
+('55-8034-2908', 'Mega Fan', 'Sofía Alondra Reyes Gómez', 'sreyes@gmail.com', 'f', '1968-02-18', 9, 'Usuario', 0, 'sofia_72179'),
+('55-8069-3709', 'Mega Fan', 'Jesús Osvaldo Ramos Pérez', 'jramos@gmail.com', 'm', '1989-12-08', 5, 'Usuario', 0, 'jesus_28333'),
+('55-8317-4862', 'Super Fan', 'Oscar Alexander Vilchis Soto', 'ovilchis@gmail.com', 'm', '1960-03-06', 20, 'Usuario', 0, 'oscar_95127'),
+('55-8361-8067', 'Fan', 'Katya Jiménez Antonio', 'kjimenez@gmail.com', 'f', '1987-01-11', 13, 'Usuario', 0, 'katya_20635'),
+('55-8616-1973', 'Super Fan', 'Alberto Barba Arroyo', 'abarba@gmail.com', 'm', '2003-03-09', 5, 'Usuario', 0, 'alberto_77796'),
+('55-8634-4784', 'Fan', 'Francisco Rafael Arreola Corona', 'farreola@gmail.com', 'm', '1973-07-12', 18, 'Usuario', 0, 'francisco_47073'),
+('55-8842-2908', 'Super Fan', 'Ana Sofía Moreno Hernández', 'amoreno@gmail.com', 'f', '1975-05-12', 14, 'Usuario', 0, 'ana_81981'),
+('55-8913-8427', 'Super Fan', 'Fernanda Curiel Perez', 'fcuriel@gmail.com', 'f', '1997-11-18', 7, 'Usuario', 0, 'fernanda_78684'),
 ('55-8962-5930', 'Fan', 'Juan Pablo Juárez Ortiz', 'jjuarez@@gmail.com', 'm', '1956-08-16', 4, 'Usuario', 0, 'juan_47476'),
-('55-9026-7777', 'Fan', 'Sebastián Mansilla Cots', '[email_redacted]', 'm', '1976-06-20', 9, 'Usuario', 0, 'sebastian_81332'),
-('55-9188-6863', 'Mega Fan', 'Iker Arnoldo Grajeda Campaña', '[email_redacted]', 'm', '2000-01-01', 5, 'Usuario', 0, 'iker_74231'),
-('55-9221-5175', 'Mega Fan', 'Ana Valeria Machuca Miranda', '[email_redacted]', 'f', '1957-07-06', 6, 'Usuario', 0, 'ana_27161'),
-('55-9297-8935', 'Super Fan', 'Juan Pablo Domínguez Ángel', '[email_redacted]', 'm', '1966-09-12', 9, 'Usuario', 0, 'juan_83111'),
-('55-9583-1422', 'Fan', 'Galia Lucía Castro Aboytes', '[email_redacted]', 'f', '1959-08-03', 1, 'Usuario', 0, 'galia_54074'),
-('55-9661-9093', 'Fan', 'Diego Serrano Pardo', '[email_redacted]', 'm', '2004-05-23', 8, 'Usuario', 0, 'diego_11037'),
-('55-9783-5924', 'Fan', 'Ricardo Antonio Gutiérrez García', '[email_redacted]', 'm', '1980-05-28', 13, 'Usuario', 0, 'ricardo_62963'),
-('55-9862-4951', 'Super Fan', 'Ramón Eliezer De Santos García', '[email_redacted]', 'm', '1962-01-17', 6, 'Usuario', 0, 'ramon_91705'),
-('55-9956-8802', 'Super Fan', 'Rodrigo Alejandro Hurtado Cortés', '[email_redacted]', 'm', '1983-02-25', 2, 'Usuario', 0, 'rodrigo_79637'),
+('55-9026-7777', 'Fan', 'Sebastián Mansilla Cots', 'smansilla@gmail.com', 'm', '1976-06-20', 9, 'Usuario', 0, 'sebastian_81332'),
+('55-9188-6863', 'Mega Fan', 'Iker Arnoldo Grajeda Campaña', 'igrajeda@gmail.com', 'm', '2000-01-01', 5, 'Usuario', 0, 'iker_74231'),
+('55-9221-5175', 'Mega Fan', 'Ana Valeria Machuca Miranda', 'amachuca@gmail.com', 'f', '1957-07-06', 6, 'Usuario', 0, 'ana_27161'),
+('55-9297-8935', 'Super Fan', 'Juan Pablo Domínguez Ángel', 'jdominguez@gmail.com', 'm', '1966-09-12', 9, 'Usuario', 0, 'juan_83111'),
+('55-9583-1422', 'Fan', 'Galia Lucía Castro Aboytes', 'gcastro@gmail.com', 'f', '1959-08-03', 1, 'Usuario', 0, 'galia_54074'),
+('55-9661-9093', 'Fan', 'Diego Serrano Pardo', 'dserrano@gmail.com', 'm', '2004-05-23', 8, 'Usuario', 0, 'diego_11037'),
+('55-9783-5924', 'Fan', 'Ricardo Antonio Gutiérrez García', 'rgutierrez@gmail.com', 'm', '1980-05-28', 13, 'Usuario', 0, 'ricardo_62963'),
+('55-9862-4951', 'Super Fan', 'Ramón Eliezer De Santos García', 'rgarcia@gmail.com', 'm', '1962-01-17', 6, 'Usuario', 0, 'ramon_91705'),
+('55-9956-8802', 'Super Fan', 'Rodrigo Alejandro Hurtado Cortés', 'rhurtado@gmail.com', 'm', '1983-02-25', 2, 'Usuario', 0, 'rodrigo_79637'),
 ('5511569800', NULL, 'Andrea Iliana Cantú Mayorga', NULL, NULL, NULL, 0, 'Usuario', 0, 'andrea_23070'),
 ('5515796753', NULL, 'Eduardo Daniel Juárez Pineda', NULL, NULL, NULL, 0, 'Usuario', 1, NULL),
 ('5532519266', NULL, 'Ximena Guadalupe Córdoba Ángeles', NULL, NULL, NULL, 0, 'Usuario', 0, 'ximena_46438'),
-('81-3104-6812', 'Fan', 'Carlos Delgado Contreras', '[email_redacted]', 'Masculino', '2005-08-16', 0, 'Usuario', 0, 'carlos_62983'),
+('81-3104-6812', 'Fan', 'Carlos Delgado Contreras', 'A01712819@tec.mx', 'Masculino', '2005-08-16', 0, 'Usuario', 0, 'carlos_62983'),
 ('8131046812', NULL, 'Cliente', NULL, NULL, NULL, 0, 'Usuario', 0, 'cliente_75598'),
 ('8131046813', NULL, 'Cliente', NULL, NULL, NULL, 0, 'Usuario', 0, 'cliente_89045'),
 ('8134556800', NULL, 'Juan Pablo Juarez', NULL, NULL, NULL, 0, 'Usuario', 0, 'juan_28430'),
@@ -956,58 +643,6 @@ CREATE TABLE `colaborador` (
 --
 
 INSERT INTO `colaborador` (`ID_Colaborador`, `ID_Rol`, `Nombre`, `Contraseña`) VALUES
-<<<<<<<< HEAD:sql/SQLs/MegaStackerCuadrupleBurgerUbuntu.sql
-('A01712819', 'Colaborador', 'Carlos Delgado Contreras', '[REDACTED]'),
-('CL01474090', 'Colaborador', 'Dante Hernández Ramírez', '[REDACTED]'),
-('CL03142057', 'Colaborador', 'Benjamín Valdéz Aguirre', '[REDACTED]'),
-('CL04645360', 'Colaborador', 'Luis Eduardo Gutiérrez Chavarría', '[REDACTED]'),
-('CL05875991', 'Colaborador', 'Osiris Abdallah Garcia Hernandez', '[REDACTED]'),
-('CL05934130', 'Colaborador', 'Mia Yanet Escarcega Villareal', '[REDACTED]'),
-('CL08921121', 'Colaborador', 'Daniel Lopez Portillo', '[REDACTED]'),
-('CL10689770', 'Colaborador', 'Mariana Gayon Garcia', '[REDACTED]'),
-('CL12695174', 'Colaborador', 'Iker Rodríguez Amaro', '[REDACTED]'),
-('CL14041111', 'Colaborador', 'Juan Jose Garcia Escamilla', '[REDACTED]'),
-('CL15708348', 'Colaborador', 'Jacquelin Suarez Anaya', '[REDACTED]'),
-('CL16454454', 'Colaborador', 'Natalia Martinez Feregrino', '[REDACTED]'),
-('CL18100715', 'Colaborador', 'Juan Pablo Sanchez Gonzalez', '[REDACTED]'),
-('CL18831765', 'Colaborador', 'Covadonga Rodriguez Rodriguez', '[REDACTED]'),
-('CL20301137', 'Colaborador', 'Martin Mendoza-Ceja', '[REDACTED]'),
-('CL21614946', 'Colaborador', 'Maria Paulina Quezada Maldonado', '[REDACTED]'),
-('CL21985981', 'Colaborador', 'Pablo Israel Luna Lopez', '[REDACTED]'),
-('CL28628856', 'Colaborador', 'Jorge Rubén Nieto Vega', '[REDACTED]'),
-('CL29144982', 'Colaborador', 'Santiago Martín del Campo Soler', '[REDACTED]'),
-('CL30204267', 'Colaborador', 'Diego Lopez Pastor', '[REDACTED]'),
-('CL32789112', 'Colaborador', 'Dulce Sarai Gonzalez Gonzalez', '[REDACTED]'),
-('CL33315007', 'Colaborador', 'Daniela Ire Esquinca Caballero', '[REDACTED]'),
-('CL34960608', 'Colaborador', 'Mario Alberto Guzman Garza', '[REDACTED]'),
-('CL35064199', 'Colaborador', 'Valentina Gonzalez Salas', '[REDACTED]'),
-('CL35949578', 'Colaborador', 'Luis Fernando Martínez Barragán', '[REDACTED]'),
-('CL36735120', 'Colaborador', 'Jose Manuel Chavez', '[REDACTED]'),
-('CL41890499', 'Colaborador', 'Maria Emillia Morales', '[REDACTED]'),
-('CL46764962', 'Colaborador', 'César Daniel Aguilar Kuri', '[REDACTED]'),
-('CL47544031', 'Colaborador', 'Emilio Hernandez', '[REDACTED]'),
-('CL48022629', 'Colaborador', 'Alondra Lizeth Landín Vega', '[REDACTED]'),
-('CL48036451', 'Colaborador', 'Diana Itzel Guerra Calva', '[REDACTED]'),
-('CL48308362', 'Colaborador', 'Andrea Cifuentes Ortega', '[REDACTED]'),
-('CL49027022', 'Colaborador', 'Victor Adrián García Galván', '[REDACTED]'),
-('CL49028531', 'Colaborador', 'Maria Guadalupe Padilla Vazquez', '[REDACTED]'),
-('CL53489931', 'Colaborador', 'Joel Guadalupe García Guzmán', '[REDACTED]'),
-('CL56601272', 'Colaborador', 'Alejandro Beníitez Bravo', '[REDACTED]'),
-('CL56761259', 'Colaborador', 'Andra Nava Ortiz', '[REDACTED]'),
-('CL56859887', 'Colaborador', 'Renata Barcenas Mila', '[REDACTED]'),
-('CL60891415', 'Colaborador', 'David Espino Barron', '[REDACTED]'),
-('CL62526407', 'Colaborador', 'Pablo Solana', '[REDACTED]'),
-('CL64339447', 'Colaborador', 'Maria Jose Pedraza Padilla', '[REDACTED]'),
-('CL69273596', 'Colaborador', 'Iñaki Mancera Llano', '[REDACTED]'),
-('CL72018333', 'Colaborador', 'Marianna Quiroz Zuñiga', '[REDACTED]'),
-('CL78145878', 'Colaborador', 'David Alejandro Robles Camacho', '[REDACTED]'),
-('CL80532101', 'Colaborador', 'Ana Paula Ortega', '[REDACTED]'),
-('CL85062921', 'Colaborador', 'Daniela Suarez Loy', '[REDACTED]'),
-('CL85565990', 'Administrador', 'Juan Pablo Cedillo Peréz', '[REDACTED]'),
-('CL85772520', 'Colaborador', 'Sara Flores Gonzalez', '[REDACTED]'),
-('CL94221819', 'Colaborador', 'Grezia Trujillo', '[REDACTED]'),
-('CL95096755', 'Colaborador', 'Betzabeth Durán Solorza', '[REDACTED]');
-========
 ('A01712819', 'Colaborador', 'Carlos Delgado Contreras', 'Citybanamex16'),
 ('CL01474090', 'Colaborador', 'Dante Hernández Ramírez', 'CL033172!'),
 ('CL03142057', 'Colaborador', 'Benjamín Valdéz Aguirre', 'CL047938!'),
@@ -1058,7 +693,6 @@ INSERT INTO `colaborador` (`ID_Colaborador`, `ID_Rol`, `Nombre`, `Contraseña`) 
 ('CL85772520', 'Colaborador', 'Sara Flores Gonzalez', 'CL026063!'),
 ('CL94221819', 'Colaborador', 'Grezia Trujillo', 'CL027249!'),
 ('CL95096755', 'Colaborador', 'Betzabeth Durán Solorza', 'CL039025!');
->>>>>>>> backup:sql/SQLs/DoubleWesternBaconCheeseBurgerEnComboExtraGrande.sql
 
 -- --------------------------------------------------------
 
