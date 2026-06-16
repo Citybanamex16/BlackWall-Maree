@@ -19,13 +19,23 @@ router.get('/login', loginControlador.getLogin)
 router.post('/login', loginControlador.postLogin)
 router.post('/signup', loginControlador.postSignUp)
 router.post('/login/verify', loginControlador.postVerifyOtp)
-router.get('/perfil', isAuth, clienteControlador.getProfile)
-router.post('/perfil', isAuth, clienteControlador.postUpdateProfile)
+router.get('/perfil', clienteControlador.getProfile)
+router.post('/perfil', clienteControlador.postUpdateProfile)
 
 /* Nuevos agregados por charly -> usados por Menu */
 router.get('/promosCliente', clienteControlador.getPromosView)
 router.get('/eventosCliente', clienteControlador.getEventos)
+router.get('/eventocCliente', clienteControlador.getEventos)
 router.get('/promosClienteData', clienteControlador.getPRsData)
 router.get('/Sesion', loginControlador.getSesion)
+
+/* Aviso de privacidad */
+router.get('/aviso-simplificado', clienteControlador.getAvisoSimplificado)
+router.get('/aviso-integral', clienteControlador.getAvisoIntegral)
+
+// Historial de pedidos del cliente
+router.get('/historial', clienteControlador.getHistorial)
+router.get('/api/mis-ordenes', clienteControlador.getClientOrders)
+router.post('/api/orders/:id/cancel', clienteControlador.postCancelClientOrder)
 
 module.exports = router

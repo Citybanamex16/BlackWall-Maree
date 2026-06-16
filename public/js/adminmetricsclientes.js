@@ -1,3 +1,5 @@
+/* global Chart */
+
 const form = document.getElementById('filtersForm')
 const btnLimpiar = document.getElementById('btnLimpiar')
 const btnExportar = document.getElementById('btnExportar')
@@ -111,6 +113,66 @@ function renderGenero (generos) {
   `).join('')
 }
 
+let chartFlujo = null
+let chartRetencion = null
+
+function renderGraficas (datosGraficas) {
+  const labels = datosGraficas.map(item => item.mes)
+  const dataTotal = datosGraficas.map(item => item.total_clientes)
+  const dataNuevos = datosGraficas.map(item => item.clientes_nuevos)
+  const dataRecurrentes = datosGraficas.map(item => item.clientes_recurrentes)
+
+  const ctxFlujo = document.getElementById('flujoClientesChart').getContext('2d')
+  if (chartFlujo) chartFlujo.destroy()
+
+  chartFlujo = new Chart(ctxFlujo, {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [{
+        label: 'Clientes Únicos',
+        data: dataTotal,
+        borderColor: '#2e5b9f',
+        backgroundColor: 'rgba(46, 91, 159, 0.2)',
+        borderWidth: 2,
+        fill: true,
+        tension: 0.3
+      }]
+    },
+    options: { responsive: true, maintainAspectRatio: false }
+  })
+
+  const ctxRetencion = document.getElementById('retencionClientesChart').getContext('2d')
+  if (chartRetencion) chartRetencion.destroy()
+
+  chartRetencion = new Chart(ctxRetencion, {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [
+        {
+          label: 'Recurrentes (Fidelizados)',
+          data: dataRecurrentes,
+          backgroundColor: '#4caf50'
+        },
+        {
+          label: 'Nuevos (Primera compra)',
+          data: dataNuevos,
+          backgroundColor: '#ff9800'
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      scales: {
+        x: { stacked: true },
+        y: { stacked: true, beginAtZero: true }
+      }
+    }
+  })
+}
+
 async function cargarMetricas () {
   clearStatus()
   dashboardContent.classList.add('loading')
@@ -132,6 +194,9 @@ async function cargarMetricas () {
 
     if (result.sinDatos) {
       showStatus('info', result.mensaje || 'No hay información disponible.')
+    }
+    if (result.data.graficas) {
+      renderGraficas(result.data.graficas)
     }
   } catch (error) {
     showStatus('error', error.message || 'Error al consultar métricas.')

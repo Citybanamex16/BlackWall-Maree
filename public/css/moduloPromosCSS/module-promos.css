@@ -8,6 +8,22 @@
 }
 
 /* ── 1. ENCABEZADO Y CONTROLES ── */
+.back-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-family: var(--font-body);
+    font-size: 13px;
+    color: var(--c-text-muted);
+    text-decoration: none;
+    margin-bottom: 32px;
+    transition: color 0.2s ease;
+}
+
+.back-link:hover {
+    color: var(--promo-gold);
+}
+
 .promotions-shell {
     display: flex;
     justify-content: space-between;
@@ -118,6 +134,13 @@
     margin-bottom: 18px;
 }
 
+.promo-status-stack {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 6px;
+}
+
 .promo-card-id,
 .promo-card-label {
     font-size: 11px;
@@ -210,6 +233,31 @@
 .promo-chip.empty {
     background: var(--c-primary-bg);
     color: var(--c-text-muted);
+}
+
+.promo-validity-pill {
+    display: inline-flex;
+    align-items: center;
+    border-radius: var(--radius-pill);
+    padding: 6px 12px;
+    font-size: 11px;
+    font-weight: 600;
+}
+
+.promo-validity-pill.is-current {
+    background: var(--c-success-bg);
+    color: var(--c-success);
+}
+
+.promo-validity-pill.is-upcoming {
+    background: var(--c-primary-light);
+    color: var(--promo-gold-deep);
+}
+
+.promo-validity-pill.is-expired,
+.promo-validity-pill.is-undated {
+    background: var(--c-border);
+    color: var(--promo-copy);
 }
 
 /* ── 5. MODALES Y FORMULARIOS ── */

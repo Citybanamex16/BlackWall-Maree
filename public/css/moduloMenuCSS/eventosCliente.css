@@ -1,0 +1,239 @@
+.eventos-cliente-page {
+    background: radial-gradient(circle at top, rgba(181, 149, 106, 0.24), transparent 34%), linear-gradient(180deg, #f8efe6 0%, #f3e5dc 48%, #efe0d4 100%);
+    padding-top: 138px;
+    padding-bottom: 100px;
+}
+
+.events-logo-button { border: none; background: transparent; padding: 0; }
+.events-sticky-nav { padding: 12px 0 14px; background: rgba(250, 247, 243, 0.92); backdrop-filter: blur(10px); }
+.events-nav-shell, .events-main { width: min(100%, 480px); margin: 0 auto; }
+.events-nav-shell { padding: 0 16px; display: grid; gap: 12px; }
+
+.events-page-kicker,
+.events-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 1.4px;
+    text-transform: uppercase;
+    color: #8a6950;
+}
+
+.events-page-title, .events-title, .events-section-title, .events-card-title {
+    font-family: 'Cormorant Garamond', serif;
+    color: #2d2118;
+    margin: 0;
+}
+
+.events-page-title { font-size: 30px; line-height: 0.95; }
+.events-page-copy, .events-copy, .events-card-copy { color: #5f534a; line-height: 1.55; margin: 0; }
+.events-page-copy { font-size: 13px; max-width: 36ch; }
+
+.events-summary-pills, .events-chip-row, .events-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.events-summary-pill,
+.events-chip,
+.events-mini-pill,
+.events-status-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.events-summary-pill {
+    width: fit-content;
+    padding: 9px 12px;
+    background: rgba(255, 255, 255, 0.76);
+    color: #6d5340;
+    border: 1px solid rgba(181, 149, 106, 0.18);
+}
+
+.events-summary-pill.is-soft { background: rgba(247, 240, 232, 0.96); }
+.events-main { padding: 16px; display: grid; gap: 16px; }
+
+.events-highlight,
+.events-card,
+.events-empty,
+.events-callout {
+    background: rgba(255, 255, 255, 0.92);
+    border: 1px solid #eadccd;
+    border-radius: 24px;
+    box-shadow: 0 18px 40px rgba(111, 80, 48, 0.08);
+    overflow: hidden;
+}
+
+.events-hero-media,
+.events-card-thumb {
+    position: relative;
+    overflow: hidden;
+    background: linear-gradient(135deg, #e4cfb8 0%, #cba784 100%);
+}
+
+.events-hero-media { aspect-ratio: 4 / 5; }
+.events-card-thumb { width: 98px; min-width: 98px; border-radius: 18px; aspect-ratio: 1 / 1.18; }
+.events-hero-media img, .events-card-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.events-hero-overlay { position: absolute; inset: 0; background: linear-gradient(180deg, rgba(16, 9, 5, 0.08), rgba(16, 9, 5, 0.58)); }
+
+.events-image-placeholder,
+.events-card-placeholder {
+    width: 100%;
+    height: 100%;
+    display: grid;
+    place-items: center;
+    color: #fffaf4;
+    text-align: center;
+    background: linear-gradient(135deg, #d1a87e 0%, #b18056 100%);
+}
+
+.events-image-placeholder i, .events-card-placeholder i { font-size: 28px; }
+.events-image-placeholder span { display: block; margin-top: 10px; font-size: 13px; letter-spacing: 1.4px; text-transform: uppercase; }
+
+.events-status-pill,
+.events-mini-pill {
+    position: absolute;
+    left: 14px;
+    z-index: 2;
+    color: #fff;
+}
+
+.events-status-pill { top: 14px; padding: 10px 14px; }
+.events-mini-pill { top: 10px; padding: 6px 10px; font-size: 11px; }
+.events-status-pill.is-live, .events-mini-pill.is-live { background: rgba(88, 113, 63, 0.9); }
+.events-status-pill.is-soon, .events-mini-pill.is-soon { background: rgba(185, 111, 93, 0.92); }
+
+.events-hero-body,
+.events-callout {
+    padding: 18px;
+}
+
+.events-title { font-size: 36px; line-height: 0.92; }
+.events-copy { font-size: 14px; }
+
+.events-chip {
+    padding: 8px 12px;
+    background: #fff7f0;
+    color: #8c6548;
+    border: 1px solid #f0ddca;
+}
+
+.events-chip.secondary { background: #fbf6f0; }
+.events-chip i { font-size: 12px; }
+.events-list { display: grid; gap: 12px; }
+
+.events-section-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: end;
+    gap: 12px;
+    padding: 0 4px;
+}
+
+.events-section-title { font-size: 30px; line-height: 0.95; }
+
+.events-counter {
+    width: 36px;
+    height: 36px;
+    display: grid;
+    place-items: center;
+    border-radius: 50%;
+    background: #fff4ea;
+    color: #9d714d;
+    font-weight: 700;
+}
+
+.events-card { padding: 14px; display: flex; gap: 14px; }
+.events-card-body { display: grid; gap: 8px; min-width: 0; }
+.events-card-title { font-size: 25px; line-height: 0.98; }
+
+.events-card-copy {
+    font-size: 13px;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.events-chip-row.compact .events-chip { font-size: 11px; padding: 7px 10px; }
+
+.events-empty {
+    padding: 28px 20px;
+    text-align: center;
+}
+
+.events-empty-icon {
+    width: 64px;
+    height: 64px;
+    margin: 0 auto 16px;
+    display: grid;
+    place-items: center;
+    border-radius: 50%;
+    background: #fff2e7;
+    color: #b77f55;
+    font-size: 24px;
+}
+
+.events-callout {
+    background: linear-gradient(180deg, rgba(255, 250, 246, 0.96), rgba(249, 238, 227, 0.98));
+    display: grid;
+    gap: 10px;
+}
+
+.events-link {
+    flex: 1 1 140px;
+    padding: 12px 14px;
+    border-radius: 999px;
+    border: 1px solid #e7d6c4;
+    text-align: center;
+    color: #7c5d46;
+    font-weight: 600;
+    background: #fff;
+}
+
+.events-link.is-primary,
+.sticky-bottom-app .btn-icon.is-current,
+.sticky-bottom-app .btn-icon.events-home-btn {
+    color: #fff;
+}
+
+.events-link.is-primary {
+    background: linear-gradient(135deg, #b5956a 0%, #a47a4e 100%);
+    border-color: #a47a4e;
+}
+
+.sticky-bottom-app .btn-icon.is-current,
+.sticky-bottom-app .btn-icon.events-home-btn {
+    border-radius: 18px;
+    padding: 10px 0;
+}
+
+.sticky-bottom-app .btn-icon.is-current {
+    background: linear-gradient(135deg, #b5956a 0%, #a47a4e 100%);
+    box-shadow: 0 10px 18px rgba(164, 122, 78, 0.24);
+}
+
+.sticky-bottom-app .btn-icon.events-home-btn {
+    background: #7da6ba;
+    box-shadow: 0 10px 18px rgba(125, 166, 186, 0.22);
+}
+
+.sticky-bottom-app .btn-icon:not(.is-current):not(.events-home-btn) { color: #8d8078; }
+
+@media (max-width: 420px) {
+    .eventos-cliente-page { padding-top: 144px; }
+    .events-page-title, .events-section-title { font-size: 28px; }
+    .events-title { font-size: 32px; }
+}
+
+@media (max-width: 360px) {
+    .events-card { flex-direction: column; }
+    .events-card-thumb { width: 100%; min-width: 100%; aspect-ratio: 16 / 9; }
+}

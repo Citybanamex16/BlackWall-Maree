@@ -144,6 +144,26 @@ module.exports = class MetricasClientes {
       ORDER BY clientes DESC
     `
 
+    const graficasQuery = `
+      WITH PrimerasCompras AS (
+          SELECT Numero_Telefonico, MIN(DATE(Fecha)) as fecha_primera_compra
+          FROM orden
+          GROUP BY Numero_Telefonico
+      )
+      SELECT 
+          DATE_FORMAT(o.Fecha, '%Y-%m') AS mes,
+          COUNT(DISTINCT c.Numero_Telefonico) AS total_clientes,
+          COUNT(DISTINCT CASE WHEN DATE_FORMAT(pc.fecha_primera_compra, '%Y-%m') = DATE_FORMAT(o.Fecha, '%Y-%m') THEN o.Numero_Telefonico END) AS clientes_nuevos,
+          COUNT(DISTINCT CASE WHEN DATE_FORMAT(pc.fecha_primera_compra, '%Y-%m') < DATE_FORMAT(o.Fecha, '%Y-%m') THEN o.Numero_Telefonico END) AS clientes_recurrentes
+      FROM orden o
+      JOIN cliente c ON o.Numero_Telefonico = c.Numero_Telefonico
+      LEFT JOIN PrimerasCompras pc ON c.Numero_Telefonico = pc.Numero_Telefonico
+      WHERE DATE(o.Fecha) BETWEEN ? AND ?
+      ${whereCliente}
+      GROUP BY mes
+      ORDER BY mes ASC;
+    `
+
     const [resumenRows] = await db.execute(resumenQuery, [
       fechaInicio,
       fechaFin,
@@ -172,6 +192,12 @@ module.exports = class MetricasClientes {
       ...paramsCliente
     ])
 
+    const [graficasRows] = await db.execute(graficasQuery, [
+      fechaInicio,
+      fechaFin,
+      ...paramsCliente
+    ])
+
     return {
       resumen: resumenRows[0] || {
         clientes_activos: 0,
@@ -182,7 +208,8 @@ module.exports = class MetricasClientes {
       },
       topClientes: topClientesRows || [],
       promociones: promocionesRows || [],
-      genero: generoRows || []
+      genero: generoRows || [],
+      graficas: graficasRows || []
     }
   }
 
@@ -224,5 +251,19 @@ module.exports = class MetricasClientes {
     ])
 
     return rows
+  }
+
+  static async getFlujoClientesMensuales () {
+    const query = `
+          SELECT 
+              DATE_FORMAT(Fecha, '%M %Y') AS mes,
+              COUNT(DISTINCT Numero_Telefonico) AS total_clientes
+          FROM orden
+          WHERE Estado_Orden = 'Entregado'
+          GROUP BY YEAR(fecha), MONTH(fecha)
+          ORDER BY YEAR(fecha) ASC, MONTH(fecha) ASC
+          LIMIT 12;
+      `
+    return db.execute(query)
   }
 }

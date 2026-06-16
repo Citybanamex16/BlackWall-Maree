@@ -4,15 +4,15 @@ const Colaborador = require('../models/colaborador.model.js')
 const Ingrediente = require('../models/ingrediente.model.js')
 const MetricasClientes = require('../models/metricasclientes.model.js')
 const MetricasProductos = require('../models/metricasproductos.model.js')
+const Calendario = require('../models/calendario.model.js')
 const Categoria = require('../models/categoria.model.js')
 const Tipo = require('../models/tipo.model.js')
 const Sucursal = require('../models/sucursal.model.js')
 
-// const bcrypt = require('bcryptjs')
-
 // const path = require('path')
 
 // Exports
+
 /** ejemplo:
  * exports.get_new = (request, response, next) => {
     response.render('new');
@@ -325,22 +325,70 @@ exports.getOrders = async (req, res, next) => {
   ]
 
   try {
-    const [pedidos] = await Pedido.fetchOrders()
+    const [[pedidos], [pendientes]] = await Promise.all([
+      Pedido.fetchOrders(),
+      Pedido.fetchPendingOrders()
+    ])
     res.render('admin/orders', {
       pageTitle: 'Órdenes',
       pedidos,
+      pendientes,
       breadcrumbs,
       error: null
     })
   } catch (error) {
     console.error('Error al cargar órdenes:', error)
-
     res.status(500).render('admin/orders', {
       pageTitle: 'Órdenes',
       pedidos: [],
+      pendientes: [],
       breadcrumbs,
       error: 'No hay conexión con la base de datos.'
     })
+  }
+}
+
+exports.getOrdersJson = async (req, res) => {
+  try {
+    const [[pedidos], [pendientes]] = await Promise.all([
+      Pedido.fetchOrders(),
+      Pedido.fetchPendingOrders()
+    ])
+    return res.json({ ok: true, pedidos, pendientes })
+  } catch {
+    return res.status(500).json({ ok: false })
+  }
+}
+
+exports.getOrderItems = async (req, res) => {
+  const { id } = req.params
+  try {
+    const [items] = await Pedido.fetchItems(id)
+    return res.status(200).json({ ok: true, items })
+  } catch (error) {
+    console.error('ERROR getOrderItems:', error)
+    return res.status(500).json({ ok: false, message: 'Error al obtener los items.' })
+  }
+}
+
+exports.postUpdateOrderStatus = async (req, res) => {
+  const { id } = req.params
+  const { estado } = req.body
+  try {
+    await Pedido.updateOrderStatus(id, estado)
+    return res.json({ ok: true })
+  } catch (error) {
+    return res.status(400).json({ ok: false, message: error.message })
+  }
+}
+
+exports.postAcceptOrder = async (req, res) => {
+  const { id } = req.params
+  try {
+    await Pedido.updateOrderStatus(id, 'Preparando')
+    return res.json({ ok: true })
+  } catch (error) {
+    return res.status(400).json({ ok: false, message: error.message })
   }
 }
 
@@ -418,11 +466,16 @@ exports.getIngredientes = (req, res, next) => {
 // Regresa lista de ingredientes activos (para llenar la tabla en el front yuhhhh)
 exports.getIngredientesLista = async (req, res, next) => {
   try {
-    const [ingredientes] = await Ingrediente.fetchAll()
+    const [rows] = await Ingrediente.fetchAll()
+    const data = rows.map(row => ({
+      ...row,
+      categorias: row.cats_raw ? row.cats_raw.split('|') : [row.Categoría],
+      tipos: row.tipos_raw ? row.tipos_raw.split('|') : []
+    }))
     res.status(200).json({
       success: true,
       message: 'Ingredientes recuperados',
-      data: ingredientes
+      data
     })
   } catch (error) {
     console.error('Error en getIngredientesLista:', error)
@@ -502,7 +555,8 @@ exports.validarIngrediente = async (req, res, next) => {
 exports.crearIngrediente = async (req, res, next) => {
   try {
     const { Nombre, Precio, Activo, Imagen } = req.body
-    const Categoria = req.body['Categoría']
+    const Categorias = req.body.Categorias // array de categorías seleccionadas
+    const Tipos = req.body.Tipos || []    // array de tipos seleccionados (opcional)
 
     // Validación de campos obligatorios
     const resultado = Ingrediente.verificarCamposVacios(req.body)
@@ -526,16 +580,16 @@ exports.crearIngrediente = async (req, res, next) => {
     const nuevoID = Ingrediente.generarID()
     console.log('Nuevo ID Ingrediente:', nuevoID)
 
-    console.log('Datos a insertar:', { nuevoID, Nombre, Categoria, Precio, Activo, Imagen })
-
     await Ingrediente.insertNuevoIngrediente(
       nuevoID,
       Nombre.trim(),
-      Categoria,
+      Categorias[0],
       parseFloat(Precio),
       Activo !== undefined ? Activo : true,
       Imagen || null
     )
+    await Ingrediente.insertCategoriasInsumo(nuevoID, Categorias)
+    if (Tipos.length > 0) await Ingrediente.insertTiposInsumo(nuevoID, Tipos)
 
     res.status(200).json({
       success: true,
@@ -585,21 +639,39 @@ exports.actualizarIngrediente = async (req, res, next) => {
   try {
     const { id } = req.params
     const { Nombre, Precio, Activo, Imagen } = req.body
-    const Categoria = req.body['Categoría']
+    const Categorias = req.body.Categorias // array de categorías seleccionadas
+    const Tipos = req.body.Tipos || []    // array de tipos seleccionados (opcional)
 
-    if (!id || !Nombre || !Categoria || !Precio) {
+    if (!id || !Nombre || !Categorias || !Categorias.length || !Precio) {
       return res.status(400).json({ success: false, message: 'Campos obligatorios faltantes' })
     }
 
     await Ingrediente.actualizarIngrediente(
-      id, Nombre.trim(), Categoria,
+      id, Nombre.trim(), Categorias[0],
       parseFloat(Precio), Activo, Imagen || null
     )
+    await Ingrediente.deleteCategoriasInsumo(id)
+    await Ingrediente.insertCategoriasInsumo(id, Categorias)
+    await Ingrediente.deleteTiposInsumo(id)
+    if (Tipos.length > 0) await Ingrediente.insertTiposInsumo(id, Tipos)
 
     res.status(200).json({ success: true, message: 'Ingrediente actualizado correctamente' })
   } catch (error) {
     console.error('Error en actualizarIngrediente:', error)
     res.status(500).json({ success: false, message: error.message })
+  }
+}
+
+// GET /admin/api/ingredientes/tiposPorCategorias?cats=Platillo,Bebidas
+exports.getTiposParaCategorias = async (req, res, next) => {
+  try {
+    const cats = req.query.cats ? req.query.cats.split(',').map(c => c.trim()).filter(Boolean) : []
+    if (cats.length === 0) return res.status(200).json({ success: true, data: [] })
+    const [tipos] = await Ingrediente.getTiposPorCategorias(cats)
+    res.status(200).json({ success: true, data: tipos })
+  } catch (error) {
+    console.error('Error en getTiposParaCategorias:', error)
+    res.status(500).json({ success: false, message: 'Error al obtener tipos' })
   }
 }
 
@@ -619,16 +691,23 @@ exports.getMetricasIngredientesData = async (req, res, next) => {
 }
 
 // Fuchi, collaborator things
-exports.getNewCollaborator = (req, res, next) => {
-  res.render('admin/newCollaborator', {
-    pageTitle: 'Registrar colaborador',
-    error: null,
-    oldInput: {
-      id_colaborador: '',
-      nombre: '',
-      rol: 'Colaborador'
-    }
-  })
+exports.getNewCollaborator = async (req, res, next) => {
+  try {
+    const idGenerado = await Colaborador.generateUniqueId()
+
+    res.render('admin/newCollaborator', {
+      pageTitle: 'Registrar colaborador',
+      error: null,
+      oldInput: {
+        id_colaborador: idGenerado,
+        nombre: '',
+        rol: 'Colaborador'
+      }
+    })
+  } catch (error) {
+    console.log(error)
+    res.redirect('/admin/colaboradores')
+  }
 }
 
 exports.postNewCollaborator = async (req, res, next) => {
@@ -676,8 +755,6 @@ exports.postNewCollaborator = async (req, res, next) => {
       })
     }
 
-    // const contrasenaHasheada = await bcrypt.hash(contrasena, 12)
-
     await Colaborador.create(
       idColaborador,
       rol,
@@ -701,7 +778,126 @@ exports.postNewCollaborator = async (req, res, next) => {
   }
 }
 
+// dias habiless
+exports.getDiasHabiles = async (req, res, next) => {
+  try {
+    const diasHabiles = await Calendario.fetchDiasHabiles()
+    const sucursales = await Calendario.fetchSucursales()
+    const idCalendario = await Calendario.generateUniqueId()
+
+    return res.render('admin/diasHabiles', {
+      pageTitle: 'Días hábiles',
+      diasHabiles,
+      sucursales,
+      error: null,
+      mensaje: null,
+      oldInput: {
+        id_calendario: idCalendario,
+        id_sucursal: '',
+        fecha: '',
+        es_laboral: '1',
+        descripcion: ''
+      }
+    })
+  } catch (error) {
+    console.error('Error al recuperar días hábiles:', error)
+
+    return res.status(500).render('admin/diasHabiles', {
+      pageTitle: 'Días hábiles',
+      diasHabiles: [],
+      sucursales: [],
+      error: 'No se pudo recuperar la configuración de días hábiles.',
+      mensaje: null,
+      oldInput: {
+        id_calendario: '',
+        id_sucursal: '',
+        fecha: '',
+        es_laboral: '1',
+        descripcion: ''
+      }
+    })
+  }
+}
+
+exports.postDiasHabiles = async (req, res, next) => {
+  try {
+    console.log('BODY DIAS HABILES:', req.body)
+    const idCalendario = String(req.body.id_calendario || '').trim()
+    const idSucursal = String(req.body.id_sucursal || '').trim()
+    const fecha = String(req.body.fecha || '').trim()
+    const esLaboral = String(req.body.es_laboral || '').trim()
+    const descripcion = String(req.body.descripcion || '').trim()
+
+    const sucursales = await Calendario.fetchSucursales()
+    const diasHabiles = await Calendario.fetchDiasHabiles()
+
+    if (!idCalendario || !idSucursal || !fecha || (esLaboral !== '0' && esLaboral !== '1')) {
+      return res.status(400).render('admin/diasHabiles', {
+        pageTitle: 'Días hábiles',
+        diasHabiles,
+        sucursales,
+        error: 'Información inválida. Verifica los datos capturados.',
+        mensaje: null,
+        oldInput: {
+          id_sucursal: idSucursal,
+          fecha,
+          es_laboral: esLaboral || '1',
+          descripcion
+        }
+      })
+    }
+
+    await Calendario.createDiaHabil(
+      idCalendario,
+      idSucursal,
+      fecha,
+      Number(esLaboral),
+      descripcion || null
+    )
+
+    const diasHabilesActualizados = await Calendario.fetchDiasHabiles()
+    const nuevoIdCalendario = await Calendario.generateUniqueId()
+
+    return res.render('admin/diasHabiles', {
+      pageTitle: 'Días hábiles',
+      diasHabiles: diasHabilesActualizados,
+      sucursales,
+      error: null,
+      mensaje: 'Configuración guardada exitosamente.',
+      oldInput: {
+        id_calendario: nuevoIdCalendario,
+        id_sucursal: '',
+        fecha: '',
+        es_laboral: '1',
+        descripcion: ''
+      }
+    })
+  } catch (error) {
+    console.error('Error al guardar días hábiles:', error)
+
+    const sucursales = await Calendario.fetchSucursales().catch(() => [])
+    const diasHabiles = await Calendario.fetchDiasHabiles().catch(() => [])
+
+    return res.status(500).render('admin/diasHabiles', {
+      pageTitle: 'Días hábiles',
+      diasHabiles,
+      sucursales,
+      error: 'No fue posible guardar la configuración.',
+      mensaje: null,
+      oldInput: {
+        id_sucursal: req.body.id_sucursal || '',
+        fecha: req.body.fecha || '',
+        es_laboral: req.body.es_laboral || '1',
+        descripcion: req.body.descripcion || ''
+      }
+    })
+  }
+}
 // Sección Categorias
+
+function parsePermiteCremaBatida (value) {
+  return value === true || value === 'true' || value === 1 || value === '1' ? 1 : 0
+}
 
 // GET categorias-tipos
 exports.getCategoriasTipos = (req, res, next) => {
@@ -737,7 +933,7 @@ exports.verificarNombreCategoria = async (req, res, next) => {
 // Inserta nueva categoria
 exports.crearCategoria = async (req, res, next) => {
   try {
-    const { Nombre } = req.body
+    const { Nombre, PermiteCremaBatida } = req.body
     if (!Nombre || String(Nombre).trim() === '') {
       return res.status(400).json({ success: false, message: 'El nombre es obligatorio' })
     }
@@ -745,7 +941,10 @@ exports.crearCategoria = async (req, res, next) => {
     if (existente.length > 0) {
       return res.status(409).json({ success: false, message: 'Ya existe una categoría con ese nombre' })
     }
-    await Categoria.insertNuevaCategoria(Nombre.trim())
+    await Categoria.insertNuevaCategoria(
+      Nombre.trim(),
+      parsePermiteCremaBatida(PermiteCremaBatida)
+    )
     res.status(200).json({ success: true, message: 'Categoría registrada exitosamente' })
   } catch (error) {
     console.error('Error en crearCategoria:', error)
@@ -774,22 +973,37 @@ exports.verificarCategoriaEnUso = async (req, res, next) => {
 exports.actualizarCategoria = async (req, res, next) => {
   try {
     const oldNombre = decodeURIComponent(req.params.nombre)
-    const { Nombre: newNombre } = req.body
+    const { Nombre: newNombre, PermiteCremaBatida } = req.body
 
     if (!newNombre || String(newNombre).trim() === '') {
       return res.status(400).json({ success: false, message: 'El nombre es obligatorio' })
     }
 
-    if (oldNombre === newNombre.trim()) {
+    const nombreFinal = newNombre.trim()
+    const permiteCremaBatida = parsePermiteCremaBatida(PermiteCremaBatida)
+    const [actualRows] = await Categoria.buscarPorNombre(oldNombre)
+    const categoriaActual = actualRows[0]
+
+    if (!categoriaActual) {
+      return res.status(404).json({ success: false, message: 'Categoría no encontrada' })
+    }
+
+    const mismoNombre = oldNombre === nombreFinal
+    const mismaBandera = Number(categoriaActual.permiteCremaBatida) === permiteCremaBatida
+
+    if (mismoNombre && mismaBandera) {
       return res.status(200).json({ success: true, message: 'Sin cambios' })
     }
 
-    const [existente] = await Categoria.buscarPorNombre(newNombre.trim())
-    if (existente.length > 0) {
-      return res.status(409).json({ success: false, message: 'Ya existe una categoría con ese nombre' })
+    if (!mismoNombre) {
+      const [existente] = await Categoria.buscarPorNombre(nombreFinal)
+      if (existente.length > 0) {
+        return res.status(409).json({ success: false, message: 'Ya existe una categoría con ese nombre' })
+      }
+      await Categoria.actualizarCategoria(oldNombre, nombreFinal)
     }
 
-    await Categoria.actualizarCategoria(oldNombre, newNombre.trim())
+    await Categoria.actualizarPermiteCremaBatida(nombreFinal, permiteCremaBatida)
     res.status(200).json({ success: true, message: 'Categoría actualizada correctamente' })
   } catch (error) {
     console.error('Error en actualizarCategoria:', error)
@@ -847,9 +1061,10 @@ exports.verificarNombreTipo = async (req, res, next) => {
 // POST crear tipo
 exports.crearTipo = async (req, res, next) => {
   try {
-    const { nombre } = req.body
+    const { nombre, categoria } = req.body
     if (!nombre) return res.status(400).json({ success: false, message: 'Nombre requerido' })
-    await Tipo.insertNuevoTipo(nombre.trim())
+    if (!categoria) return res.status(400).json({ success: false, message: 'Categoría requerida' })
+    await Tipo.insertNuevoTipo(nombre.trim(), categoria.trim())
     res.status(200).json({ success: true, message: 'Tipo registrado exitosamente' })
   } catch (error) {
     console.error('Error en crearTipo:', error)
@@ -876,10 +1091,13 @@ exports.verificarTipoEnUso = async (req, res, next) => {
 exports.actualizarTipo = async (req, res, next) => {
   try {
     const oldNombre = decodeURIComponent(req.params.nombre)
-    const { nombre: newNombre } = req.body
+    const { nombre: newNombre, categoria: newCategoria } = req.body
 
     if (!newNombre || !newNombre.trim()) {
       return res.status(400).json({ success: false, message: 'El nombre es obligatorio' })
+    }
+    if (!newCategoria || !newCategoria.trim()) {
+      return res.status(400).json({ success: false, message: 'La categoría es obligatoria' })
     }
 
     if (newNombre.trim() !== oldNombre) {
@@ -889,7 +1107,7 @@ exports.actualizarTipo = async (req, res, next) => {
       }
     }
 
-    await Tipo.actualizarTipo(oldNombre, newNombre.trim())
+    await Tipo.actualizarTipo(oldNombre, newNombre.trim(), newCategoria.trim())
     res.status(200).json({ success: true, message: 'Tipo actualizado correctamente' })
   } catch (error) {
     console.error('Error en actualizarTipo:', error)
@@ -1005,5 +1223,55 @@ exports.eliminarSucursal = async (req, res, next) => {
   } catch (error) {
     console.error('Error en eliminarSucursal:', error)
     res.status(500).json({ success: false, message: error.message })
+  }
+}
+
+exports.getMetricasRoyalty = async (request, response, next) => {
+  try {
+    const [flujoClientes] = await MetricasClientes.getFlujoClientesMensuales()
+
+    const labelsMeses = flujoClientes.map(row => row.mes)
+    const dataClientes = flujoClientes.map(row => row.total_clientes)
+
+    response.render('metricsRoyalty.ejs', {
+      chartLabels: JSON.stringify(labelsMeses),
+      chartData: JSON.stringify(dataClientes)
+    })
+  } catch (error) {
+    console.log(error)
+  }
+}
+
+exports.postDeleteDiaHabil = async (req, res, next) => {
+  try {
+    const idCalendario = String(req.params.id || '').trim()
+
+    if (!idCalendario) {
+      return res.status(400).json({
+        ok: false,
+        mensaje: 'ID de día hábil inválido.'
+      })
+    }
+
+    const resultado = await Calendario.deleteById(idCalendario)
+
+    if (!resultado) {
+      return res.status(404).json({
+        ok: false,
+        mensaje: 'No fue posible eliminar el día hábil.'
+      })
+    }
+
+    return res.json({
+      ok: true,
+      mensaje: 'Día hábil eliminado correctamente.'
+    })
+  } catch (error) {
+    console.error('Error al eliminar día hábil:', error)
+
+    return res.status(500).json({
+      ok: false,
+      mensaje: 'Ocurrió un error al actualizar la base de datos.'
+    })
   }
 }

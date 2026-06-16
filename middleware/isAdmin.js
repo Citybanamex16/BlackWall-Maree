@@ -1,11 +1,3 @@
-module.exports = (req, res, next) => {
-  if (!req.session || !req.session.user) {
-    return res.redirect('/menu/menu')
-  }
+const { requireRole } = require('./roleGuard.js')
 
-  if (req.session.rol !== 'Administrador') {
-    return res.status(403).send('Acceso denegado')
-  }
-
-  next()
-}
+module.exports = requireRole('Administrador')

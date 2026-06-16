@@ -6,7 +6,7 @@
     --font-body: 'Jost', sans-serif;
 
     /* --- Fondos y Superficies --- */
-    --c-bg-body: #fcfaf7;
+    --c-bg-body: #ffffff;
     --c-bg-gradient: linear-gradient(180deg, #fffdf9 0%, #f8f1e6 100%);
     --c-surface: #ffffff;
     --c-surface-soft: #fcf8f3;
@@ -49,7 +49,7 @@
 /* Reset básico global */
 body {
     font-family: var(--font-body);
-    background: var(--c-bg-gradient);
+    background: #ffffff;
     color: var(--c-text-main);
     min-height: 100vh;
     margin: 0;

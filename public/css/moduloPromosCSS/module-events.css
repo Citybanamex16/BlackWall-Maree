@@ -10,6 +10,22 @@
 }
 
 /* ── 1. ENCABEZADO Y CONTROLES ── */
+.back-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-family: var(--font-body);
+    font-size: 13px;
+    color: var(--c-text-muted);
+    text-decoration: none;
+    margin-bottom: 32px;
+    transition: color 0.2s ease;
+}
+
+.back-link:hover {
+    color: var(--event-accent);
+}
+
 .events-shell {
     display: flex;
     justify-content: space-between;
@@ -132,6 +148,13 @@
     margin-bottom: 18px;
 }
 
+.event-status-stack {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 6px;
+}
+
 .event-card-label {
     font-size: 11px;
     letter-spacing: 1.4px;
@@ -197,6 +220,31 @@
     background: var(--c-surface);
     color: var(--event-copy);
     font-size: 13px;
+}
+
+.event-validity-pill {
+    display: inline-flex;
+    align-items: center;
+    border-radius: var(--radius-pill);
+    padding: 6px 12px;
+    font-size: 11px;
+    font-weight: 600;
+}
+
+.event-validity-pill.is-current {
+    background: var(--event-sage-soft);
+    color: var(--event-sage);
+}
+
+.event-validity-pill.is-upcoming {
+    background: var(--c-danger-bg);
+    color: var(--event-accent-deep);
+}
+
+.event-validity-pill.is-expired,
+.event-validity-pill.is-undated {
+    background: var(--c-border);
+    color: var(--event-copy);
 }
 
 /* ── 5. FOOTER DE TARJETAS ── */

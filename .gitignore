@@ -60,3 +60,16 @@ coverage/
 
 dist/
 build/
+
+############################
+# Licencias de Google
+############################
+util/GoogleCredentials/Google-Wallet.json
+
+############################
+# Licencias de Apple
+############################
+util/AppleCredentials
+passes/
+
+

@@ -52,6 +52,39 @@ const guardarRelaciones = async (connection, idEvento, promociones, productos) =
   }
 }
 
+const obtenerProductosPorEvento = async (connection, idEvento) => {
+  const [rows] = await connection.execute(
+    'SELECT ID_Producto FROM producto_pertenece_evento WHERE ID_Evento = ?',
+    [idEvento]
+  )
+
+  return rows.map(row => String(row.ID_Producto))
+}
+
+const sincronizarExclusividadProductos = async (connection, idsProductos = []) => {
+  const ids = normalizarIds(idsProductos)
+
+  if (ids.length === 0) {
+    return
+  }
+
+  const placeholders = ids.map(() => '?').join(', ')
+
+  await connection.execute(
+    `UPDATE producto AS p
+     SET p.EsExclusivo = CASE
+       WHEN EXISTS (
+         SELECT 1
+         FROM producto_pertenece_evento AS ppe
+         WHERE ppe.ID_Producto = p.ID_Producto
+       ) THEN 1
+       ELSE 0
+     END
+     WHERE p.ID_Producto IN (${placeholders})`,
+    ids
+  )
+}
+
 module.exports = class Evento {
   constructor ({
     id = null,
@@ -98,6 +131,7 @@ module.exports = class Evento {
       )
 
       await guardarRelaciones(connection, idEvento, this.promociones, this.productos)
+      await sincronizarExclusividadProductos(connection, this.productos)
 
       await connection.commit()
 
@@ -178,6 +212,39 @@ module.exports = class Evento {
     `)
   }
 
+  static fetchActiveForClient () {
+    return db.execute(`
+      SELECT
+        e.ID_Evento,
+        e.Nombre,
+        e.Descripcion,
+        e.Imagen,
+        DATE_FORMAT(e.Fecha_Inicio, '%Y-%m-%d') AS Fecha_Inicio,
+        DATE_FORMAT(e.Fecha_Final, '%Y-%m-%d') AS Fecha_Final,
+        COUNT(DISTINCT ecp.ID_Promocion) AS TotalPromociones,
+        COUNT(DISTINCT ppe.ID_Producto) AS TotalProductos,
+        CASE
+          WHEN CURDATE() BETWEEN e.Fecha_Inicio AND COALESCE(e.Fecha_Final, e.Fecha_Inicio) THEN 'live'
+          ELSE 'soon'
+        END AS estatus
+      FROM evento e
+      LEFT JOIN evento_contiene_promocion ecp
+        ON ecp.ID_Evento = e.ID_Evento
+      LEFT JOIN producto_pertenece_evento ppe
+        ON ppe.ID_Evento = e.ID_Evento
+      WHERE e.Activo = 1
+        AND COALESCE(e.Fecha_Final, e.Fecha_Inicio) >= CURDATE()
+      GROUP BY e.ID_Evento, e.Nombre, e.Descripcion, e.Imagen, e.Fecha_Inicio, e.Fecha_Final
+      ORDER BY
+        CASE
+          WHEN CURDATE() BETWEEN e.Fecha_Inicio AND COALESCE(e.Fecha_Final, e.Fecha_Inicio) THEN 0
+          ELSE 1
+        END,
+        e.Fecha_Inicio ASC,
+        e.Nombre ASC
+    `)
+  }
+
   static async fetchById (idEvento) {
     const [[eventos], [promociones], [productos]] = await Promise.all([
       db.execute(`
@@ -232,6 +299,9 @@ module.exports = class Evento {
     try {
       await connection.beginTransaction()
 
+      const productosActuales = await obtenerProductosPorEvento(connection, idEvento)
+      const productosNuevos = normalizarIds(datosEvento.productos)
+
       await connection.execute(
         `UPDATE evento
          SET Nombre = ?, Descripcion = ?, Activo = ?, Fecha_Inicio = ?, Fecha_Final = ?, Imagen = ?
@@ -263,6 +333,8 @@ module.exports = class Evento {
         datosEvento.productos
       )
 
+      await sincronizarExclusividadProductos(connection, [...productosActuales, ...productosNuevos])
+
       await connection.commit()
     } catch (error) {
       await connection.rollback()
@@ -286,10 +358,27 @@ module.exports = class Evento {
     )
   }
 
-  static deleteEvento (idEvento) {
-    return db.execute(
-      'DELETE FROM evento WHERE ID_Evento = ?',
-      [idEvento]
-    )
+  static async deleteEvento (idEvento) {
+    const connection = await db.getConnection()
+
+    try {
+      await connection.beginTransaction()
+
+      const productosActuales = await obtenerProductosPorEvento(connection, idEvento)
+
+      await connection.execute(
+        'DELETE FROM evento WHERE ID_Evento = ?',
+        [idEvento]
+      )
+
+      await sincronizarExclusividadProductos(connection, productosActuales)
+
+      await connection.commit()
+    } catch (error) {
+      await connection.rollback()
+      throw error
+    } finally {
+      connection.release()
+    }
   }
 }

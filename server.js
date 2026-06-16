@@ -3,6 +3,20 @@ const path = require('path')
 const session = require('express-session')
 const appServer = express()
 
+// Apple Wallet
+appServer.get('/passes/:filename', (req, res) => {
+  console.log('Sirviendo pass:', req.params.filename)
+  const filePath = path.join(__dirname, 'passes', req.params.filename)
+  res.setHeader('Content-Type', 'application/vnd.apple.pkpass')
+  res.setHeader('Content-Disposition', `attachment; filename="${req.params.filename}"`)
+  res.sendFile(filePath, (err) => {
+    if (err) {
+      console.log('Error enviando pass:', err)
+      res.status(404).send('Pass no encontrado')
+    }
+  })
+})
+
 // Sección: Configuración de Carpetas Estaticas
 appServer.use(express.static(path.join(__dirname, 'public')))
 
@@ -20,18 +34,6 @@ appServer.use(session({
   saveUninitialized: false // Asegura que no se guarde una sesión para una petición que no lo necesita
 }))
 
-appServer.use((req, res, next) => {
-  if (!req.session.user) {
-    req.session.user = {
-      id: 999,
-      rol: 'admin',
-      nombre: 'Administrador de prueba'
-    }
-    req.session.name = 'Administrador de prueba'
-  }
-  next()
-})
-
 // ESTO Hace que no salga /Ruta fallida por cada foto, no lo borren porfa
 appServer.use('/img/placeholder.webp', (req, res) => {
   res.redirect('https://placehold.co/400x300/fdf8f2/b5956a?text=Marée')
@@ -40,7 +42,8 @@ appServer.use('/img/placeholder.webp', (req, res) => {
 // Middlewares Globales de enrutamiento, redirects & locals
 appServer.use((req, res, next) => {
   // res.locals es lo que EJS lee por defecto
-  res.locals.nombreUsuario = req.session.name || null
+  res.locals.nombreUsuario = req.session.user?.nombre || req.session.cliente?.nombre || req.session.name || null
+  res.locals.rolUsuario = req.session.user?.rol || req.session.rol || null
   next()
 })
 const bodyParser = require('body-parser')
@@ -50,6 +53,7 @@ appServer.use(bodyParser.json())
 // Sección de Routers
 const clienteRutes = require('./routes/cliente.routes.js')
 const adminRutes = require('./routes/admin.routes.js')
+const colaboradorRoutes = require('./routes/colaborador.routes.js')
 const menuRutes = require('./routes/menu.routes.js')
 const rutasEventosPromos = require('./routes/promo_eventos.routes.js')
 const rutasRoyalty = require('./routes/royalty.routes.js')
@@ -57,6 +61,7 @@ const rutasRoyalty = require('./routes/royalty.routes.js')
 // Prefijos De Routes
 appServer.use('/cliente', clienteRutes) // Modulos a Quitar
 appServer.use('/admin', adminRutes) // Modulos a quitar
+appServer.use('/colaborador', colaboradorRoutes)
 appServer.use('/menu', menuRutes) // Modulo de Menu Digital
 appServer.use('/promos', rutasEventosPromos)
 appServer.use('/royalty', rutasRoyalty)

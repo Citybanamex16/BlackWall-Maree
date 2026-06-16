@@ -4,14 +4,16 @@ const router = express.Router()
 // Llamada a controlador de Admin
 const adminControlador = require('../controllers/admin.controlador.js')
 const feedBackControlador = require('../controllers/feedback.controlador.js')
+const royaltyControlador = require('../controllers/royalty.controlador.js')
 const isAuth = require('../middleware/isAuth.js')
 const isAdmin = require('../middleware/isAdmin.js')
+const isAdminOrCollaborator = require('../middleware/isAdminOrCollaborator.js')
 // Dashboard principal
 router.get('/', isAuth, isAdmin, adminControlador.getHub)
 // Cada sección del dashboard uu que rico
 // router.get('/ingredientes', adminControlador.getIngredientes)
 
-router.get('/ingredientes', isAuth, isAdmin, adminControlador.getIngredients)
+router.get('/ingredientes', isAdminOrCollaborator, adminControlador.getIngredients)
 router.get('/productos', isAuth, isAdmin, adminControlador.getProducts)
 
 router.get('/api/metricas-clientes', isAuth, isAdmin, adminControlador.getRoyaltyMetricsData)
@@ -25,23 +27,32 @@ router.post('/colaboradores/nuevo', isAuth, isAdmin, adminControlador.postNewCol
 router.get('/colaboradores/:id', isAuth, isAdmin, adminControlador.getCollaboratorsDetails)
 router.post('/colaboradores/:id/baja', isAuth, isAdmin, adminControlador.postDarDeBajaColaborador)
 
-router.get('/ordenes', isAuth, isAdmin, adminControlador.getOrders)
-router.post('/api/orders/:id/cancel', adminControlador.cancelActiveOrder)
+router.get('/dias-habiles', isAuth, isAdmin, adminControlador.getDiasHabiles)
+router.get('/dias-habiles', isAuth, isAdmin, adminControlador.getDiasHabiles)
+router.post('/dias-habiles', isAuth, isAdmin, adminControlador.postDiasHabiles)
+router.post('/dias-habiles/:id/delete', isAuth, isAdmin, adminControlador.postDeleteDiaHabil)
+
+router.get('/ordenes', isAdminOrCollaborator, adminControlador.getOrders)
+router.get('/api/orders', isAdminOrCollaborator, adminControlador.getOrdersJson)
+router.get('/api/orders/:id/items', isAdminOrCollaborator, adminControlador.getOrderItems)
+router.post('/api/orders/:id/cancel', isAdminOrCollaborator, adminControlador.cancelActiveOrder)
+router.post('/api/orders/:id/accept', isAdminOrCollaborator, adminControlador.postAcceptOrder)
+router.post('/api/orders/:id/status', isAdminOrCollaborator, adminControlador.postUpdateOrderStatus)
 router.get('/promociones', isAuth, isAdmin, adminControlador.getPromotions)
 router.get('/eventos', isAuth, isAdmin, adminControlador.getEvents)
 router.get('/mensajes', isAuth, isAdmin, adminControlador.getMensajes)
 
-router.get('/ingredientes', adminControlador.getIngredientes)
-router.get('/api/ingredientes', adminControlador.getIngredientesLista)
-router.get('/api/ingredientes/categorias', adminControlador.getCategorias)
-router.get('/api/ingredientes/verificarNombre', adminControlador.verificarNombreIngrediente)
-router.post('/api/ingredientes/validar', adminControlador.validarIngrediente)
-router.post('/api/ingredientes/crear', adminControlador.crearIngrediente)
-router.get('/api/ingredientes/:id/validarEliminable', adminControlador.validarIngredienteEliminable)
-router.delete('/api/ingredientes/:id/eliminar', adminControlador.eliminarIngrediente)
-router.put('/api/ingredientes/:id/actualizar', adminControlador.actualizarIngrediente)
-router.get('/metricas-ingredientes', adminControlador.getMetricasIngredientes)
-router.get('/api/metricas-ingredientes', adminControlador.getMetricasIngredientesData)
+router.get('/api/ingredientes', isAdminOrCollaborator, adminControlador.getIngredientesLista)
+router.get('/api/ingredientes/categorias', isAdminOrCollaborator, adminControlador.getCategorias)
+router.get('/api/ingredientes/tiposPorCategorias', isAdmin, adminControlador.getTiposParaCategorias)
+router.get('/api/ingredientes/verificarNombre', isAdmin, adminControlador.verificarNombreIngrediente)
+router.post('/api/ingredientes/validar', isAdmin, adminControlador.validarIngrediente)
+router.post('/api/ingredientes/crear', isAdmin, adminControlador.crearIngrediente)
+router.get('/api/ingredientes/:id/validarEliminable', isAdmin, adminControlador.validarIngredienteEliminable)
+router.delete('/api/ingredientes/:id/eliminar', isAdmin, adminControlador.eliminarIngrediente)
+router.put('/api/ingredientes/:id/actualizar', isAdmin, adminControlador.actualizarIngrediente)
+router.get('/metricas-ingredientes', isAdmin, adminControlador.getMetricasIngredientes)
+router.get('/api/metricas-ingredientes', isAdmin, adminControlador.getMetricasIngredientesData)
 
 router.get('/categorias-tipos', isAuth, isAdmin, adminControlador.getCategoriasTipos)
 router.get('/api/categorias', isAuth, isAdmin, adminControlador.getCategoriasLista)
@@ -68,5 +79,9 @@ router.post('/api/sucursales/crear', isAuth, isAdmin, adminControlador.crearSucu
 router.put('/api/sucursales/:id/actualizar', isAuth, isAdmin, adminControlador.actualizarSucursal)
 router.get('/api/sucursales/:id/verificarEliminable', isAuth, isAdmin, adminControlador.verificarSucursalEliminable)
 router.delete('/api/sucursales/:id/eliminar', isAuth, isAdmin, adminControlador.eliminarSucursal)
+
+// Registrar Visitas
+router.post('/procesar-escaneo', isAdminOrCollaborator, royaltyControlador.postProcesarEscaneo)
+router.post('/registrar-visita', isAdminOrCollaborator, royaltyControlador.postRegistrarVisitaAdmin)
 
 module.exports = router

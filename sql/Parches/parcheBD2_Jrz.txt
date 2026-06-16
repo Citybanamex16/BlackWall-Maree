@@ -52,3 +52,6 @@ END$$
 -- Y esto pt 3 (creo que ya no ha de estar para uds pero por si acaso)
 
 ALTER TABLE insumo DROP COLUMN Tipo;
+
+-- COLUMNA Direccion
+ALTER TABLE orden ADD COLUMN Direccion VARCHAR(255) NULL DEFAULT NULL;

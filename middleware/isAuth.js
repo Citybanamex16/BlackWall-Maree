@@ -1,7 +1,3 @@
-module.exports = (req, res, next) => {
-  if (!req.session || !req.session.user) {
-    return res.redirect('/menu/menu')
-  }
+const { requireInternalAuth } = require('./roleGuard.js')
 
-  next()
-}
+module.exports = requireInternalAuth

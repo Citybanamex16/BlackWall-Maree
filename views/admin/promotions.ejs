@@ -10,8 +10,21 @@
     <link rel="stylesheet" href="/css/moduloPromosCSS/module-promos.css">
 </head>
 <body>
+    <nav class="navbar" role="navigation">
+        <div class="navbar-brand">
+            <div class="navbar-item">
+                <div class="logo-area">
+                    <span class="logo-text">MARÉE</span>
+                    <span class="logo-sub">Love at First Crêpe</span>
+                </div>
+            </div>
+        </div>
+    </nav>
+
     <section class="section">
         <div class="container">
+            <a href="/admin" class="back-link">← Admin Dashboard</a>
+
             <div class="promotions-shell">
                 <div>
                     <span class="promotions-kicker">Promociones y beneficios</span>
@@ -22,9 +35,6 @@
                     </p>
                 </div>
                 <div class="promotion-toolbar">
-                    <a href="/admin" class="button maree-ghost is-medium" type="button">
-                        Volver al dashboard
-                    </a>
                     <div id="loading-spinner" class="button is-loading is-ghost is-hidden"></div>
                     <button id="btn-nueva-promocion" class="button maree-action-button is-rounded is-medium" type="button">
                         Nueva promoción
@@ -45,6 +55,36 @@
                     Las eliminaciones se confirman y se restringen si la promoción ya está ligada a eventos,
                     canjes de clientes o beneficios de royalty.
                 </p>
+            </div>
+        </div>
+    </section>
+
+    <section class="section pt-0">
+        <div class="container">
+            <div class="box promotion-help-box">
+                <p class="promotion-help-title">Promociones más usadas</p>
+                <p class="promotion-help-copy">
+                    Consulta qué promociones concentran más movimiento entre clientes para detectar
+                    beneficios populares y revisar su desempeño sin salir de esta vista.
+                </p>
+                <div class="table-container mt-5">
+                    <table class="table is-fullwidth is-hoverable">
+                        <thead>
+                            <tr>
+                                <th>Top</th>
+                                <th>Promoción</th>
+                                <th>Usos</th>
+                                <th>Clientes</th>
+                                <th>Canjes</th>
+                            </tr>
+                        </thead>
+                        <tbody id="promociones-populares-body">
+                            <tr>
+                                <td colspan="5">Cargando métricas...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
     </section>
@@ -226,5 +266,6 @@
     </div>
 
     <script src="/js/promos_eventos/promos.js"></script>
+<script src="/js/adminOrderNotifications.js"></script>
 </body>
 </html>

@@ -10,12 +10,20 @@ const isAdmin = require('../middleware/isAdmin.js')
 // Visualizar estados Royalties
 router.get('/royaltyAdmin', isAuth, isAdmin, royaltyControlador.getRoyaltyAdmin)
 router.get('/royaltyAdmin/api', isAuth, isAdmin, royaltyControlador.getRoyaltyAdminJSON)
+router.get('/royaltyUser/apple-pass', royaltyControlador.getApplePass)
 
 // Modificar estados Royalties
 router.put('/royaltyAdmin/:nombre', isAuth, isAdmin, royaltyControlador.updateRoyalty)
 router.get('/royaltyMetrics', isAuth, isAdmin, royaltyControlador.getRoyaltyMetrics)
 router.get('/royaltyAdmin/:nombre/promociones', isAuth, isAdmin, royaltyControlador.getPromocionesParaModal)
 router.get('/royaltyAdmin/:nombre/eventos', isAuth, isAdmin, royaltyControlador.getEventosParaModal)
+
+// Metodos post
+router.post('/promociones', isAuth, isAdmin, royaltyControlador.postRegistrarEstadoRoyalty)
+router.get('/royaltyAdmin/promocion-evento-filtro', isAuth, isAdmin, royaltyControlador.getFilterPromocionesEventos)
+// Agrega estas dos rutas (antes de las rutas de cliente)
+router.get('/royaltyAdmin/todas/promociones-disponibles', isAuth, isAdmin, royaltyControlador.getTodasPromociones)
+router.get('/royaltyAdmin/todas/eventos-disponibles', isAuth, isAdmin, royaltyControlador.getTodosEventos)
 
 router.delete('/borrar/:nombre', isAuth, isAdmin, royaltyControlador.deleteRoyalty)
 

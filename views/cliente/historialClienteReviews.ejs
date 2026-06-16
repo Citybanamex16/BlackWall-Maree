@@ -1,0 +1,110 @@
+<%- include('../partials/header_cliente', { pageTitle: 'Mis Reseñas - Marée' }) %>
+
+<div id="sticky-top" class="sticky-top-app">
+    <div class="logo-area">
+        <span class="logo-text">MARÉE</span>
+        <span class="logo-sub">Mis Reseñas</span>
+    </div>
+    <a href="/royalty/royaltyUser"
+       style="font-size:13px;color:#b5956a;text-decoration:none;font-family:'Jost',sans-serif;">
+        ← Regresar
+    </a>
+</div>
+
+<section class="section">
+    <div class="container" style="max-width:680px;">
+        <p style="font-size:11px;color:#aaa;font-family:'Jost',sans-serif;
+                  text-transform:uppercase;letter-spacing:0.06em;margin-bottom:4px;">
+            <%= datosCliente.nombre %>
+        </p>
+        <h1 style="font-family:'Cormorant Garamond',serif;font-size:32px;margin-bottom:4px;">
+            Mis Reseñas
+        </h1>
+        <p style="font-size:13px;color:#888;font-family:'Jost',sans-serif;margin-bottom:28px;">
+            Aquí puedes ver los comentarios que has dejado en Marée.
+        </p>
+
+        <!-- ← Aquí inyecta el JS -->
+        <div id="contenedor-reviews"></div>
+    </div>
+</section>
+<style>
+    .resena-card {
+        background: #fff;
+        border: 1px solid #ede5d8;
+        border-radius: 12px;
+        padding: 20px;
+        margin-bottom: 16px;
+
+        .resena-card {
+    background: #fff;
+    border: 1px solid #ede5d8;
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 16px;
+}
+
+.resena-estrellas {
+    color: #D4AF37;
+    font-size: 16px;
+    letter-spacing: 2px;
+}
+
+.resena-meta {
+    font-size: 11px;
+    color: #aaa;
+    font-family: 'Jost', sans-serif;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin-bottom: 6px;
+}
+
+.resena-comentario {
+    font-family: 'Jost', sans-serif;
+    font-size: 14px;
+    color: #444;
+    line-height: 1.6;
+    margin: 0;
+}
+
+.resena-orden {
+    font-size: 12px;
+    color: #b5956a;
+    font-family: 'Jost', sans-serif;
+    margin-top: 12px;
+}
+
+.resena-empty {
+    text-align: center;
+    padding: 48px 24px;
+    color: #aaa;
+    font-family: 'Jost', sans-serif;
+}
+
+.resena-empty-icon {
+    font-size: 40px;
+    margin-bottom: 12px;
+}
+
+.resena-empty-hint {
+    margin-top: 12px;
+    font-size: 13px;
+    color: #b5956a;
+    background: #fdf8f2;
+    border: 1px solid #ede5d8;
+    border-radius: 10px;
+    padding: 12px 16px;
+    display: inline-block;
+    line-height: 1.6;
+}
+    }
+</style>
+
+<script>
+    window.clienteData = <%- JSON.stringify(datosCliente) %>
+</script>
+
+<script src="/js/menudigital/feedbackScripts/historialReviewsCliente.js"></script>
+
+</body>
+</html>

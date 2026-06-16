@@ -21,25 +21,25 @@
             </div>
         </div>
         <div style="display:flex;align-items:center;gap:16px;">
-        <a href="/cliente/login"
-            style="padding:8px 18px;border:1px solid #b5956a;border-radius:6px;
-                    color:#b5956a;font-size:13px;text-decoration:none;font-family:'Jost',sans-serif;">
-            Iniciar Sesión
-        </a>
-        <span id="nav-item-count" style="font-size:13px;color:#888;font-family:'Jost',sans-serif;"></span>
+            <% if (!datosCliente) { %>
+                <a href="/cliente/login"
+                    style="padding:8px 18px;border:1px solid #b5956a;border-radius:6px;
+                            color:#b5956a;font-size:13px;text-decoration:none;font-family:'Jost',sans-serif;">
+                    Iniciar Sesión
+                </a>
+            <% } %>
+            <span id="nav-item-count" style="font-size:13px;color:#888;font-family:'Jost',sans-serif;"></span>
         </div>
     </nav>
-    
+
     <section class="section">
         <div class="container">
 
             <h1 class="page-title">Resumen de Pedido</h1>
             <p class="page-subtitle">Revisa tu orden antes de confirmar</p>
 
-            <!-- Lista de items -->
             <div id="lista-pedido"></div>
 
-            <!-- Mensaje si está vacío -->
             <div id="pedido-vacio" style="display:none;margin-top:32px;text-align:center;">
                 <p style="color:#aaa;font-size:15px;margin-bottom:12px;">
                     No hay artículos en tu pedido.
@@ -47,7 +47,6 @@
                 <a href="/" style="color:#b5956a;font-size:14px;">← Regresar al menú</a>
             </div>
 
-            <!-- Botón checkout -->
             <div id="seccion-checkout" style="display:none;margin-top:24px;">
                 <button id="btn-checkout"
                     style="padding:14px 32px;background:#b5956a;color:#fff;
@@ -56,10 +55,54 @@
                     Confirmar Pedido →
                 </button>
             </div>
-
         </div>
+
+        <div id="contenedor-royalty-ui"></div>
+    
+        <div id="modal-royalty" class="modal">
+            <div class="modal-background" onclick="cerrarModalPremios()"></div>
+            <div class="modal-content" style="background: white; padding: 25px; border-radius: 15px;">
+                <h3 class="title is-4" style="font-family: 'Cormorant Garamond';">Canjear Premio Royalty</h3>
+                <p class="subtitle is-6">Selecciona el producto para aplicar tu descuento:</p>
+                <div id="lista-productos-premios"></div>
+                <button class="button is-fullwidth mt-4" onclick="cerrarModalPremios()">Cancelar</button>
+            </div>
+        </div>
+            
+        <% if (datosCliente) { %>
+        <div style="margin-top:32px;display:flex;justify-content:flex-end;">
+            <a href="/cliente/historial"
+               style="padding:10px 22px;border:1px solid #b5956a;border-radius:6px;
+                      color:#b5956a;font-size:13px;text-decoration:none;font-family:'Jost',sans-serif;">
+                Historial de Pedidos →
+            </a>
+        </div>
+        <% } else { %>
+        <div style="margin-top:40px;padding:16px 20px;background:#faf7f3;border-radius:8px;
+                    border:1px solid #ede5d8;text-align:center;">
+            <p style="font-size:14px;color:#888;font-family:'Jost',sans-serif;margin-bottom:8px;">
+                ¿Quieres dar seguimiento a tu pedido?
+            </p>
+            <a href="/cliente/login"
+               style="color:#b5956a;font-size:14px;font-family:'Jost',sans-serif;font-weight:500;">
+                Inicia sesión para ver tu historial →
+            </a>
+        </div>
+        <% } %>
+
+
+        <script>
+            window.datosRoyalty = {
+                tokens: <%= (datosCliente && datosCliente.tokensDisponibles) ? datosCliente.tokensDisponibles : 0 %>,
+                descuento: <%= (datosCliente && datosCliente.descuentoRoyalty) ? datosCliente.descuentoRoyalty : 0 %>,
+                nivel: "<%= (datosCliente) ? datosCliente.nivel : '' %>"
+            };
+        </script>
     </section>
 
+    <script>
+        const sesionCliente = <%- JSON.stringify(datosCliente || null) %>;
+    </script>
     <script src="/js/menudigital/order.js"></script>
 </body>
 </html>

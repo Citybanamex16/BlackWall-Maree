@@ -1,5 +1,8 @@
 const Login = require('../models/login.model.js')
 const nav = require('../models/breadcrumbs.model.js')
+const bcrypt = require('bcryptjs')
+
+const isBcryptHash = (value = '') => /^\$2[aby]\$\d{2}\$/.test(value)
 
 const formatearTelefono = (tel) => {
   const soloNumeros = tel.replace(/\D/g, '')
@@ -7,6 +10,38 @@ const formatearTelefono = (tel) => {
     return `${soloNumeros.slice(0, 2)}-${soloNumeros.slice(2, 6)}-${soloNumeros.slice(6)}`
   }
   return tel
+}
+
+const normalizarIdColaborador = (valor = '') => valor.trim().toUpperCase()
+const esPosibleTelefonoCliente = (valor = '') => /^[\d\s-]{10,15}$/.test(valor)
+
+const setEmployeeSession = (request, colaborador) => {
+  request.session.isLoggedIn = true
+  request.session.user = {
+    id: colaborador.id_colaborador,
+    nombre: colaborador.nombre,
+    rol: colaborador.id_rol
+  }
+  request.session.rol = colaborador.id_rol
+  request.session.name = colaborador.nombre
+
+  delete request.session.cliente
+  delete request.session.pendingPhone
+}
+
+const setClientSession = (request, client) => {
+  request.session.isLoggedIn = true
+  request.session.rol = client.rol
+  request.session.name = client.Nombre
+  request.session.cliente = {
+    nombre: client.Nombre,
+    telefono: client.telefono,
+    genero: client.genero,
+    visitas: client.visitasActual || 0
+  }
+
+  delete request.session.user
+  delete request.session.pendingPhone
 }
 
 exports.logout = (request, response, next) => {
@@ -28,38 +63,43 @@ exports.postLogin = async (request, response, next) => {
   const { telefono, password } = request.body
 
   try {
+    const idColaborador = normalizarIdColaborador(telefono)
     // --- LÓGICA COLABORADOR ---
-    if (/^CL\d{8}$/i.test(telefono)) {
-      const [rows] = await Login.fetchColaborador(telefono)
+    if (!esPosibleTelefonoCliente(telefono)) {
+      const [rows] = await Login.fetchColaborador(idColaborador)
       const colaborador = rows[0]
-
       if (!colaborador) {
         return response.status(404).json({ error: 'ID de Colaborador no encontrado.' })
       }
 
       if (password) {
-        if (password === colaborador.password) {
-          request.session.isLoggedIn = true
-          request.session.user = {
-            id: colaborador.id_colaborador,
-            nombre: colaborador.nombre
-          }
-          request.session.rol = colaborador.id_rol
+        let passwordValido = false
+
+        if (isBcryptHash(colaborador.password)) {
+          passwordValido = await bcrypt.compare(password, colaborador.password)
+        } else if (password === colaborador.password) {
+          passwordValido = true
+
+          const nuevoHash = await bcrypt.hash(password, 12)
+          await Login.updateColaboradorPasswordHash(colaborador.id_colaborador, nuevoHash)
+        }
+
+        if (passwordValido) {
+          setEmployeeSession(request, colaborador)
 
           const redirectUrl = colaborador.id_rol === 'Administrador'
             ? '/admin'
-            : '/menu/menu'
+            : '/colaborador'
 
           return response.status(200).json({ success: true, redirectUrl })
         }
         return response.status(401).json({ error: 'Contraseña incorrecta.' })
       }
-
       return response.status(200).json({ requirePassword: true })
     }
 
     // --- LÓGICA CLIENTE ---
-    if (/^[\d\s-]{10,15}$/.test(telefono)) {
+    if (esPosibleTelefonoCliente(telefono)) {
       const telefonoFormateado = formatearTelefono(telefono)
       const client = await Login.findByPhoneForLogin(telefonoFormateado)
 
@@ -89,7 +129,7 @@ exports.postLogin = async (request, response, next) => {
 }
 
 exports.postSignUp = async (request, response, next) => {
-  const { telefono, nombre, genero, birthday, mail } = request.body
+  const { telefono, nombre, genero, birthday, mail, username } = request.body
   const telefonoSoloNumeros = telefono.replace(/\D/g, '')
 
   if (telefonoSoloNumeros.length !== 10) {
@@ -98,7 +138,7 @@ exports.postSignUp = async (request, response, next) => {
 
   try {
     const telefonoFormateado = formatearTelefono(telefonoSoloNumeros)
-    await Login.save({ telefono: telefonoFormateado, nombre, genero, birthday, mail })
+    await Login.save({ telefono: telefonoFormateado, nombre, genero, birthday, mail, username })
 
     const otpData = await issueOtpForClient(telefonoFormateado)
     request.session.pendingPhone = telefonoFormateado
@@ -143,14 +183,11 @@ exports.postVerifyOtp = async (request, response, next) => {
       }
 
       await Login.deleteVerificationCode(telefono)
-      request.session.isLoggedIn = true
-      request.session.rol = client.rol
-      request.session.cliente = { nombre: client.nombre, telefono: client.telefono, genero: client.genero, visitas: client.visitasActual || 0 }
-      delete request.session.pendingPhone
+      setClientSession(request, client)
 
       return response.status(200).json({
         success: true,
-        redirectUrl: '/royalty/royaltyUser'
+        redirectUrl: '/menu/menu'
       })
     }
 

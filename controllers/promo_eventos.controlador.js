@@ -122,6 +122,40 @@ const eliminarImagenSubida = async (archivo) => {
   await eliminarImagenEvento(obtenerRutaImagenEvento(archivo))
 }
 
+const normalizarFechaISO = (fecha) => {
+  if (!fecha) {
+    return ''
+  }
+
+  const texto = String(fecha)
+  const coincidencia = texto.match(/^(\d{4}-\d{2}-\d{2})/)
+
+  if (coincidencia) {
+    return coincidencia[1]
+  }
+
+  const fechaObjeto = new Date(fecha)
+
+  if (Number.isNaN(fechaObjeto.getTime())) {
+    return ''
+  }
+
+  const anio = fechaObjeto.getFullYear()
+  const mes = String(fechaObjeto.getMonth() + 1).padStart(2, '0')
+  const dia = String(fechaObjeto.getDate()).padStart(2, '0')
+
+  return `${anio}-${mes}-${dia}`
+}
+
+const obtenerFechaActualLocal = () => {
+  const hoy = new Date()
+  const anio = hoy.getFullYear()
+  const mes = String(hoy.getMonth() + 1).padStart(2, '0')
+  const dia = String(hoy.getDate()).padStart(2, '0')
+
+  return `${anio}-${mes}-${dia}`
+}
+
 const validarDatosEvento = ({
   nombre,
   descripcion,
@@ -134,7 +168,19 @@ const validarDatosEvento = ({
     return 'Faltan datos obligatorios para guardar el evento.'
   }
 
-  if (new Date(fechaInicio) > new Date(fechaFinal)) {
+  const fechaInicioNormalizada = normalizarFechaISO(fechaInicio)
+  const fechaFinalNormalizada = normalizarFechaISO(fechaFinal)
+  const hoy = obtenerFechaActualLocal()
+
+  if (!fechaInicioNormalizada || !fechaFinalNormalizada) {
+    return 'Las fechas enviadas no son validas.'
+  }
+
+  if (fechaInicioNormalizada < hoy || fechaFinalNormalizada < hoy) {
+    return 'Solo se permiten fechas actuales o futuras.'
+  }
+
+  if (fechaInicioNormalizada > fechaFinalNormalizada) {
     return 'La fecha de inicio no puede ser posterior a la fecha final.'
   }
 
@@ -150,13 +196,24 @@ const validarDatosPromocion = ({ nombre, descuento, condicion, fechaInicio, fech
     return 'Faltan datos obligatorios para guardar la promoción.'
   }
 
+  const fechaInicioNormalizada = normalizarFechaISO(fechaInicio)
+  const fechaFinalNormalizada = normalizarFechaISO(fechaFinal)
+  const hoy = obtenerFechaActualLocal()
   const descuentoNumero = Number(descuento || 0)
 
   if (Number.isNaN(descuentoNumero) || descuentoNumero < 0 || descuentoNumero > 100) {
     return 'El descuento debe ser un número entre 0 y 100.'
   }
 
-  if (new Date(fechaInicio) > new Date(fechaFinal)) {
+  if (!fechaInicioNormalizada || !fechaFinalNormalizada) {
+    return 'Las fechas enviadas no son validas.'
+  }
+
+  if (fechaInicioNormalizada < hoy || fechaFinalNormalizada < hoy) {
+    return 'Solo se permiten fechas actuales o futuras.'
+  }
+
+  if (fechaInicioNormalizada > fechaFinalNormalizada) {
     return 'La fecha de inicio no puede ser posterior a la fecha final.'
   }
 
@@ -560,6 +617,25 @@ exports.getPromotionsAPI = async (req, res, next) => {
     res.status(500).json({
       success: false,
       message: 'No se pudo obtener el catálogo de promociones.'
+    })
+  }
+}
+
+exports.getPromotionsMetricsAPI = async (req, res, next) => {
+  try {
+    const limite = Number.parseInt(req.query.limit, 10)
+    const [promociones] = await Promociones.fetchPromocionesPopulares(limite)
+
+    res.status(200).json({
+      success: true,
+      message: 'Metricas de promociones obtenidas correctamente.',
+      data: promociones
+    })
+  } catch (error) {
+    console.log('Error al obtener metricas de promociones:', error)
+    res.status(500).json({
+      success: false,
+      message: 'No se pudieron obtener las metricas de promociones.'
     })
   }
 }

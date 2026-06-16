@@ -1,60 +1,179 @@
 <%- include('../partials/header_cliente', { pageTitle: 'Menu - Maree' }) %>
-    <link rel="stylesheet" href="/css/moduloRoyaltyCSS/royalty-cliente.css">
+<link rel="stylesheet" href="/css/moduloRoyaltyCSS/royalty-cliente.css">
 <body>
-<%- include('../partials/breadcrumbs') %>
     
-<main class="container-fluid container-md my-3 my-md-5 royalty-dashboard">
-    
-    <div class="row mb-4">
-        <div class="col-12 col-md-8 mx-auto px-2 px-md-3">
-            <div class="premium-card text-center p-4">
-                
-                <h1 class="fs-2 fw-bold mb-1 text-truncate">¡Hola, <%= cliente.Nombre %>!</h1>
-                <p class="text-muted small mb-4">Maree Royalty</p>
-
-                <div class="qr-container mb-4">
-                    <div class="qr-placeholder mx-auto">
-                        <i class="bi bi-qr-code-scan"></i>
-                        <span class="mt-2 small text-muted">Generando...</span>
+    <main class="container-fluid container-md my-3 my-md-5 royalty-dashboard">
+        <div class="row mb-4">
+            <div class="col-12 col-md-8 mx-auto px-2 px-md-3">
+                <div class="premium-card p-4">
+                    <div class="greeting-section mb-4 text-start">
+                        <h1 class="greeting-title text-truncate">¡Hola, <%= cliente.username || cliente.Nombre  %>!</h1>
+                        <p class="loyalty-subtitle">Maree Rewards</p>
                     </div>
-                    <p class="text-muted mt-3 mb-0"><small><i class="bi bi-info-circle"></i> Muestra este código en caja</small></p>
-                </div>
-
-                <div class="royalty-stats row g-0">
-                    <div class="stat-item col-6 border-end">
-                        <span class="stat-label">Nivel</span>
-                        <strong id="cliente-nivel-badge" class="badge-nivel mx-auto mt-1"><%= cliente.nivel %></strong>
-                    </div>
-                    <div class="stat-item col-6">
-                        <span class="stat-label">Visitas</span>
-                        <strong class="stat-value mt-1"><%= cliente.visitas %></strong>
-                    </div>
-                </div>
-                
+            <div class="text-center mt-4">
+                <strong id="cliente-nivel-badge" class="badge-nivel mx-auto mt-1"><%= cliente.nivel %></strong>
             </div>
+            <br>
+            <div class="qr-showcase-container mb-4 mx-auto text-center">
+                <div class="qr-placeholder">
+                    <% if (typeof qrCode !== 'undefined' && qrCode) { %>
+                        <div class="qr-image-wrapper">
+                            <img src="<%= qrCode %>" alt="Código QR de <%= cliente.Nombre %>" class="img-fluid">
+                        </div>
+                    <% } else { %>
+                        <div class="qr-error-state">
+                            <i class="bi bi-qr-code-scan fs-3"></i>
+                            <span class="mt-2 small">Código no disponible</span>
+                        </div>
+                    <% } %>
+                </div>
+                <div class="qr-instruction mt-3">
+                    <span class="badge-instruction">
+                        Muestra este código en caja
+                    </span>
+                </div>
+            </div>
+            
+            <div class="sellos-section px-2 mt-4 text-start">
+                <p class="sellos-title">Tus Sellos</p>
+                <div id="contenedor-sellos" data-visitas="<%= cliente.visitas %>"></div>
+            </div>
+            <div class="is-flex is-justify-content-center is-align-items-center mt-5 mb-4">
+    <div class="buttons is-centered"> 
+        <a id="btn-google-wallet" 
+   href="#" 
+   target="_blank" 
+   class="mx-2" 
+   style="opacity: 0.5; pointer-events: none;"
+   aria-disabled="true">
+    <img src="https://help.ipswichtheatres.co.uk/hc/article_attachments/24188305565329" 
+         alt="Agregar a Google Wallet" 
+         style="height: 44px; width: auto;">
+</a>
+        <a id="btn-apple-wallet" href="/royalty/royaltyUser/apple-pass" target="_blank" class="mx-2">
+    <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/3/30/Add_to_Apple_Wallet_badge.svg/3840px-Add_to_Apple_Wallet_badge.svg.png" 
+         alt="Agregar a Apple Wallet" 
+         style="height: 44px; width: auto;">
+</a>
+    </div>
+</div>
         </div>
     </div>
 
-    <section class="mb-4 ps-2 ps-md-0">
-        <h2 class="section-title mb-3 fs-4">Tus Promociones</h2>
-        <div class="scroll-horizontal pb-3" id="contenedor-promociones">
-            <div class="w-100 text-center py-4 loading-state">
-                <div class="spinner-border text-gold spinner-border-sm" role="status"></div> 
-                <span class="ms-2 small">Cargando promociones...</span>
-            </div>
-        </div>
-    </section>
 
-    <section class="mb-4 ps-2 ps-md-0">
-        <h2 class="section-title mb-3 fs-4">Tus Eventos</h2>
-        <div class="scroll-horizontal pb-3" id="contenedor-eventos">
-            <div class="w-100 text-center py-4 loading-state">
-                <div class="spinner-border text-gold spinner-border-sm" role="status"></div> 
-                <span class="ms-2 small">Cargando eventos...</span>
-            </div>
-        </div>
-    </section>
+
+
+
+    <!-- ═══════════════════════════════════════════
+     CARRUSEL DE PROMOCIONES ROYALTY
+     Se inyectan las tarjetas desde JS con construirCarruselPromos()
+════════════════════════════════════════════ -->
+
+
+  <!-- Encabezado -->
+   <div class="row">
+      <div class="col-12 col-md-8 mx-auto px-2 px-md-3">
+  <section class="promos-section premium-card mb-5 p-4" style="margin-top: 32px;">
+    <div class="promos-header mb-4 text-start">
+    <h2 class="section-title fs-4">Tus Promociones</h2>
+    <p class="loyalty-subtitle mb-1">Beneficios exclusivos de tu nivel</p>
+  </div>
+
+  <!-- Estado de carga -->
+  <div id="promos-loading" class="w-100 text-center py-4">
+    <div class="spinner-border spinner-border-sm text-gold" role="status"></div>
+    <span class="ms-2 small text-muted">Cargando promociones...</span>
+  </div>
+
+  <!-- Estado vacío (oculto por defecto) -->
+  <div id="promos-empty" class="alert alert-light border mx-3 w-100 text-center" style="display:none;">
+    No hay promociones disponibles para tu nivel en este momento.
+  </div>
+
+  <!-- Carrusel (oculto hasta que JS inyecte tarjetas) -->
+  <div id="contenedor-promos-carrusel"
+       class="scroll-horizontal pb-3"
+       style="display:none;">
+    <!-- Las .promo-img-card se inyectan aquí desde construirCarruselPromos() -->
+  </div>
+
+</section>
+</div>
+</div>
+
+
+
+<div id="sticky-bottom" class="sticky-bottom-app">
+
+    <a href="/menu/sucursales" class="btn btn-icon search-side-btn" aria-label="Mapa">
+        <i class="fas fa-map-marker-alt is-size-4"></i>
+    </a>
+
+    <a href="/cliente/eventosCliente" class="btn btn-icon search-side-btn" aria-label="Eventos">
+        <i class="fas fa-calendar-alt is-size-4"></i>
+    </a>
+
+    <a href="/" class="btn btn-icon search-side-btn" aria-label="Inicio">
+        <i class="fas fa-house is-size-4"></i>
+    </a>
+
+    <div class="search-bar-wrapper control has-icons-left" id="search-expanded" style="display:none;flex:1;">
+        <input id="search-input" class="input is-rounded" type="text" placeholder="Buscar...">
+        <span class="icon is-left">
+            <i class="fas fa-search"></i>
+        </span>
+    </div>
+
+    <a href="/menu/orden" class="btn btn-icon search-side-btn" aria-label="Carrito">
+        <span style="position:relative;display:inline-flex;">
+            <i class="fas fa-shopping-cart is-size-4"></i>
+            <span class="fab-badge">0</span>
+        </span>
+    </a>
+
+</div>
+
+
+
+
+
+    
+
+    <script>
+  fetch('/royalty/royaltyUser/api/datos')
+    .then(r => r.json())
+    .then(data => {
+      console.log('Respuesta:', data)
+
+      // Google Wallet
+      if (data.walletLink) {
+        const btnGoogle = document.getElementById('btn-google-wallet')
+        btnGoogle.href = data.walletLink
+        btnGoogle.style.opacity = '1'
+        btnGoogle.style.pointerEvents = 'auto'
+        btnGoogle.removeAttribute('aria-disabled')
+      }
+
+      // Apple Wallet (por si también lo necesitas)
+      if (data.applePassUrl) {
+        const btnApple = document.getElementById('btn-apple-wallet')
+        btnApple.href = data.applePassUrl
+      }
+    })
+    .catch(err => console.error('Error cargando wallet:', err))
+</script>
+    
+    
+
 </main>
+
+<script>
+  window.clienteData = {
+    nombre:  "<%= cliente.Nombre %>",
+    nivel:   "<%= cliente.nivel %>",
+    visitas: "<%= cliente.visitas %>"
+  }
+</script>
 
 <script src="/js/Royalty/royalty.cliente.js"></script>
 </body>

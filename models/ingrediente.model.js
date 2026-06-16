@@ -1,20 +1,63 @@
 const db = require('../util/database.js')
 
 module.exports = class Ingrediente {
-  // Consigue todods los ingredientes activos
+  // Devuelve todos los ingredientes con sus categorías y tipos
   static async fetchAll () {
-    return db.execute('SELECT ID_Insumo, Nombre, Categoría, Precio, Activo FROM insumo')
+    return db.execute(`
+      SELECT i.ID_Insumo, i.Nombre, i.\`Categoría\`, i.Precio, i.Activo, i.Imagen,
+        IFNULL(
+          GROUP_CONCAT(DISTINCT ic.Nom_Categoria ORDER BY ic.Nom_Categoria SEPARATOR '|'),
+          i.\`Categoría\`
+        ) AS cats_raw,
+        GROUP_CONCAT(DISTINCT it.Nom_Tipo ORDER BY it.Nom_Tipo SEPARATOR '|') AS tipos_raw
+      FROM insumo i
+      LEFT JOIN insumo_categoria ic ON i.ID_Insumo = ic.ID_Insumo
+      LEFT JOIN insumo_tipo it ON i.ID_Insumo = it.ID_Insumo
+      GROUP BY i.ID_Insumo, i.Nombre, i.\`Categoría\`, i.Precio, i.Activo, i.Imagen
+    `)
   }
+
+  static async fetchAllValid (connection) {
+    return connection.execute('SELECT * FROM insumo WHERE Activo = 1')
+  }
+
+
+  // Devuelve solo los insumos activos que pertenecen a una categoría específica
+  static async fetchAllValidPorCategoria (connection, categoria) {
+    return connection.execute(
+      `SELECT i.ID_Insumo, i.Nombre, i.\`Categoría\`, i.Precio, i.Activo, i.Imagen,
+              it.Nom_Tipo AS tipo
+       FROM insumo i
+       JOIN insumo_categoria ic ON i.ID_Insumo = ic.ID_Insumo
+       LEFT JOIN insumo_tipo it ON i.ID_Insumo = it.ID_Insumo
+       WHERE ic.Nom_Categoria = ? AND i.Activo = 1
+       ORDER BY i.Nombre`,
+      [categoria]
+    )
+  }
+
+  // Devuelve solo los insumos activos que pertenecen a un tipo específico
+  static async fetchAllValidPorTipo (connection, tipo) {
+    return connection.execute(
+      `SELECT i.ID_Insumo, i.Nombre, i.\`Categoría\`, i.Precio, i.Activo, i.Imagen
+       FROM insumo i
+       JOIN insumo_tipo it ON i.ID_Insumo = it.ID_Insumo
+       WHERE it.Nom_Tipo = ? AND i.Activo = 1
+       ORDER BY i.Nombre`,
+      [tipo]
+    )
+  }
+
+
 
   // Busca ingrediente por nombre (para verificar duplicados)
   static async buscarPorNombre (nombre) {
     return db.execute('SELECT ID_Insumo FROM insumo WHERE Nombre = ?', [nombre])
   }
 
-  // IMPORTANTE
   // Verifica que los campos obligatorios no estén vacíos
   static verificarCamposVacios (datos) {
-    const camposRequeridos = ['Nombre', 'Categoría', 'Precio']
+    const camposRequeridos = ['Nombre', 'Precio']
     for (const campo of camposRequeridos) {
       const valor = datos[campo]
       if (valor === null || valor === undefined || String(valor).trim() === '') {
@@ -22,7 +65,10 @@ module.exports = class Ingrediente {
       }
     }
 
-    // Valida precio no negativo
+    if (!datos.Categorias || !Array.isArray(datos.Categorias) || datos.Categorias.length === 0) {
+      return { camposVacios: true, campoFaltante: 'Categoría' }
+    }
+
     const precio = parseFloat(datos.Precio)
     if (isNaN(precio) || precio < 0) {
       return { camposVacios: true, campoFaltante: 'Precio (valor inválido)' }
@@ -31,13 +77,13 @@ module.exports = class Ingrediente {
     return { camposVacios: false }
   }
 
-  // Hace el  ID con inicio IN
+  // Genera ID con prefijo IN
   static generarID () {
     const numero = Math.floor(Math.random() * 90_000_000 + 10_000_000)
     return `IN${numero}`
   }
 
-  // Inserta nuevo ingrediente en BD
+  // Inserta el insumo base (Categoría = primera categoría seleccionada)
   static async insertNuevoIngrediente (id, nombre, categoria, precio, activo, tipo, imagen) {
     return db.execute(
       'INSERT INTO insumo (ID_Insumo, Nombre, `Categoría`, Precio, Activo, Imagen) VALUES (?, ?, ?, ?, ?, ?)',
@@ -45,12 +91,54 @@ module.exports = class Ingrediente {
     )
   }
 
-  //  all categorías disponibles (desde tabla categoría)
+  // Inserta las categorías del insumo en la tabla junction
+  static async insertCategoriasInsumo (idInsumo, categorias) {
+    if (!categorias || categorias.length === 0) return
+    const placeholders = categorias.map(() => '(?, ?)').join(', ')
+    const values = categorias.flatMap(cat => [idInsumo, cat])
+    return db.execute(
+      `INSERT IGNORE INTO insumo_categoria (ID_Insumo, Nom_Categoria) VALUES ${placeholders}`,
+      values
+    )
+  }
+
+  // Elimina todas las categorías de un insumo (para reemplazarlas al actualizar)
+  static async deleteCategoriasInsumo (idInsumo) {
+    return db.execute('DELETE FROM insumo_categoria WHERE ID_Insumo = ?', [idInsumo])
+  }
+
+  // Inserta los tipos del insumo en la tabla junction
+  static async insertTiposInsumo (idInsumo, tipos) {
+    if (!tipos || tipos.length === 0) return
+    const placeholders = tipos.map(() => '(?, ?)').join(', ')
+    const values = tipos.flatMap(t => [idInsumo, t])
+    return db.execute(
+      `INSERT IGNORE INTO insumo_tipo (ID_Insumo, Nom_Tipo) VALUES ${placeholders}`,
+      values
+    )
+  }
+
+  // Elimina todos los tipos de un insumo (para reemplazarlos al actualizar)
+  static async deleteTiposInsumo (idInsumo) {
+    return db.execute('DELETE FROM insumo_tipo WHERE ID_Insumo = ?', [idInsumo])
+  }
+
+  // Devuelve los tipos que pertenecen a alguna de las categorías dadas
+  static async getTiposPorCategorias (categorias) {
+    if (!categorias || categorias.length === 0) return [[], []]
+    const placeholders = categorias.map(() => '?').join(', ')
+    return db.execute(
+      `SELECT nombre, categoria FROM tipos WHERE categoria IN (${placeholders}) ORDER BY categoria ASC, nombre ASC`,
+      categorias
+    )
+  }
+
+  // Obtiene las categorías disponibles
   static async getCategorias () {
     return db.execute('SELECT Nombre FROM categoría')
   }
 
-  // Busca en cuales productos aparece un ingrediente
+  // Busca en cuáles productos aparece un ingrediente
   static async getProductosVinculados (idInsumo) {
     return db.execute(
       `SELECT p.Nombre FROM producto_tiene_insumo pti
@@ -60,11 +148,12 @@ module.exports = class Ingrediente {
     )
   }
 
-  // Elimina de producto_tiene_insumo y luego de insumo
+  // Elimina de insumo_categoria, producto_tiene_insumo y luego de insumo
   static async eliminarIngrediente (idInsumo) {
     return db.execute('CALL EliminarIngrediente(?)', [idInsumo])
   }
 
+  // Actualiza los campos del insumo (Categoría = primera categoría seleccionada)
   static async actualizarIngrediente (id, nombre, categoria, precio, activo, imagen) {
     return db.execute(
       'CALL ActualizarIngrediente(?, ?, ?, ?, ?, ?)',
@@ -119,4 +208,30 @@ module.exports = class Ingrediente {
 
     return { resumen, masUsados, porCategoria, afectados, sinUso }
   }
+
+  // En tu archivo models/Insumo.js (o similar)
+
+ static async verificarDisponibilidad(ids) {
+  // Si no hay IDs, regresamos vacío
+  if (!ids || ids.length === 0) return []
+
+  try {
+    const [rows] = await db.execute(
+      `SELECT ID_Insumo FROM insumo 
+       WHERE ID_Insumo IN (${ids.map(() => '?').join(',')}) 
+       AND Activo = 1`,
+      ids
+    )
+
+    // Regresamos solo los IDs disponibles
+    return rows.map(row => row.ID_Insumo)
+
+  } catch (error) {
+    console.error('Error en verificarDisponibilidad de Insumos:', error)
+    throw error
+  }
+ }
 }
+
+
+

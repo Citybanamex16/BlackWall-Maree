@@ -6,6 +6,7 @@ const modalRegistroCategoria = document.getElementById('ModalRegistroCategoria')
 const btnCerrarRegistroCategoria = document.getElementById('btnCerrarRegistroCategoria')
 const btnConfirmarRegistroCategoria = document.getElementById('btnConfirmarRegistroCategoria')
 const inputNombreCategoria = document.getElementById('inputNombreCategoria')
+const inputPermiteCremaBatidaCategoria = document.getElementById('inputPermiteCremaBatidaCategoria')
 
 const modalResumenCategoria = document.getElementById('ModalResumenCategoria')
 const resumenContenidoCategoria = document.getElementById('resumenContenidoCategoria')
@@ -50,6 +51,7 @@ async function cargarTablaCategorias () {
       <thead>
         <tr>
           <th>Nombre</th>
+          <th>Crema batida</th>
           <th></th>
         </tr>
       </thead>
@@ -60,6 +62,7 @@ async function cargarTablaCategorias () {
       const tr = document.createElement('tr')
       tr.innerHTML = `
         <td style="font-weight:500;">${cat.Nombre}</td>
+        <td>${cat.permiteCremaBatida ? 'Sí' : 'No'}</td>
         <td><button class="btn-eliminar" data-nombre="${cat.Nombre}">Eliminar</button></td>
       `
       tr.style.cursor = 'pointer'
@@ -70,7 +73,7 @@ async function cargarTablaCategorias () {
 
       tr.addEventListener('click', (e) => {
         if (e.target.classList.contains('btn-eliminar')) return
-        abrirModalEditarCategoria(cat.Nombre)
+        abrirModalEditarCategoria(cat)
       })
 
       tbody.appendChild(tr)
@@ -89,6 +92,7 @@ async function cargarTablaCategorias () {
 btnNuevaCategoria.addEventListener('click', (e) => {
   e.preventDefault()
   inputNombreCategoria.value = ''
+  inputPermiteCremaBatidaCategoria.checked = false
   modalRegistroCategoria.showModal()
 })
 
@@ -102,6 +106,7 @@ btnConfirmarRegistroCategoria.addEventListener('click', async (e) => {
   e.preventDefault()
 
   const nombre = inputNombreCategoria.value.trim()
+  const permiteCremaBatida = inputPermiteCremaBatidaCategoria.checked
 
   if (!nombre) {
     mostrarErrorCat('Campo incompleto', 'El nombre de la categoría es obligatorio.')
@@ -120,12 +125,15 @@ btnConfirmarRegistroCategoria.addEventListener('click', async (e) => {
     return
   }
 
-  datosCategoriaParaEnviar = { Nombre: nombre }
+  datosCategoriaParaEnviar = {
+    Nombre: nombre,
+    PermiteCremaBatida: permiteCremaBatida
+  }
   modalRegistroCategoria.close()
-  mostrarResumenCategoria(nombre)
+  mostrarResumenCategoria(nombre, permiteCremaBatida)
 })
 
-function mostrarResumenCategoria (nombre) {
+function mostrarResumenCategoria (nombre, permiteCremaBatida) {
   resumenContenidoCategoria.innerHTML = ''
 
   const fila = document.createElement('div')
@@ -142,6 +150,14 @@ function mostrarResumenCategoria (nombre) {
   fila.appendChild(etiqueta)
   fila.appendChild(valor)
   resumenContenidoCategoria.appendChild(fila)
+
+  const filaCrema = document.createElement('div')
+  filaCrema.className = 'resumen-fila'
+  filaCrema.innerHTML = `
+    <span class="resumen-label">Crema batida</span>
+    <span class="resumen-valor">${permiteCremaBatida ? 'Permitida' : 'No permitida'}</span>
+  `
+  resumenContenidoCategoria.appendChild(filaCrema)
 
   modalResumenCategoria.showModal()
 }
@@ -202,22 +218,24 @@ function mostrarErrorCat (titulo, mensaje) {
 const modalEditarCategoria = document.getElementById('ModalEditarCategoria')
 const editarSubtituloCategoria = document.getElementById('editarSubtituloCategoria')
 const editNombreCategoria = document.getElementById('editNombreCategoria')
+const editPermiteCremaBatidaCategoria = document.getElementById('editPermiteCremaBatidaCategoria')
 const editarCategoriaEnUso = document.getElementById('editarCategoriaEnUso')
 const btnGuardarEditarCategoria = document.getElementById('btnGuardarEditarCategoria')
 const btnCancelarEditarCategoria = document.getElementById('btnCancelarEditarCategoria')
 
 let nombreOriginalCategoria = null
 
-async function abrirModalEditarCategoria (nombre) {
-  nombreOriginalCategoria = nombre
-  editarSubtituloCategoria.textContent = `Editando: ${nombre}`
-  editNombreCategoria.value = nombre
+async function abrirModalEditarCategoria (categoria) {
+  nombreOriginalCategoria = categoria.Nombre
+  editarSubtituloCategoria.textContent = `Editando: ${categoria.Nombre}`
+  editNombreCategoria.value = categoria.Nombre
+  editPermiteCremaBatidaCategoria.checked = Boolean(categoria.permiteCremaBatida)
   editarCategoriaEnUso.style.display = 'none'
   editarCategoriaEnUso.innerHTML = ''
 
   // Verificar si está en uso
   try {
-    const res = await fetch(`/admin/api/categorias/${encodeURIComponent(nombre)}/verificarEnUso`)
+    const res = await fetch(`/admin/api/categorias/${encodeURIComponent(categoria.Nombre)}/verificarEnUso`)
     const obj = await res.json()
     if (obj.enUso) {
       editarCategoriaEnUso.style.display = 'block'
@@ -244,6 +262,7 @@ btnGuardarEditarCategoria.addEventListener('click', async () => {
   if (!nombreOriginalCategoria) return
 
   const nuevoNombre = editNombreCategoria.value.trim()
+  const permiteCremaBatida = editPermiteCremaBatidaCategoria.checked
 
   if (!nuevoNombre) {
     mostrarErrorCat('Campo incompleto', 'El nombre es obligatorio.')
@@ -269,7 +288,10 @@ btnGuardarEditarCategoria.addEventListener('click', async () => {
     const res = await fetch(`/admin/api/categorias/${encodeURIComponent(nombreOriginalCategoria)}/actualizar`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ Nombre: nuevoNombre })
+      body: JSON.stringify({
+        Nombre: nuevoNombre,
+        PermiteCremaBatida: permiteCremaBatida
+      })
     })
 
     if (!res.ok) {

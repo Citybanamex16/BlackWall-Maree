@@ -9,6 +9,7 @@ module.exports = class Cliente {
       SELECT 
           c.Nombre, 
           c.Numero_Telefonico AS telefono, 
+          c.username AS username,
           c.Correo AS mail, 
           c.Genero AS genero, 
           c.Fecha_Nacimiento AS birthday,
@@ -42,11 +43,12 @@ module.exports = class Cliente {
 
   static save (nuevoCliente) {
     return db.execute(
-      `INSERT INTO cliente (Nombre, Numero_Telefonico, Correo, Genero, Fecha_Nacimiento, ID_Rol, Nombre_Royalty) 
-       VALUES (?, ?, ?, ?, ?, ?, ?)`,
+      `INSERT INTO cliente (Nombre, Numero_Telefonico, username, Correo, Genero, Fecha_Nacimiento, ID_Rol, Nombre_Royalty) 
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         nuevoCliente.nombre,
         nuevoCliente.telefono,
+        nuevoCliente.username,
         nuevoCliente.mail || null,
         nuevoCliente.genero,
         nuevoCliente.birthday,
@@ -69,5 +71,16 @@ module.exports = class Cliente {
       LIMIT 1
     `
     return db.execute(query, [idColaborador])
+  }
+
+  static updateColaboradorPasswordHash (idColaborador, passwordHash) {
+    return db.execute(
+      `
+        UPDATE colaborador
+        SET Contraseña = ?
+        WHERE ID_Colaborador = ?
+      `,
+      [passwordHash, idColaborador]
+    )
   }
 }

@@ -13,17 +13,8 @@ async function getFeedbackData () {
     const feedbackData = response.data
 
     buildSectionRecentSummary(feedbackData)
-
-    // la chart
     buildSectionKPIs(feedbackData)
-
     applyFilter(feedbackData)
-
-    // Filter button listener
-    btnFiltrar.addEventListener('click', (event) => {
-      event.preventDefault()
-      applyFilter(feedbackData)
-    })
   } catch (err) {
     console.error('Error en getFeedbackData:', err)
     document.getElementById('seccion-comentarios').innerHTML = `
@@ -34,7 +25,13 @@ async function getFeedbackData () {
   }
 }
 
+btnFiltrar.addEventListener('click', (event) => {
+  event.preventDefault()
+  getFeedbackData()
+})
+
 getFeedbackData()
+setInterval(getFeedbackData, 15000)
 
 // Construcción de Sección 0: KPI cards
 function buildSectionRecentSummary (AllData) {
@@ -78,6 +75,9 @@ function cleanOldReviews (AllData, daysThreshold) {
   cutoffDate.setDate(cutoffDate.getDate() - daysThreshold)
   cutoffDate.setHours(0, 0, 0, 0) // Limpiamos horas para una comparación justa
 
+  const todayEnd = new Date(APP_TODAY)
+  todayEnd.setHours(23, 59, 59, 999)
+
   return AllData.filter(review => {
     if (!review.Fecha) return false
 
@@ -87,7 +87,7 @@ function cleanOldReviews (AllData, daysThreshold) {
     const tempReviewDate = new Date(reviewDate)
     tempReviewDate.setHours(0, 0, 0, 0)
 
-    return tempReviewDate >= cutoffDate
+    return tempReviewDate >= cutoffDate && reviewDate <= todayEnd
   })
 }
 
@@ -127,7 +127,11 @@ function applyFilter (AllData) {
     const matchId = idFilterValue === '' ||
       review.ID_Review.toLowerCase().includes(idFilterValue)
 
-    const reviewDateString = review.Fecha.split('T')[0]
+    // Fecha puede llegar como Date object o string — extraemos YYYY-MM-DD en hora local
+    const d = new Date(review.Fecha)
+    const reviewDateString = d.getFullYear() + '-' +
+      String(d.getMonth() + 1).padStart(2, '0') + '-' +
+      String(d.getDate()).padStart(2, '0')
     const matchDate = dateFilterValue === '' ||
       reviewDateString >= dateFilterValue
 
