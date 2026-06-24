@@ -237,20 +237,52 @@ module.exports = class Pedido {
     console.log(`👤 [USER CONTEXT] Nivel: ${usuario.nivelRoyalty || 'General'} | EsRoyalty: ${usuario.esRoyalty}`)
 
     try {
+      const [pe] = await db.execute(`
+        SELECT
+          p.ID_Producto,
+          promo.Descuento
+        FROM evento_contiene_promocion ecp
+        INNER JOIN evento e
+          ON e.ID_Evento = ecp.ID_Evento
+        INNER JOIN producto_tiene_promocion ptp
+          ON ecp.ID_Promocion = ptp.ID_Promocion
+        INNER JOIN producto p
+          ON ptp.ID_Producto = p.ID_Producto
+        INNER JOIN promocion promo
+          ON ptp.ID_Promocion = promo.ID_Promocion
+        WHERE e.Activo = 1
+          AND CURDATE() BETWEEN e.Fecha_Inicio AND COALESCE(e.Fecha_Final, e.Fecha_Inicio)
+          AND promo.Activo = 1
+          AND CURDATE() BETWEEN promo.Fecha_inicio AND COALESCE(promo.Fecha_final, promo.Fecha_inicio)
+      `)
+
       // 1. Promociones de Evento (PE)
-      const [pe] = await db.query("CALL obtener_promociones_por_tipo('PE')")
-      if (pe[0].length > 0) {
-        console.log(`📢 [PE] Encontradas ${pe[0].length} promociones de evento.`)
-        pe[0].forEach(p => {
+      if (pe.length > 0) {
+        console.log(`📢 [PE] Encontradas ${pe.length} promociones de evento vigentes.`)
+        pe.forEach(p => {
           compendio[p.ID_Producto] = { descuento: parseFloat(p.Descuento), tipo: 'PE' }
         })
       }
 
+      const [pu] = await db.execute(`
+        SELECT
+          p.ID_Producto,
+          promo.Descuento
+        FROM producto_tiene_promocion ptp
+        INNER JOIN producto p
+          ON p.ID_Producto = ptp.ID_Producto
+        INNER JOIN promocion promo
+          ON promo.ID_Promocion = ptp.ID_Promocion
+        WHERE promo.Activo = 1
+          AND CURDATE() BETWEEN promo.Fecha_inicio AND COALESCE(promo.Fecha_final, promo.Fecha_inicio)
+          AND ptp.ID_Promocion NOT IN (SELECT ID_Promocion FROM evento_contiene_promocion)
+          AND ptp.ID_Promocion NOT IN (SELECT ID_Promocion FROM estado_royalty_da_promociones)
+      `)
+
       // 2. Promociones Únicas (PU)
-      const [pu] = await db.query("CALL obtener_promociones_por_tipo('PU')")
-      if (pu[0].length > 0) {
-        console.log(`🎯 [PU] Encontradas ${pu[0].length} promociones únicas.`)
-        pu[0].forEach(p => {
+      if (pu.length > 0) {
+        console.log(`🎯 [PU] Encontradas ${pu.length} promociones únicas vigentes.`)
+        pu.forEach(p => {
           // El compendio se sobreescribe si ya existe (lógica de prioridad)
           compendio[p.ID_Producto] = { descuento: parseFloat(p.Descuento), tipo: 'PU' }
         })
@@ -258,10 +290,25 @@ module.exports = class Pedido {
 
       // 3. Promociones Royalty (PR)
       if (usuario.esRoyalty) {
-        const [pr] = await db.query("CALL obtener_promociones_por_tipo('PR')")
-        console.log(`👑 [PR] Evaluando ${pr[0].length} promociones de nivel para el usuario.`)
+        const [pr] = await db.execute(`
+          SELECT
+            p.ID_Producto,
+            promo.Descuento,
+            erp.Nombre_Royalty
+          FROM estado_royalty_da_promociones erp
+          INNER JOIN producto_tiene_promocion ptp
+            ON erp.ID_Promocion = ptp.ID_Promocion
+          INNER JOIN producto p
+            ON ptp.ID_Producto = p.ID_Producto
+          INNER JOIN promocion promo
+            ON ptp.ID_Promocion = promo.ID_Promocion
+          WHERE promo.Activo = 1
+            AND CURDATE() BETWEEN promo.Fecha_inicio AND COALESCE(promo.Fecha_final, promo.Fecha_inicio)
+            AND erp.ID_Promocion NOT IN (SELECT ID_Promocion FROM evento_contiene_promocion)
+        `)
+        console.log(`👑 [PR] Evaluando ${pr.length} promociones de nivel vigentes para el usuario.`)
 
-        pr[0].forEach(p => {
+        pr.forEach(p => {
           if (p.Nombre_Royalty === usuario.nivelRoyalty) {
             console.log(`✅ [PR MATCH] Producto ${p.ID_Producto} aplica para nivel ${usuario.nivelRoyalty}`)
             compendio[p.ID_Producto] = { descuento: parseFloat(p.Descuento), tipo: 'PR' }

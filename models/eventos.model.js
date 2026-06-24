@@ -151,6 +151,7 @@ module.exports = class Evento {
         Nombre AS nombre
       FROM promocion
       WHERE Activo = 1
+        AND COALESCE(Fecha_final, Fecha_inicio) >= CURDATE()
       ORDER BY Nombre ASC
     `)
   }
@@ -169,6 +170,7 @@ module.exports = class Evento {
         ID_Promocion AS id
       FROM promocion
       WHERE Activo = 1
+        AND COALESCE(Fecha_final, Fecha_inicio) >= CURDATE()
         AND ID_Promocion IN (${placeholders})
     `, ids)
   }
