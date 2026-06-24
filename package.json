@@ -10,6 +10,7 @@
   "description": "This Repository is used for storing, organizing and sharing the Software Project technology consulting organization Blackwall offers to Maree",
   "main": "index.js",
   "dependencies": {
+    "@google-cloud/storage": "^7.19.0",
     "@zxing/browser": "^0.1.5",
     "@zxing/library": "^0.21.3",
     "acorn": "^8.16.0",
@@ -39,6 +40,7 @@
     "call-bound": "^1.0.4",
     "callsites": "^3.1.0",
     "chalk": "^4.1.2",
+    "cloudinary": "^2.10.0",
     "color-convert": "^2.0.1",
     "color-name": "^1.1.4",
     "concat-map": "^0.0.1",

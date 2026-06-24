@@ -177,6 +177,9 @@ async function crearLoyaltyObject (telefono, nombreCliente, nombreRoyalty, punto
   }
   const classId = getClassId(nombreRoyalty)
   const objectId = `${ISSUER_ID}.cliente_${limpiarTelefono(telefono)}`
+  const sellosEnCiclo = (puntosActuales ?? 0) % 8
+  const sellosUrl = `https://res.cloudinary.com/dvbrrtput/image/upload/sellos/stamp_${sellosEnCiclo}.png`
+
   try {
     await walletClient.loyaltyobject.insert({
       requestBody: {
@@ -197,7 +200,11 @@ async function crearLoyaltyObject (telefono, nombreCliente, nombreRoyalty, punto
           balance: { int: maxPuntos ?? 0 },
           label: 'Meta de visitas'
         },
-        stampInfos: generarStampInfos(puntosActuales ?? 0, maxPuntos ?? 0),
+        heroImage: {
+          sourceUri: { uri: sellosUrl },
+          contentDescription: {
+            defaultValue: { language: 'es', value: `${sellosEnCiclo} sellos` }
+          }},
         textModulesData: [
           {
             id: 'nivel',
@@ -220,13 +227,16 @@ async function crearLoyaltyObject (telefono, nombreCliente, nombreRoyalty, punto
 
 // Actualiza la tarjeta cuandoo cambia el nivel del cliente
 async function actualizarLoyaltyObject (telefono, nombreCliente, nombreRoyalty, puntosActuales, maxPuntos) {
+  
   if (!googleWalletConfigurado()) {
     advertirGoogleWalletNoDisponible()
     return null
   }
   const classId = getClassId(nombreRoyalty)
   const objectId = `${ISSUER_ID}.cliente_${limpiarTelefono(telefono)}`
-
+  const sellosEnCiclo = (puntosActuales ?? 0) % 8
+  const sellosUrl = `https://res.cloudinary.com/dvbrrtput/image/upload/sellos/stamp_${sellosEnCiclo}.png`
+  try{
   await walletClient.loyaltyobject.patch({
     resourceId: objectId,
     requestBody: {
@@ -245,7 +255,13 @@ async function actualizarLoyaltyObject (telefono, nombreCliente, nombreRoyalty, 
         balance: { int: maxPuntos },
         label: 'Meta'
       },
-      stampInfos: generarStampInfos(puntosActuales ?? 0, maxPuntos ?? 0),
+      stampInfos: generarStampInfos(sellosEnCiclo, maxPuntos ?? 0),
+      heroImage: {
+        sourceUri: {
+          uri: sellosUrl 
+        }
+      },
+      imageModulesData: [],
       textModulesData: [
         {
           id: 'nivel',
@@ -256,6 +272,14 @@ async function actualizarLoyaltyObject (telefono, nombreCliente, nombreRoyalty, 
     }
   })
   console.log(`Tarjeta actualizada para cliente ${telefono}`)
+} catch (error) {
+    if (error.code === 404) {
+      // ✅ Cliente nunca agregó su tarjeta — se omite silenciosamente
+      console.log(`Cliente ${telefono} no tiene tarjeta en Wallet, se omite`)
+    } else {
+      throw error
+    }
+  }
 }
 
 // Actualiza todos los clientes de un nivel cuando el admin modifica ese estado royalty
@@ -271,51 +295,66 @@ async function actualizarTarjetaPorNivel (nombreRoyalty, nuevoNombre, nuevoDescr
     [nombreRoyalty]
   )
 
-  const promesas = clientes.map(cliente =>
-    actualizarLoyaltyObject(
-      cliente.telefono,
-      cliente.Nombre,
-      nuevoNombre || nombreRoyalty,
-      cliente.visitas ?? 0,
-      maxVisitasFinal ?? 0
+  const resultados = await Promise.allSettled(
+    clientes.map(cliente =>
+      actualizarLoyaltyObject(
+        cliente.Numero_Telefonico,
+        cliente.Nombre,
+        nuevoNombre || nombreRoyalty,
+        cliente.Visitas_Actuales,
+        maxVisitas
+      )
     )
   )
-
-  await Promise.all(promesas)
+  const fallidos = resultados.filter(r => r.status === 'rejected')
   console.log(`${clientes.length} tarjetas actualizadas para nivel ${nombreRoyalty}`)
 }
 
-async function generarLinkWallet (telefono, nombreCliente, nombreRoyalty, puntosActuales, maxPuntos) {
+async function generarLinkWallet(telefono, nombreCliente, nombreRoyalty, puntosActuales, maxPuntos) {
   if (!googleWalletConfigurado()) {
     advertirGoogleWalletNoDisponible()
     return null
   }
-  await crearLoyaltyClass(nombreRoyalty, maxPuntos)
-  await crearLoyaltyObject(telefono, nombreCliente, nombreRoyalty, puntosActuales, maxPuntos)
+
+  try {
+    await crearLoyaltyClass(nombreRoyalty, maxPuntos)
+    console.log('[Wallet] Clase OK')
+  } catch (e) {
+    console.error('[Wallet] Error en clase:', e.message)
+  }
+
+  try {
+    await crearLoyaltyObject(telefono, nombreCliente, nombreRoyalty, puntosActuales, maxPuntos)
+    console.log('[Wallet] Objeto OK')
+  } catch (e) {
+    console.error('[Wallet] Error en objeto:', e.message)
+  }
+
   const objectId = `${ISSUER_ID}.cliente_${limpiarTelefono(telefono)}`
+
+  // Verificar que el objeto realmente existe antes de generar el link
+  try {
+    const existing = await walletClient.loyaltyobject.get({ resourceId: objectId })
+    console.log('[Wallet] Objeto verificado en Google:', existing.data.id)
+  } catch (e) {
+    console.error('[Wallet] Objeto NO encontrado en Google:', e.message)
+  }
+
   const claims = {
-    iss: credentials.client_email, // se obtienen el email del cliente del JSON
+    iss: credentials.client_email,
     aud: 'google',
-    origins: ['http://localhost:3005', 'https://manicure-starless-spending.ngrok-free.dev'], // dominio del sitio web
     typ: 'savetowallet',
+    iat: Math.floor(Date.now() / 1000),
     payload: {
       loyaltyObjects: [{ id: objectId }]
     }
   }
 
-  const auth = new GoogleAuth({
-    keyFile: credentialsPath,
-    scopes: ['https://www.googleapis.com/auth/wallet_object.issuer']
-  })
-
-  const token = jwt.sign(claims, credentials.private_key, {
-    algorithm: 'RS256',
-    expiresIn: '1h'
-  })
-  await auth.getClient()
-  return `https://pay.google.com/gp/v/save/${token}`
+  const token = jwt.sign(claims, credentials.private_key, { algorithm: 'RS256' })
+  const url = `https://pay.google.com/gp/v/save/${token}`
+  console.log('[Wallet] URL generada:', url)
+  return url
 }
-
 module.exports = {
   crearLoyaltyClass,
   actualizarLoyaltyClass,

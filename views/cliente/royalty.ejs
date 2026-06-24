@@ -39,11 +39,17 @@
                 <div id="contenedor-sellos" data-visitas="<%= cliente.visitas %>"></div>
             </div>
             <div class="is-flex is-justify-content-center is-align-items-center mt-5 mb-4">
-    <div class="buttons is-centered"> <a id="btn-google-wallet" href="#" target="_blank" class="mx-2">
-            <img src="https://help.ipswichtheatres.co.uk/hc/article_attachments/24188305565329" 
-                 alt="Agregar a Google Wallet" 
-                 style="height: 44px; width: auto;">
-        </a>
+    <div class="buttons is-centered"> 
+        <a id="btn-google-wallet" 
+   href="#" 
+   target="_blank" 
+   class="mx-2" 
+   style="opacity: 0.5; pointer-events: none;"
+   aria-disabled="true">
+    <img src="https://help.ipswichtheatres.co.uk/hc/article_attachments/24188305565329" 
+         alt="Agregar a Google Wallet" 
+         style="height: 44px; width: auto;">
+</a>
         <a id="btn-apple-wallet" href="/royalty/royaltyUser/apple-pass" target="_blank" class="mx-2">
     <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/3/30/Add_to_Apple_Wallet_badge.svg/3840px-Add_to_Apple_Wallet_badge.svg.png" 
          alt="Agregar a Apple Wallet" 
@@ -127,19 +133,7 @@
 
 </div>
 
-<script>
-fetch('/royalty/royaltyUser/api/datos')
-  .then(r => {
-    return r.json()
-  })
-  .catch(err => {
-    document.body.insertAdjacentHTML('beforeend',
-      `<div style="position:fixed;bottom:0;left:0;right:0;background:orange;padding:10px;font-size:14px;z-index:9999">
-        Error: ${err.message}
-      </div>`
-    )
-  })
-</script>
+
 
 
 
@@ -149,12 +143,24 @@ fetch('/royalty/royaltyUser/api/datos')
   fetch('/royalty/royaltyUser/api/datos')
     .then(r => r.json())
     .then(data => {
-      console.log('Respuesta:', data) // para debuggear
+      console.log('Respuesta:', data)
+
+      // Google Wallet
       if (data.walletLink) {
-        document.getElementById('btn-google-wallet').href = data.walletLink // ✅ nombre correcto
+        const btnGoogle = document.getElementById('btn-google-wallet')
+        btnGoogle.href = data.walletLink
+        btnGoogle.style.opacity = '1'
+        btnGoogle.style.pointerEvents = 'auto'
+        btnGoogle.removeAttribute('aria-disabled')
+      }
+
+      // Apple Wallet (por si también lo necesitas)
+      if (data.applePassUrl) {
+        const btnApple = document.getElementById('btn-apple-wallet')
+        btnApple.href = data.applePassUrl
       }
     })
-    .catch(err => console.error('Error:', err))
+    .catch(err => console.error('Error cargando wallet:', err))
 </script>
     
     
