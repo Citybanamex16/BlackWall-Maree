@@ -65,6 +65,7 @@ build/
 # Licencias de Google
 ############################
 util/GoogleCredentials/Google-Wallet.json
+util/GoogleCredentials/uploadScript.js
 
 ############################
 # Licencias de Apple
