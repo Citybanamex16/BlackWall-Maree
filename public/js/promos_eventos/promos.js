@@ -199,6 +199,7 @@ function renderizarPromociones (lista) {
   lista.forEach(promo => {
     const activa = estaActiva(promo.Activo)
     const vigencia = obtenerEstadoVigencia(promo.Fecha_inicio, promo.Fecha_final)
+    const expirada = vigencia.clase === 'is-expired'
     const descuentoPorcentaje = Number(promo.DescuentoPorcentaje || 0)
     const beneficio = descuentoPorcentaje > 0
       ? `<span class="promo-benefit">${formatearDescuento(descuentoPorcentaje)}</span>`
@@ -250,8 +251,9 @@ function renderizarPromociones (lista) {
               class="card-footer-item promo-footer-button"
               data-action="cambiar-estado"
               data-id="${promo.ID_Promocion}"
+              ${expirada ? 'disabled aria-disabled="true"' : ''}
             >
-              ${activa ? 'Desactivar' : 'Activar'}
+              ${expirada ? 'Vencida' : (activa ? 'Desactivar' : 'Activar')}
             </button>
             <button type="button" class="card-footer-item promo-footer-button is-danger-text" data-action="eliminar" data-id="${promo.ID_Promocion}">
               Eliminar
@@ -755,6 +757,7 @@ function validarFormulario (datos) {
   let esValido = true
   const hoy = obtenerFechaActualLocal()
   const descuentoNumero = Number(datos.descuento || 0)
+  const permitirFechasHistoricas = estadoPromociones.modo === 'editar'
 
   if (!datos.nombre) {
     marcarError('nombre', 'El nombre es obligatorio.')
@@ -776,12 +779,12 @@ function validarFormulario (datos) {
     esValido = false
   }
 
-  if (datos.fechaInicio && datos.fechaInicio < hoy) {
+  if (!permitirFechasHistoricas && datos.fechaInicio && datos.fechaInicio < hoy) {
     marcarError('fecha_de_Inicio', 'La fecha de inicio debe ser actual o futura.')
     esValido = false
   }
 
-  if (datos.fechaFinal && datos.fechaFinal < hoy) {
+  if (!permitirFechasHistoricas && datos.fechaFinal && datos.fechaFinal < hoy) {
     marcarError('fecha_de_Fin', 'La fecha final debe ser actual o futura.')
     esValido = false
   }

@@ -192,7 +192,20 @@ const abrirModalCheckout = () => {
     })
   })
 
-  document.getElementById('btn-confirmar-orden').addEventListener('click', () => {
+  const btnConfirmarOrden = document.getElementById('btn-confirmar-orden')
+  let isSubmittingOrder = false
+
+  const setSubmittingState = (isSubmitting) => {
+    isSubmittingOrder = isSubmitting
+    btnConfirmarOrden.disabled = isSubmitting
+    btnConfirmarOrden.style.opacity = isSubmitting ? '0.7' : '1'
+    btnConfirmarOrden.style.cursor = isSubmitting ? 'not-allowed' : 'pointer'
+    btnConfirmarOrden.textContent = isSubmitting ? 'Confirmando...' : 'Confirmar Orden'
+  }
+
+  btnConfirmarOrden.addEventListener('click', () => {
+    if (isSubmittingOrder) return
+
     const formaSeleccionada = document.querySelector('input[name="forma"]:checked').value
     const direccion = document.getElementById('input-direccion')?.value.trim() || ''
     const errorServ = document.getElementById('error-servidor')
@@ -222,6 +235,8 @@ const abrirModalCheckout = () => {
     }
     if (errorDir) errorDir.style.display = 'none'
 
+    setSubmittingState(true)
+
     fetch('/menu/pedidos/validar', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -232,10 +247,11 @@ const abrirModalCheckout = () => {
         if (!validacion.pedidoValido) {
           errorServ.style.display = 'block'
           errorServ.textContent = validacion.mensaje || 'El pedido está vacío.'
+          setSubmittingState(false)
           return
         }
 
-        fetch('/menu/pedidos/confirmar', {
+        return fetch('/menu/pedidos/confirmar', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -255,11 +271,14 @@ const abrirModalCheckout = () => {
             } else {
               errorServ.style.display = 'block'
               errorServ.textContent = 'No se pudo confirmar el pedido. Intenta de nuevo.'
+              setSubmittingState(false)
             }
           })
-          .catch(() => { errorServ.style.display = 'block' })
       })
-      .catch(() => { errorServ.style.display = 'block' })
+      .catch(() => {
+        errorServ.style.display = 'block'
+        setSubmittingState(false)
+      })
   })
 }
 
@@ -466,15 +485,15 @@ window.abrirModalPremios = () => {
     const ahorro = precioBase * (window.datosRoyalty.descuento / 100)
     const precioFinal = precioBase - ahorro
 
-const itemDiv = document.createElement('div');
-        // Quitamos el estilo en línea de itemDiv y usamos clases/estilos armónicos
-        itemDiv.style.cssText = "padding: 15px; border: 1px solid #eee; border-radius: 10px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; background: #fff; transition: box-shadow 0.2s, border-color 0.2s;";
-        
-        // Efecto hover (opcional, imita tu .order-btn-card)
-        itemDiv.onmouseover = () => { itemDiv.style.borderColor = '#e0b89a'; itemDiv.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.06)'; };
-        itemDiv.onmouseout = () => { itemDiv.style.borderColor = '#eee'; itemDiv.style.boxShadow = 'none'; };
+    const itemDiv = document.createElement('div')
+    // Quitamos el estilo en línea de itemDiv y usamos clases/estilos armónicos
+    itemDiv.style.cssText = 'padding: 15px; border: 1px solid #eee; border-radius: 10px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; background: #fff; transition: box-shadow 0.2s, border-color 0.2s;'
 
-        itemDiv.innerHTML = `
+    // Efecto hover (opcional, imita tu .order-btn-card)
+    itemDiv.onmouseover = () => { itemDiv.style.borderColor = '#e0b89a'; itemDiv.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.06)' }
+    itemDiv.onmouseout = () => { itemDiv.style.borderColor = '#eee'; itemDiv.style.boxShadow = 'none' }
+
+    itemDiv.innerHTML = `
             <div>
                 <span style="display:block; font-family: 'Jost', sans-serif; font-weight: 500; font-size: 15px; color: #222;">
                     ${item.producto_base ? 'Crepa Personalizada' : item.nombre}
@@ -491,7 +510,7 @@ const itemDiv = document.createElement('div');
                 onmouseout="this.style.background='transparent'; this.style.color='#b5956a'">
                 Aplicar
             </button>
-        `;
+        `
     lista.appendChild(itemDiv)
   })
 

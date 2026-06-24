@@ -240,10 +240,10 @@ exports.postCancelClientOrder = async (request, response) => {
   }
 }
 
-exports.getAvisoSimplificado = async (request, response) =>{
+exports.getAvisoSimplificado = async (request, response) => {
   response.render('cliente/aviso-simplificado')
 }
 
-exports.getAvisoIntegral = async (request, response) =>{
+exports.getAvisoIntegral = async (request, response) => {
   response.render('cliente/aviso-integral')
 }

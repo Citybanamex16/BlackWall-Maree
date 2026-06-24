@@ -163,6 +163,35 @@
     .status-btn[data-status="Cancelado"].active-status { background: #c0392b; border-color: #c0392b; }
     .status-btn[data-status="Preparando"]:hover { border-color: #3b5bdb; color: #3b5bdb; }
     .status-btn[data-status="Preparando"].active-status { background: #3b5bdb; border-color: #3b5bdb; }
+
+    .report-toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin: 12px 0 16px;
+      align-items: end;
+      background: #fff;
+      border: 1px solid #ede5d8;
+      border-radius: 10px;
+      padding: 12px;
+    }
+    .report-toolbar .field {
+      margin-bottom: 0;
+      min-width: 180px;
+      flex: 1;
+    }
+    .report-toolbar .label {
+      font-size: 11px;
+      font-family: 'Jost', sans-serif;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: #777;
+      margin-bottom: 4px;
+    }
+    .report-toolbar .button {
+      height: 40px;
+      margin-top: 18px;
+    }
   </style>
 </head>
 
@@ -190,6 +219,25 @@
           <p class="page-sub">Gestión de órdenes activas</p>
         </div>
       </div>
+
+      <form class="report-toolbar" method="GET" action="/admin/api/orders/report/pdf">
+        <div class="field">
+          <label class="label" for="report-start-date">Fecha inicio</label>
+          <div class="control">
+            <input class="input" type="date" id="report-start-date" name="fechaInicio">
+          </div>
+        </div>
+        <div class="field">
+          <label class="label" for="report-end-date">Fecha fin</label>
+          <div class="control">
+            <input class="input" type="date" id="report-end-date" name="fechaFin">
+          </div>
+        </div>
+        <button type="submit" class="button is-link is-light">
+          <span class="icon"><i class="fas fa-file-pdf"></i></span>
+          <span>Descargar reporte PDF</span>
+        </button>
+      </form>
 
       <div id="alert-container"></div>
 
@@ -442,6 +490,20 @@
     function fechaStr (f) {
       return f ? new Date(f).toLocaleString('es-MX', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : 'Sin fecha'
     }
+
+    ;(() => {
+      const startInput = document.getElementById('report-start-date')
+      const endInput = document.getElementById('report-end-date')
+      const hoy = new Date().toISOString().slice(0, 10)
+
+      if (endInput && !endInput.value) {
+        endInput.value = hoy
+      }
+
+      if (startInput && !startInput.value) {
+        startInput.value = hoy
+      }
+    })()
 
     // ── Toggle sección pendientes ──
     const pendingToggle  = document.getElementById('pending-toggle')

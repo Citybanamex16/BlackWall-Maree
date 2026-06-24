@@ -125,7 +125,6 @@
       knownPendingIds.forEach(id => {
         if (!currentPendingIds.has(id)) knownPendingIds.delete(id)
       })
-
     } catch {}
   }
 

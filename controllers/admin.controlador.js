@@ -8,6 +8,7 @@ const Calendario = require('../models/calendario.model.js')
 const Categoria = require('../models/categoria.model.js')
 const Tipo = require('../models/tipo.model.js')
 const Sucursal = require('../models/sucursal.model.js')
+const PDFDocument = require('pdfkit')
 
 // const path = require('path')
 
@@ -360,6 +361,163 @@ exports.getOrdersJson = async (req, res) => {
   }
 }
 
+exports.exportOrdersSalesPdf = async (req, res) => {
+  const fechaInicio = String(req.query.fechaInicio || '').trim()
+  const fechaFin = String(req.query.fechaFin || '').trim()
+
+  try {
+    const [[ordenes], [ventasDiarias]] = await Promise.all([
+      Pedido.fetchOrdersReportData(fechaInicio, fechaFin),
+      Pedido.fetchDailySalesReport(fechaInicio, fechaFin)
+    ])
+
+    const totalVentas = ventasDiarias.reduce((acumulado, item) => {
+      return acumulado + Number(item.total_ventas || 0)
+    }, 0)
+
+    const nombreArchivo = fechaInicio || fechaFin
+      ? `reporte_ordenes_ventas_${fechaInicio || 'inicio'}_${fechaFin || 'fin'}.pdf`
+      : 'reporte_ordenes_ventas.pdf'
+
+    const doc = new PDFDocument({ size: 'A4', margin: 40 })
+    res.setHeader('Content-Type', 'application/pdf')
+    res.setHeader('Content-Disposition', `attachment; filename="${nombreArchivo}"`)
+    doc.pipe(res)
+
+    const formatMoneda = (valor) => `$${Number(valor || 0).toFixed(2)}`
+    const formatFechaHora = (valor) => {
+      if (!valor) return 'Sin fecha'
+      return new Date(valor).toLocaleString('es-MX', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      })
+    }
+    const formatFecha = (valor) => {
+      if (!valor) return 'Sin fecha'
+      return new Date(valor).toLocaleDateString('es-MX', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric'
+      })
+    }
+    const truncate = (texto, max = 24) => {
+      const limpio = String(texto || '')
+      if (limpio.length <= max) return limpio
+      return `${limpio.slice(0, max - 3)}...`
+    }
+    const ensureSpace = (altura = 22) => {
+      if (doc.y + altura > doc.page.height - 45) {
+        doc.addPage()
+      }
+    }
+
+    doc.fontSize(18).font('Helvetica-Bold').text('Reporte de ordenes y ventas diarias')
+    doc.moveDown(0.4)
+    doc.fontSize(10).font('Helvetica')
+    doc.text(`Fecha de generacion: ${new Date().toLocaleString('es-MX')}`)
+    doc.text(`Rango: ${fechaInicio || 'Sin limite'} a ${fechaFin || 'Sin limite'}`)
+    doc.moveDown(0.6)
+
+    doc.font('Helvetica-Bold').text('Resumen', { underline: true })
+    doc.moveDown(0.2)
+    doc.font('Helvetica').fontSize(10)
+    doc.text(`Total de ordenes en reporte: ${ordenes.length}`)
+    doc.text(`Total de ventas entregadas: ${formatMoneda(totalVentas)}`)
+    doc.text(`Dias con ventas entregadas: ${ventasDiarias.length}`)
+    doc.moveDown(0.8)
+
+    doc.fontSize(12).font('Helvetica-Bold').text('1) Detalle de ordenes')
+    doc.moveDown(0.3)
+
+    const drawHeaderOrdenes = () => {
+      ensureSpace(20)
+      doc.fontSize(9).font('Helvetica-Bold')
+      doc.text('ID', 40, doc.y, { width: 70 })
+      doc.text('Fecha', 110, doc.y, { width: 95 })
+      doc.text('Cliente', 205, doc.y, { width: 130 })
+      doc.text('Tipo', 335, doc.y, { width: 60 })
+      doc.text('Estado', 395, doc.y, { width: 60 })
+      doc.text('Total', 455, doc.y, { width: 95, align: 'right' })
+      doc.moveDown(0.3)
+      doc.strokeColor('#cccccc').lineWidth(0.6)
+      doc.moveTo(40, doc.y).lineTo(555, doc.y).stroke()
+      doc.moveDown(0.2)
+      doc.font('Helvetica').fontSize(9)
+    }
+
+    drawHeaderOrdenes()
+    ordenes.forEach((orden) => {
+      ensureSpace(18)
+      const y = doc.y
+      doc.text(truncate(orden.id_orden, 12), 40, y, { width: 70 })
+      doc.text(formatFechaHora(orden.fecha), 110, y, { width: 95 })
+      doc.text(truncate(orden.nombre_cliente || 'Sin nombre', 24), 205, y, { width: 130 })
+      doc.text(truncate(orden.tipo_orden || 'N/A', 10), 335, y, { width: 60 })
+      doc.text(truncate(orden.estado_orden || 'N/A', 12), 395, y, { width: 60 })
+      doc.text(formatMoneda(orden.total_orden), 455, y, { width: 95, align: 'right' })
+      doc.moveDown(1)
+
+      if (doc.y > doc.page.height - 55) {
+        doc.addPage()
+        drawHeaderOrdenes()
+      }
+    })
+
+    if (ordenes.length === 0) {
+      doc.font('Helvetica-Oblique').text('No se encontraron ordenes para el rango seleccionado.')
+      doc.moveDown(0.5)
+    }
+
+    ensureSpace(45)
+    doc.moveDown(0.6)
+    doc.fontSize(12).font('Helvetica-Bold').text('2) Ventas diarias (solo ordenes entregadas)')
+    doc.moveDown(0.3)
+
+    const drawHeaderVentas = () => {
+      ensureSpace(20)
+      doc.fontSize(9).font('Helvetica-Bold')
+      doc.text('Fecha', 40, doc.y, { width: 170 })
+      doc.text('Ordenes entregadas', 210, doc.y, { width: 150, align: 'center' })
+      doc.text('Total ventas', 360, doc.y, { width: 190, align: 'right' })
+      doc.moveDown(0.3)
+      doc.strokeColor('#cccccc').lineWidth(0.6)
+      doc.moveTo(40, doc.y).lineTo(555, doc.y).stroke()
+      doc.moveDown(0.2)
+      doc.font('Helvetica').fontSize(9)
+    }
+
+    drawHeaderVentas()
+    ventasDiarias.forEach((venta) => {
+      ensureSpace(18)
+      const y = doc.y
+      doc.text(formatFecha(venta.fecha), 40, y, { width: 170 })
+      doc.text(String(venta.total_ordenes || 0), 210, y, { width: 150, align: 'center' })
+      doc.text(formatMoneda(venta.total_ventas), 360, y, { width: 190, align: 'right' })
+      doc.moveDown(1)
+
+      if (doc.y > doc.page.height - 55) {
+        doc.addPage()
+        drawHeaderVentas()
+      }
+    })
+
+    if (ventasDiarias.length === 0) {
+      doc.font('Helvetica-Oblique').text('No hay ventas entregadas para el rango seleccionado.')
+    }
+
+    doc.end()
+  } catch (error) {
+    console.error('Error al generar reporte PDF de ordenes y ventas:', error)
+    return res.status(500).json({
+      ok: false,
+      mensaje: 'No fue posible generar el reporte PDF.'
+    })
+  }
+}
+
 exports.getOrderItems = async (req, res) => {
   const { id } = req.params
   try {
@@ -556,7 +714,7 @@ exports.crearIngrediente = async (req, res, next) => {
   try {
     const { Nombre, Precio, Activo, Imagen } = req.body
     const Categorias = req.body.Categorias // array de categorías seleccionadas
-    const Tipos = req.body.Tipos || []    // array de tipos seleccionados (opcional)
+    const Tipos = req.body.Tipos || [] // array de tipos seleccionados (opcional)
 
     // Validación de campos obligatorios
     const resultado = Ingrediente.verificarCamposVacios(req.body)
@@ -640,7 +798,7 @@ exports.actualizarIngrediente = async (req, res, next) => {
     const { id } = req.params
     const { Nombre, Precio, Activo, Imagen } = req.body
     const Categorias = req.body.Categorias // array de categorías seleccionadas
-    const Tipos = req.body.Tipos || []    // array de tipos seleccionados (opcional)
+    const Tipos = req.body.Tipos || [] // array de tipos seleccionados (opcional)
 
     if (!id || !Nombre || !Categorias || !Categorias.length || !Precio) {
       return res.status(400).json({ success: false, message: 'Campos obligatorios faltantes' })

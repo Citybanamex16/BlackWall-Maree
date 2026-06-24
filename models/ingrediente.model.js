@@ -21,7 +21,6 @@ module.exports = class Ingrediente {
     return connection.execute('SELECT * FROM insumo WHERE Activo = 1')
   }
 
-
   // Devuelve solo los insumos activos que pertenecen a una categoría específica
   static async fetchAllValidPorCategoria (connection, categoria) {
     return connection.execute(
@@ -47,8 +46,6 @@ module.exports = class Ingrediente {
       [tipo]
     )
   }
-
-
 
   // Busca ingrediente por nombre (para verificar duplicados)
   static async buscarPorNombre (nombre) {
@@ -211,27 +208,23 @@ module.exports = class Ingrediente {
 
   // En tu archivo models/Insumo.js (o similar)
 
- static async verificarDisponibilidad(ids) {
+  static async verificarDisponibilidad (ids) {
   // Si no hay IDs, regresamos vacío
-  if (!ids || ids.length === 0) return []
+    if (!ids || ids.length === 0) return []
 
-  try {
-    const [rows] = await db.execute(
+    try {
+      const [rows] = await db.execute(
       `SELECT ID_Insumo FROM insumo 
        WHERE ID_Insumo IN (${ids.map(() => '?').join(',')}) 
        AND Activo = 1`,
       ids
-    )
+      )
 
-    // Regresamos solo los IDs disponibles
-    return rows.map(row => row.ID_Insumo)
-
-  } catch (error) {
-    console.error('Error en verificarDisponibilidad de Insumos:', error)
-    throw error
+      // Regresamos solo los IDs disponibles
+      return rows.map(row => row.ID_Insumo)
+    } catch (error) {
+      console.error('Error en verificarDisponibilidad de Insumos:', error)
+      throw error
+    }
   }
- }
 }
-
-
-

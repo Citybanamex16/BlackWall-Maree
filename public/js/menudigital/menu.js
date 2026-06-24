@@ -183,10 +183,10 @@ function generarHTMLModal (platillo, dataExtra, promoDisplay, promoPrecio) {
       </div>`
     : ''
   const ingredientesHelperHTML = dataExtra.permiteModificarIngredientes === false
-    ? `<p style="font-size:11px;color:#aaa;font-family:'Jost',sans-serif;margin-bottom:8px;">Este producto se prepara tal como aparece en el menú.</p>`
-    : `<p style="font-size:11px;color:#aaa;font-family:'Jost',sans-serif;margin-bottom:8px;">Toca × para quitar (no cambia el precio)</p>`
+    ? '<p style="font-size:11px;color:#aaa;font-family:\'Jost\',sans-serif;margin-bottom:8px;">Este producto se prepara tal como aparece en el menú.</p>'
+    : '<p style="font-size:11px;color:#aaa;font-family:\'Jost\',sans-serif;margin-bottom:8px;">Toca × para quitar (no cambia el precio)</p>'
   const extrasSectionHTML = dataExtra.permiteModificarIngredientes === false
-    ? `<p style="font-size:12px;color:#7d746b;font-family:'Jost',sans-serif;margin-bottom:4px;">La composición de este producto no es editable por el cliente.</p>`
+    ? '<p style="font-size:12px;color:#7d746b;font-family:\'Jost\',sans-serif;margin-bottom:4px;">La composición de este producto no es editable por el cliente.</p>'
     : `
         <p style="font-size:11px;font-weight:600;letter-spacing:1px;color:#888;margin-bottom:8px;text-transform:uppercase;">Agregar ingrediente extra</p>
         <div style="display:flex;gap:8px;align-items:center;margin-bottom:10px;flex-wrap:wrap;">
@@ -996,7 +996,6 @@ function renderizarVistaCategoria (categoriaObj, productos, allTypes, allPromos,
   if (productosRestantes.length > 0) {
     const idGridOtros = construirSeccionTipo('Otros', mainWrapper)
     const gridOtros = document.getElementById(idGridOtros)
-
 
     // Forzamos que la sección de Otros empiece colapsada para no estorbar (Opcional)
     gridOtros.parentElement.classList.remove('is-open')

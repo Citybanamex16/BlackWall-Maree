@@ -24,7 +24,7 @@ if (googleWalletDisponible) {
     scopes: ['https://www.googleapis.com/auth/wallet_object.issuer']
   })
 
-  walletClient = google.walletobjects({ version: 'v1', auth }) 
+  walletClient = google.walletobjects({ version: 'v1', auth })
 }
 
 // Retorna la URL de la imagen correcta según visitas
@@ -104,11 +104,11 @@ async function generarGoogleWalletUrl (datosCliente) {
   const body = buildLoyaltyObjectBody(datosCliente)
 
   const claims = {
-  iss: credentials.client_email,
-  aud: 'google',
-  typ: 'savetowallet',
-  iat: Math.floor(Date.now() / 1000),
-  payload: { loyaltyObjects: [{ id: objectId }] }
+    iss: credentials.client_email,
+    aud: 'google',
+    typ: 'savetowallet',
+    iat: Math.floor(Date.now() / 1000),
+    payload: { loyaltyObjects: [{ id: objectId }] }
 
   }
 
@@ -124,6 +124,6 @@ module.exports = {
   upsertLoyaltyObject,
   generarGoogleWalletUrl,
   getStampImageUrl,
-  googleWalletDisponible,  
-  credentialsPath     
+  googleWalletDisponible,
+  credentialsPath
 }
