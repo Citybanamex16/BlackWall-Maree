@@ -511,12 +511,6 @@ exports.validarPedido = async (request, response, next) => {
 
 exports.confirmarPedido = async (request, response, next) => {
   const { items, forma, telefono: telefonoBody, nombre: nombreBody, direccion, descripcion } = request.body
-  console.error('💥 Error en Policía:', err)
-  next(err)
-}
-
-exports.confirmarPedido = async (request, response, next) => {
-  const { items, forma, telefono: telefonoBody, nombre: nombreBody, direccion, descripcion } = request.body
   const sesion = request.session.cliente
   const telefonoFinal = sesion ? String(sesion.telefono) : telefonoBody
   const nombreFinal = sesion ? sesion.nombre : (String(nombreBody || '').trim() || 'Cliente')

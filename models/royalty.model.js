@@ -1,5 +1,17 @@
 const db = require('../util/database.js')
 
+const normalizarIds = (ids = []) => {
+  if (!Array.isArray(ids)) {
+    return []
+  }
+
+  return [...new Set(
+    ids
+      .map(id => String(id).trim())
+      .filter(Boolean)
+  )]
+}
+
 module.exports = class Royalty {
   constructor (nombre, numeroPrioridad, descripcion, maxVisitas, minVisitas, descuento_premio) {
     this.Nombre_Royalty = nombre
@@ -21,9 +33,11 @@ module.exports = class Royalty {
     return db.execute(`
     SELECT p.ID_promocion, p.Nombre 
     FROM promocion p
-    WHERE p.ID_promocion NOT IN (
-      SELECT ID_Promocion FROM evento_contiene_promocion
-    )
+    WHERE p.Activo = 1
+      AND COALESCE(p.Fecha_final, p.Fecha_inicio) >= CURDATE()
+      AND p.ID_promocion NOT IN (
+        SELECT ID_Promocion FROM evento_contiene_promocion
+      )
   `)
   }
 
@@ -126,10 +140,33 @@ module.exports = class Royalty {
     FROM promocion p
     INNER JOIN estado_royalty_da_promociones erp ON p.ID_promocion = erp.ID_Promocion
     WHERE erp.Nombre_Royalty = ?
-    AND p.ID_promocion NOT IN (
-      SELECT ID_Promocion FROM evento_contiene_promocion
-    )
+     AND p.Activo = 1
+    AND COALESCE(p.Fecha_final, p.Fecha_inicio) >= CURDATE()
+     AND erp.ID_Promocion NOT IN (
+       SELECT ID_Promocion FROM evento_contiene_promocion
+     )
   `, [nombre])
+  }
+
+  static async fetchPromocionesDisponiblesPorIds (idsPromociones = []) {
+    const ids = normalizarIds(idsPromociones)
+
+    if (ids.length === 0) {
+      return [[]]
+    }
+
+    const placeholders = ids.map(() => '?').join(', ')
+
+    return db.execute(`
+      SELECT p.ID_Promocion AS id
+      FROM promocion p
+      WHERE p.ID_Promocion IN (${placeholders})
+        AND p.Activo = 1
+        AND COALESCE(p.Fecha_final, p.Fecha_inicio) >= CURDATE()
+        AND p.ID_Promocion NOT IN (
+          SELECT ID_Promocion FROM evento_contiene_promocion
+        )
+    `, ids)
   }
 
   static async fetchEventos_royalty (nombre) {
@@ -203,12 +240,29 @@ module.exports = class Royalty {
   }
 
   static async fetchPromotions (nivel) {
-    return db.execute('CALL sp_fetchPromociones(?)', [nivel])
-      .then(resultado => {
-        const rows = resultado[0]
-
-        return [rows[0]]
-      })
+    return db.execute(`
+      SELECT
+        p.ID_Promocion,
+        p.Nombre,
+        p.Descuento,
+        p.Fecha_inicio,
+        p.Fecha_final,
+        prod.ID_Producto,
+        prod.Nombre AS Producto
+      FROM estado_royalty_da_promociones erdp
+      INNER JOIN promocion p
+        ON p.ID_Promocion = erdp.ID_Promocion
+      INNER JOIN producto_tiene_promocion ptp
+        ON ptp.ID_Promocion = p.ID_Promocion
+      INNER JOIN producto prod
+        ON prod.ID_Producto = ptp.ID_Producto
+      WHERE erdp.Nombre_Royalty = ?
+        AND p.Activo = 1
+        AND CURDATE() BETWEEN p.Fecha_inicio AND COALESCE(p.Fecha_final, p.Fecha_inicio)
+        AND erdp.ID_Promocion NOT IN (
+          SELECT ID_Promocion FROM evento_contiene_promocion
+        )
+    `, [nivel]).then(([rows]) => [rows])
   }
 
   static fetchEvents (nivel) {

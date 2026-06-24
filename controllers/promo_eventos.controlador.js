@@ -191,7 +191,7 @@ const validarDatosEvento = ({
   return null
 }
 
-const validarDatosPromocion = ({ nombre, descuento, condicion, fechaInicio, fechaFinal }) => {
+const validarDatosPromocion = ({ nombre, descuento, condicion, fechaInicio, fechaFinal, permitirFechasHistoricas = false }) => {
   if (!nombre || !nombre.trim() || !condicion || !condicion.trim() || !fechaInicio || !fechaFinal) {
     return 'Faltan datos obligatorios para guardar la promoción.'
   }
@@ -209,7 +209,7 @@ const validarDatosPromocion = ({ nombre, descuento, condicion, fechaInicio, fech
     return 'Las fechas enviadas no son validas.'
   }
 
-  if (fechaInicioNormalizada < hoy || fechaFinalNormalizada < hoy) {
+  if (!permitirFechasHistoricas && (fechaInicioNormalizada < hoy || fechaFinalNormalizada < hoy)) {
     return 'Solo se permiten fechas actuales o futuras.'
   }
 
@@ -230,7 +230,7 @@ const validarPromocionesActivasEvento = async (idsPromociones) => {
   const promocionesNoElegibles = idsPromociones.filter(idPromocion => !idsActivos.has(String(idPromocion)))
 
   if (promocionesNoElegibles.length > 0) {
-    return 'Todas las promociones vinculadas al evento deben estar activas.'
+    return 'Todas las promociones vinculadas al evento deben estar activas y no vencidas.'
   }
 
   return null
@@ -745,7 +745,8 @@ exports.putUpdatePromotion = async (req, res, next) => {
       descuento,
       condicion,
       fechaInicio,
-      fechaFinal
+      fechaFinal,
+      permitirFechasHistoricas: true
     })
 
     if (errorValidacion) {
@@ -851,6 +852,13 @@ exports.patchActivatePromotion = async (req, res, next) => {
 
     const promocionActiva = estaActivoRegistro(promocion.Activo)
 
+    if (estaActivoRegistro(promocion.Expirada)) {
+      return res.status(409).json({
+        success: false,
+        message: 'No se puede activar una promoción vencida. Elimínala o actualiza su vigencia.'
+      })
+    }
+
     if (promocionActiva) {
       return res.status(200).json({
         success: true,
@@ -882,6 +890,15 @@ exports.deletePromotion = async (req, res, next) => {
       return res.status(404).json({
         success: false,
         message: 'La promoción que intentas eliminar no existe.'
+      })
+    }
+
+    if (estaActivoRegistro(promocion.Expirada)) {
+      await Promociones.deleteExpiredPromocion(idPromocion)
+
+      return res.status(200).json({
+        success: true,
+        message: 'Promoción vencida eliminada correctamente.'
       })
     }
 

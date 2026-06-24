@@ -7,6 +7,58 @@ const AppleWallet = require('../models/appleWallet.model.js')
 const path = require('path')
 const fs = require('fs')
 
+const normalizarIdsRelacionados = (relaciones = []) => {
+  if (typeof relaciones === 'string') {
+    const relacionesTexto = relaciones.trim()
+
+    if (!relacionesTexto) {
+      return []
+    }
+
+    try {
+      return normalizarIdsRelacionados(JSON.parse(relacionesTexto))
+    } catch (error) {
+      return [relacionesTexto]
+    }
+  }
+
+  if (!Array.isArray(relaciones)) {
+    return []
+  }
+
+  return [...new Set(
+    relaciones
+      .map(relacion => {
+        if (typeof relacion === 'string' || typeof relacion === 'number') {
+          return String(relacion).trim()
+        }
+
+        if (relacion && typeof relacion === 'object' && relacion.id) {
+          return String(relacion.id).trim()
+        }
+
+        return ''
+      })
+      .filter(Boolean)
+  )]
+}
+
+const validarPromocionesRoyaltyDisponibles = async (idsPromociones = []) => {
+  if (idsPromociones.length === 0) {
+    return null
+  }
+
+  const [promocionesDisponibles] = await Royalty.fetchPromocionesDisponiblesPorIds(idsPromociones)
+  const idsDisponibles = new Set(promocionesDisponibles.map(promocion => String(promocion.id)))
+  const idsInvalidos = idsPromociones.filter(idPromocion => !idsDisponibles.has(String(idPromocion)))
+
+  if (idsInvalidos.length > 0) {
+    return 'Las promociones asignadas a royalty deben estar activas, no vencidas y no vinculadas a eventos.'
+  }
+
+  return null
+}
+
 // Admin
 exports.getRoyaltyAdmin = async (request, response, next) => {
   try {
@@ -70,12 +122,21 @@ exports.postRegistrarEstadoRoyalty = async (request, response, next) => {
     })
   }
   try {
+    const idsPromociones = normalizarIdsRelacionados(promociones)
+    const errorPromociones = await validarPromocionesRoyaltyDisponibles(idsPromociones)
+
+    if (errorPromociones) {
+      return response.status(400).json({
+        success: false,
+        message: errorPromociones
+      })
+    }
+
     const nuevoEstadoRoyalty = new Royalty(nombre, prioridad, descripcion, maxVisitas, minVisitas, descuento_premio)
     await nuevoEstadoRoyalty.save()
     const promesas = []
-    if (promociones && promociones.length > 0) {
+    if (idsPromociones.length > 0) {
       console.log('promociones recibidas:', promociones)
-      const idsPromociones = promociones.map(p => p.id)
       console.log('ids extraídos:', idsPromociones)
       promesas.push(Royalty.guardarEstadoRoyaltyPromociones(nombre, idsPromociones))
     }
@@ -173,8 +234,18 @@ exports.updateRoyalty = async (request, response, next) => {
   try {
     const nombreOriginal = request.params.nombre
     const { nombre, prioridad, descripcion, minVisitas, maxVisitas, descuento_premio, promociones, eventos } = request.body
+    const idsPromociones = normalizarIdsRelacionados(promociones)
+    const errorPromociones = await validarPromocionesRoyaltyDisponibles(idsPromociones)
+
+    if (errorPromociones) {
+      return response.status(400).json({
+        success: false,
+        message: errorPromociones
+      })
+    }
+
     await Royalty.updateEstadoRoyalty(nombreOriginal, nombre, prioridad, descripcion, minVisitas, maxVisitas, descuento_premio)
-    await Royalty.updatePromocionesRoyalty(nombre, promociones)
+    await Royalty.updatePromocionesRoyalty(nombre, idsPromociones)
     await Royalty.updateEventosRoyalty(nombre, eventos)
     await WalletModel.actualizarLoyaltyClass(nombreOriginal, nombre, maxVisitas)
     await WalletModel.actualizarTarjetaPorNivel(nombreOriginal, nombre, null, maxVisitas)
