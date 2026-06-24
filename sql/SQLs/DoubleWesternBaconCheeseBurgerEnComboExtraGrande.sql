@@ -199,6 +199,7 @@ DROP PROCEDURE IF EXISTS `sp_EstadoCliente`$$
 CREATE DEFINER=`root`@`localhost` PROCEDURE `sp_EstadoCliente` (IN `p_telefono` VARCHAR(20))   BEGIN
     SELECT 
         c.Nombre, 
+        c.username,
         c.Numero_Telefonico AS telefono, 
         c.Nombre_Royalty AS nivel, 
         c.Visitas_Actuales AS visitas, 
