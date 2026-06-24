@@ -162,7 +162,7 @@ exports.getMenuData = async (request, response, next) => {
     // console.log('Categorías Info: ', Allcategories)
     // console.log('Products Info: ', productsData)
 
-    console.log("productos obtenidos: ", productsData.length , " vs los 81 disponibles : ", productsData)
+    console.log('productos obtenidos: ', productsData.length, ' vs los 81 disponibles : ', productsData)
 
     response.status(200).json({
       ok: true,
@@ -211,7 +211,7 @@ exports.getMenuPromos = async (req, res, nex) => {
 exports.getMapaSucursales = (req, res, nex) => {
   const breadcrumbs = nav.getBreadcrumbs('Menu')
   const SesionData = req.session.cliente
-  res.render('cliente/mapaSucursal', { breadcrumbs, datosCliente: SesionData})
+  res.render('cliente/mapaSucursal', { breadcrumbs, datosCliente: SesionData })
 }
 
 exports.getAllSucursales = async (req, res, nex) => {
@@ -248,7 +248,7 @@ exports.getOrden = async (request, response, next) => {
         const info = statusData[0]
 
         // 2. CÁLCULO DE TOKENS (Regla: Visitas/8 - Gastados)
-        const visitas = info.visitas|| 0
+        const visitas = info.visitas || 0
         const gastados = info.tokens_gastados || 0
         const tokensDisponibles = Math.floor(visitas / 8) - gastados
 
@@ -284,9 +284,6 @@ exports.getPlatillo = async (request, response, next) => {
 
     const row = rows[0]
 
-
-
-
     const disponible = row.Disponible === 1 || row.Disponible === '1'
 
     const ingredientes = rows
@@ -312,7 +309,7 @@ exports.getPlatillo = async (request, response, next) => {
            ORDER BY ID_Insumo = ? DESC
            LIMIT 1`,
           [CREMA_BATIDA_INGREDIENT_ID, CREMA_BATIDA_INGREDIENT_ID]
-        )
+      )
       : [[]]
     const cremaBatida = cremaBatidaRows[0] || null
 
@@ -343,7 +340,7 @@ exports.getPlatillo = async (request, response, next) => {
 }
 
 exports.agregarItem = (request, response, next) => {
- const { nombre, precio, precio_total, desc } = request.body
+  const { nombre, precio, precio_total, desc } = request.body
   const precioFinal = precio ?? precio_total ?? 0
   console.log(`Item agregado: ${nombre} - $${precioFinal}`)
   response.status(200).json({ agregado: true, nombre, precio, desc })
@@ -426,28 +423,28 @@ exports.validarPedido = async (request, response, next) => {
   const { items } = request.body
 
   try {
-    const tienePremio = items.some(i => i.premioAplicado === true);
-    let descuentoRecompensa = 0;
+    const tienePremio = items.some(i => i.premioAplicado === true)
+    let descuentoRecompensa = 0
 
     if (tienePremio) {
-      const [statusData] = await Royalty.fetchClientStatus(usuario.telefono);
-      const info = statusData[0];
-      
-      const tokensReales = Math.floor(info.visitas / 8) - (info.tokens_gastados || 0);
+      const [statusData] = await Royalty.fetchClientStatus(usuario.telefono)
+      const info = statusData[0]
+
+      const tokensReales = Math.floor(info.visitas / 8) - (info.tokens_gastados || 0)
 
       if (tokensReales <= 0) {
-        return response.status(200).json({ 
-          pedidoValido: false, 
-          mensaje: 'No tienes tokens suficientes para reclamar este premio.' 
-        });
+        return response.status(200).json({
+          pedidoValido: false,
+          mensaje: 'No tienes tokens suficientes para reclamar este premio.'
+        })
       }
-      descuentoRecompensa = parseFloat(info.descuento_premio) || 0;
+      descuentoRecompensa = parseFloat(info.descuento_premio) || 0
     }
 
-  // ── Validación básica ──
-  if (!Array.isArray(items) || items.length === 0) {
-    return response.status(400).json({ pedidoValido: false, mensaje: 'El pedido está vacío' })
-  }
+    // ── Validación básica ──
+    if (!Array.isArray(items) || items.length === 0) {
+      return response.status(400).json({ pedidoValido: false, mensaje: 'El pedido está vacío' })
+    }
 
     // ── 1. Recolección de IDs ──
     const idsProductos = [...new Set(items.map(i => i.id))]
@@ -476,12 +473,12 @@ exports.validarPedido = async (request, response, next) => {
     items.forEach((item, index) => {
       // Pasamos el compendio para que el cálculo sepa qué promo aplicar
       const precioOficial = Pedido.calcularPrecioRealItem(item, listaOro, compendio, descuentoRecompensa)
-      
+
       const precioRecibido = parseFloat(
         String(item.precio_total ?? item.precio).replace(/[^0-9.]/g, '')
       )
 
-      console.log(` ⚖️ [COMPARACIÓN] Item ${index + 1}: Poli calculó $${precioOficial} | Front envió $${precioRecibido}`);
+      console.log(` ⚖️ [COMPARACIÓN] Item ${index + 1}: Poli calculó $${precioOficial} | Front envió $${precioRecibido}`)
 
       if (Math.abs(precioOficial - precioRecibido) > 0.01) {
         erroresPrecio.push(`Item ${index + 1}: se esperaba $${precioOficial} pero se recibió $${precioRecibido}`)
@@ -514,10 +511,9 @@ exports.validarPedido = async (request, response, next) => {
 
 exports.confirmarPedido = async (request, response, next) => {
   const { items, forma, telefono: telefonoBody, nombre: nombreBody, direccion, descripcion } = request.body
-    console.error('💥 Error en Policía:', err)
-    next(err)
-  }
-
+  console.error('💥 Error en Policía:', err)
+  next(err)
+}
 
 exports.confirmarPedido = async (request, response, next) => {
   const { items, forma, telefono: telefonoBody, nombre: nombreBody, direccion, descripcion } = request.body
@@ -552,19 +548,19 @@ exports.confirmarPedido = async (request, response, next) => {
   try {
     // --- INICIO DEL POLICÍA DE ROYALTY ---
     const itemConPremio = items.find(i => i.premioAplicado === true)
-    let idPromocionARegistrar = null
+    const idPromocionARegistrar = null
 
     if (itemConPremio) {
       // A. Verificar tokens reales en la Base de Datos
       const [statusData] = await Royalty.fetchClientStatus(telefonoFinal)
-      console.log("Data Estado", statusData);
+      console.log('Data Estado', statusData)
       if (!statusData || statusData.length === 0) {
         return response.status(403).json({ pedidoConfirmado: false, mensaje: 'No se encontró información de Royalty' })
       }
 
       const info = statusData[0]
       const tokensDisponibles = Math.floor(info.Visitas_Actuales / 8) - info.tokens_gastados
-      console.log("Tokens disponibles", tokensDisponibles);
+      console.log('Tokens disponibles', tokensDisponibles)
 
       if (tokensDisponibles <= 0) {
         return response.status(403).json({ pedidoConfirmado: false, mensaje: 'Fraude detectado: No tienes tokens disponibles' })
@@ -625,7 +621,6 @@ exports.getProducts = (req, res, next) => {
   const breadcrumbs = nav.getBreadcrumbs('AdminSection')
   res.render('admin/products', { breadcrumbs })
 }
-
 
 exports.getProductsCatalog = async (req, res, next) => {
   console.log('Backend obteniendo todos los Productos, ingredientes & catalogos')
@@ -715,10 +710,10 @@ exports.getProductfieldsAndIngredientes = async (req, res, next) => {
     }
 
     const allIngredientes = await productos.getCategoryIngredientes(typeId)
-    
+
     // Mantenemos el filtro de HEAD para eficiencia
     const [tiposFiltrados] = await tipos.fetchByCategoria(typeId)
-    
+
     // Traemos las validaciones de la nueva rama para activar funciones
     const supportsProductWhippedCream = await tableHasColumn('producto', 'Permite_Crema_Batida')
     const supportsProductIngredientCustomization = await tableHasColumn('producto', 'Permite_Modificar_Ingredientes')
@@ -743,7 +738,6 @@ exports.getProductfieldsAndIngredientes = async (req, res, next) => {
     })
   }
 }
-
 
 exports.getIngredientesPorTipo = async (req, res, next) => {
   try {
@@ -1227,15 +1221,15 @@ exports.getIngredientesActivos = async (req, res, nex) => {
   try {
     // Iniciamos la transacción
     await connection.beginTransaction()
-        // Ejecutamos ambas consultas usando la misma conexión
-        const categoria = req.query.categoria
-        const tipo = req.query.tipo
-        const result = tipo
-          ? await ingrediente.fetchAllValidPorTipo(connection, tipo)
-          : categoria
-            ? await ingrediente.fetchAllValidPorCategoria(connection, categoria)
-            : await ingrediente.fetchAllValid(connection)
-        const resultPrecioBase = await productos.getCrepaPersoPrecioBase(connection);
+    // Ejecutamos ambas consultas usando la misma conexión
+    const categoria = req.query.categoria
+    const tipo = req.query.tipo
+    const result = tipo
+      ? await ingrediente.fetchAllValidPorTipo(connection, tipo)
+      : categoria
+        ? await ingrediente.fetchAllValidPorCategoria(connection, categoria)
+        : await ingrediente.fetchAllValid(connection)
+    const resultPrecioBase = await productos.getCrepaPersoPrecioBase(connection)
 
     // Si todo sale bien, confirmamos (commit)
     await connection.commit()
@@ -1260,38 +1254,34 @@ exports.getIngredientesActivos = async (req, res, nex) => {
     if (connection) connection.release()
   }
 }
-//Sección feedback Cliente
+// Sección feedback Cliente
 exports.getReviewHistoryView = (request, response, next) => {
   const breadcrumbs = nav.getBreadcrumbs('Menu')
   const SesionData = request.session.cliente
-  console.log("Datos del cliente: ", SesionData)
-  response.render('cliente/historialClienteReviews', { breadcrumbs, datosCliente: SesionData})
+  console.log('Datos del cliente: ', SesionData)
+  response.render('cliente/historialClienteReviews', { breadcrumbs, datosCliente: SesionData })
 }
-
-
 
 exports.getClientReviewHistory = async (req, res, nex) => {
   console.log("Getting Client's review history")
-  try{
+  try {
+    const clienteTelefono = req.query.Numero_Telefonico
 
-    const clienteTelefono = req.query.Numero_Telefonico;
-
-    if(clienteTelefono === undefined){
-      throw new Error("Telefono indefinido")
+    if (clienteTelefono === undefined) {
+      throw new Error('Telefono indefinido')
     }
 
-    console.log("Teléfono recibido:", clienteTelefono);
+    console.log('Teléfono recibido:', clienteTelefono)
 
     const resultData = await feedback.getClientFeedback(clienteTelefono)
 
-    console.log("Reviews obtenidas: ", resultData)
+    console.log('Reviews obtenidas: ', resultData)
 
-     res.status(200).json({
-          ok: true,
-          message: 'Catalogo Feedback Obtenido',
-          reviewCatalog:resultData
-                  })
-
+    res.status(200).json({
+      ok: true,
+      message: 'Catalogo Feedback Obtenido',
+      reviewCatalog: resultData
+    })
   } catch (err) {
     if (connection) await connection.rollback()
 
@@ -1300,12 +1290,10 @@ exports.getClientReviewHistory = async (req, res, nex) => {
       message: 'Error en la transacción',
       error: err.message || err
     })
-
   } finally {
     if (connection) connection.release()
   }
 }
-
 
 // Sección feedback Cliente
 exports.getReviewHistoryView = (request, response, next) => {
