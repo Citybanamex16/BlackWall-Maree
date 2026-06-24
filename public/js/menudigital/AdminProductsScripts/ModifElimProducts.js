@@ -1,4 +1,4 @@
-/* global ShowErrorModal, showSuccessModal, refreshProductsCatalog, buildWhippedCreamSupportNotice, buildIngredientCustomizationSupportNotice, catalogoIng:writable , catalogTipos:writable , limpiarModal, createFieldElement, buildIngredientsSection, SetRegisterButtons, onBtnIngNewClick, getIngredientesSeleccionados, validarDatosRegistro */
+/* global ShowErrorModal, showSuccessModal, refreshProductsCatalog, buildWhippedCreamSupportNotice, buildIngredientCustomizationSupportNotice, catalogoIng:writable , catalogTipos:writable , limpiarModal, createFieldElement, buildIngredientsSection, SetRegisterButtons, onBtnIngNewClick, getIngredientesSeleccionados, validarDatosRegistro, crearSeparadorSeccion */
 /* exported ConstruirModifModal, ModifyProduct */
 
 /* CU05 Modificar Platillo Existente */
@@ -78,6 +78,9 @@ document.getElementById('cerrarFormsRegistrar').addEventListener('click', (event
   event.preventDefault()
   ModifModal.close()
 })
+ModifModal.addEventListener('click', (e) => {
+  if (e.target === ModifModal) ModifModal.close()
+})
 
 async function ConstruirModifModal (productData, AllCategorys) {
   const ModifIdSection = document.getElementById('idSection')
@@ -96,8 +99,12 @@ async function ConstruirModifModal (productData, AllCategorys) {
   ModifTitle.textContent = `Modificar ${productData.nombre}`
   ModifIdSection.textContent = `ID: ${productData.id}`
 
-  // --- 3. Construcción de Campos Dinámicos ---
+  // --- 3. Información básica ---
   const KEYS_EXCLUIDAS = ['id', 'ingredientes', 'categoria', 'tipo', 'activo', 'permiteCremaBatida', 'permiteModificarIngredientes']
+
+  const sepBasica = crearSeparadorSeccion('Información básica')
+  sepBasica.classList.add('is-dynamic')
+  ModifForm.appendChild(sepBasica)
 
   Object.entries(productData).forEach(([key, value]) => {
     if (KEYS_EXCLUIDAS.includes(key)) return
@@ -107,7 +114,11 @@ async function ConstruirModifModal (productData, AllCategorys) {
     ModifForm.appendChild(fieldEl)
   });
 
-  // --- 4. Secciones Especiales (Ingredientes y Dropdowns) ---
+  // --- 4. Composición ---
+  const sepComposicion = crearSeparadorSeccion('Composición')
+  sepComposicion.classList.add('is-dynamic')
+  ModifForm.appendChild(sepComposicion)
+
   const ingSection = buildIngredientsSection({ mostrarCantidad: false })
   ingSection.classList.add('is-dynamic')
   ModifForm.appendChild(ingSection)
@@ -120,12 +131,15 @@ async function ConstruirModifModal (productData, AllCategorys) {
   tipoField.classList.add('is-dynamic')
   ModifForm.appendChild(tipoField)
 
+  // --- 5. Configuración ---
+  const sepConfig = crearSeparadorSeccion('Configuración')
+  sepConfig.classList.add('is-dynamic')
+  ModifForm.appendChild(sepConfig)
+
   const activoField = buildActivoDropdown(productData.activo)
   activoField.classList.add('is-dynamic')
   ModifForm.appendChild(activoField)
 
-  // --- 5. Lógica de Parches (Nuevos campos de Crema Batida y Modificación) ---
-  // Usamos los soportes detectados en el backend para mostrar u ocultar opciones
   if (window.supportsProductWhippedCream === true) {
     const cremaBatidaField = buildPermiteCremaBatidaField(productData.permiteCremaBatida)
     ModifForm.appendChild(cremaBatidaField)
@@ -261,13 +275,13 @@ function buildPermiteModificarIngredientesField (checked = true) {
 
 // ── Pre-seleccionar ingredientes en los dropdowns ──────────
 function precargarIngredientes (ingData) {
-  const rows = document.querySelectorAll('#ingredientsList .maree-ing-row')
   ingData.forEach((ing, i) => {
+    const rows = document.querySelectorAll('#ingredientsList .maree-ing-row')
     if (!rows[i]) {
-      onBtnIngNewClick() // crea la fila si no existe
+      onBtnIngNewClick()
     }
-    const dropdown = document.querySelectorAll('#ingredientsList .ing-dropdown')[i]
-    if (dropdown) dropdown.value = ing.id
+    const dropdowns = document.querySelectorAll('#ingredientsList .ing-dropdown')
+    if (dropdowns[i]) dropdowns[i].value = String(ing.id)
   })
 }
 

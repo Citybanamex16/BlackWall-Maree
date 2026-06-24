@@ -140,7 +140,7 @@ function renderProductoAdmin (prod, duplicateMap) {
   const ingredientesResumen = getIngredientesResumen(prod.ingredientes)
 
   return `
-    <div class="admin-prod-row" data-id="${prod.id}">
+    <div class="admin-prod-row" data-id="${prod.id}" data-nombre="${prod.nombre.replace(/"/g, '&quot;')}">
       <div class="admin-prod-info">
         <div class="admin-prod-img-container">
             <img src="${prod.imagen}" class="admin-prod-img" onerror="this.src='/img/placeholder.webp'">
@@ -267,6 +267,7 @@ function construirCatalogoAdmin (datos) {
     if (badge) badge.textContent = count
   })
 
+  setupSearchBar()
   console.log('Catálogo admin construido con éxito')
 }
 
@@ -373,6 +374,54 @@ async function seleccionarTipoProducto (id) {
   } finally {
     hideSpinner()
   }
+}
+
+/* ── Helper: separador visual entre secciones del modal ── */
+/* exported crearSeparadorSeccion */
+function crearSeparadorSeccion (titulo) {
+  const div = document.createElement('div')
+  div.classList.add('modal-section-sep', 'is-dynamic')
+  div.textContent = titulo
+  return div
+}
+
+/* ── Búsqueda de productos en catálogo ── */
+function normalizar (str) {
+  return (str || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '')
+}
+
+function filtrarProductos (query) {
+  const q = normalizar(query.trim())
+  let primerCoincidente = null
+
+  document.querySelectorAll('.categoria-section').forEach(sec => {
+    const rows = sec.querySelectorAll('.admin-prod-row')
+    let visibles = 0
+    rows.forEach(row => {
+      const nombre = normalizar(row.dataset.nombre || '')
+      const coincide = q === '' || nombre.includes(q)
+      row.style.display = coincide ? '' : 'none'
+      if (coincide) {
+        visibles++
+        if (!primerCoincidente) primerCoincidente = row
+      }
+    })
+    sec.style.display = (q !== '' && visibles === 0) ? 'none' : ''
+  })
+
+  if (q !== '' && primerCoincidente) {
+    primerCoincidente.scrollIntoView({ behavior: 'smooth', block: 'center' })
+  }
+}
+
+function setupSearchBar () {
+  const input = document.getElementById('admin-search-input')
+  if (!input) return
+  let timer
+  input.addEventListener('input', () => {
+    clearTimeout(timer)
+    timer = setTimeout(() => filtrarProductos(input.value), 280)
+  })
 }
 
 /* == Funcion de creación de Modal Registrar Producto == */
@@ -492,6 +541,7 @@ function createFieldElement (field) {
     if (field.type === 'float') input.step = 'any'
     if (mappedType === 'file') input.accept = field.accept || 'image/*'
     if (field.placeholder) input.placeholder = field.placeholder
+    if (field.value !== undefined && field.value !== null) input.value = field.value
 
     wrapper.appendChild(label)
     wrapper.appendChild(input)
@@ -745,51 +795,44 @@ function refreshIngredientDropdowns () {
 
 /* == Funcion Central == */
 function createProductRegisterForms (Fields, Ingredientes, type, tiposData) {
-  // Type == Categoría
-  catalogoIng = [] // Empieza vacío; se llena cuando el usuario selecciona un tipo
-
-  // Limpieza del modal
+  catalogoIng = []
   limpiarModal(RegisterFormModal)
   limpiarModal(registerForm)
   RegisterFormTitle.textContent = `Registro de nuevo ${type}`
 
-  // Inyectar campos dinámicos (nombre, precio, etc.)
-  Fields.forEach((field, index) => {
-    if (field.nombre === 'permiteCremaBatida' && window.supportsProductWhippedCream !== true) {
-      return
-    }
-    if (field.nombre === 'permiteModificarIngredientes' && window.supportsProductIngredientCustomization !== true) {
-      return
-    }
-    const fieldEl = createFieldElement(field)
-    fieldEl.style.animationDelay = `${index * 0.05}s`
-    registerForm.appendChild(fieldEl)
+  const BASICOS = ['nombre', 'precio', 'imagen']
+  const camposBasicos = Fields.filter(f => BASICOS.includes((f.nombre || f.name || '').toLowerCase()))
+  const camposConfig = Fields.filter(f => !BASICOS.includes((f.nombre || f.name || '').toLowerCase()))
+
+  // ─── Información básica ───
+  registerForm.appendChild(crearSeparadorSeccion('Información básica'))
+  camposBasicos.forEach((field, i) => {
+    const el = createFieldElement(field)
+    el.style.animationDelay = `${i * 0.05}s`
+    registerForm.appendChild(el)
   })
 
-  if (window.supportsProductWhippedCream !== true) {
-    registerForm.appendChild(buildWhippedCreamSupportNotice())
-  }
-
-  if (window.supportsProductIngredientCustomization !== true) {
-    registerForm.appendChild(buildIngredientCustomizationSupportNotice())
-  }
-
-  // Construir la sección de tipos
+  // ─── Composición ───
+  registerForm.appendChild(crearSeparadorSeccion('Composición'))
   registerForm.appendChild(buildTypeSection(tiposData))
-
-  // Listener: cuando cambia el tipo, recargar ingredientes
   const tipoSelectEl = registerForm.querySelector('#productTypeSelect')
   if (tipoSelectEl) {
-    tipoSelectEl.addEventListener('change', () => {
-      fetchIngredientesPorTipo(tipoSelectEl.value)
-    })
+    tipoSelectEl.addEventListener('change', () => fetchIngredientesPorTipo(tipoSelectEl.value))
   }
-
-  // Construir e inyectar la sección de ingredientes (vacía hasta que se elija tipo)
   registerForm.appendChild(buildIngredientsSection({ mostrarCantidad: false }))
 
-  SetRegisterButtons('POST', Ingredientes, type)
+  // ─── Configuración ───
+  registerForm.appendChild(crearSeparadorSeccion('Configuración'))
+  if (window.supportsProductWhippedCream !== true) registerForm.appendChild(buildWhippedCreamSupportNotice())
+  if (window.supportsProductIngredientCustomization !== true) registerForm.appendChild(buildIngredientCustomizationSupportNotice())
+  camposConfig.forEach(field => {
+    const n = (field.nombre || field.name || '').toLowerCase()
+    if (n === 'permitecremabatida' && window.supportsProductWhippedCream !== true) return
+    if (n === 'permitemodificaringredientes' && window.supportsProductIngredientCustomization !== true) return
+    registerForm.appendChild(createFieldElement(field))
+  })
 
+  SetRegisterButtons('POST', Ingredientes, type)
   RegisterFormModal.showModal()
 }
 

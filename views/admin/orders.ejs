@@ -372,11 +372,6 @@
           </div>
         </div>
 
-        <div style="grid-column:1 / -1;">
-          <p class="detail-label">Especificaciones extra</p>
-          <p class="detail-value" id="detail-descripcion"></p>
-        </div>
-
         <hr style="margin:8px 0 16px;border:none;border-top:1px solid #eee;">
 
         <p style="font-size:13px;font-family:'Jost',sans-serif;font-weight:500;color:#555;margin-bottom:8px;text-transform:uppercase;letter-spacing:0.05em;">
@@ -521,15 +516,17 @@
       tr.dataset.telefono   = p.telefono || '—'
       tr.dataset.tipo       = p.tipo_orden || '—'
       tr.dataset.fecha      = fechaStr(p.fecha)
-      tr.dataset.direccion  = p.direccion || ''
-      tr.dataset.estado     = p.estado_orden
-      tr.style.cursor       = 'pointer'
+      tr.dataset.direccion   = p.direccion || ''
+      tr.dataset.descripcion = p.descripcion || ''
+      tr.dataset.estado      = p.estado_orden
+      tr.style.cursor        = 'pointer'
       tr.innerHTML = `
         <td><strong>${p.id_orden}</strong></td>
         <td>${p.nombre_cliente || 'Sin nombre'}</td>
         <td>${p.telefono || '—'}</td>
         <td>${p.tipo_orden || '—'}</td>
         <td>${p.direccion || '—'}</td>
+        <td>${p.descripcion || '—'}</td>
         <td class="order-status-cell"><span class="order-badge ${badgeClass(p.estado_orden)}">${p.estado_orden}</span></td>
         <td style="white-space:nowrap;">${fechaStr(p.fecha)}</td>
         <td class="order-actions"><button class="button is-danger is-light is-small btn-cancel-order" data-order-id="${p.id_orden}">Cancelar</button></td>`
