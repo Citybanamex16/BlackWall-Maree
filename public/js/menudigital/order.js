@@ -192,7 +192,20 @@ const abrirModalCheckout = () => {
     })
   })
 
-  document.getElementById('btn-confirmar-orden').addEventListener('click', () => {
+  const btnConfirmarOrden = document.getElementById('btn-confirmar-orden')
+  let isSubmittingOrder = false
+
+  const setSubmittingState = (isSubmitting) => {
+    isSubmittingOrder = isSubmitting
+    btnConfirmarOrden.disabled = isSubmitting
+    btnConfirmarOrden.style.opacity = isSubmitting ? '0.7' : '1'
+    btnConfirmarOrden.style.cursor = isSubmitting ? 'not-allowed' : 'pointer'
+    btnConfirmarOrden.textContent = isSubmitting ? 'Confirmando...' : 'Confirmar Orden'
+  }
+
+  btnConfirmarOrden.addEventListener('click', () => {
+    if (isSubmittingOrder) return
+
     const formaSeleccionada = document.querySelector('input[name="forma"]:checked').value
     const direccion = document.getElementById('input-direccion')?.value.trim() || ''
     const errorServ = document.getElementById('error-servidor')
@@ -222,6 +235,8 @@ const abrirModalCheckout = () => {
     }
     if (errorDir) errorDir.style.display = 'none'
 
+    setSubmittingState(true)
+
     fetch('/menu/pedidos/validar', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -232,10 +247,11 @@ const abrirModalCheckout = () => {
         if (!validacion.pedidoValido) {
           errorServ.style.display = 'block'
           errorServ.textContent = validacion.mensaje || 'El pedido está vacío.'
+          setSubmittingState(false)
           return
         }
 
-        fetch('/menu/pedidos/confirmar', {
+        return fetch('/menu/pedidos/confirmar', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -255,11 +271,14 @@ const abrirModalCheckout = () => {
             } else {
               errorServ.style.display = 'block'
               errorServ.textContent = 'No se pudo confirmar el pedido. Intenta de nuevo.'
+              setSubmittingState(false)
             }
           })
-          .catch(() => { errorServ.style.display = 'block' })
       })
-      .catch(() => { errorServ.style.display = 'block' })
+      .catch(() => {
+        errorServ.style.display = 'block'
+        setSubmittingState(false)
+      })
   })
 }
 

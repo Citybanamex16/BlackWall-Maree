@@ -33,7 +33,11 @@ module.exports = class Pedido {
         o.Direccion AS direccion,
         ${descripcionSelect}
       FROM orden o
-      LEFT JOIN cliente c
+      LEFT JOIN (
+        SELECT Numero_Telefonico, MAX(Nombre) AS Nombre
+        FROM cliente
+        GROUP BY Numero_Telefonico
+      ) c
         ON o.Numero_Telefonico = c.Numero_Telefonico
       WHERE o.Estado_Orden NOT IN ('Cancelado', 'Entregado', 'Pendiente')
       ORDER BY o.Fecha DESC
@@ -57,7 +61,11 @@ module.exports = class Pedido {
         o.Direccion AS direccion,
         ${descripcionSelect}
       FROM orden o
-      LEFT JOIN cliente c
+      LEFT JOIN (
+        SELECT Numero_Telefonico, MAX(Nombre) AS Nombre
+        FROM cliente
+        GROUP BY Numero_Telefonico
+      ) c
         ON o.Numero_Telefonico = c.Numero_Telefonico
       WHERE o.Estado_Orden = 'Pendiente'
       ORDER BY o.Fecha ASC
@@ -70,6 +78,7 @@ module.exports = class Pedido {
     const descripcionSelect = hasDescripcion
       ? 'o.Descripcion AS descripcion'
       : 'NULL AS descripcion'
+    const descripcionGroupBy = hasDescripcion ? ', o.Descripcion' : ''
 
     const filtros = []
     const params = []
@@ -98,7 +107,11 @@ module.exports = class Pedido {
         ${descripcionSelect},
         COALESCE(SUM(otp.Cantidad * otp.Precio_Venta), 0) AS total_orden
       FROM orden o
-      LEFT JOIN cliente c
+      LEFT JOIN (
+        SELECT Numero_Telefonico, MAX(Nombre) AS Nombre
+        FROM cliente
+        GROUP BY Numero_Telefonico
+      ) c
         ON o.Numero_Telefonico = c.Numero_Telefonico
       LEFT JOIN orden_tiene_producto otp
         ON o.ID_Orden = otp.ID_Orden
@@ -110,8 +123,7 @@ module.exports = class Pedido {
         o.Tipo_Orden,
         o.Estado_Orden,
         o.Fecha,
-        o.Direccion,
-        o.Descripcion
+        o.Direccion${descripcionGroupBy}
       ORDER BY o.Fecha DESC
     `
 
@@ -173,7 +185,11 @@ module.exports = class Pedido {
         o.Estado_Orden AS estado_orden,
         o.Fecha AS fecha
       FROM orden o
-      LEFT JOIN cliente c
+      LEFT JOIN (
+        SELECT Numero_Telefonico, MAX(Nombre) AS Nombre
+        FROM cliente
+        GROUP BY Numero_Telefonico
+      ) c
         ON o.Numero_Telefonico = c.Numero_Telefonico
       WHERE o.ID_Orden = ?
       LIMIT 1
