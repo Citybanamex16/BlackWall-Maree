@@ -15,7 +15,7 @@ async function modificarRoyalty (nombre) {
   document.getElementById('input-descripcion').value = royalty.Descripción
   document.getElementById('input-minVisitas').value = royalty.Min_Visitas
   document.getElementById('input-maxVisitas').value = royalty.Max_Visitas
-  const valorMostrar = royalty.descuento_premio ? (royalty.descuento_premio * 100) : 0;
+  const valorMostrar = royalty.descuento_premio ? (royalty.descuento_premio * 100) : 0
   document.getElementById('input-descuentos_premios').value = valorMostrar
 
   // Promociones
@@ -230,7 +230,7 @@ const abrirModalNuevoEstadoRoyalty = async () => {
     const maxPrioridad = Math.max(...royaltiesData.map(r => Number(r.Número_de_prioridad)))
     recordatorioPrioridad.textContent = `La prioridad más alta actual es ${maxPrioridad}`
   } else {
-  recordatorioPrioridad.textContent = ''
+    recordatorioPrioridad.textContent = ''
   }
 
   document.getElementById('modalAgregarRoyalty').classList.add('is-active')
@@ -297,8 +297,8 @@ function agregarValidarFormulario (datos) {
   const maxNuevo = Number(datos.maxVisitas)
   const desc_nuevo = Number(datos.descuento_premio)
   const prioridadNueva = Number(datos.prioridad)
-  const prioridadDuplicada = royaltiesData.find(r => 
-  Number(r.Número_de_prioridad) === prioridadNueva && r.Nombre_Royalty !== nombreOriginal)
+  const prioridadDuplicada = royaltiesData.find(r =>
+    Number(r.Número_de_prioridad) === prioridadNueva && r.Nombre_Royalty !== nombreOriginal)
 
   let esValido = true
   if (!datos.nombre.trim()) { marcarError('add-input-nombre', 'Obligatorio'); esValido = false }
@@ -337,35 +337,35 @@ function agregarValidarFormulario (datos) {
     esValido = false
   }
   if (minNuevo === maxNuevo) {
-  marcarError('add-input-minVisitas', 'Min y Max no pueden ser iguales')
-  marcarError('add-input-maxVisitas', 'Min y Max no pueden ser iguales')
-  esValido = false
-}
-
-for (const royalty of royaltiesData) {
-  if (royalty.Nombre_Royalty === nombreOriginal) continue
-
-  const minExistente = Number(royalty.Min_Visitas)
-  const maxExistente = Number(royalty.Max_Visitas)
-
-  if (minNuevo <= maxExistente && maxNuevo >= minExistente) {
-    marcarError('add-input-minVisitas', `Rango traslapa con "${royalty.Nombre_Royalty}" (${minExistente}-${maxExistente})`)
-    marcarError('add-input-maxVisitas', `Rango traslapa con "${royalty.Nombre_Royalty}" (${minExistente}-${maxExistente})`)
+    marcarError('add-input-minVisitas', 'Min y Max no pueden ser iguales')
+    marcarError('add-input-maxVisitas', 'Min y Max no pueden ser iguales')
     esValido = false
-    break
   }
-}
-if (prioridadDuplicada) {
-  marcarError('add-input-prioridad', `La prioridad ${prioridadNueva} ya la tiene "${prioridadDuplicada.Nombre_Royalty}"`)
-  esValido = false
-}
-const nombreDuplicado = royaltiesData.find(r => 
-  r.Nombre_Royalty.toLowerCase() === datos.nombre.toLowerCase()
-)
-if (nombreDuplicado) {
-  marcarError('add-input-nombre', 'Ya existe un estado royalty con ese nombre')
-  esValido = false
-}
+
+  for (const royalty of royaltiesData) {
+    if (royalty.Nombre_Royalty === nombreOriginal) continue
+
+    const minExistente = Number(royalty.Min_Visitas)
+    const maxExistente = Number(royalty.Max_Visitas)
+
+    if (minNuevo <= maxExistente && maxNuevo >= minExistente) {
+      marcarError('add-input-minVisitas', `Rango traslapa con "${royalty.Nombre_Royalty}" (${minExistente}-${maxExistente})`)
+      marcarError('add-input-maxVisitas', `Rango traslapa con "${royalty.Nombre_Royalty}" (${minExistente}-${maxExistente})`)
+      esValido = false
+      break
+    }
+  }
+  if (prioridadDuplicada) {
+    marcarError('add-input-prioridad', `La prioridad ${prioridadNueva} ya la tiene "${prioridadDuplicada.Nombre_Royalty}"`)
+    esValido = false
+  }
+  const nombreDuplicado = royaltiesData.find(r =>
+    r.Nombre_Royalty.toLowerCase() === datos.nombre.toLowerCase()
+  )
+  if (nombreDuplicado) {
+    marcarError('add-input-nombre', 'Ya existe un estado royalty con ese nombre')
+    esValido = false
+  }
 
   return esValido
 }
@@ -404,11 +404,11 @@ function validarFormulario (datos) {
     marcarError('input-maxVisitas', 'Debe ser mayor que cero')
     esValido = false
   }
-  if(minNuevo === maxNuevo) {
-    marcarError ('input-minVisitas', `El valor minimo y maximo no pueden ser iguales`)
+  if (minNuevo === maxNuevo) {
+    marcarError('input-minVisitas', 'El valor minimo y maximo no pueden ser iguales')
   }
-  //Para el valor minimo
-  if (minActual != minNuevo){
+  // Para el valor minimo
+  if (minActual != minNuevo) {
     for (const royalty of royaltiesData) {
       if (royalty.Nombre_Royalty === nombreOriginal) continue
       const maxExistente = Number(royalty.Max_Visitas)
@@ -420,15 +420,15 @@ function validarFormulario (datos) {
       }
     }
   }
-  if(prioridadActual != prioridadNueva){
+  if (prioridadActual != prioridadNueva) {
     if (prioridadDuplicada) {
       marcarError('input-prioridad', `La prioridad ${prioridadNueva} ya la tiene "${prioridadDuplicada.Nombre_Royalty}"`)
       esValido = false
     }
   }
 
-  const nombreDuplicado = royaltiesData.find(r => 
-  r.Nombre_Royalty.toLowerCase() === datos.nombre.toLowerCase() && 
+  const nombreDuplicado = royaltiesData.find(r =>
+    r.Nombre_Royalty.toLowerCase() === datos.nombre.toLowerCase() &&
   r.Nombre_Royalty !== nombreOriginal)
   if (nombreDuplicado) {
     marcarError('input-nombre', 'Ya existe un estado royalty con ese nombre')

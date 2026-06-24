@@ -466,15 +466,15 @@ window.abrirModalPremios = () => {
     const ahorro = precioBase * (window.datosRoyalty.descuento / 100)
     const precioFinal = precioBase - ahorro
 
-const itemDiv = document.createElement('div');
-        // Quitamos el estilo en línea de itemDiv y usamos clases/estilos armónicos
-        itemDiv.style.cssText = "padding: 15px; border: 1px solid #eee; border-radius: 10px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; background: #fff; transition: box-shadow 0.2s, border-color 0.2s;";
-        
-        // Efecto hover (opcional, imita tu .order-btn-card)
-        itemDiv.onmouseover = () => { itemDiv.style.borderColor = '#e0b89a'; itemDiv.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.06)'; };
-        itemDiv.onmouseout = () => { itemDiv.style.borderColor = '#eee'; itemDiv.style.boxShadow = 'none'; };
+    const itemDiv = document.createElement('div')
+    // Quitamos el estilo en línea de itemDiv y usamos clases/estilos armónicos
+    itemDiv.style.cssText = 'padding: 15px; border: 1px solid #eee; border-radius: 10px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; background: #fff; transition: box-shadow 0.2s, border-color 0.2s;'
 
-        itemDiv.innerHTML = `
+    // Efecto hover (opcional, imita tu .order-btn-card)
+    itemDiv.onmouseover = () => { itemDiv.style.borderColor = '#e0b89a'; itemDiv.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.06)' }
+    itemDiv.onmouseout = () => { itemDiv.style.borderColor = '#eee'; itemDiv.style.boxShadow = 'none' }
+
+    itemDiv.innerHTML = `
             <div>
                 <span style="display:block; font-family: 'Jost', sans-serif; font-weight: 500; font-size: 15px; color: #222;">
                     ${item.producto_base ? 'Crepa Personalizada' : item.nombre}
@@ -491,7 +491,7 @@ const itemDiv = document.createElement('div');
                 onmouseout="this.style.background='transparent'; this.style.color='#b5956a'">
                 Aplicar
             </button>
-        `;
+        `
     lista.appendChild(itemDiv)
   })
 

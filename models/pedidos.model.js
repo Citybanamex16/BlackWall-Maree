@@ -65,6 +65,90 @@ module.exports = class Pedido {
     return db.execute(query)
   }
 
+  static async fetchOrdersReportData (fechaInicio = '', fechaFin = '') {
+    const hasDescripcion = await tableHasColumn('orden', 'Descripcion')
+    const descripcionSelect = hasDescripcion
+      ? 'o.Descripcion AS descripcion'
+      : 'NULL AS descripcion'
+
+    const filtros = []
+    const params = []
+
+    if (fechaInicio) {
+      filtros.push('o.Fecha >= ?')
+      params.push(`${fechaInicio} 00:00:00`)
+    }
+
+    if (fechaFin) {
+      filtros.push('o.Fecha <= ?')
+      params.push(`${fechaFin} 23:59:59`)
+    }
+
+    const whereClause = filtros.length > 0 ? `WHERE ${filtros.join(' AND ')}` : ''
+
+    const query = `
+      SELECT
+        o.ID_Orden AS id_orden,
+        c.Nombre AS nombre_cliente,
+        o.Numero_Telefonico AS telefono,
+        o.Tipo_Orden AS tipo_orden,
+        o.Estado_Orden AS estado_orden,
+        o.Fecha AS fecha,
+        o.Direccion AS direccion,
+        ${descripcionSelect},
+        COALESCE(SUM(otp.Cantidad * otp.Precio_Venta), 0) AS total_orden
+      FROM orden o
+      LEFT JOIN cliente c
+        ON o.Numero_Telefonico = c.Numero_Telefonico
+      LEFT JOIN orden_tiene_producto otp
+        ON o.ID_Orden = otp.ID_Orden
+      ${whereClause}
+      GROUP BY
+        o.ID_Orden,
+        c.Nombre,
+        o.Numero_Telefonico,
+        o.Tipo_Orden,
+        o.Estado_Orden,
+        o.Fecha,
+        o.Direccion,
+        o.Descripcion
+      ORDER BY o.Fecha DESC
+    `
+
+    return db.execute(query, params)
+  }
+
+  static async fetchDailySalesReport (fechaInicio = '', fechaFin = '') {
+    const filtros = ["o.Estado_Orden = 'Entregado'"]
+    const params = []
+
+    if (fechaInicio) {
+      filtros.push('o.Fecha >= ?')
+      params.push(`${fechaInicio} 00:00:00`)
+    }
+
+    if (fechaFin) {
+      filtros.push('o.Fecha <= ?')
+      params.push(`${fechaFin} 23:59:59`)
+    }
+
+    const whereClause = `WHERE ${filtros.join(' AND ')}`
+    const query = `
+      SELECT
+        DATE(o.Fecha) AS fecha,
+        COUNT(DISTINCT o.ID_Orden) AS total_ordenes,
+        COALESCE(SUM(otp.Cantidad * otp.Precio_Venta), 0) AS total_ventas
+      FROM orden o
+      LEFT JOIN orden_tiene_producto otp
+        ON o.ID_Orden = otp.ID_Orden
+      ${whereClause}
+      GROUP BY DATE(o.Fecha)
+      ORDER BY DATE(o.Fecha) ASC
+    `
+
+    return db.execute(query, params)
+  }
+
   static updateOrderStatus (idOrden, nuevoEstado) {
     const allowed = ['Pendiente', 'Preparando', 'Listo', 'Entregado', 'Cancelado']
     if (!allowed.includes(nuevoEstado)) throw new Error('Estado inválido')
@@ -182,12 +266,12 @@ module.exports = class Pedido {
   /**
  * Obtiene los precios base directos de la BD.
  */
-    static async obtenerListaDeOro(idsProductos, idsInsumos) {
-    console.log("\n📡 [LISTA ORO] Solicitando precios base a la DB...");
-    const [resultSets] = await db.query("CALL ObtenerPreciosBase(?, ?)", [
-        idsProductos.join(','),
-        idsInsumos.join(',')
-    ]);
+  static async obtenerListaDeOro (idsProductos, idsInsumos) {
+    console.log('\n📡 [LISTA ORO] Solicitando precios base a la DB...')
+    const [resultSets] = await db.query('CALL ObtenerPreciosBase(?, ?)', [
+      idsProductos.join(','),
+      idsInsumos.join(',')
+    ])
     let productoMetaRows = []
 
     if (idsProductos.length > 0) {
@@ -235,19 +319,19 @@ module.exports = class Pedido {
            FROM producto_tiene_insumo
            WHERE ID_Producto IN (${idsProductos.map(() => '?').join(',')})`,
           idsProductos
-        )
+      )
       : [[]]
 
-    const lista = { productos: {}, insumos: {}, productoMeta: {} };
-    resultSets[0].forEach(p => lista.productos[p.id] = parseFloat(p.Precio));
-    resultSets[1].forEach(i => lista.insumos[i.id] = parseFloat(i.Precio));
+    const lista = { productos: {}, insumos: {}, productoMeta: {} }
+    resultSets[0].forEach(p => lista.productos[p.id] = parseFloat(p.Precio))
+    resultSets[1].forEach(i => lista.insumos[i.id] = parseFloat(i.Precio))
     productoMetaRows.forEach(p => {
       lista.productoMeta[p.id] = {
         permiteCremaBatida: p.permiteCremaBatida === 1 || p.permiteCremaBatida === '1',
         permiteModificarIngredientes: p.permiteModificarIngredientes === 1 || p.permiteModificarIngredientes === '1',
         ingredientesBaseIds: []
-      };
-    });
+      }
+    })
     ingredientesBaseRows.forEach(ing => {
       if (!lista.productoMeta[ing.idProducto]) {
         lista.productoMeta[ing.idProducto] = {
@@ -313,7 +397,7 @@ module.exports = class Pedido {
     console.log(`   💰 Precio Base Unitario: $${precioBase}`)
 
     // 2. Aplicar Promoción del Compendio
-    if (item.premioAplicado){
+    if (item.premioAplicado) {
       const descuentoEfectivo = precioBase * descuentoRoyalty
       precioBase = precioBase - descuentoEfectivo
       console.log(`   🏆 [PREMIO ROYALTY] Aplicando descuento de recompensa: ${descuentoRoyalty * 100}% (-$${descuentoEfectivo.toFixed(2)})`)
@@ -365,15 +449,15 @@ module.exports = class Pedido {
     }
 
     if (insumos.length > 0) {
-        console.log(`   ➕ Sumando ${insumos.length} insumos a precio de lista...`);
-        insumos.forEach(ins => {
-            const pInsumo = (listaOro.insumos[ins.id_insumo] || 0);
-            if (pInsumo > 0) {
-                // Intenta usar el nombre para el log, si no tiene, usa el ID
-                console.log(`      • ${ins.nombre || ins.id_insumo}: $${pInsumo}`);
-            }
-            acumulado += pInsumo;
-        });
+      console.log(`   ➕ Sumando ${insumos.length} insumos a precio de lista...`)
+      insumos.forEach(ins => {
+        const pInsumo = (listaOro.insumos[ins.id_insumo] || 0)
+        if (pInsumo > 0) {
+          // Intenta usar el nombre para el log, si no tiene, usa el ID
+          console.log(`      • ${ins.nombre || ins.id_insumo}: $${pInsumo}`)
+        }
+        acumulado += pInsumo
+      })
     }
 
     console.log(`   ✅ [TOTAL ITEM] $${acumulado.toFixed(2)}`)
