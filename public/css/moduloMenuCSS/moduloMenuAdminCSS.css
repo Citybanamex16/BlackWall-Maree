@@ -1734,3 +1734,75 @@ Spinner CSS
   transform: scale(1.2);
 }
 
+/* ═══════════════════════════════════════════
+   BÚSQUEDA DE PRODUCTOS
+═══════════════════════════════════════════ */
+.admin-search-wrapper {
+  margin-bottom: 20px;
+}
+
+.admin-search-inner {
+  position: relative;
+  max-width: 380px;
+}
+
+.admin-search-icon {
+  position: absolute;
+  left: 13px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-muted);
+  font-size: 13px;
+  pointer-events: none;
+}
+
+#admin-search-input {
+  width: 100%;
+  padding: 9px 14px 9px 36px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-family: 'Jost', sans-serif;
+  font-size: 14px;
+  color: var(--text-main);
+  background: #fff;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+#admin-search-input:focus {
+  outline: none;
+  border-color: var(--gold);
+  box-shadow: 0 0 0 3px rgba(181, 149, 106, 0.12);
+}
+
+#admin-search-input::placeholder {
+  color: var(--text-muted);
+}
+
+/* ═══════════════════════════════════════════
+   SEPARADORES DE SECCIÓN EN MODALES
+═══════════════════════════════════════════ */
+.modal-section-sep {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 22px 0 14px;
+  font-family: 'Jost', sans-serif;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 1.8px;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.modal-section-sep::before,
+.modal-section-sep::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+}
+
+.modal-section-sep:first-child {
+  margin-top: 8px;
+}
+

@@ -843,8 +843,9 @@ function generarStickyTabs (categorias, todosLosProductos, todosLosTipos, promos
       // LLAMADA CLAVE: Re-renderizamos la sección con la categoría clickeada
       renderizarVistaCategoria(cat, todosLosProductos, todosLosTipos, promosDatos, datosCliente)
 
-      // Scroll opcional al inicio del menú por si el usuario estaba muy abajo
-      window.scrollTo({ top: 0, behavior: 'smooth' })
+      // Scroll al inicio del contenido del menú (saltando el hero banner)
+      const menuRoot = document.getElementById('menu-root')
+      if (menuRoot) menuRoot.scrollIntoView({ behavior: 'smooth', block: 'start' })
     })
 
     listaTabs.appendChild(li)
