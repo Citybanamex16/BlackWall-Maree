@@ -25,12 +25,12 @@ async function getIngredientesPorTipoEdit (tipo) {
   try {
     // Mantenemos la ruta específica de HEAD porque es más eficiente
     const response = await fetch(`/menu/ingredientesPorTipo?tipo=${encodeURIComponent(tipo)}`)
-    
+
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}))
       throw new Error(errorData.message || 'Error al obtener ingredientes por tipo')
     }
-    
+
     const data = await response.json()
     return data.success ? data.data : []
   } catch (error) {
@@ -52,7 +52,7 @@ function refreshModifIngredientDropdowns () {
 
 async function getTiposByCategoria (categoria) {
   try {
-    // HEAD filtraba, la otra rama quería traer todos. 
+    // HEAD filtraba, la otra rama quería traer todos.
     // Mantenemos el filtro por desempeño:
     const response = await fetch(`/menu/tiposByCategoria?categoria=${encodeURIComponent(categoria)}`)
 
@@ -68,7 +68,6 @@ async function getTiposByCategoria (categoria) {
     return []
   }
 }
-
 
 // Referencias del modal
 const ModifModal = document.getElementById('RegisterFormsCU04')
@@ -87,7 +86,7 @@ async function ConstruirModifModal (productData, AllCategorys) {
   // Mantenemos el filtrado de HEAD para que el modal abra con lo que corresponde al producto
   catalogoIng = await getIngredientesPorTipoEdit(productData.tipo)
   catalogTipos = await getTiposByCategoria(productData.categoria)
-  
+
   if (!catalogoIng || !catalogTipos) return
 
   // --- 2. Limpieza y Títulos ---
@@ -105,7 +104,7 @@ async function ConstruirModifModal (productData, AllCategorys) {
     const fieldEl = createFieldElement(field)
     fieldEl.classList.add('is-dynamic')
     ModifForm.appendChild(fieldEl)
-  });
+  })
 
   // --- 4. Secciones Especiales (Ingredientes y Dropdowns) ---
   const ingSection = buildIngredientsSection({ mostrarCantidad: false })
@@ -150,7 +149,6 @@ async function ConstruirModifModal (productData, AllCategorys) {
   SetRegisterButtons('MODIFY', catalogoIng, productData)
   ModifModal.showModal()
 }
-
 
 // ── Dropdown de categoría ──────────────────────────────────
 function buildCategoriaDropdown (categorias, valorActual) {

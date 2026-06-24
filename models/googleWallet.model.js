@@ -204,7 +204,8 @@ async function crearLoyaltyObject (telefono, nombreCliente, nombreRoyalty, punto
           sourceUri: { uri: sellosUrl },
           contentDescription: {
             defaultValue: { language: 'es', value: `${sellosEnCiclo} sellos` }
-          }},
+          }
+        },
         textModulesData: [
           {
             id: 'nivel',
@@ -227,7 +228,6 @@ async function crearLoyaltyObject (telefono, nombreCliente, nombreRoyalty, punto
 
 // Actualiza la tarjeta cuandoo cambia el nivel del cliente
 async function actualizarLoyaltyObject (telefono, nombreCliente, nombreRoyalty, puntosActuales, maxPuntos) {
-  
   if (!googleWalletConfigurado()) {
     advertirGoogleWalletNoDisponible()
     return null
@@ -236,43 +236,43 @@ async function actualizarLoyaltyObject (telefono, nombreCliente, nombreRoyalty, 
   const objectId = `${ISSUER_ID}.cliente_${limpiarTelefono(telefono)}`
   const sellosEnCiclo = (puntosActuales ?? 0) % 8
   const sellosUrl = `https://res.cloudinary.com/dvbrrtput/image/upload/sellos/stamp_${sellosEnCiclo}.png`
-  try{
-  await walletClient.loyaltyobject.patch({
-    resourceId: objectId,
-    requestBody: {
-      classId,
-      accountName: `${nombreRoyalty}`,
-      barcode: {
-        type: 'QR_CODE',
-        value: String(telefono),
-        alternateText: nombreCliente
-      },
-      loyaltyPoints: {
-        balance: { int: puntosActuales },
-        label: 'Visitas'
-      },
-      secondaryLoyaltyPoints: {
-        balance: { int: maxPuntos },
-        label: 'Meta'
-      },
-      stampInfos: generarStampInfos(sellosEnCiclo, maxPuntos ?? 0),
-      heroImage: {
-        sourceUri: {
-          uri: sellosUrl 
-        }
-      },
-      imageModulesData: [],
-      textModulesData: [
-        {
-          id: 'nivel',
-          header: 'Nivel Actual',
-          body: nombreRoyalty || 'Sin nivel'
-        }
-      ]
-    }
-  })
-  console.log(`Tarjeta actualizada para cliente ${telefono}`)
-} catch (error) {
+  try {
+    await walletClient.loyaltyobject.patch({
+      resourceId: objectId,
+      requestBody: {
+        classId,
+        accountName: `${nombreRoyalty}`,
+        barcode: {
+          type: 'QR_CODE',
+          value: String(telefono),
+          alternateText: nombreCliente
+        },
+        loyaltyPoints: {
+          balance: { int: puntosActuales },
+          label: 'Visitas'
+        },
+        secondaryLoyaltyPoints: {
+          balance: { int: maxPuntos },
+          label: 'Meta'
+        },
+        stampInfos: generarStampInfos(sellosEnCiclo, maxPuntos ?? 0),
+        heroImage: {
+          sourceUri: {
+            uri: sellosUrl
+          }
+        },
+        imageModulesData: [],
+        textModulesData: [
+          {
+            id: 'nivel',
+            header: 'Nivel Actual',
+            body: nombreRoyalty || 'Sin nivel'
+          }
+        ]
+      }
+    })
+    console.log(`Tarjeta actualizada para cliente ${telefono}`)
+  } catch (error) {
     if (error.code === 404) {
       // ✅ Cliente nunca agregó su tarjeta — se omite silenciosamente
       console.log(`Cliente ${telefono} no tiene tarjeta en Wallet, se omite`)
@@ -310,7 +310,7 @@ async function actualizarTarjetaPorNivel (nombreRoyalty, nuevoNombre, nuevoDescr
   console.log(`${clientes.length} tarjetas actualizadas para nivel ${nombreRoyalty}`)
 }
 
-async function generarLinkWallet(telefono, nombreCliente, nombreRoyalty, puntosActuales, maxPuntos) {
+async function generarLinkWallet (telefono, nombreCliente, nombreRoyalty, puntosActuales, maxPuntos) {
   if (!googleWalletConfigurado()) {
     advertirGoogleWalletNoDisponible()
     return null

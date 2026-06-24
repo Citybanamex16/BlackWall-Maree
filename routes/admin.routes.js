@@ -33,6 +33,7 @@ router.post('/dias-habiles', isAuth, isAdmin, adminControlador.postDiasHabiles)
 router.post('/dias-habiles/:id/delete', isAuth, isAdmin, adminControlador.postDeleteDiaHabil)
 
 router.get('/ordenes', isAdminOrCollaborator, adminControlador.getOrders)
+router.get('/api/orders/report/pdf', isAdminOrCollaborator, adminControlador.exportOrdersSalesPdf)
 router.get('/api/orders', isAdminOrCollaborator, adminControlador.getOrdersJson)
 router.get('/api/orders/:id/items', isAdminOrCollaborator, adminControlador.getOrderItems)
 router.post('/api/orders/:id/cancel', isAdminOrCollaborator, adminControlador.cancelActiveOrder)

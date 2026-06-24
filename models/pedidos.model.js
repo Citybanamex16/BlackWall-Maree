@@ -33,7 +33,11 @@ module.exports = class Pedido {
         o.Direccion AS direccion,
         ${descripcionSelect}
       FROM orden o
-      LEFT JOIN cliente c
+      LEFT JOIN (
+        SELECT Numero_Telefonico, MAX(Nombre) AS Nombre
+        FROM cliente
+        GROUP BY Numero_Telefonico
+      ) c
         ON o.Numero_Telefonico = c.Numero_Telefonico
       WHERE o.Estado_Orden NOT IN ('Cancelado', 'Entregado', 'Pendiente')
       ORDER BY o.Fecha DESC
@@ -57,12 +61,104 @@ module.exports = class Pedido {
         o.Direccion AS direccion,
         ${descripcionSelect}
       FROM orden o
-      LEFT JOIN cliente c
+      LEFT JOIN (
+        SELECT Numero_Telefonico, MAX(Nombre) AS Nombre
+        FROM cliente
+        GROUP BY Numero_Telefonico
+      ) c
         ON o.Numero_Telefonico = c.Numero_Telefonico
       WHERE o.Estado_Orden = 'Pendiente'
       ORDER BY o.Fecha ASC
     `
     return db.execute(query)
+  }
+
+  static async fetchOrdersReportData (fechaInicio = '', fechaFin = '') {
+    const hasDescripcion = await tableHasColumn('orden', 'Descripcion')
+    const descripcionSelect = hasDescripcion
+      ? 'o.Descripcion AS descripcion'
+      : 'NULL AS descripcion'
+    const descripcionGroupBy = hasDescripcion ? ', o.Descripcion' : ''
+
+    const filtros = []
+    const params = []
+
+    if (fechaInicio) {
+      filtros.push('o.Fecha >= ?')
+      params.push(`${fechaInicio} 00:00:00`)
+    }
+
+    if (fechaFin) {
+      filtros.push('o.Fecha <= ?')
+      params.push(`${fechaFin} 23:59:59`)
+    }
+
+    const whereClause = filtros.length > 0 ? `WHERE ${filtros.join(' AND ')}` : ''
+
+    const query = `
+      SELECT
+        o.ID_Orden AS id_orden,
+        c.Nombre AS nombre_cliente,
+        o.Numero_Telefonico AS telefono,
+        o.Tipo_Orden AS tipo_orden,
+        o.Estado_Orden AS estado_orden,
+        o.Fecha AS fecha,
+        o.Direccion AS direccion,
+        ${descripcionSelect},
+        COALESCE(SUM(otp.Cantidad * otp.Precio_Venta), 0) AS total_orden
+      FROM orden o
+      LEFT JOIN (
+        SELECT Numero_Telefonico, MAX(Nombre) AS Nombre
+        FROM cliente
+        GROUP BY Numero_Telefonico
+      ) c
+        ON o.Numero_Telefonico = c.Numero_Telefonico
+      LEFT JOIN orden_tiene_producto otp
+        ON o.ID_Orden = otp.ID_Orden
+      ${whereClause}
+      GROUP BY
+        o.ID_Orden,
+        c.Nombre,
+        o.Numero_Telefonico,
+        o.Tipo_Orden,
+        o.Estado_Orden,
+        o.Fecha,
+        o.Direccion${descripcionGroupBy}
+      ORDER BY o.Fecha DESC
+    `
+
+    return db.execute(query, params)
+  }
+
+  static async fetchDailySalesReport (fechaInicio = '', fechaFin = '') {
+    const filtros = ["o.Estado_Orden = 'Entregado'"]
+    const params = []
+
+    if (fechaInicio) {
+      filtros.push('o.Fecha >= ?')
+      params.push(`${fechaInicio} 00:00:00`)
+    }
+
+    if (fechaFin) {
+      filtros.push('o.Fecha <= ?')
+      params.push(`${fechaFin} 23:59:59`)
+    }
+
+    const whereClause = `WHERE ${filtros.join(' AND ')}`
+    const query = `
+      SELECT
+        DATE(o.Fecha) AS fecha,
+        COUNT(DISTINCT o.ID_Orden) AS total_ordenes,
+        COALESCE(SUM(otp.Cantidad * otp.Precio_Venta), 0) AS total_ventas
+      FROM orden o
+      LEFT JOIN orden_tiene_producto otp
+        ON o.ID_Orden = otp.ID_Orden
+      ${whereClause}
+      GROUP BY DATE(o.Fecha)
+      ORDER BY DATE(o.Fecha) ASC
+    `
+
+    return db.execute(query, params)
   }
 
   static updateOrderStatus (idOrden, nuevoEstado) {
@@ -89,7 +185,11 @@ module.exports = class Pedido {
         o.Estado_Orden AS estado_orden,
         o.Fecha AS fecha
       FROM orden o
-      LEFT JOIN cliente c
+      LEFT JOIN (
+        SELECT Numero_Telefonico, MAX(Nombre) AS Nombre
+        FROM cliente
+        GROUP BY Numero_Telefonico
+      ) c
         ON o.Numero_Telefonico = c.Numero_Telefonico
       WHERE o.ID_Orden = ?
       LIMIT 1
@@ -137,20 +237,52 @@ module.exports = class Pedido {
     console.log(`👤 [USER CONTEXT] Nivel: ${usuario.nivelRoyalty || 'General'} | EsRoyalty: ${usuario.esRoyalty}`)
 
     try {
+      const [pe] = await db.execute(`
+        SELECT
+          p.ID_Producto,
+          promo.Descuento
+        FROM evento_contiene_promocion ecp
+        INNER JOIN evento e
+          ON e.ID_Evento = ecp.ID_Evento
+        INNER JOIN producto_tiene_promocion ptp
+          ON ecp.ID_Promocion = ptp.ID_Promocion
+        INNER JOIN producto p
+          ON ptp.ID_Producto = p.ID_Producto
+        INNER JOIN promocion promo
+          ON ptp.ID_Promocion = promo.ID_Promocion
+        WHERE e.Activo = 1
+          AND CURDATE() BETWEEN e.Fecha_Inicio AND COALESCE(e.Fecha_Final, e.Fecha_Inicio)
+          AND promo.Activo = 1
+          AND CURDATE() BETWEEN promo.Fecha_inicio AND COALESCE(promo.Fecha_final, promo.Fecha_inicio)
+      `)
+
       // 1. Promociones de Evento (PE)
-      const [pe] = await db.query("CALL obtener_promociones_por_tipo('PE')")
-      if (pe[0].length > 0) {
-        console.log(`📢 [PE] Encontradas ${pe[0].length} promociones de evento.`)
-        pe[0].forEach(p => {
+      if (pe.length > 0) {
+        console.log(`📢 [PE] Encontradas ${pe.length} promociones de evento vigentes.`)
+        pe.forEach(p => {
           compendio[p.ID_Producto] = { descuento: parseFloat(p.Descuento), tipo: 'PE' }
         })
       }
 
+      const [pu] = await db.execute(`
+        SELECT
+          p.ID_Producto,
+          promo.Descuento
+        FROM producto_tiene_promocion ptp
+        INNER JOIN producto p
+          ON p.ID_Producto = ptp.ID_Producto
+        INNER JOIN promocion promo
+          ON promo.ID_Promocion = ptp.ID_Promocion
+        WHERE promo.Activo = 1
+          AND CURDATE() BETWEEN promo.Fecha_inicio AND COALESCE(promo.Fecha_final, promo.Fecha_inicio)
+          AND ptp.ID_Promocion NOT IN (SELECT ID_Promocion FROM evento_contiene_promocion)
+          AND ptp.ID_Promocion NOT IN (SELECT ID_Promocion FROM estado_royalty_da_promociones)
+      `)
+
       // 2. Promociones Únicas (PU)
-      const [pu] = await db.query("CALL obtener_promociones_por_tipo('PU')")
-      if (pu[0].length > 0) {
-        console.log(`🎯 [PU] Encontradas ${pu[0].length} promociones únicas.`)
-        pu[0].forEach(p => {
+      if (pu.length > 0) {
+        console.log(`🎯 [PU] Encontradas ${pu.length} promociones únicas vigentes.`)
+        pu.forEach(p => {
           // El compendio se sobreescribe si ya existe (lógica de prioridad)
           compendio[p.ID_Producto] = { descuento: parseFloat(p.Descuento), tipo: 'PU' }
         })
@@ -158,10 +290,25 @@ module.exports = class Pedido {
 
       // 3. Promociones Royalty (PR)
       if (usuario.esRoyalty) {
-        const [pr] = await db.query("CALL obtener_promociones_por_tipo('PR')")
-        console.log(`👑 [PR] Evaluando ${pr[0].length} promociones de nivel para el usuario.`)
+        const [pr] = await db.execute(`
+          SELECT
+            p.ID_Producto,
+            promo.Descuento,
+            erp.Nombre_Royalty
+          FROM estado_royalty_da_promociones erp
+          INNER JOIN producto_tiene_promocion ptp
+            ON erp.ID_Promocion = ptp.ID_Promocion
+          INNER JOIN producto p
+            ON ptp.ID_Producto = p.ID_Producto
+          INNER JOIN promocion promo
+            ON ptp.ID_Promocion = promo.ID_Promocion
+          WHERE promo.Activo = 1
+            AND CURDATE() BETWEEN promo.Fecha_inicio AND COALESCE(promo.Fecha_final, promo.Fecha_inicio)
+            AND erp.ID_Promocion NOT IN (SELECT ID_Promocion FROM evento_contiene_promocion)
+        `)
+        console.log(`👑 [PR] Evaluando ${pr.length} promociones de nivel vigentes para el usuario.`)
 
-        pr[0].forEach(p => {
+        pr.forEach(p => {
           if (p.Nombre_Royalty === usuario.nivelRoyalty) {
             console.log(`✅ [PR MATCH] Producto ${p.ID_Producto} aplica para nivel ${usuario.nivelRoyalty}`)
             compendio[p.ID_Producto] = { descuento: parseFloat(p.Descuento), tipo: 'PR' }
@@ -182,12 +329,12 @@ module.exports = class Pedido {
   /**
  * Obtiene los precios base directos de la BD.
  */
-    static async obtenerListaDeOro(idsProductos, idsInsumos) {
-    console.log("\n📡 [LISTA ORO] Solicitando precios base a la DB...");
-    const [resultSets] = await db.query("CALL ObtenerPreciosBase(?, ?)", [
-        idsProductos.join(','),
-        idsInsumos.join(',')
-    ]);
+  static async obtenerListaDeOro (idsProductos, idsInsumos) {
+    console.log('\n📡 [LISTA ORO] Solicitando precios base a la DB...')
+    const [resultSets] = await db.query('CALL ObtenerPreciosBase(?, ?)', [
+      idsProductos.join(','),
+      idsInsumos.join(',')
+    ])
     let productoMetaRows = []
 
     if (idsProductos.length > 0) {
@@ -235,19 +382,19 @@ module.exports = class Pedido {
            FROM producto_tiene_insumo
            WHERE ID_Producto IN (${idsProductos.map(() => '?').join(',')})`,
           idsProductos
-        )
+      )
       : [[]]
 
-    const lista = { productos: {}, insumos: {}, productoMeta: {} };
-    resultSets[0].forEach(p => lista.productos[p.id] = parseFloat(p.Precio));
-    resultSets[1].forEach(i => lista.insumos[i.id] = parseFloat(i.Precio));
+    const lista = { productos: {}, insumos: {}, productoMeta: {} }
+    resultSets[0].forEach(p => lista.productos[p.id] = parseFloat(p.Precio))
+    resultSets[1].forEach(i => lista.insumos[i.id] = parseFloat(i.Precio))
     productoMetaRows.forEach(p => {
       lista.productoMeta[p.id] = {
         permiteCremaBatida: p.permiteCremaBatida === 1 || p.permiteCremaBatida === '1',
         permiteModificarIngredientes: p.permiteModificarIngredientes === 1 || p.permiteModificarIngredientes === '1',
         ingredientesBaseIds: []
-      };
-    });
+      }
+    })
     ingredientesBaseRows.forEach(ing => {
       if (!lista.productoMeta[ing.idProducto]) {
         lista.productoMeta[ing.idProducto] = {
@@ -313,7 +460,7 @@ module.exports = class Pedido {
     console.log(`   💰 Precio Base Unitario: $${precioBase}`)
 
     // 2. Aplicar Promoción del Compendio
-    if (item.premioAplicado){
+    if (item.premioAplicado) {
       const descuentoEfectivo = precioBase * descuentoRoyalty
       precioBase = precioBase - descuentoEfectivo
       console.log(`   🏆 [PREMIO ROYALTY] Aplicando descuento de recompensa: ${descuentoRoyalty * 100}% (-$${descuentoEfectivo.toFixed(2)})`)
@@ -365,15 +512,15 @@ module.exports = class Pedido {
     }
 
     if (insumos.length > 0) {
-        console.log(`   ➕ Sumando ${insumos.length} insumos a precio de lista...`);
-        insumos.forEach(ins => {
-            const pInsumo = (listaOro.insumos[ins.id_insumo] || 0);
-            if (pInsumo > 0) {
-                // Intenta usar el nombre para el log, si no tiene, usa el ID
-                console.log(`      • ${ins.nombre || ins.id_insumo}: $${pInsumo}`);
-            }
-            acumulado += pInsumo;
-        });
+      console.log(`   ➕ Sumando ${insumos.length} insumos a precio de lista...`)
+      insumos.forEach(ins => {
+        const pInsumo = (listaOro.insumos[ins.id_insumo] || 0)
+        if (pInsumo > 0) {
+          // Intenta usar el nombre para el log, si no tiene, usa el ID
+          console.log(`      • ${ins.nombre || ins.id_insumo}: $${pInsumo}`)
+        }
+        acumulado += pInsumo
+      })
     }
 
     console.log(`   ✅ [TOTAL ITEM] $${acumulado.toFixed(2)}`)
