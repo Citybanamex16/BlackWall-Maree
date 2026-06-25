@@ -110,6 +110,15 @@ function construirFichaProductos (datosProducto, datosCategorias, duplicateMap) 
 
     // Delegar clicks en todas las fichas de esta categoría
     gridDestino.addEventListener('click', (e) => {
+
+      // Si le picaron al checkbox de lote o al contenedor Marée, detenemos la propagación y salimos.
+      const isCheckbox = e.target.closest('.product-select-checkbox') || e.target.closest('.maree-checkbox-row');
+      if (isCheckbox) {
+        // Permitimos que el 'change' ocurra normalmente, pero evitamos que la fila ejecute el modal de edición
+        return; 
+      }
+
+
       // Click en botón Elim/Desact — tiene prioridad, no propaga a la fila
       const btnElim = e.target.closest('.btn-elim-desact')
       if (btnElim && canManageProducts) {

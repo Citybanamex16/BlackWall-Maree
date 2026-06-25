@@ -1806,3 +1806,155 @@ Spinner CSS
   margin-top: 8px;
 }
 
+
+
+
+/* ============= Check Boxes de Editar Productos =========== */
+/* Agregado el 24 de Junio de 2026 por Charly :)
+
+/* Asegurar que la fila se adapte al checkbox sin colapsar */
+.admin-prod-row {
+  display: flex !important;
+  align-items: center !important;
+  gap: 16px;
+  padding: 12px;
+}
+
+/* Efecto visual premium cuando la fila está seleccionada */
+.admin-prod-row.is-selected-row {
+  background-color: var(--gold-bg) !important;
+  border-color: var(--gold-light) !important;
+  transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+
+/* Estilo para el contenedor del checkbox */
+.admin-prod-checkbox-wrapper {
+  flex-shrink: 0;
+}
+
+
+/* ============= FIN Check Boxes de Editar Productos =========== */
+
+
+
+/* ═══════════════════════════════════════════
+   PANEL FLOTANTE DE ACCIONES EN LOTE
+═══════════════════════════════════════════ */
+.maree-bulk-panel {
+  position: fixed;
+  bottom: 24px;
+  left: 24px;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(8px); /* Efecto vidrio esmerilado de lujo */
+  border: 1px solid var(--gold-light);
+  box-shadow: 0 10px 30px rgba(181, 149, 106, 0.2);
+  border-radius: 16px;
+  padding: 16px 20px;
+  z-index: 999;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 260px;
+  transition: opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1), 
+              transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Estado oculto con fundido (Clase personalizada para evitar a Bulma) */
+.maree-bulk-panel.is-panel-hidden {
+  opacity: 0;
+  transform: translateY(20px);
+  pointer-events: none; 
+}
+
+
+.bulk-panel-header {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.bulk-panel-badge {
+  align-self: flex-start;
+  background: var(--gold-bg);
+  color: var(--gold);
+  border: 1px solid var(--gold-light);
+  font-family: 'Jost', sans-serif;
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  padding: 2px 8px;
+  border-radius: 50px;
+  font-weight: 600;
+}
+
+.bulk-panel-text {
+  font-family: 'Jost', sans-serif;
+  font-size: 13px;
+  color: var(--text-main);
+  margin: 0;
+}
+
+.bulk-panel-text strong {
+  color: var(--gold);
+  font-weight: 700;
+  font-size: 15px;
+}
+
+/* Botones de acción del Panel */
+.bulk-panel-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.btn-bulk-action {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 14px;
+  border-radius: 8px;
+  font-family: 'Jost', sans-serif;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: none;
+}
+
+/* Modificar - Azul Desaturado Elegante */
+.btn-bulk-blue {
+  background-color: #f0f4f8;
+  color: #2b6cb0;
+}
+
+
+.btn-bulk-blue:hover {
+  background-color: #2b6cb0;
+  color: white;
+  transform: translateY(-2px);
+}
+
+/* Eliminar - Rojo Desaturado Elegante */
+.btn-bulk-red {
+  background-color: #fff5f5;
+  color: #c53030;
+}
+
+.btn-bulk-red:hover {
+  background-color: #c53030;
+  color: white;
+  transform: translateY(-2px);
+}
+
+.btn-bulk-action:active {
+  transform: scale(0.95);
+}
+
+/* ═══════════════════════════════════════════
+   Fin de PANEL FLOTANTE DE ACCIONES EN LOTE
+═══════════════════════════════════════════ */
+
+

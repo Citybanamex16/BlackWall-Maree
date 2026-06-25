@@ -20,6 +20,7 @@ async function getAllIngredientesCatalog () {
   }
 }
 
+
 async function getIngredientesPorTipoEdit (tipo) {
   if (!tipo) return []
   try {
@@ -39,6 +40,7 @@ async function getIngredientesPorTipoEdit (tipo) {
   }
 }
 
+
 // Esta función se perdía en el conflicto, es vital conservarla
 function refreshModifIngredientDropdowns () {
   document.querySelectorAll('#ingredientsList .ing-dropdown').forEach(select => {
@@ -49,6 +51,7 @@ function refreshModifIngredientDropdowns () {
     }
   })
 }
+
 
 
 async function getTiposByCategoria (categoria) {
@@ -700,3 +703,136 @@ async function desactivarProd (idProd, nombreProd) {
     ShowErrorModal('Error en Desactivación', error.message || 'La conexión con la BD a fallado. Favor de intentarlo mas tarde')
   }
 }
+
+
+
+
+
+/* Nuevo codigo para checkboxes de seleccion de productos (pasar a un nuevo script) */
+
+// ═══════════════════════════════════════════
+// ESTADO GLOBAL DE ACCIONES EN LOTE
+// ═══════════════════════════════════════════
+const productosSeleccionados = new Set();
+
+// NOTA: Reemplaza 'contenedorMenu' por el ID o variable real de tu contenedor principal en el DOM (ej. document.getElementById('menuAdminContainer'))
+const contenedorPrincipal = document.getElementById('admin-catalogo') || document.body;
+
+contenedorPrincipal.addEventListener('change', (event) => {
+  const target = event.target;
+
+  // ─── CASO A: CLICK EN CHECKBOX INDIVIDUAL DE PRODUCTO ───
+  if (target.classList.contains('product-select-checkbox')) {
+    const fila = target.closest('.admin-prod-row');
+    const productoId = target.dataset.idProd;
+
+    if (target.checked) {
+      productosSeleccionados.add(productoId);
+      fila.classList.add('is-selected-row'); // Cambia a fondo crema suave de Marée
+    } else {
+      productosSeleccionados.delete(productoId);
+      fila.classList.remove('is-selected-row');
+      
+      // Si desmarcamos un producto individual, tenemos que apagar el "Seleccionar Todo" de su categoría
+      const gridPadre = target.closest('.grid-productos');
+      if (gridPadre) {
+        const masterCheck = gridPadre.querySelector('.select-all-category');
+        if (masterCheck) masterCheck.checked = false;
+      }
+    }
+    
+    actualizarPanelAcciones();
+  }
+
+  // ─── CASO B: CLICK EN CHECKBOX MAESTRO DE CATEGORÍA ───
+  if (target.classList.contains('select-all-category')) {
+    const idGridTarget = target.dataset.targetGrid;
+    const gridContenedor = document.getElementById(idGridTarget);
+    
+    if (!gridContenedor) return;
+
+    // Buscamos todos los checkboxes de productos SOLO dentro de esta categoría
+    const checksDeCategoria = gridContenedor.querySelectorAll('.product-select-checkbox');
+    const checked = target.checked;
+
+    checksDeCategoria.forEach(checkbox => {
+      // Solo alteramos el estado si es diferente para no sobrecargar el Set
+      if (checkbox.checked !== checked) {
+        checkbox.checked = checked;
+        
+        const fila = checkbox.closest('.admin-prod-row');
+        const productoId = checkbox.dataset.idProd;
+
+        if (checked) {
+          productosSeleccionados.add(productoId);
+          fila.classList.add('is-selected-row');
+        } else {
+          productosSeleccionados.delete(productoId);
+          fila.classList.remove('is-selected-row');
+        }
+      }
+    });
+
+    actualizarPanelAcciones();
+  }
+});
+
+// ═══════════════════════════════════════════
+// FUNCIÓN DE CONTROL Y AUDITORÍA (PASO PREVIO AL PANEL)
+// ═══════════════════════════════════════════
+function actualizarPanelAcciones() {
+
+  const panel = document.getElementById('bulkActionsPanel');
+  const contador = document.getElementById('bulkCounter');
+  
+  if (!panel || !contador) return;
+
+  const totalSeleccionados = productosSeleccionados.size;
+
+  // 1. Actualizamos el número en pantalla
+  contador.textContent = totalSeleccionados;
+
+  // 2. Lógica de "Aparecer y Desaparecer" con fundido
+  if (totalSeleccionados > 0) {
+    panel.classList.remove('is-panel-hidden');
+    
+  } else {
+    panel.classList.add('is-panel-hidden');
+  }
+}
+
+// ═══════════════════════════════════════════
+// LISTENERS PARA LAS ACCIONES DE LOS BOTONES
+// ═══════════════════════════════════════════
+document.addEventListener('DOMContentLoaded', () => {
+  const btnDelete = document.getElementById('btnBulkDelete');
+  const btnEdit = document.getElementById('btnBulkEdit');
+
+  if (btnDelete) {
+    btnDelete.addEventListener('click', () => {
+      const idsAEliminar = Array.from(productosSeleccionados);
+      console.log(`🚨 Solicitud masiva: Eliminar los productos con ID:`, idsAEliminar);
+      
+      // Aquí conectaremos la Meta 1 en el siguiente paso (Llamar al modal de confirmación masiva)
+    });
+  }
+
+  if (btnEdit) {
+    btnEdit.addEventListener('click', () => {
+      const idsAModificar = Array.from(productosSeleccionados);
+      console.log(`✏️ Solicitud masiva: Modificar los productos con ID:`, idsAModificar);
+      
+      // Meta 2 futura
+    });
+  }
+});
+
+
+
+
+
+
+
+
+
+
