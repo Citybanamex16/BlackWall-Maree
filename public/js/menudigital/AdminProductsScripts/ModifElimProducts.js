@@ -1,4 +1,4 @@
-/* global ShowErrorModal, showSuccessModal, refreshProductsCatalog, buildWhippedCreamSupportNotice, buildIngredientCustomizationSupportNotice, catalogoIng:writable , catalogTipos:writable , limpiarModal, createFieldElement, buildIngredientsSection, SetRegisterButtons, onBtnIngNewClick, getIngredientesSeleccionados, validarDatosRegistro */
+/* global ShowErrorModal, showSuccessModal, refreshProductsCatalog, buildWhippedCreamSupportNotice, buildIngredientCustomizationSupportNotice, catalogoIng:writable , catalogTipos:writable , limpiarModal, createFieldElement, buildIngredientsSection, SetRegisterButtons, onBtnIngNewClick, getIngredientesSeleccionados, validarDatosRegistro, crearSeparadorSeccion */
 /* exported ConstruirModifModal, ModifyProduct */
 
 /* CU05 Modificar Platillo Existente */
@@ -20,6 +20,7 @@ async function getAllIngredientesCatalog () {
   }
 }
 
+
 async function getIngredientesPorTipoEdit (tipo) {
   if (!tipo) return []
   try {
@@ -39,6 +40,7 @@ async function getIngredientesPorTipoEdit (tipo) {
   }
 }
 
+
 // Esta función se perdía en el conflicto, es vital conservarla
 function refreshModifIngredientDropdowns () {
   document.querySelectorAll('#ingredientsList .ing-dropdown').forEach(select => {
@@ -49,6 +51,8 @@ function refreshModifIngredientDropdowns () {
     }
   })
 }
+
+
 
 async function getTiposByCategoria (categoria) {
   try {
@@ -77,6 +81,9 @@ document.getElementById('cerrarFormsRegistrar').addEventListener('click', (event
   event.preventDefault()
   ModifModal.close()
 })
+ModifModal.addEventListener('click', (e) => {
+  if (e.target === ModifModal) ModifModal.close()
+})
 
 async function ConstruirModifModal (productData, AllCategorys) {
   const ModifIdSection = document.getElementById('idSection')
@@ -95,8 +102,12 @@ async function ConstruirModifModal (productData, AllCategorys) {
   ModifTitle.textContent = `Modificar ${productData.nombre}`
   ModifIdSection.textContent = `ID: ${productData.id}`
 
-  // --- 3. Construcción de Campos Dinámicos ---
+  // --- 3. Información básica ---
   const KEYS_EXCLUIDAS = ['id', 'ingredientes', 'categoria', 'tipo', 'activo', 'permiteCremaBatida', 'permiteModificarIngredientes']
+
+  const sepBasica = crearSeparadorSeccion('Información básica')
+  sepBasica.classList.add('is-dynamic')
+  ModifForm.appendChild(sepBasica)
 
   Object.entries(productData).forEach(([key, value]) => {
     if (KEYS_EXCLUIDAS.includes(key)) return
@@ -106,7 +117,11 @@ async function ConstruirModifModal (productData, AllCategorys) {
     ModifForm.appendChild(fieldEl)
   })
 
-  // --- 4. Secciones Especiales (Ingredientes y Dropdowns) ---
+  // --- 4. Composición ---
+  const sepComposicion = crearSeparadorSeccion('Composición')
+  sepComposicion.classList.add('is-dynamic')
+  ModifForm.appendChild(sepComposicion)
+
   const ingSection = buildIngredientsSection({ mostrarCantidad: false })
   ingSection.classList.add('is-dynamic')
   ModifForm.appendChild(ingSection)
@@ -119,12 +134,15 @@ async function ConstruirModifModal (productData, AllCategorys) {
   tipoField.classList.add('is-dynamic')
   ModifForm.appendChild(tipoField)
 
+  // --- 5. Configuración ---
+  const sepConfig = crearSeparadorSeccion('Configuración')
+  sepConfig.classList.add('is-dynamic')
+  ModifForm.appendChild(sepConfig)
+
   const activoField = buildActivoDropdown(productData.activo)
   activoField.classList.add('is-dynamic')
   ModifForm.appendChild(activoField)
 
-  // --- 5. Lógica de Parches (Nuevos campos de Crema Batida y Modificación) ---
-  // Usamos los soportes detectados en el backend para mostrar u ocultar opciones
   if (window.supportsProductWhippedCream === true) {
     const cremaBatidaField = buildPermiteCremaBatidaField(productData.permiteCremaBatida)
     ModifForm.appendChild(cremaBatidaField)
@@ -259,13 +277,13 @@ function buildPermiteModificarIngredientesField (checked = true) {
 
 // ── Pre-seleccionar ingredientes en los dropdowns ──────────
 function precargarIngredientes (ingData) {
-  const rows = document.querySelectorAll('#ingredientsList .maree-ing-row')
   ingData.forEach((ing, i) => {
+    const rows = document.querySelectorAll('#ingredientsList .maree-ing-row')
     if (!rows[i]) {
-      onBtnIngNewClick() // crea la fila si no existe
+      onBtnIngNewClick()
     }
-    const dropdown = document.querySelectorAll('#ingredientsList .ing-dropdown')[i]
-    if (dropdown) dropdown.value = ing.id
+    const dropdowns = document.querySelectorAll('#ingredientsList .ing-dropdown')
+    if (dropdowns[i]) dropdowns[i].value = String(ing.id)
   })
 }
 
@@ -685,3 +703,218 @@ async function desactivarProd (idProd, nombreProd) {
     ShowErrorModal('Error en Desactivación', error.message || 'La conexión con la BD a fallado. Favor de intentarlo mas tarde')
   }
 }
+
+
+
+
+
+/* Nuevo codigo para checkboxes de seleccion de productos (pasar a un nuevo script) */
+
+// ═══════════════════════════════════════════
+// ESTADO GLOBAL DE ACCIONES EN LOTE
+// ═══════════════════════════════════════════
+const productosSeleccionados = new Set();
+
+// NOTA: Reemplaza 'contenedorMenu' por el ID o variable real de tu contenedor principal en el DOM (ej. document.getElementById('menuAdminContainer'))
+const contenedorPrincipal = document.getElementById('admin-catalogo') || document.body;
+
+contenedorPrincipal.addEventListener('change', (event) => {
+  const target = event.target;
+
+  // ─── CASO A: CLICK EN CHECKBOX INDIVIDUAL DE PRODUCTO ───
+  if (target.classList.contains('product-select-checkbox')) {
+    const fila = target.closest('.admin-prod-row');
+    const productoId = target.dataset.idProd;
+
+    if (target.checked) {
+      productosSeleccionados.add(productoId);
+      fila.classList.add('is-selected-row'); // Cambia a fondo crema suave de Marée
+    } else {
+      productosSeleccionados.delete(productoId);
+      fila.classList.remove('is-selected-row');
+      
+      // Si desmarcamos un producto individual, tenemos que apagar el "Seleccionar Todo" de su categoría
+      const gridPadre = target.closest('.grid-productos');
+      if (gridPadre) {
+        const masterCheck = gridPadre.querySelector('.select-all-category');
+        if (masterCheck) masterCheck.checked = false;
+      }
+    }
+    
+    actualizarPanelAcciones();
+  }
+
+  // ─── CASO B: CLICK EN CHECKBOX MAESTRO DE CATEGORÍA ───
+  if (target.classList.contains('select-all-category')) {
+    const idGridTarget = target.dataset.targetGrid;
+    const gridContenedor = document.getElementById(idGridTarget);
+    
+    if (!gridContenedor) return;
+
+    // Buscamos todos los checkboxes de productos SOLO dentro de esta categoría
+    const checksDeCategoria = gridContenedor.querySelectorAll('.product-select-checkbox');
+    const checked = target.checked;
+
+    checksDeCategoria.forEach(checkbox => {
+      // Solo alteramos el estado si es diferente para no sobrecargar el Set
+      if (checkbox.checked !== checked) {
+        checkbox.checked = checked;
+        
+        const fila = checkbox.closest('.admin-prod-row');
+        const productoId = checkbox.dataset.idProd;
+
+        if (checked) {
+          productosSeleccionados.add(productoId);
+          fila.classList.add('is-selected-row');
+        } else {
+          productosSeleccionados.delete(productoId);
+          fila.classList.remove('is-selected-row');
+        }
+      }
+    });
+
+    actualizarPanelAcciones();
+  }
+});
+
+// ═══════════════════════════════════════════
+// FUNCIÓN DE CONTROL Y AUDITORÍA (PASO PREVIO AL PANEL)
+// ═══════════════════════════════════════════
+function actualizarPanelAcciones() {
+
+  const panel = document.getElementById('bulkActionsPanel');
+  const contador = document.getElementById('bulkCounter');
+  
+  if (!panel || !contador) return;
+
+  const totalSeleccionados = productosSeleccionados.size;
+
+  // 1. Actualizamos el número en pantalla
+  contador.textContent = totalSeleccionados;
+
+  // 2. Lógica de "Aparecer y Desaparecer" con fundido
+  if (totalSeleccionados > 0) {
+    panel.classList.remove('is-panel-hidden');
+
+  } else {
+    panel.classList.add('is-panel-hidden');
+  }
+}
+
+// ═══════════════════════════════════════════
+// LISTENERS PARA LAS ACCIONES DE LOS BOTONES
+// ═══════════════════════════════════════════
+document.addEventListener('DOMContentLoaded', () => {
+  const btnBulkEdit = document.getElementById('btnBulkEdit');
+  const btnBulkDelete = document.getElementById('btnBulkDelete');
+  const modalDelete = document.getElementById('bulkDeleteConfirmModal');
+  const btnCancel = document.getElementById('btnCancelBulkDelete');
+  const btnCloseX = document.getElementById('closeBulkDeleteX');
+  const btnConfirm = document.getElementById('btnConfirmBulkDelete');
+  const countText = document.getElementById('bulkDeleteCountText');
+
+  if (btnBulkDelete && modalDelete) {
+    // 1. Al dar click en el botón "Eliminar" del Panel Flotante
+    btnBulkDelete.addEventListener('click', () => {
+      const total = productosSeleccionados.size;
+      if (total === 0) return;
+
+      // Inyectamos dinámicamente la cantidad de productos a borrar
+      countText.textContent = total;
+      
+      // Abrimos el modal de confirmación
+      modalDelete.showModal(); 
+    });
+
+    // Cierre del modal (Cancelar o la X)
+    const cerrarModal = () => modalDelete.close();
+    btnCancel.addEventListener('click', cerrarModal);
+    btnCloseX.addEventListener('click', cerrarModal);
+
+    // 2. CONFIRMACIÓN: Acción real de mandar los datos al Backend
+    btnConfirm.addEventListener('click', async () => {
+      const idsAEliminar = Array.from(productosSeleccionados);
+      
+      // Deshabilitamos el botón para evitar doble submit (clics repetidos)
+      btnConfirm.disabled = true;
+      btnConfirm.textContent = "Eliminando...";
+
+      try {
+        // Enviar array de IDs por POST mediante Fetch
+        const respuesta = await fetch('/menu/eliminarSeleccion', {
+          method: 'DELETE',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ ids: idsAEliminar }) // Tu controlador recibirá req.body.ids
+        });
+
+        const resultado = await respuesta.json();
+
+        if (respuesta.ok && resultado.success) {
+          console.log("🚀 Transacción exitosa en el backend. Productos eliminados.");
+          
+          // Opcional: Mostrar una alerta premium de éxito aquí
+          
+          // Limpiamos nuestro set en memoria y recargamos la interfaz
+          productosSeleccionados.clear();
+          actualizarPanelAcciones();
+          modalDelete.close();
+          
+          // Recargamos la página (o puedes remover las filas con JS de forma optimista)
+          window.location.reload(); 
+        } else {
+          throw new Error(resultado.message || "Error desconocido en el servidor");
+        }
+
+      } catch (error) {
+        console.error("❌ La transacción falló (Se debió aplicar Rollback):", error);
+        alert(`Hubo un error al eliminar los productos: ${error.message}`);
+      } finally {
+        // Restauramos el botón por si acaso
+        btnConfirm.disabled = false;
+        btnConfirm.innerHTML = "Sí, Eliminar Todo";
+      }
+    });
+  }
+
+
+
+if (btnBulkEdit) {
+    btnBulkEdit.addEventListener('click', () => {
+      const idsAModificar = Array.from(productosSeleccionados);
+      console.log(`✏️ Solicitud masiva: Modificar los productos con ID:`, idsAModificar);
+      
+      // Meta 2 futura
+    });
+  }
+
+
+
+
+
+
+});
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+

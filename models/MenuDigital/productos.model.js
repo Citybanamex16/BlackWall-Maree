@@ -346,7 +346,7 @@ module.exports = class Producto {
     return Number(rows[0]?.total || 0) > 0
   }
 
-  /* EliminarDesactivar producto PD30576515 */
+  /* EliminarDesactivar producto */
 
   static async eliminarProducto (connection, id) {
     await connection.execute('DELETE FROM producto_tiene_insumo WHERE ID_Producto = ?', [id])
@@ -369,3 +369,5 @@ module.exports = class Producto {
     return result
   }
 }
+
+

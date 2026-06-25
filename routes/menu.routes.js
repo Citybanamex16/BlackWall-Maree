@@ -88,6 +88,7 @@ router.get('/ingredientesPorTipo', isAdmin, menuControlador.getIngredientesPorTi
 router.get('/formsTipoPlatillo', isAdmin, menuControlador.getCategorys)
 router.get('/formsRegistraPlatillo', isAdmin, menuControlador.getProductfieldsAndIngredientes)
 
+
 router.post('/uploadImage', isAdmin, uploadProductos.single('imagen'), menuControlador.uploadImage)
 router.post('/registerNewProduct', isAdmin, subirImagenProducto, menuControlador.postNewProduct)
 
@@ -95,6 +96,7 @@ router.put('/modifProduct/:id', isAdmin, menuControlador.postModifProduct)
 // Eliminar Producto
 router.delete('/eliminarProducto', isAdmin, menuControlador.deleteProducto)
 router.put('/desactivarProducto', isAdmin, menuControlador.putDesactivarProducto)
+router.delete('/eliminarSeleccion', isAdmin, menuControlador.deleteProductsSelection)
 
 // Rutas Global: Rutas utilizadas por cualquier CU, devuelven información general
 router.get('/globalAdminIngredientes', isAdmin, menuControlador.getIngredientesFullCatalog)

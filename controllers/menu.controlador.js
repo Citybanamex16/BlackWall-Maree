@@ -1393,3 +1393,81 @@ exports.postNewFeedback = async (req, res, post) => {
     })
   }
 }
+
+
+exports.deleteProductsSelection = async (req, res, pos) => {
+  let connection
+
+  try{
+    const frontEndData = req.body
+    const idsAEliminar = frontEndData.ids
+    console.log("Data received from Frontend: ", idsAEliminar)
+
+
+      if (!idsAEliminar || idsAEliminar.length === 0) {
+        return res.status(400).json({
+          ok: false,
+          message: 'No se proporcionaron IDs para eliminar'
+        });
+      }
+
+   
+      //Connection Pool
+      connection = await pool.getConnection()
+
+
+      //Procedemos a eliminar todos los productos en el array en una transaccion
+
+      //1. Iniciamos transaccion (De aqui para abajo es la transaccion)
+      await connection.beginTransaction()
+
+      //2. Accion DELETE en la BD
+      for (const id of idsAEliminar){
+        console.log("Eliminando: ", id)
+        await productos.eliminarProducto(connection, id)
+      }
+
+      //3. Si llegamos hasta aqui todo salio bien
+      console.log("Eliminacion de lote hecha con exito")
+      await connection.commit()
+
+      res.status(200).json({
+      ok: true,
+      success:true,
+      message: 'Lote Eliminado Con exito'
+    })
+
+    
+
+  } catch (err) {
+     console.log('Error interno en Delete Selection of products ', err)
+
+     console.log('❌ Error interno en Delete Selection of products: ', err);
+    
+    // Si la conexión falló, hacemos Rollback absoluto
+    if (connection) {
+      console.log('🔄 Ejecutando Rollback de la transacción para salvar los datos...');
+      try {
+        await connection.rollback();
+      } catch (rollbackErr) {
+        console.error('Error al intentar hacer rollback: ', rollbackErr);
+      }
+    }
+
+    res.status(500).json({
+      ok: false,
+      message: 'Error en Backend al borrar Seleccion de productos',
+      error: err
+    })
+
+  } finally {
+
+    // 🌟 COMPORTAMIENTO VITAL: Siempre devolvemos la conexión al pool
+    if (connection) {
+      console.log('🔌 Conexión devuelta al pool con éxito.');
+      connection.release();
+    }
+
+  }
+
+};
