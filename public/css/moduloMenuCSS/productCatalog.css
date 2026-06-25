@@ -710,3 +710,28 @@ dialog .checkbox {
 }
 
 
+/* ============= Check Boxes de Editar Productos ===========
+/* Agregado el 24 de Junio de 2026 por Charly :)
+
+/* Asegurar que la fila se adapte al checkbox sin colapsar */
+.admin-prod-row {
+  display: flex !important;
+  align-items: center !important;
+  gap: 16px;
+  padding: 12px;
+}
+
+/* Efecto visual premium cuando la fila está seleccionada */
+.admin-prod-row.is-selected-row {
+  background-color: var(--gold-bg) !important;
+  border-color: var(--gold-light) !important;
+  transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+
+/* Estilo para el contenedor del checkbox */
+.admin-prod-checkbox-wrapper {
+  flex-shrink: 0;
+}
+
+/* ============= FIN Check Boxes de Editar Productos ===========
+

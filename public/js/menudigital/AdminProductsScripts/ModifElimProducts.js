@@ -50,6 +50,7 @@ function refreshModifIngredientDropdowns () {
   })
 }
 
+
 async function getTiposByCategoria (categoria) {
   try {
     // HEAD filtraba, la otra rama quería traer todos.

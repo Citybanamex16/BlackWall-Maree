@@ -141,6 +141,13 @@ function renderProductoAdmin (prod, duplicateMap) {
 
   return `
     <div class="admin-prod-row" data-id="${prod.id}" data-nombre="${prod.nombre.replace(/"/g, '&quot;')}">
+      
+    <div class="admin-prod-checkbox-wrapper" style="display: flex; align-items: center; padding-left: 4px;">
+      <label class="maree-checkbox-row" style="margin: 0; padding: 0;">
+        <input type="checkbox" class="product-select-checkbox" data-id-prod="${prod.id}">
+      </label>
+    </div>
+
       <div class="admin-prod-info">
         <div class="admin-prod-img-container">
             <img src="${prod.imagen}" class="admin-prod-img" onerror="this.src='/img/placeholder.webp'">
@@ -191,12 +198,19 @@ function construirCategoria (cat, contenedorMenu) {
       </span>
     </div>
     <div id="${idContenedor}" class="grid-productos admin-grid mt-1 grid-collapsible">
-      <!-- Cabecera de columnas -->
-     <div class="admin-prod-header">
-  <span>Producto</span>
-  <span>${canManageProducts ? 'Acción' : ''}</span>
-</div>
-    </div>`
+
+
+    <div class="admin-prod-header" style="display: flex; align-items: center; gap: 12px;">
+      <label class="maree-checkbox-row" style="margin: 0; padding: 0; display: flex; align-items: center;" onclick="e => e.stopPropagation()">
+        <input type="checkbox" class="select-all-category" data-target-grid="${idContenedor}">
+        <span style="font-family: 'Jost', sans-serif; font-size: 11px; letter-spacing: 1px; text-transform: uppercase; margin-left: 6px; color: var(--text-muted);">
+          Seleccionar Todo
+        </span>
+      </label>
+      <span style="margin-left: auto;">${canManageProducts ? 'Acciones' : ''}</span>
+    </div>
+
+  </div>`
 
   const header = seccionCat.querySelector('.cat-header')
   const grid = seccionCat.querySelector('.grid-productos')
