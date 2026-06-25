@@ -186,7 +186,7 @@ async function crearLoyaltyObject (telefono, nombreCliente, nombreRoyalty, punto
         id: objectId,
         classId,
         state: 'ACTIVE',
-        accountName: `${nombreRoyalty}`,
+        accountName: `${nombreCliente}`,
         barcode: {
           type: 'QR_CODE',
           value: String(telefono),
@@ -205,14 +205,7 @@ async function crearLoyaltyObject (telefono, nombreCliente, nombreRoyalty, punto
           contentDescription: {
             defaultValue: { language: 'es', value: `${sellosEnCiclo} sellos` }
           }
-        },
-        textModulesData: [
-          {
-            id: 'nivel',
-            header: 'Nivel Actual',
-            body: nombreRoyalty || 'Sin nivel'
-          }
-        ]
+        }
       }
     })
     console.log(`Tarjeta creada para cliente ${limpiarTelefono(telefono)}`)
@@ -241,7 +234,7 @@ async function actualizarLoyaltyObject (telefono, nombreCliente, nombreRoyalty, 
       resourceId: objectId,
       requestBody: {
         classId,
-        accountName: `${nombreRoyalty}`,
+        accountName: `${nombreCliente}`,
         barcode: {
           type: 'QR_CODE',
           value: String(telefono),
@@ -261,14 +254,14 @@ async function actualizarLoyaltyObject (telefono, nombreCliente, nombreRoyalty, 
             uri: sellosUrl
           }
         },
-        imageModulesData: [],
-        textModulesData: [
-          {
-            id: 'nivel',
-            header: 'Nivel Actual',
-            body: nombreRoyalty || 'Sin nivel'
-          }
-        ]
+        imageModulesData: []
+      /* textModulesData: [
+        {
+          id: 'nivel',
+          header: 'Nivel Actual',
+          body: nombreRoyalty || 'Sin nivel'
+        }
+      ] */
       }
     })
     console.log(`Tarjeta actualizada para cliente ${telefono}`)

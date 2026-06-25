@@ -35,6 +35,7 @@ const setClientSession = (request, client) => {
   request.session.name = client.Nombre
   request.session.cliente = {
     nombre: client.Nombre,
+    username: client.username,
     telefono: client.telefono,
     genero: client.genero,
     visitas: client.visitasActual || 0
