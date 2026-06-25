@@ -279,6 +279,33 @@
 <!-- ====== End of Selected Products Menu ===== -->
 
 
+
+<!-- ======  Selected Products Delete Confirmation Modal ===== -->
+<dialog id="bulkDeleteConfirmModal" class="maree-modal">
+  <div class="modal-accent-bar" style="background-color: #c53030; width: 100%;"></div>
+  <button class="modal-close-btn" id="closeBulkDeleteX">✕</button>
+
+  <div class="modal-inner" style="text-align: center; padding: 20px 10px;">
+    <div style="font-size: 40px; margin-bottom: 12px;">⚠️</div>
+    <h2 class="modal-title" style="color: #c53030; font-size: 24px;">¿Eliminar Productos en Lote?</h2>
+    <p class="modal-sub" style="margin-top: 10px; max-width: 320px; margin-left: auto; margin-right: auto;">
+      Estás a punto de eliminar permanentemente <strong id="bulkDeleteCountText" style="color: #222;">0</strong> productos seleccionados. Esta acción no se puede deshacer.
+    </p>
+
+    <div class="modal-footer" style="margin-top: 30px; justify-content: center; gap: 16px;">
+      <button id="btnCancelBulkDelete" type="button" class="btn-secondary">
+        Cancelar
+      </button>
+      <button id="btnConfirmBulkDelete" type="button" class="btn-primary" style="background-color: #c53030; color: white;">
+        Sí, Eliminar Todo
+      </button>
+    </div>
+  </div>
+</dialog>
+
+<!-- ====== End of Selected Products Delete Confirmation Modal ===== -->
+
+
 <script>
   window.canManageProducts = <%- JSON.stringify(canManageProducts) %>
 </script>

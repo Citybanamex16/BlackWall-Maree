@@ -795,7 +795,7 @@ function actualizarPanelAcciones() {
   // 2. Lógica de "Aparecer y Desaparecer" con fundido
   if (totalSeleccionados > 0) {
     panel.classList.remove('is-panel-hidden');
-    
+
   } else {
     panel.classList.add('is-panel-hidden');
   }
@@ -805,27 +805,109 @@ function actualizarPanelAcciones() {
 // LISTENERS PARA LAS ACCIONES DE LOS BOTONES
 // ═══════════════════════════════════════════
 document.addEventListener('DOMContentLoaded', () => {
-  const btnDelete = document.getElementById('btnBulkDelete');
-  const btnEdit = document.getElementById('btnBulkEdit');
+  const btnBulkEdit = document.getElementById('btnBulkEdit');
+  const btnBulkDelete = document.getElementById('btnBulkDelete');
+  const modalDelete = document.getElementById('bulkDeleteConfirmModal');
+  const btnCancel = document.getElementById('btnCancelBulkDelete');
+  const btnCloseX = document.getElementById('closeBulkDeleteX');
+  const btnConfirm = document.getElementById('btnConfirmBulkDelete');
+  const countText = document.getElementById('bulkDeleteCountText');
 
-  if (btnDelete) {
-    btnDelete.addEventListener('click', () => {
-      const idsAEliminar = Array.from(productosSeleccionados);
-      console.log(`🚨 Solicitud masiva: Eliminar los productos con ID:`, idsAEliminar);
+  if (btnBulkDelete && modalDelete) {
+    // 1. Al dar click en el botón "Eliminar" del Panel Flotante
+    btnBulkDelete.addEventListener('click', () => {
+      const total = productosSeleccionados.size;
+      if (total === 0) return;
+
+      // Inyectamos dinámicamente la cantidad de productos a borrar
+      countText.textContent = total;
       
-      // Aquí conectaremos la Meta 1 en el siguiente paso (Llamar al modal de confirmación masiva)
+      // Abrimos el modal de confirmación
+      modalDelete.showModal(); 
+    });
+
+    // Cierre del modal (Cancelar o la X)
+    const cerrarModal = () => modalDelete.close();
+    btnCancel.addEventListener('click', cerrarModal);
+    btnCloseX.addEventListener('click', cerrarModal);
+
+    // 2. CONFIRMACIÓN: Acción real de mandar los datos al Backend
+    btnConfirm.addEventListener('click', async () => {
+      const idsAEliminar = Array.from(productosSeleccionados);
+      
+      // Deshabilitamos el botón para evitar doble submit (clics repetidos)
+      btnConfirm.disabled = true;
+      btnConfirm.textContent = "Eliminando...";
+
+      try {
+        // Enviar array de IDs por POST mediante Fetch
+        const respuesta = await fetch('/menu/eliminarSeleccion', {
+          method: 'DELETE',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ ids: idsAEliminar }) // Tu controlador recibirá req.body.ids
+        });
+
+        const resultado = await respuesta.json();
+
+        if (respuesta.ok && resultado.success) {
+          console.log("🚀 Transacción exitosa en el backend. Productos eliminados.");
+          
+          // Opcional: Mostrar una alerta premium de éxito aquí
+          
+          // Limpiamos nuestro set en memoria y recargamos la interfaz
+          productosSeleccionados.clear();
+          actualizarPanelAcciones();
+          modalDelete.close();
+          
+          // Recargamos la página (o puedes remover las filas con JS de forma optimista)
+          window.location.reload(); 
+        } else {
+          throw new Error(resultado.message || "Error desconocido en el servidor");
+        }
+
+      } catch (error) {
+        console.error("❌ La transacción falló (Se debió aplicar Rollback):", error);
+        alert(`Hubo un error al eliminar los productos: ${error.message}`);
+      } finally {
+        // Restauramos el botón por si acaso
+        btnConfirm.disabled = false;
+        btnConfirm.innerHTML = "Sí, Eliminar Todo";
+      }
     });
   }
 
-  if (btnEdit) {
-    btnEdit.addEventListener('click', () => {
+
+
+if (btnBulkEdit) {
+    btnBulkEdit.addEventListener('click', () => {
       const idsAModificar = Array.from(productosSeleccionados);
       console.log(`✏️ Solicitud masiva: Modificar los productos con ID:`, idsAModificar);
       
       // Meta 2 futura
     });
   }
+
+
+
+
+
+
 });
+
+
+
+
+
+
+
+
+
+
+
+
+  
 
 
 
