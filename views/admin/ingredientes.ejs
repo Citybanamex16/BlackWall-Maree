@@ -58,6 +58,11 @@
     </div>
 
     <!-- Tabla -->
+    <% if (canManageIngredients) { %>
+    <div style="margin-bottom:10px;">
+      <button id="btnSelectAllIng" class="btn-secondary" style="font-size:13px;padding:6px 16px;">Seleccionar todo</button>
+    </div>
+    <% } %>
     <div class="ing-table-wrap">
       <div id="tablaContainer">
         <div class="ing-empty">Cargando ingredientes...</div>
@@ -203,6 +208,34 @@
     </div>
   </div>
 </dialog>
+
+<% if (canManageIngredients) { %>
+<!-- Panel flotante de acciones en lote -->
+<div id="bulkActionsPanel" class="maree-bulk-panel is-panel-hidden">
+  <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;">
+    <span style="background:#b5956a;color:white;font-size:11px;font-weight:600;padding:2px 8px;border-radius:20px;letter-spacing:0.5px;">✦ SELECCIÓN</span>
+  </div>
+  <p style="font-size:13px;color:#555;margin-bottom:14px;">
+    Ingredientes Seleccionados: <strong id="bulkCounterIng">0</strong>
+  </p>
+  <div style="display:flex;gap:8px;">
+    <button id="btnBulkDeleteIng" class="btn-bulk-action btn-bulk-red">🗑 Eliminar</button>
+  </div>
+</div>
+
+<!-- Modal confirmación eliminación en lote -->
+<dialog id="ModalEliminarLote" class="maree-modal">
+  <div class="modal-inner" style="text-align:center;">
+    <span class="modal-icon">⚠️</span>
+    <p class="modal-title modal-title-danger">¿Eliminar Ingredientes en Lote?</p>
+    <p id="bulkDeleteCountTextIng" style="font-size:14px;color:#555;margin-bottom:24px;"></p>
+    <div class="modal-actions" style="justify-content:center;gap:16px;">
+      <button id="btnCancelarEliminarLote" class="btn-secondary">Cancelar</button>
+      <button id="btnConfirmarEliminarLote" class="btn-danger">Sí, Eliminar Todo</button>
+    </div>
+  </div>
+</dialog>
+<% } %>
 
 <script>
   window.canManageIngredients = <%- JSON.stringify(canManageIngredients) %>

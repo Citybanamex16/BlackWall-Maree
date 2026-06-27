@@ -793,6 +793,22 @@ exports.eliminarIngrediente = async (req, res, next) => {
   }
 }
 
+exports.eliminarIngredientesSeleccion = async (req, res, next) => {
+  try {
+    const { ids } = req.body
+    if (!ids || !Array.isArray(ids) || ids.length === 0) {
+      return res.status(400).json({ success: false, message: 'No se proporcionaron IDs' })
+    }
+    for (const id of ids) {
+      await Ingrediente.eliminarIngrediente(id)
+    }
+    res.status(200).json({ success: true, message: `${ids.length} ingrediente(s) eliminado(s) correctamente` })
+  } catch (error) {
+    console.error('Error en eliminarIngredientesSeleccion:', error)
+    res.status(500).json({ success: false, message: 'Error al eliminar ingredientes' })
+  }
+}
+
 exports.actualizarIngrediente = async (req, res, next) => {
   try {
     const { id } = req.params

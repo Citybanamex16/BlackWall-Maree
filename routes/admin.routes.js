@@ -49,6 +49,7 @@ router.get('/api/ingredientes/tiposPorCategorias', isAdmin, adminControlador.get
 router.get('/api/ingredientes/verificarNombre', isAdmin, adminControlador.verificarNombreIngrediente)
 router.post('/api/ingredientes/validar', isAdmin, adminControlador.validarIngrediente)
 router.post('/api/ingredientes/crear', isAdmin, adminControlador.crearIngrediente)
+router.delete('/api/ingredientes/eliminarSeleccion', isAdmin, adminControlador.eliminarIngredientesSeleccion)
 router.get('/api/ingredientes/:id/validarEliminable', isAdmin, adminControlador.validarIngredienteEliminable)
 router.delete('/api/ingredientes/:id/eliminar', isAdmin, adminControlador.eliminarIngrediente)
 router.put('/api/ingredientes/:id/actualizar', isAdmin, adminControlador.actualizarIngrediente)

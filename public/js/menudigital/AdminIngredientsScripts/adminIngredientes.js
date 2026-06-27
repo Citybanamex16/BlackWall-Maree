@@ -1,6 +1,8 @@
 console.log('adminIngredientes.js cargadouu')
 const canManageIngredients = window.canManageIngredients === true
 
+let ingredientesSeleccionados = new Set()
+
 // Referencias del DOM
 const btnRegistrar = document.getElementById('btnRegistrarIngrediente')
 const modalRegistro = document.getElementById('ModalRegistroIngrediente')
@@ -53,11 +55,17 @@ async function cargarTablaIngredientes () {
       return
     }
 
+    ingredientesSeleccionados.clear()
+    actualizarPanelAccionesIng()
+    const btnSelectAll = document.getElementById('btnSelectAllIng')
+    if (btnSelectAll) btnSelectAll.textContent = 'Seleccionar todo'
+
     const tabla = document.createElement('table')
     tabla.className = 'ing-table'
     tabla.innerHTML = `
       <thead>
         <tr>
+          ${canManageIngredients ? '<th style="width:36px;"></th>' : ''}
           <th>ID</th>
           <th>Nombre</th>
           <th>Categoría</th>
@@ -86,6 +94,7 @@ async function cargarTablaIngredientes () {
         : '<span style="color:#ccc;font-size:12px;">—</span>'
 
       tr.innerHTML = `
+        ${canManageIngredients ? `<td style="width:36px;" onclick="event.stopPropagation()"><input type="checkbox" class="ing-select-checkbox" data-id="${ing.ID_Insumo}"></td>` : ''}
         <td class="muted" style="font-size:12px;font-family:monospace;">${ing.ID_Insumo}</td>
         <td style="font-weight:500;">${ing.Nombre}</td>
         <td>${badgesCats}</td>
@@ -97,11 +106,26 @@ async function cargarTablaIngredientes () {
       tbody.appendChild(tr)
 
       if (canManageIngredients) {
+        tr.querySelector('.ing-select-checkbox').addEventListener('change', (e) => {
+          const id = e.target.dataset.id
+          if (e.target.checked) {
+            ingredientesSeleccionados.add(id)
+            tr.classList.add('is-selected-row')
+          } else {
+            ingredientesSeleccionados.delete(id)
+            tr.classList.remove('is-selected-row')
+            const selectAll = document.getElementById('selectAllIngredientes')
+            if (selectAll) selectAll.checked = false
+          }
+          actualizarPanelAccionesIng()
+        })
+
         tr.querySelector('.btn-eliminar').addEventListener('click', (e) => {
           abrirModalEliminar(e.target.dataset.id, e.target.dataset.nombre)
         })
         tr.addEventListener('click', (e) => {
           if (e.target.classList.contains('btn-eliminar')) return
+          if (e.target.classList.contains('ing-select-checkbox')) return
           abrirModalEditar(ing)
         })
       }
@@ -110,6 +134,30 @@ async function cargarTablaIngredientes () {
     tabla.appendChild(tbody)
     tablaContainer.innerHTML = ''
     tablaContainer.appendChild(tabla)
+
+    if (canManageIngredients) {
+      const btnSelectAll = document.getElementById('btnSelectAllIng')
+      if (btnSelectAll) {
+        btnSelectAll.addEventListener('click', () => {
+          const checkboxes = tablaContainer.querySelectorAll('.ing-select-checkbox')
+          const todosSeleccionados = checkboxes.length > 0 && [...checkboxes].every(cb => cb.checked)
+          checkboxes.forEach(cb => {
+            cb.checked = !todosSeleccionados
+            const id = cb.dataset.id
+            const row = cb.closest('tr')
+            if (!todosSeleccionados) {
+              ingredientesSeleccionados.add(id)
+              row.classList.add('is-selected-row')
+            } else {
+              ingredientesSeleccionados.delete(id)
+              row.classList.remove('is-selected-row')
+            }
+          })
+          btnSelectAll.textContent = todosSeleccionados ? 'Seleccionar todo' : 'Deseleccionar todo'
+          actualizarPanelAccionesIng()
+        })
+      }
+    }
   } catch (error) {
     console.error('Error cargando tabla:', error)
     tablaContainer.innerHTML = '<div class="ing-empty" style="color:#a03020;">Error al cargar ingredientes.</div>'
@@ -473,6 +521,75 @@ if (canManageIngredients && btnCancelarEditar) {
     modalEditar.close()
     idParaEditar = null
   })
+}
+
+// ─── Panel de acciones en lote ────────────────────────────
+function actualizarPanelAccionesIng () {
+  const panel = document.getElementById('bulkActionsPanel')
+  const counter = document.getElementById('bulkCounterIng')
+  if (!panel || !counter) return
+  const n = ingredientesSeleccionados.size
+  counter.textContent = n
+  if (n > 0) panel.classList.remove('is-panel-hidden')
+  else panel.classList.add('is-panel-hidden')
+}
+
+if (canManageIngredients) {
+  const btnBulkDeleteIng = document.getElementById('btnBulkDeleteIng')
+  const modalEliminarLote = document.getElementById('ModalEliminarLote')
+  const btnCancelarEliminarLote = document.getElementById('btnCancelarEliminarLote')
+  const btnConfirmarEliminarLote = document.getElementById('btnConfirmarEliminarLote')
+  const bulkDeleteCountTextIng = document.getElementById('bulkDeleteCountTextIng')
+
+  if (btnBulkDeleteIng && modalEliminarLote) {
+    btnBulkDeleteIng.addEventListener('click', () => {
+      const n = ingredientesSeleccionados.size
+      bulkDeleteCountTextIng.innerHTML = `Estás a punto de eliminar permanentemente <strong>${n}</strong> ingrediente(s) seleccionado(s). Esta acción no se puede deshacer.`
+      modalEliminarLote.showModal()
+    })
+  }
+
+  if (btnCancelarEliminarLote) {
+    btnCancelarEliminarLote.addEventListener('click', () => {
+      modalEliminarLote.close()
+    })
+  }
+
+  if (btnConfirmarEliminarLote) {
+    btnConfirmarEliminarLote.addEventListener('click', async () => {
+      const idsAEliminar = [...ingredientesSeleccionados]
+      btnConfirmarEliminarLote.textContent = 'Eliminando...'
+      btnConfirmarEliminarLote.disabled = true
+
+      try {
+        const res = await fetch('/admin/api/ingredientes/eliminarSeleccion', {
+          method: 'DELETE',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ ids: idsAEliminar })
+        })
+        const obj = await res.json()
+
+        if (obj.success) {
+          ingredientesSeleccionados.clear()
+          actualizarPanelAccionesIng()
+          modalEliminarLote.close()
+          exitoTitulo.textContent = 'Ingredientes eliminados'
+          exitoMensaje.textContent = obj.message || 'Los ingredientes seleccionados fueron eliminados correctamente.'
+          modalExito.showModal()
+          cargarTablaIngredientes()
+        } else {
+          modalEliminarLote.close()
+          mostrarError('Error al eliminar', obj.message || 'Error desconocido')
+        }
+      } catch (error) {
+        modalEliminarLote.close()
+        mostrarError('Error interno', `${error}`)
+      } finally {
+        btnConfirmarEliminarLote.textContent = 'Sí, Eliminar Todo'
+        btnConfirmarEliminarLote.disabled = false
+      }
+    })
+  }
 }
 
 if (canManageIngredients && btnGuardarEditar) {
